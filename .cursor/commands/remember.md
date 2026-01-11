@@ -63,9 +63,16 @@
 
 **禁止问多个问题**；如果多个信息缺失，优先推断最容易的，只问最关键的那个。
 
-### 4) 经验落盘（必须含触发条件与校验方式）
+### 4) 冲突检测与处理（必须执行）
 
-### 2) 经验落盘（必须含触发条件与校验方式）
+在沉淀新经验前，必须执行冲突检测（按 `skill-experience-depositor.mdc` 的冲突处理机制）：
+
+1. **读取所有现有经验**：读取 `ai/context/experience/INDEX.md` 中的所有 active 经验
+2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
+3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
+4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
+
+### 5) 经验落盘（必须含触发条件与校验方式）
 
 创建 `ai/context/experience/<tag>-<title>.md`，按 `skill-experience-depositor.mdc` 的模板写入：
 
@@ -95,13 +102,18 @@
 ## 关联指针（Pointers）
 
 - `path/to/file`：说明看什么
+
+## 替代关系（Replaced by / Replaces）（可选，如有冲突则必须）
+
+- **被替代**：此经验已被 `ai/context/experience/<tag>-<new-title>.md` 替代
+- **替代**：此经验替代了 `ai/context/experience/<tag>-<old-title>.md`
 ```
 
-### 3) 索引更新（必须）
+### 6) 索引更新（必须）
 
-更新 `ai/context/experience/INDEX.md`，新增一行：
+更新 `ai/context/experience/INDEX.md`，新增一行（Status 默认为 `active`）：
 
-| Tag | Title | Trigger (when to load) | File |
+| Tag | Title | Trigger (when to load) | Status | File |
 
 要求：
 

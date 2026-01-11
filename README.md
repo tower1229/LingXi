@@ -6,12 +6,15 @@
 
 ## 你能得到什么
 
-- **显式命令**：`/req`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
+- **显式命令**：`/req`、`/review-req`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
 - **产物落盘**：每一步输出写入固定目录，形成可交接、可回放、可复用的状态文件
-- **上下文工程**：只沉淀“最小高信号”上下文（概要 + 指针），避免文档膨胀
+- **上下文工程**：只沉淀"最小高信号"上下文（概要 + 指针），避免文档膨胀
 - **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
 - **即时沉淀**：`/remember` 让你在解决问题当下立即沉淀经验，无需等 `/compound`
 - **经验自动加载**：在 `/req`、`/plan`、`/work` 执行前自动检索匹配的历史经验，主动提醒相关风险与背景文档（复刻原文的 experience-index Skill）
+- **结构化状态文件**：状态文件包含当前阶段、下一步动作、阻塞项等信息，便于 Subagent 快速理解状态
+- **阶段性笔记保存**：Work 阶段支持阶段性保存 checkpoint，避免上下文占满，支持长时间任务和跨会话恢复
+- **Context7 集成**：在 Plan 和 Work 阶段自动查询技术文档，确保实现的准确性和最佳实践
 
 ## 快速开始（建议路径）
 
@@ -28,7 +31,24 @@
 - `ai/requirements/in-progress/REQ-xxx.md`
 - `ai/requirements/INDEX.md`
 
-### 2) 用 `/plan` 生成可执行计划
+### 2) 用 `/review-req` 审查需求（建议执行）
+
+在进入 Plan 前，先审查 Requirement 的执行风险和不足之处：
+
+```
+/review-req REQ-xxx
+```
+
+会输出到对话中（不保存文档）：
+
+- 执行风险总结（技术/业务/执行三维度）
+- 需求完整性分析（缺失信息清单、信息模糊点）
+- 不足之处与改进建议
+- 总体评估（可执行性评分、是否可以开始 Plan）
+
+**如果发现阻塞性问题，建议先更新 Requirement（使用 `/req REQ-xxx`），再进入 Plan。**
+
+### 3) 用 `/plan` 生成可执行计划
 
 ```
 /plan REQ-xxx
@@ -39,7 +59,7 @@
 - `ai/requirements/in-progress/REQ-xxx.plan.md`
 - `ai/requirements/INDEX.md`（状态更新）
 
-### 3) 用 `/work` 按计划实现并持续验证
+### 4) 用 `/work` 按计划实现并持续验证
 
 ```
 /work REQ-xxx
@@ -48,8 +68,15 @@
 会持续更新：
 
 - `ai/requirements/in-progress/REQ-xxx.plan.md`（勾选任务 + 验证记录）
+- `ai/context/session/<REQ-xxx>-checkpoint-{timestamp}.md`（阶段性保存，避免上下文占满）
 
-### 4) 用 `/review` 分级审查并产出 TODO
+**特性**：
+
+- 支持阶段性保存 checkpoint，避免上下文占满
+- 支持跨会话恢复，下次执行 `/work REQ-xxx` 时自动加载最近的 checkpoint
+- 自动调用 Context7 查询技术文档，确保实现准确性
+
+### 5) 用 `/review` 分级审查并产出 TODO
 
 ```
 /review REQ-xxx
@@ -60,7 +87,7 @@
 - `ai/requirements/in-progress/REQ-xxx.review.md`
 - `ai/requirements/INDEX.md`（状态更新）
 
-### 5) 用 `/compound` 做复利沉淀
+### 6) 用 `/compound` 做复利沉淀
 
 ```
 /compound REQ-xxx
@@ -72,7 +99,7 @@
 - `ai/context/experience/INDEX.md` -（按需）`ai/context/tech/services/<service-or-module>.md`
 - `ai/requirements/INDEX.md`（可将状态推进为 completed）
 
-### 6) 用 `/remember` 即时沉淀（可选，低摩擦）
+### 7) 用 `/remember` 即时沉淀（可选，低摩擦）
 
 刚解决一个问题或踩到一个坑后，立即沉淀：
 
@@ -92,18 +119,19 @@
 ```
 .
 ├── .cursor/
-│   ├── commands/                 # 显式命令：/req /plan /work /review /compound /remember
+│   ├── commands/                 # 显式命令：/req /review-req /plan /work /review /compound /remember
 │   └── rules/                    # 工作流规则与编码规范（自动生效）
 ├── ai/
 │   ├── requirements/             # 需求产物（索引/进行中/已完成）
-│   │   ├── INDEX.md
+│   │   ├── INDEX.md              # 状态索引（包含当前阶段、下一步动作、阻塞项）
 │   │   ├── in-progress/
 │   │   └── completed/
 │   ├── context/                  # 长期上下文（业务/技术/经验）
 │   │   ├── business/
 │   │   ├── tech/
 │   │   │   └── services/
-│   │   └── experience/
+│   │   ├── experience/
+│   │   └── session/              # 会话临时信息（checkpoint、临时笔记等）
 │   └── workspace/                # 临时工作区（默认忽略）
 ```
 
