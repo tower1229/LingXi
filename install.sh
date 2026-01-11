@@ -1,0 +1,168 @@
+#!/bin/bash
+
+# Cursor Workflow 安装脚本
+# 将 cursor-workflow 模板集成到当前项目
+
+set -e
+
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# 打印带颜色的消息
+info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+error() {
+    echo -e "${RED}✗${NC} $1"
+}
+
+# 检查命令是否存在
+check_command() {
+    if ! command -v "$1" &> /dev/null; then
+        error "$1 未安装，请先安装 $1"
+        exit 1
+    fi
+}
+
+# 获取脚本所在目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 检查是否在正确的目录
+if [ ! -d "$SCRIPT_DIR/.cursor" ] || [ ! -d "$SCRIPT_DIR/ai" ]; then
+    error "未找到 .cursor 或 ai 目录"
+    error "请确保在 cursor-workflow 模板仓库的根目录运行此脚本"
+    exit 1
+fi
+
+info "开始安装 Cursor Workflow..."
+
+# 检查目标目录是否存在
+CURSOR_EXISTS=false
+AI_EXISTS=false
+
+if [ -d ".cursor" ]; then
+    CURSOR_EXISTS=true
+    warning ".cursor 目录已存在"
+fi
+
+if [ -d "ai" ]; then
+    AI_EXISTS=true
+    warning "ai 目录已存在"
+fi
+
+# 询问是否继续
+if [ "$CURSOR_EXISTS" = true ] || [ "$AI_EXISTS" = true ]; then
+    echo ""
+    read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        info "安装已取消"
+        exit 0
+    fi
+fi
+
+# 创建 .cursor 目录结构
+info "创建 .cursor 目录结构..."
+mkdir -p .cursor/commands
+mkdir -p .cursor/rules
+
+# 复制 commands
+info "复制 commands..."
+cp -r "$SCRIPT_DIR/.cursor/commands/"* .cursor/commands/
+success "已复制 commands (7 个文件)"
+
+# 复制 rules
+info "复制 rules..."
+cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
+success "已复制 rules (6 个文件)"
+
+# 创建 ai 目录结构
+info "创建 ai 目录结构..."
+mkdir -p ai/requirements/in-progress
+mkdir -p ai/requirements/completed
+mkdir -p ai/context/business
+mkdir -p ai/context/tech/services
+mkdir -p ai/context/experience
+mkdir -p ai/context/session
+mkdir -p ai/workspace
+
+# 复制 INDEX.md 文件
+info "复制索引文件..."
+cp "$SCRIPT_DIR/ai/requirements/INDEX.md" ai/requirements/INDEX.md
+cp "$SCRIPT_DIR/ai/context/experience/INDEX.md" ai/context/experience/INDEX.md
+success "已复制索引文件"
+
+# 更新 .gitignore
+info "更新 .gitignore..."
+GITIGNORE_ENTRIES=(
+    "# Local workspace for temp code clones, generated artifacts, etc."
+    "ai/workspace/"
+    ""
+    "# Session-level context (ephemeral, not a knowledge base)"
+    "ai/context/session/"
+)
+
+if [ -f ".gitignore" ]; then
+    # 检查是否已存在这些条目
+    NEED_UPDATE=false
+    for entry in "${GITIGNORE_ENTRIES[@]}"; do
+        if [ -n "$entry" ] && ! grep -qF "$entry" .gitignore 2>/dev/null; then
+            NEED_UPDATE=true
+            break
+        fi
+    done
+
+    if [ "$NEED_UPDATE" = true ]; then
+        echo "" >> .gitignore
+        echo "# Cursor Workflow" >> .gitignore
+        for entry in "${GITIGNORE_ENTRIES[@]}"; do
+            echo "$entry" >> .gitignore
+        done
+        success "已更新 .gitignore"
+    else
+        info ".gitignore 已包含相关条目，跳过更新"
+    fi
+else
+    # 创建 .gitignore
+    cat > .gitignore << 'EOF'
+# Local workspace for temp code clones, generated artifacts, etc.
+ai/workspace/
+
+# Session-level context (ephemeral, not a knowledge base)
+ai/context/session/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+EOF
+    success "已创建 .gitignore"
+fi
+
+# 输出成功信息
+echo ""
+success "安装完成！"
+echo ""
+info "已安装的文件："
+echo "  - .cursor/commands/ (7 个命令文件)"
+echo "  - .cursor/rules/ (6 个规则文件)"
+echo "  - ai/ 目录结构"
+echo ""
+info "下一步："
+echo "  1. 在 Cursor 中打开项目"
+echo "  2. 运行 /req 命令创建第一个需求"
+echo "  3. 查看 README.md 了解完整工作流"
+echo ""
+info "更多信息：https://github.com/your-org/cursor-workflow"

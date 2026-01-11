@@ -1,8 +1,88 @@
 # cursor-workflow
 
-一个可直接复刻“Plan → Work → Review → Compound”闭环的 **Cursor 项目模板仓库**：显式命令驱动、产物落盘、上下文工程与复合沉淀（复利）。
+一个可直接复刻"Plan → Work → Review → Compound"闭环的 **Cursor 项目模板仓库**：显式命令驱动、产物落盘、上下文工程与复合沉淀（复利）。
 
-> 核心理念来自你提供的公众号文章（上下文工程 + 复合工程 + 工具隐形化/入口极简化）：[文章链接](https://mp.weixin.qq.com/s?__biz=MjM5ODYwMjI2MA==&mid=2649798388&idx=1&sn=e0312f3b4b60675a40411281e86c4469&chksm=bfe5a54d8a2afd9db884eec432759a63267ab38626bccefabbfddf6af888e7cbe5d599defa9f&mpshare=1&srcid=0111ehqH3VLnSGsgFXkhbzyZ&sharer_shareinfo=c9158e608e7bf32688b4ce4546cb04f9&sharer_shareinfo_first=af9111366c52d30a0a791cbebb5d69d5&from=singlemessage&scene=1&subscene=317&sessionid=1768108880&clicktime=1768110543&enterid=1768110543&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=8077397-zh_CN-zip&fasttmpl_flag=0&realreporttime=1768110543550&devicetype=android-36&version=28004153&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=zh_CN&countrycode=CN&exportkey=n_ChQIAhIQ5Th7WC0yB0DQElVCDbmUnRLrAQIE97dBBAEAAAAAADQROcfKi3kAAAAOpnltbLcz9gKNyK89dVj0HaF%2B5MoCppD6of7L%2Fnay7FIgej3QLVcdCjZN7d0Aep4tRg%2B3YPtoKrETAQwQA2r%2BMfim9BqNWYrhnWepx66aEGdGYfaCjkcqKZuNV6k0RN8Qk9be2Cx3fhOU%2BYzCEVY0ILfEgPGLubn8geTWoRDTkusdBaWW3Eo4pqRzcpG8s9yy1p7ZggROEDD3l7NUPYbIAMbmibmgHTTOnUSyMGNJLKgylmWplcCMhYq9gf6TioCLVEmLkVtpwBi62DFE%2F2QUT84Xwpw%3D&pass_ticket=uxlTWTN0HMjxaV2dDYG1ay%2B9qDAh9mY1G5l1btTsehTvePCVHHhVpLHzvltMe2w1&wx_header=3)
+> 核心理念（上下文工程 + 复合工程 + 工具隐形化/入口极简化）
+
+## 安装到现有项目
+
+### 方式 1：一键远程安装（推荐）
+
+直接在项目目录中运行以下命令，脚本会自动从 GitHub 下载并安装：
+
+#### Linux/macOS/Git Bash
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install-remote.sh | bash
+```
+
+#### Windows PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+```
+
+#### 如果上述命令失败（需要设置执行策略）
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+```
+
+### 方式 2：下载后本地安装
+
+如果不想直接执行远程脚本，也可以先下载：
+
+```bash
+# 下载脚本
+curl -fsSL https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install-remote.sh -o install.sh
+chmod +x install.sh
+
+# 运行脚本
+./install.sh
+```
+
+### 方式 3：手动复制
+
+如果不想使用脚本，也可以手动复制文件：
+
+1. **复制 `.cursor` 目录**：
+
+   ```bash
+   cp -r cursor-workflow/.cursor /path/to/your-project/
+   ```
+
+2. **复制 `ai` 目录结构**：
+
+   ```bash
+   # 创建目录结构
+   mkdir -p ai/requirements/{in-progress,completed}
+   mkdir -p ai/context/{business,tech/services,experience,session}
+   mkdir -p ai/workspace
+
+   # 复制索引文件
+   cp cursor-workflow/ai/requirements/INDEX.md ai/requirements/
+   cp cursor-workflow/ai/context/experience/INDEX.md ai/context/experience/
+   ```
+
+3. **更新 `.gitignore`**（如果存在）：
+
+   ```gitignore
+   # Local workspace for temp code clones, generated artifacts, etc.
+   ai/workspace/
+
+   # Session-level context (ephemeral, not a knowledge base)
+   ai/context/session/
+   ```
+
+### 验证安装
+
+安装完成后，检查以下文件是否存在：
+
+- `.cursor/commands/` (7 个命令文件)
+- `.cursor/rules/` (6 个规则文件)
+- `ai/requirements/INDEX.md`
+- `ai/context/experience/INDEX.md`
 
 ## 你能得到什么
 
