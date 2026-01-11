@@ -1,0 +1,36 @@
+---
+description: "Skill: Index Manager (ai/requirements/INDEX.md as SSoT)"
+globs:
+  - "ai/requirements/**"
+alwaysApply: true
+---
+
+# Skill：Index Manager（需求索引与状态）
+
+## 目标
+
+把 `ai/requirements/INDEX.md` 作为单一事实来源（SSoT），保证需求在 **Plan → Work → Review → Compound** 闭环中可追踪、可交接。
+
+## 必须满足
+
+- **任何 REQ 产物变更**（创建/计划/审查/完成）都必须同步更新 `ai/requirements/INDEX.md`
+- `INDEX.md` 每行至少包含：
+  - **ID**：`REQ-xxx`
+  - **Title**
+  - **Status**：`in-progress` / `planned` / `in-review` / `needs-fix` / `completed`
+  - **Links**：至少包含 requirement 文件路径；按需补充 plan/review 等
+
+## 更新规则（Fail Fast）
+
+- 如果发现某个 `REQ-xxx` 在 `ai/requirements/in-progress/` 或 `ai/requirements/completed/` 存在文件，但 `INDEX.md` 无对应行：必须补齐
+- 如果 `INDEX.md` 中存在某个 `REQ-xxx`，但对应文件不存在：必须指出并修复（创建缺失文件或修正索引）
+
+## Link 约定
+
+Links 字段优先写相对路径（示例）：
+
+- `ai/requirements/in-progress/REQ-001.md`
+- `ai/requirements/in-progress/REQ-001.plan.md`
+- `ai/requirements/in-progress/REQ-001.review.md`
+- `ai/requirements/completed/REQ-001.md`
+

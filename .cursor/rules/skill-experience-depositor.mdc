@@ -1,0 +1,62 @@
+---
+description: "Skill: Experience Depositor (ai/context/experience/* + index)"
+globs:
+  - "ai/context/experience/**"
+  - "ai/context/tech/services/**"
+alwaysApply: true
+---
+
+# Skill：Experience Depositor（复利沉淀）
+
+## 目标
+
+把“过程中的坑/隐性约束/排查结论”沉淀为下次可复用资产，并维护索引。
+
+## 经验沉淀模板（必须包含）
+
+每条经验文件：`ai/context/experience/<tag>-<title>.md`
+
+```markdown
+# <Title>
+
+## 触发条件（When to load）
+- ...
+
+## 问题现象（Symptom）
+- ...
+
+## 根因（Root cause）
+- ...
+
+## 解决方案（Fix）
+- ...
+
+## 校验方式（How to verify）
+- ...
+
+## 关联指针（Pointers）
+- `path/to/file`：说明看什么
+```
+
+并更新 `ai/context/experience/INDEX.md`：
+
+| Tag | Title | Trigger (when to load) | File |
+|---|---|---|---|
+
+## 服务/模块上下文（仅概要 + 指针）
+
+如果本次涉及某个服务/模块但缺少“高信号概要”，补：
+
+- `ai/context/tech/services/<service-or-module>.md`
+
+允许包含：
+
+- 服务/模块做什么、不做什么（边界）
+- 关键流程/概念（少量稳定术语）
+- 常见坑（引用 experience）
+- 代码指针（入口文件/关键函数/配置入口）
+
+禁止包含：
+
+- 复制代码、接口定义、字段表、实现细节复述
+

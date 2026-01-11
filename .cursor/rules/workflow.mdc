@@ -1,0 +1,98 @@
+---
+description: Cursor Workflow Template (Plan → Work → Review → Compound) + Context Engineering
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Cursor Workflow（显式闭环）与上下文工程（最小高信号）
+
+## 目标
+
+每次交付都让下一次更快、更稳：把“过程经验”沉淀为**下次自动可用**的资产，而不是事后写一篇总结没人看。
+
+## 工作流闭环（必须遵循）
+
+你必须使用以下 5 个命令，并将产物落盘到约定目录：
+
+- `/req`：生成/更新 Requirement（写入 `ai/requirements/in-progress/` 并更新 `ai/requirements/INDEX.md`）
+- `/plan`：生成可执行计划（写入 `ai/requirements/in-progress/<REQ>.plan.md`）
+- `/work`：按计划实现（持续更新 plan 中任务勾选与验证记录）
+- `/review`：结构化审查并分级 TODO（写入 `ai/requirements/in-progress/<REQ>.review.md`）
+- `/compound`：沉淀复利资产（写入 `ai/context/` 并维护索引）
+
+## “技能型 rules”约定（用于模拟 Skill）
+
+本模板把可复用流程固化为一组 **skill rules**（见 `.cursor/rules/skill-*.mdc`）。命令只负责入口与路由，具体落盘格式与约束由 skill rules 统一提供。
+
+建议关注：
+
+- `skill-index-manager.mdc`：索引与状态（SSoT）
+- `skill-experience-depositor.mdc`：Experience 沉淀与索引
+- `skill-context-engineering.mdc`：最小高信号上下文原则
+
+### 状态与索引（单一事实来源）
+
+- `ai/requirements/INDEX.md` 是需求索引与状态的单一事实来源（SSoT）
+- 任何新需求/计划/审查/完成都必须更新索引
+
+建议的 Status：
+
+- `in-progress`（已创建 requirement）
+- `planned`
+- `in-review` / `needs-fix`
+- `completed`
+
+## 位置即语义（强约定）
+
+- `ai/requirements/`：需求与过程产物
+- `ai/context/`：长期可复用上下文（业务/技术/经验）
+- `ai/context/session/`：会话临时信息（不要当知识库；通常不进版本库）
+- `ai/workspace/`：临时工作区（可忽略）
+
+## 上下文工程（Context Engineering）规则
+
+### 原则：最小高信号 token 集合
+
+上下文不是越多越好；你必须优先提供“高信号、低噪声、可复用”的信息。
+
+### 允许沉淀的内容（高信号）
+
+- **边界**：服务/模块做什么、不做什么
+- **关键概念**：少量稳定术语与流程
+- **易错点**：可复现的坑（配触发条件与校验方式）
+- **指针**：入口文件、关键函数、配置入口、外部依赖入口（用路径/函数名指向即可）
+
+### 禁止沉淀的内容（低信号/高维护）
+
+- 把代码/接口定义/数据结构“完整复制”到文档
+- 复述可从代码直接读到的信息（字段列表、完整参数表、实现细节）
+- 用“像代码一样详细的 Spec”替代代码（会过时并造成同步成本）
+
+### 加载策略（避免上下文爆炸）
+
+- 默认只加载与当前任务直接相关的少量 `ai/context/` 条目（宁少勿滥）
+- 当需要更多信息：先补“概要 + 指针”，再读代码细节
+
+## 复合工程（Compound Engineering）规则
+
+你需要把问题解决转化为系统免疫力，按 ROI 从高到低优先沉淀：
+
+1. **Automation**：可用 lint/test/script 拦截的重复问题（最优先）
+2. **Skill-like 指南**：可复用的多步骤流程（先文档，稳定后再工具化）
+3. **Experience**：踩坑（必须包含触发条件与校验方式）
+
+### 经验沉淀的最小模板（必须包含）
+
+- 触发条件（When to load）
+- 问题现象（Symptom）
+- 根因（Root cause）
+- 解决方案（Fix）
+- 校验方式（How to verify）
+- 关联指针（Pointers：文件路径/函数/配置入口）
+
+## 输出与行为约束
+
+- 你必须优先“引用路径/指针”，而不是在聊天中复制大段内容
+- 除非用户明确要求“保存为文档”，否则不要创建分析/总结类长文档；本模板中的 requirement/plan/review/experience 属于工作流产物，允许创建
+- 保持实现简洁：约定大于配置、避免过早抽象、复用优先、Fail Fast

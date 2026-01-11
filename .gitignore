@@ -1,0 +1,10 @@
+# Local workspace for temp code clones, generated artifacts, etc.
+ai/workspace/
+
+# Session-level context (ephemeral, not a knowledge base)
+ai/context/session/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+
