@@ -8,6 +8,7 @@
 
 - `.cursor/rules/skill-index-manager.mdc`
 - `.cursor/rules/skill-context-engineering.mdc`
+- `.cursor/rules/skill-experience-index.mdc`（自动检索与加载历史经验）
 
 ## 使用方式
 
@@ -31,6 +32,7 @@
 
 ## 执行要点（入口 + 路由）
 
+- **经验检索（必须优先执行）**：调用 `skill-experience-index.mdc`，根据需求描述自动检索匹配的历史经验，并主动提醒用户相关风险与背景文档
 - **ID 生成**：若未指定 `REQ-xxx`，读取 `ai/requirements/INDEX.md` 生成下一个连续 ID
 - **澄清问题**：最多 5 个，优先问“范围/验收/依赖/风险”，信息足够则不问
 - **落盘结构**：创建/更新 `ai/requirements/in-progress/<REQ-xxx>.md`，使用以下结构（保持简洁、可验收；不写实现方案）：

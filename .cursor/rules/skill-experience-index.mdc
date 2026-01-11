@@ -1,0 +1,119 @@
+---
+description: "Skill: Experience Index (自动匹配与加载历史经验)"
+globs:
+  - "ai/requirements/**"
+  - "ai/context/experience/**"
+alwaysApply: true
+---
+
+# Skill：Experience Index（经验自动检索与加载）
+
+## 目标
+
+在需求分析、方案设计、代码编写前**自动检索匹配的历史经验**，并主动提醒，避免重复踩坑。
+
+## 触发时机（必须执行）
+
+在执行以下操作**之前**，必须自动调用经验检索：
+
+1. **需求分析**（`/req` 执行时）：分析需求描述，匹配相关历史经验
+2. **方案设计**（`/plan` 执行时）：设计技术方案前，加载相关技术经验
+3. **代码编写**（`/work` 执行时）：编写代码前，加载相关代码模式与风险
+
+## 检索流程（必须遵循）
+
+### 1) 读取主索引
+
+读取 `ai/context/experience/INDEX.md`，提取所有经验的：
+- **Tag**（分类标签）
+- **Title**（经验标题）
+- **Trigger**（触发条件，用于匹配）
+- **File**（经验文件路径）
+
+### 2) 场景描述匹配（关键词/语义匹配）
+
+根据当前任务场景（需求描述/方案模块/代码文件），与每条经验的 **Trigger** 进行匹配：
+
+**匹配策略**：
+- **关键词匹配**：需求/方案/文件中的关键词出现在 Trigger 中
+- **语义匹配**：场景描述与 Trigger 在语义上相关（例如："商品发放" 匹配 "商品相关功能"）
+- **模块匹配**：涉及的服务/模块/技术栈匹配 Trigger 中的描述
+
+### 3) 分类与结构化返回
+
+将匹配的经验按以下 4 类分类：
+
+- **Context（上下文）**：需要加载的背景文档、服务概要
+- **Risk（风险）**：易错点、隐性约束、历史坑
+- **Service（服务）**：依赖的服务/模块建议
+- **Pattern（代码模式）**：代码规范、实现模式
+
+**返回格式**（结构化）：
+
+```json
+{
+  "context": {
+    "files": ["商品发放历史问题.md", "钱包服务技术总结.md"]
+  },
+  "risk": {
+    "alerts": [
+      {
+        "level": "high",
+        "message": "注意：历史上商品发放有钱包类型匹配问题",
+        "file": "apollo-config-quote-requirement.md"
+      },
+      {
+        "level": "medium",
+        "message": "Apollo 配置值必须用引号包裹",
+        "file": "apollo-config-quote-requirement.md"
+      }
+    ]
+  },
+  "service": {
+    "suggestions": ["商品服务", "钱包服务"]
+  },
+  "pattern": {
+    "files": ["error-handling.md", "validation-pattern.md"]
+  }
+}
+```
+
+### 4) 主动提醒（必须）
+
+将匹配结果**主动在对话中提醒用户**，格式：
+
+```markdown
+## 🔍 相关历史经验提醒
+
+### ⚠️ 高风险提醒
+- **钱包类型匹配问题**（`apollo-config-quote-requirement.md`）：历史上商品发放时选错钱包类型导致领取失败，请确认虚拟商品必须发到虚拟钱包，实物商品发到实物钱包。
+
+### 💡 背景文档建议
+- 商品发放历史问题：`ai/context/experience/product-distribution-issues.md`
+- 钱包服务技术总结：`ai/context/tech/services/wallet-service.md`
+
+### 🔗 相关服务
+- 商品服务
+- 钱包服务
+
+### 📋 代码模式
+- 错误处理模式：`ai/context/experience/error-handling.md`
+```
+
+## 加载策略（避免上下文爆炸）
+
+- **默认只加载匹配的经验文件摘要**（不完整加载全文）
+- **高优先级（Risk alerts）**：完整加载并主动提醒
+- **低优先级（Context/Pattern）**：只提醒文件路径，需要时再加载
+
+## 匹配优先级
+
+- **Level: high**：必须立即提醒，并加载完整经验
+- **Level: medium**：建议提醒，加载摘要
+- **Level: low**：仅提醒文件路径
+
+## 禁止事项
+
+- 不要在没有匹配经验时强行输出"无相关经验"
+- 不要加载不相关的经验（严格按 Trigger 匹配）
+- 不要重复提醒同一条经验（一次任务只提醒一次）

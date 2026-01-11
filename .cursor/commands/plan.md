@@ -8,6 +8,7 @@
 
 - `.cursor/rules/skill-index-manager.mdc`
 - `.cursor/rules/skill-context-engineering.mdc`
+- `.cursor/rules/skill-experience-index.mdc`（自动检索与加载历史经验）
 
 ## 使用方式
 
@@ -25,6 +26,7 @@
 ## 执行要点（入口 + 路由）
 
 - **输入**：读取 `ai/requirements/in-progress/<REQ-xxx>.md`（Requirement）
+- **经验检索（必须优先执行）**：调用 `skill-experience-index.mdc`，根据需求与计划模块自动检索匹配的技术经验，并主动提醒相关风险与代码模式
 - **计划结构**：创建/更新 `ai/requirements/in-progress/<REQ-xxx>.plan.md`，使用以下结构（可勾选、可执行、可复现验证）：
 
 ```markdown
@@ -33,29 +35,38 @@
 ## 目标回放（1-3 行）
 
 ## 交付物（Deliverables）
+
 - [ ] 代码变更：...
 - [ ] 文档变更：...
 - [ ] 验证记录：...
 
 ## 任务清单（Tasks）
+
 ### A. 准备与对齐
+
 - [ ] ...
 
 ### B. 后端
+
 - [ ] ...
 
 ### C. 前端
+
 - [ ] ...
 
 ### D. 数据/配置/外部系统（如有）
+
 - [ ] ...
 
 ## 文件清单（Files）
+
 - [ ] 新增：`...`
 - [ ] 修改：`...`
 
 ## 验证方式（Validation）
+
 > 允许多样化：测试/脚本/手工步骤。必须“可复现”。
+
 - **自动化**：
   - [ ] ...
 - **脚本**：
@@ -64,13 +75,16 @@
   - [ ] ...
 
 ## 风险与回滚（Risks & Rollback）
+
 - 风险：
 - 回滚策略：
 
 ## Open Questions
+
 - [ ] ...
 
 ## 执行记录（Worklog）
+
 - YYYY-MM-DD: 完成 xxx；验证方式：xxx；结果：PASS/FAIL（附简短原因）
 ```
 
@@ -83,4 +97,3 @@
 
 - 必须实际写入/更新文件
 - 最后用 3-6 行说明：计划文件路径、下一步建议 `/work <REQ-xxx>`
-

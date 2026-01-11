@@ -13,13 +13,19 @@ alwaysApply: true
 
 ## 工作流闭环（必须遵循）
 
-你必须使用以下 5 个命令，并将产物落盘到约定目录：
+你必须使用以下命令，并将产物落盘到约定目录：
+
+### 闭环命令（Plan → Work → Review → Compound）
 
 - `/req`：生成/更新 Requirement（写入 `ai/requirements/in-progress/` 并更新 `ai/requirements/INDEX.md`）
 - `/plan`：生成可执行计划（写入 `ai/requirements/in-progress/<REQ>.plan.md`）
 - `/work`：按计划实现（持续更新 plan 中任务勾选与验证记录）
 - `/review`：结构化审查并分级 TODO（写入 `ai/requirements/in-progress/<REQ>.review.md`）
 - `/compound`：沉淀复利资产（写入 `ai/context/` 并维护索引）
+
+### 即时沉淀命令（低摩擦）
+
+- `/remember`：刚解决一个问题/踩一个坑后，立即沉淀一条经验（写入 `ai/context/experience/`，无需 REQ-xxx）
 
 ## “技能型 rules”约定（用于模拟 Skill）
 
@@ -29,6 +35,7 @@ alwaysApply: true
 
 - `skill-index-manager.mdc`：索引与状态（SSoT）
 - `skill-experience-depositor.mdc`：Experience 沉淀与索引
+- `skill-experience-index.mdc`：经验自动检索与加载（在需求分析/方案设计/代码编写前自动匹配与提醒）
 - `skill-context-engineering.mdc`：最小高信号上下文原则
 
 ### 状态与索引（单一事实来源）
@@ -73,6 +80,24 @@ alwaysApply: true
 
 - 默认只加载与当前任务直接相关的少量 `ai/context/` 条目（宁少勿滥）
 - 当需要更多信息：先补“概要 + 指针”，再读代码细节
+
+### 经验自动加载机制（Experience Index）
+
+在执行 `/req`、`/plan`、`/work` 命令时，必须自动调用 `skill-experience-index.mdc`：
+
+1. **需求分析阶段**（`/req`）：根据需求描述匹配历史经验，主动提醒相关风险与背景文档
+2. **方案设计阶段**（`/plan`）：根据需求与计划模块匹配技术经验，提醒风险与代码模式
+3. **代码编写阶段**（`/work`）：根据当前任务与代码文件匹配代码模式与风险，主动提醒
+
+**匹配依据**：`ai/context/experience/INDEX.md` 中的 **Trigger (when to load)** 列。
+
+**返回结果**（结构化）：
+- **Context**：需要加载的背景文档
+- **Risk**：易错点、隐性约束（High/Medium/Low 分级）
+- **Service**：依赖的服务/模块建议
+- **Pattern**：代码规范、实现模式
+
+**主动提醒格式**：在对话中直接输出匹配的经验提醒（包括高风险警告、背景文档路径、相关服务、代码模式）。
 
 ## 复合工程（Compound Engineering）规则
 

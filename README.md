@@ -6,10 +6,12 @@
 
 ## 你能得到什么
 
-- **显式命令**：`/req`、`/plan`、`/work`、`/review`、`/compound`
+- **显式命令**：`/req`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
 - **产物落盘**：每一步输出写入固定目录，形成可交接、可回放、可复用的状态文件
 - **上下文工程**：只沉淀“最小高信号”上下文（概要 + 指针），避免文档膨胀
 - **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
+- **即时沉淀**：`/remember` 让你在解决问题当下立即沉淀经验，无需等 `/compound`
+- **经验自动加载**：在 `/req`、`/plan`、`/work` 执行前自动检索匹配的历史经验，主动提醒相关风险与背景文档（复刻原文的 experience-index Skill）
 
 ## 快速开始（建议路径）
 
@@ -70,12 +72,27 @@
 - `ai/context/experience/INDEX.md` -（按需）`ai/context/tech/services/<service-or-module>.md`
 - `ai/requirements/INDEX.md`（可将状态推进为 completed）
 
+### 6) 用 `/remember` 即时沉淀（可选，低摩擦）
+
+刚解决一个问题或踩到一个坑后，立即沉淀：
+
+```
+/remember <问题/坑的简要描述>
+```
+
+会生成/更新：
+
+- `ai/context/experience/<tag>-<title>.md`（一条经验文件）
+- `ai/context/experience/INDEX.md`
+
+**与 `/compound` 的区别**：`/remember` 不需要 REQ-xxx，适合即时沉淀单条经验；`/compound` 围绕一个 REQ 做系统性复利收尾。
+
 ## 目录结构（位置即语义）
 
 ```
 .
 ├── .cursor/
-│   ├── commands/                 # 显式命令：/req /plan /work /review /compound
+│   ├── commands/                 # 显式命令：/req /plan /work /review /compound /remember
 │   └── rules/                    # 工作流规则与编码规范（自动生效）
 ├── ai/
 │   ├── requirements/             # 需求产物（索引/进行中/已完成）
@@ -99,6 +116,7 @@
 
 本模板把可复用流程拆成 **skill rules**（模拟原文的 Skills）。Commands 只负责入口与路由，Skill rules 负责“如何落盘/如何约束/如何回写索引”：
 
-- `.cursor/rules/skill-index-manager.mdc`
-- `.cursor/rules/skill-experience-depositor.mdc`
-- `.cursor/rules/skill-context-engineering.mdc`
+- `.cursor/rules/skill-index-manager.mdc`：索引与状态（SSoT）
+- `.cursor/rules/skill-experience-depositor.mdc`：Experience 沉淀与索引
+- `.cursor/rules/skill-experience-index.mdc`：经验自动检索与加载（在需求分析/方案设计/代码编写前自动匹配与提醒）
+- `.cursor/rules/skill-context-engineering.mdc`：最小高信号上下文原则

@@ -8,6 +8,7 @@
 
 - `.cursor/rules/skill-plan-manager.mdc`（Worklog/验证方式/任务勾选）
 - `.cursor/rules/skill-context-engineering.mdc`
+- `.cursor/rules/skill-experience-index.mdc`（自动检索与加载历史经验）
 - `.cursor/rules/development-specifications.mdc`
 
 ## 使用方式
@@ -26,6 +27,7 @@
 ## 执行要点（入口 + 路由）
 
 - **输入**：读取 `ai/requirements/in-progress/<REQ-xxx>.plan.md`
+- **经验检索（代码编写前必须执行）**：调用 `skill-experience-index.mdc`，根据当前任务与代码文件自动检索匹配的代码模式与风险，并主动提醒
 - **执行节奏**：按 Tasks 顺序逐条推进；每完成一个可独立交付任务立刻做一次验证（测试/脚本/手工均可，但必须可复现）
 - **持续更新**：将任务勾选与验证结果写回 plan 的 Worklog（以 `skill-plan-manager.mdc` 为准）
 - **完成判断**：当 Deliverables 全部完成，进入 `/review <REQ-xxx>`
