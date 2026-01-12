@@ -1,0 +1,48 @@
+---
+name: compound
+description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突检测，写 experience 与索引；写入必须用户确认。
+---
+
+# Compound
+
+## When to Use
+
+- review 完成且用户确认进入 compound
+- 或 `/flow 沉淀 ...` 需要落盘候选经验时
+
+## Outputs (must write)
+
+- `ai/context/experience/<tag>-<title>.md`
+- `ai/context/experience/INDEX.md`
+- 更新：`ai/requirements/INDEX.md`
+- 按需：`ai/context/tech/services/<service-or-module>.md`
+
+## Instructions
+
+### 0) 先检查重复（强制）
+
+调用 skill `experience-index`，避免重复沉淀同类经验。
+
+### 1) 提取候选（优先顺序）
+
+1. plan 的 Compounding Candidates
+2. plan Worklog（返工/排查/关键决策/验证）
+3. review 的复利候选
+
+### 2) 写入必须确认
+
+未收到用户明确确认前，不得写入 `ai/context/experience/`。
+
+### 3) 冲突检测与落盘
+
+调用 skill `experience-depositor`：
+
+- 冲突 → deprecated 旧经验并记录替代关系
+- 重复 → 合并或提示用户选择
+
+### 4) 索引推进
+
+调用 skill `index-manager`：
+
+- 完成沉淀后可推进 Status = `completed`，Current Phase = `compound`
+

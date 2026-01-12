@@ -1,10 +1,12 @@
 # cursor-workflow
 
-一个可直接复刻"Plan → Work → Review → Compound"闭环的 **Cursor 项目模板仓库**：显式命令驱动、产物落盘、上下文工程与复合沉淀（复利）。
+一个可直接复刻 **Plan → Work → Review → Compound** 闭环的 Cursor 项目模板仓库：以 **单入口 `/flow`** 驱动状态机（可循环、可纠偏）、产物落盘、上下文工程与复合沉淀（复利）。
 
-> 核心理念（上下文工程 + 复合工程 + 工具隐形化/入口极简化）
+> 核心理念：上下文工程 + 复合工程 + 工具隐形化（入口极简，但“人工闸门”强控制）
 
 ## 安装到现有项目
+
+> **重要**：本工作流依赖 Cursor Nightly 的 Agent Skills 功能（仅 Nightly 渠道可用），详见 [Cursor Agent Skills](https://cursor.com/cn/docs/context/skills) 与 [Agent Skills](https://agentskills.io/home)。
 
 ### 方式 1：一键远程安装（推荐）
 
@@ -79,128 +81,65 @@ chmod +x install.sh
 
 安装完成后，检查以下文件是否存在：
 
-- `.cursor/commands/` (7 个命令文件)
-- `.cursor/rules/` (7 个规则文件)
+- `.cursor/commands/`（至少包含 `flow.md`）
+- `.cursor/rules/`（7 个规则文件）
+- `.cursor/hooks.json`（Hooks 配置：门控 + 候选沉淀确认）
+- `.cursor/skills/`（Agent Skills：Nightly）
 - `ai/requirements/INDEX.md`
 - `ai/context/experience/INDEX.md`
 
 ## 你能得到什么
 
-- **显式命令**：`/req`、`/audit`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
+- **单入口命令**：`/flow <REQ|描述>`（内部状态机路由 + 循环选项 + 人工闸门）
 - **产物落盘**：每一步输出写入固定目录，形成可交接、可回放、可复用的状态文件
 - **上下文工程**：只沉淀"最小高信号"上下文（概要 + 指针），避免文档膨胀
 - **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
-- **即时沉淀**：`/remember` 让你在解决问题当下立即沉淀经验，无需等 `/compound`
-- **经验自动加载**：在 `/req`、`/audit`、`/plan`、`/work`、`/review`、`/compound` 执行前自动检索匹配的历史经验，主动提醒相关风险与背景文档（experience-index）
+- **候选沉淀确认（Hooks）**：检测到“复利候选”后自动弹出确认（你确认后才会写入 `ai/context/experience/`）
+- **经验自动加载**：在 `/flow` 进入任一阶段前自动检索匹配历史经验（experience-index）
 - **结构化状态文件**：状态文件包含当前阶段、下一步动作、阻塞项等信息，便于 Subagent 快速理解状态
 - **阶段性笔记保存**：Work 阶段支持阶段性保存 checkpoint，避免上下文占满，支持长时间任务和跨会话恢复
 - **Context7 集成**：在 Plan 和 Work 阶段自动查询技术文档，确保实现的准确性和最佳实践
 
+> **输出质量如何保证？** `/flow` 不会把原先分散在各命令里的“高质量提示词/模板”丢掉：这些内容被保留在 `.cursor/commands/{req,audit,plan,work,review,compound}.md` 作为阶段 Playbook，`/flow` 进入对应阶段时必须遵循。
+
 ## 快速开始（建议路径）
 
-### 1) 用 `/req` 创建需求
+### 1) 用 `/flow` 创建或继续需求
 
 在 Cursor 中运行：
 
 ```
-/req <需求描述>
+/flow <需求描述>
 ```
 
-会生成/更新：
-
-- `ai/requirements/in-progress/REQ-xxx.md`
-- `ai/requirements/INDEX.md`
-
-### 2) 用 `/audit` 审查需求（建议执行）
-
-在进入 Plan 前，先审查 Requirement 的执行风险和不足之处：
+或者继续已有需求：
 
 ```
-/audit REQ-xxx
+/flow REQ-xxx
 ```
 
-会输出到对话中（不保存文档）：
+`/flow` 会在每一轮结束输出一个“循环选项菜单”（人工闸门），你可以反复 audit/plan/work/review，直到满意再推进。
 
-- 执行风险总结（技术/业务/执行三维度）
-- 需求完整性分析（缺失信息清单、信息模糊点）
-- 不足之处与改进建议
-- 总体评估（可执行性评分、是否可以开始 Plan）
+### 2) Hooks 自动发现候选沉淀（但写入必须确认）
 
-**如果发现阻塞性问题，建议先更新 Requirement（使用 `/req REQ-xxx`），再进入 Plan。**
+当系统在输出中检测到“复利候选（Compounding Candidates）”时，会自动弹出确认提示。
 
-### 3) 用 `/plan` 生成可执行计划
+你需要继续使用单入口 `/flow` 来确认：
 
 ```
-/plan REQ-xxx
+/flow 沉淀 1,3
+/flow 沉淀 全部
+/flow 忽略沉淀
 ```
-
-会生成/更新：
-
-- `ai/requirements/in-progress/REQ-xxx.plan.md`
-- `ai/requirements/INDEX.md`（状态更新）
-
-### 4) 用 `/work` 按计划实现并持续验证
-
-```
-/work REQ-xxx
-```
-
-会持续更新：
-
-- `ai/requirements/in-progress/REQ-xxx.plan.md`（勾选任务 + 验证记录）
-- `ai/context/session/<REQ-xxx>-checkpoint-{timestamp}.md`（阶段性保存，避免上下文占满）
-
-**特性**：
-
-- 支持阶段性保存 checkpoint，避免上下文占满
-- 支持跨会话恢复，下次执行 `/work REQ-xxx` 时自动加载最近的 checkpoint
-- 自动调用 Context7 查询技术文档，确保实现准确性
-
-### 5) 用 `/review` 分级审查并产出 TODO
-
-```
-/review REQ-xxx
-```
-
-会生成/更新：
-
-- `ai/requirements/in-progress/REQ-xxx.review.md`
-- `ai/requirements/INDEX.md`（状态更新）
-
-### 6) 用 `/compound` 做复利沉淀
-
-```
-/compound REQ-xxx
-```
-
-会生成/更新：
-
-- `ai/context/experience/<tag>-<title>.md`
-- `ai/context/experience/INDEX.md` -（按需）`ai/context/tech/services/<service-or-module>.md`
-- `ai/requirements/INDEX.md`（可将状态推进为 completed）
-
-### 7) 用 `/remember` 即时沉淀（可选，低摩擦）
-
-刚解决一个问题或踩到一个坑后，立即沉淀：
-
-```
-/remember <问题/坑的简要描述>
-```
-
-会生成/更新：
-
-- `ai/context/experience/<tag>-<title>.md`（一条经验文件）
-- `ai/context/experience/INDEX.md`
-
-**与 `/compound` 的区别**：`/remember` 不需要 REQ-xxx，适合即时沉淀单条经验；`/compound` 围绕一个 REQ 做系统性复利收尾。
 
 ## 目录结构（位置即语义）
 
 ```
 .
 ├── .cursor/
-│   ├── commands/                 # 显式命令：/req /audit /plan /work /review /compound /remember
-│   └── rules/                    # 工作流规则与编码规范（自动生效）
+│   ├── commands/                 # 单入口命令：/flow
+│   ├── rules/                    # 工作流规则与编码规范（自动生效）
+│   └── hooks.json                # Hooks：门控 + 候选沉淀确认
 ├── ai/
 │   ├── requirements/             # 需求产物（索引/进行中/已完成）
 │   │   ├── INDEX.md              # 状态索引（包含当前阶段、下一步动作、阻塞项）

@@ -1,7 +1,7 @@
 # Requirements Index
 
-> 约定：每个需求一个 ID（例如 `REQ-001`），并在此处维护最小索引。
+> SSoT：`ai/requirements/INDEX.md` 是需求状态的单一事实来源（SSoT）。
 
-| ID | Title | Status | Owner | Links |
-|---|---|---|---|---|
+| ID | Title | Status | Current Phase | Next Action | Blockers | Links |
+|---|---|---|---|---|---|---|
 

@@ -1,16 +1,5 @@
 ---
-description: Development Specifications and Coding Standards
-globs:
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/*.js"
-  - "**/*.jsx"
-  - "**/*.py"
-  - "**/*.go"
-  - "**/*.java"
-  - "**/*.kt"
-  - "**/*.rs"
-  - "**/*.md"
+description: "Development specifications and coding standards (keep it simple, type-safe, fail fast)."
 alwaysApply: true
 ---
 
@@ -81,9 +70,10 @@ alwaysApply: true
 ### 9. 命名约定 (Naming Conventions)
 
 - **文件命名**：
-  - React 组件：`PascalCase.tsx`（如 `UserProfile.tsx`）
-  - Hooks：`use-kebab-case.ts`（如 `use-auth.ts`）
-  - 工具函数：`kebab-case.ts`（如 `format-date.ts`）
+
+  - React 组件：`PascalCase.tsx`
+  - Hooks：`use-kebab-case.ts`
+  - 工具函数：`kebab-case.ts`
   - 类型定义：`kebab-case.types.ts`
 
 - **代码命名**：
@@ -91,9 +81,8 @@ alwaysApply: true
   - 函数/变量：`camelCase`
   - 常量：`UPPER_SNAKE_CASE`
   - Props 类型：`{ComponentName}Props`
-  - 事件处理器：`handle` 前缀（如 `handleClick`）
+  - 事件处理器：`handle` 前缀
 
 ---
 
-> 记住：简单、直接、安全。这三个词概括了我们所有的开发原则。
-
+> 记住：简单、直接、安全。
