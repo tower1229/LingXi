@@ -38,6 +38,10 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 
 - 读取 `INDEX.md` 中所有 `Status = active` 的经验
 - 识别本轮新增的经验（由 `experience-depositor` 传入）
+- 读取本轮新增经验文件内容，确保包含并可提取以下结构化字段：
+  - `Decision Shape`（Decision being made / Alternatives rejected / Discriminating signal）
+  - `Judgment Capsule`（I used to think / Now I believe / decisive variable）
+  - `Surface signal` / `Hidden risk`（来自 INDEX；若缺失则提示在后续补齐）
 
 ### 2) 合并/取代判断
 
@@ -48,8 +52,9 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 | 优先级 | 条件 | 动作 |
 |---|---|---|
 | 1 | **Tag 相同** | 必定合并/取代（新覆盖旧） |
-| 2 | **Trigger 关键词重叠 ≥ 60%** | 候选合并（同主题重复） |
-| 3 | **Title 语义高度相似** | 候选取代（新经验是旧经验升级版） |
+| 2 | **Decision being made 相同/高度相似** | 候选合并/取代（同一判断单元的升级/补全） |
+| 3 | **Trigger 关键词重叠 ≥ 60%** | 候选合并（同主题重复） |
+| 4 | **Title 语义高度相似** | 候选取代（新经验是旧经验升级版） |
 
 **关键词重叠计算**：
 ```
@@ -100,7 +105,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 
 ### 5) 输出质量准则建议（人工闸门）
 
-基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"：
+基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）：
 
 ```markdown
 ## 成长循环：质量准则建议（需人工采纳）
@@ -113,11 +118,18 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 | 1 | 涉及用户数据的变更必须有审计日志 | 红线/规则 | `.cursor/rules/` |
 | 2 | 跨服务调用应先检查超时配置 | 检查清单 | `.cursor/skills/` |
 | 3 | 数据库 DDL 变更需同步更新 ERD | 流程约束 | `.workflow/context/tech/quality-bar.md` |
+
+建议写法（建议本身应当是“判断结构”）：
+- Surface signal：...
+- Hidden risk：...
+- Decisive variable：...
+- Boundary（不适用条件）：...
 ```
 
 **建议提炼规则**：
 
-- 从经验的"根因"或"解决方案"中抽象出可复用的判断标准
+- 从新增经验的 `Judgment Capsule` 中抽象可复用的判断标准（I used to think → Now I believe → decisive variable）
+- 若 Capsule 缺失/质量差，优先提示“需要补齐 Decision Shape/Capsule”，不要强行输出泛化口号
 - 如果某类问题反复出现（Trigger 相似的经验 ≥ 2 条），优先建议升级为自动拦截
 - 建议必须标注"类型"和"落盘目标"，方便用户决策
 

@@ -2,14 +2,19 @@
 
 > **定位**：这是一个“技能优先（Skills-first）”的 Cursor 工作流模板仓库，用**单入口**命令 `/flow <REQ-xxx|描述>` 驱动需求全生命周期（req → plan → audit → work → review → compound），并通过 **人工闸门（human gates）** 与 **确认式沉淀（confirm-only compounding）** 保证过程可控、产物可追溯、经验可复利。
 
-## 1. 背景与理念来源
+## 1. 背景与设计理念
 
-- **理念来源**：`docs/ai-engineering-notes-from-speckit.md`（对“上下文工程 × 复合工程”的结构化提炼）
-- **关键差异**：本仓库不是直接照搬 speckit / spec-first 体系，而是基于 Cursor 的现实能力组合出一个可落地的工程系统：
-  - **Rules**：提供常驻约束（红线、规范、写作风格）
-  - **Commands**：提供极简入口（`/flow`），把复杂度隐藏在系统内部
-  - **Skills**：承载阶段 Playbook（高质量模板、检查清单、落盘规范）
-  - **Hooks**：提供自动门控、候选沉淀提醒、危险操作确认等自动化能力
+本仓库的设计核心是把 AI 辅助研发做成一套“可长期复用、越用越快”的工程系统，重点解决两类根问题：
+
+- **上下文工程（Context Engineering）**：在正确的时刻给到**最小高信号**信息（先指针后细节、分层加载、按需展开），避免上下文膨胀导致偏航。
+- **复合工程（Compounding Engineering）**：把执行过程中的“坑/隐性约束/排查结论/验证方法/决策理由”沉淀为系统资产，让后续同类工作边际成本下降。
+
+为让上述理念可落地，本仓库采用 Cursor 可用的能力组合出一个工程化闭环：
+
+- **Rules**：提供常驻约束（红线、规范、写作风格）
+- **Commands**：提供极简入口（`/flow`），把复杂度隐藏在系统内部
+- **Skills**：承载阶段 Playbook（高质量模板、检查清单、落盘规范）
+- **Hooks**：提供自动门控、候选沉淀提醒、危险操作确认等自动化能力
 
 ## 2. 目标与非目标
 
@@ -90,7 +95,7 @@ Hooks (.cursor/hooks + hooks.json)
 
 ## 4. 核心约束（护栏）
 
-来自 `AGENTS.md` 与 `.cursor/rules/workflow-core/RULE.md` 的硬约束：
+本工作流的硬约束：
 
 - **Single entrypoint**：只使用 `/flow <REQ-xxx|描述>` 驱动生命周期。
 - **Human gates**：任何阶段切换都不能静默自动推进；每轮必须输出菜单，等待用户选择。
@@ -131,16 +136,21 @@ Hooks (.cursor/hooks + hooks.json)
 
 `\.workflow/context/experience/INDEX.md` 用于“可检索、可治理、可谱系化”的经验库管理。
 
-当前表头（见 `REQ-001` 的实现决策）：
+经验索引表头建议如下：
 
 ```text
-| Tag | Title | Trigger (when to load) | Status | Scope | Strength | Replaces | ReplacedBy | File |
+| Tag | Title | Trigger (when to load) | Surface signal | Hidden risk | Status | Scope | Strength | Replaces | ReplacedBy | File |
 ```
 
 - **Status**：`active` / `deprecated`（禁止删除文件，只做 deprecated）
 - **Scope**：`narrow < medium < broad`
 - **Strength**：`hypothesis < validated < enforced`（enforced 通常意味着已转为自动拦截/规则化）
 - **Replaces / ReplacedBy**：经验谱系链（新 → 旧 / 旧 → 新）
+
+两类 Trigger 的分工：
+
+- **Trigger (when to load)**：偏工程检索（关键词/场景），用于在正确时刻加载
+- **Surface signal / Hidden risk**：偏认知触发（风险嗅觉），用于在相似“风险味道”出现时提醒警觉
 
 ### 5.4 Quality Bar（质量准则）
 
@@ -267,6 +277,12 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 - **Skill/流程升级**：重复执行的流程 → 优先固化为 skill
 - **长期上下文补齐**：考古类信息 → `.workflow/context/tech/services/` 或 `.workflow/context/business/`
 
+在写入 experience 之前，必须先做一个“成长过滤器”判断：
+
+- **一年后在完全不同项目**再遇到类似局面，这条信息还能否帮助我**提前做出正确判断**？
+  - 否 → 不进 experience（留在 session/worklog 作为项目记录）
+  - 是 → 进入 experience（长期判断资产）
+
 > 这体现了“文档不是终点，自动化与可执行资产优先”的复合工程思想。
 
 ### 8.3 成长循环（Experience Curator，自动执行）
@@ -279,6 +295,10 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
   - **取代链**：新经验覆盖旧经验 → 旧经验 `deprecated`，建立谱系关系（Replaces/ReplacedBy）
 - **输出治理报告**：动作/理由/影响/回滚方式
 - **输出质量准则建议（只建议）**：1-3 条，等待用户 `/flow 采纳质量准则` 或 `/flow 忽略质量准则`
+
+成长循环的“抽象上升”要求：
+
+- 质量准则建议应优先基于经验的 **Judgment Capsule**（I used to think → Now I believe → decisive variable）抽象，而不是复述案例/步骤
 
 ## 9. 安装与复刻（作为模板仓库）
 
@@ -295,31 +315,9 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 - 创建 `.workflow` 目录骨架并复制 `requirements/INDEX.md` 与 `experience/INDEX.md`
 - 更新 `.gitignore`（忽略 `.workflow/workspace/` 与 `.workflow/context/session/`）
 
-## 10. 已知不一致与改进建议（设计层面）
-
-### 10.1 安装脚本“下一步”提示与单入口一致性
-
-本仓库的硬约束是 **只使用 `/flow`**。为避免新用户被误导，安装脚本的“下一步”提示应统一为：
-
-- `运行 /flow <需求描述> 创建第一个需求`
-
-## 11. 扩展点（如何演进而不破坏体系）
+## 10. 扩展点（如何演进而不破坏体系）
 
 - **新增阶段能力**：优先新增/扩展 `.cursor/skills/*`，而不是增加新的命令入口。
 - **增强自动化拦截**：把高频错误从“经验”升级为 hook/lint/CI（Strength → enforced）。
 - **服务上下文建设**：当项目复杂度上升，优先补齐 `tech/services/*` 作为“考古资产”，并在 plan 阶段强制引用指针。
 - **经验治理策略**：合并/取代规则保持可解释、可回滚，避免引入不可控的黑盒聚类。
-
-## 12. 端到端示例（以 REQ-001 为参照）
-
-仓库内置了一个完成态样例（便于理解产物形态与闭环）：
-
-- `\.workflow/requirements/completed/REQ-001.md`
-- `\.workflow/requirements/completed/REQ-001.plan.md`
-- `\.workflow/requirements/completed/REQ-001.review.md`
-
-它展示了：
-
-- plan 如何记录设计决策、任务拆解、验证清单、工作日志
-- review 如何按验收标准做审查并给出推进建议
-- 最终如何归档到 completed 并在 INDEX 中标记 `Status=completed, Current Phase=compound`

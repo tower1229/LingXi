@@ -29,6 +29,17 @@ description: 将“过程中的坑/隐性约束/排查结论”沉淀到 .workfl
 
 输出要求：对每条候选给出“落点选择 + 理由 + 预期收益（下次如何变快/变稳）”。
 
+### 0.0) 成长过滤器（强制：决定进 session 还是进 experience）
+
+在决定“写入经验文档（长期）”之前，对每条候选先回答一个问题：
+
+> **如果我一年后在完全不同的项目里再遇到类似局面，这条信息还能帮我提前做出正确判断吗？**
+
+- 若答案是 **否**：不写入 experience，改为沉淀到 **session/worklog**（项目记录），并说明原因
+- 若答案是 **是**：允许写入 experience（长期判断资产）
+
+> 目的：避免 experience 退化为“事实堆叠/案例百科”，把长期资产留给“可迁移的判断结构”。
+
 ### 0.1) 成长循环（每次新增经验后自动触发）
 
 当本次沉淀**实际新增**了经验文件（写入 `.workflow/context/experience/`）后，必须**自动调用 `experience-curator` Skill**，传入本轮新增的经验 Tag 列表。
@@ -56,10 +67,31 @@ description: 将“过程中的坑/隐性约束/排查结论”沉淀到 .workfl
 - 校验方式（How to verify）
 - 关联指针（Pointers）
 
+#### 强制：把经验主语从【事】换成【判断】
+
+每条经验必须补齐以下两段（哪怕每段只写 3 行）：
+
+- **Decision Shape（判断结构）**
+  - Decision being made: 我当时在判断什么
+  - Alternatives rejected: 我拒绝了哪些备选方案（至少 1 个）
+  - Discriminating signal: 我靠什么可观测信号做出分叉
+- **Judgment Capsule（认知蒸馏）**
+  - I used to think:
+  - Now I believe:
+  - Because the decisive variable is:
+
+> 目的：确保经验一定能上升为“判断结构”，而不是仅成为“做过什么/怎么做”的文档。
+
 落盘：
 
 - `.workflow/context/experience/<tag>-<title>.md`
 - 更新 `.workflow/context/experience/INDEX.md`
+
+索引写入要求（与 INDEX 表头一致）：
+
+- `Trigger (when to load)`：用于工程检索（关键词/场景）
+- `Surface signal`：表层信号（让我应该警觉的味道）
+- `Hidden risk`：隐含风险（真正会炸的点）
 
 ### 冲突检测（必须）
 

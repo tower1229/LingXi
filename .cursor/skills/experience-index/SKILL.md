@@ -13,11 +13,12 @@ description: 在需求分析/方案设计/编码/审查/沉淀前，按 Trigger 
 
 1. 读取 `.workflow/context/experience/INDEX.md`
 2. 只匹配 Status = `active` 的经验（过滤 `deprecated`）
-3. 基于当前场景（需求描述/阶段/涉及模块）做关键词 + 语义匹配 Trigger
+3. 基于当前场景（需求描述/阶段/涉及模块）做关键词 + 语义匹配 Trigger（when to load）
 4. **优先返回高 Strength 经验**：`enforced` > `validated` > `hypothesis`
 5. **优先返回 broad Scope 经验**：`broad` > `medium` > `narrow`
 6. 结构化输出提醒（尽量精简）：
    - 高风险提醒（Level: high/medium/low）
+   - 认知触发器（Surface signal / Hidden risk）
    - 背景文档指针（文件路径）
    - 相关服务建议
    - 代码模式指针
@@ -29,7 +30,9 @@ description: 在需求分析/方案设计/编码/审查/沉淀前，按 Trigger 
 | ------------ | --------------------------------------- | -------------------------------------------------------------------------- |
 | `Tag`        | 唯一标识                                | 用于引用与检索                                                             |
 | `Title`      | 简短标题                                | 一句话描述经验                                                             |
-| `Trigger`    | 关键词/场景                             | 触发加载的条件                                                             |
+| `Trigger`    | 关键词/场景                             | 触发加载的条件（when to load，偏工程检索）                                 |
+| `Surface signal` | 句子 | 表层信号（我闻到熟悉风险味道的线索，偏认知触发） |
+| `Hidden risk` | 句子 | 隐含风险（真正会出问题的点，偏认知触发） |
 | `Status`     | `active` / `deprecated`                 | active=可用，deprecated=已被合并或取代                                     |
 | `Scope`      | `narrow` / `medium` / `broad`           | 经验适用范围：narrow=单一场景，medium=同类问题，broad=跨场景通用           |
 | `Strength`   | `hypothesis` / `validated` / `enforced` | 经验强度：hypothesis=首次总结，validated=多次验证，enforced=已转为自动拦截 |
