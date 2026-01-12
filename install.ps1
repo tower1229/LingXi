@@ -88,16 +88,13 @@ if ($CursorExists -or $WorkflowExists) {
 Write-Info "创建 .cursor 目录结构..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
 # 下载 commands
 Write-Info "下载 commands..."
 $Commands = @(
-    "commands/req.md",
-    "commands/audit.md",
-    "commands/plan.md",
-    "commands/work.md",
-    "commands/review.md",
-    "commands/compound.md",
+    "commands/flow.md",
     "commands/remember.md"
 )
 
@@ -108,7 +105,7 @@ foreach ($cmd in $Commands) {
         exit 1
     }
 }
-Write-Success "已下载 commands (7 个文件)"
+Write-Success "已下载 commands (2 个文件)"
 
 # 下载 rules
 Write-Info "下载 rules..."
@@ -127,6 +124,53 @@ foreach ($rule in $Rules) {
     }
 }
 Write-Success "已下载 rules (4 个文件)"
+
+# 下载 hooks（hooks.json + scripts）
+Write-Info "下载 hooks..."
+$HookFiles = @(
+    "hooks.json",
+    "hooks/_hook-utils.mjs",
+    "hooks/after-agent-response.mjs",
+    "hooks/audit-after-shell-execution.mjs",
+    "hooks/before-shell-execution.mjs",
+    "hooks/before-submit-prompt.mjs",
+    "hooks/stop.mjs"
+)
+
+foreach ($f in $HookFiles) {
+    $localFile = ".cursor\$f"
+    if (-not (Download-File ".cursor\$f" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+}
+Write-Success "已下载 hooks (hooks.json + 6 个脚本)"
+
+# 下载 skills
+Write-Info "下载 skills..."
+$Skills = @(
+    "skills/audit/SKILL.md",
+    "skills/compound/SKILL.md",
+    "skills/context-engineering/SKILL.md",
+    "skills/experience-depositor/SKILL.md",
+    "skills/experience-index/SKILL.md",
+    "skills/flow-router/SKILL.md",
+    "skills/index-manager/SKILL.md",
+    "skills/plan/SKILL.md",
+    "skills/plan-manager/SKILL.md",
+    "skills/req/SKILL.md",
+    "skills/review/SKILL.md",
+    "skills/work/SKILL.md"
+)
+
+foreach ($s in $Skills) {
+    $localFile = ".cursor\$s"
+    if (-not (Download-File ".cursor\$s" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+}
+Write-Success "已下载 skills (12 个)"
 
 # 创建 .workflow 目录结构
 Write-Info "创建 .workflow 目录结构..."

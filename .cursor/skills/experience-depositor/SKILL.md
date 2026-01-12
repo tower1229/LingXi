@@ -18,6 +18,17 @@ description: 将“过程中的坑/隐性约束/排查结论”沉淀到 .workfl
 2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 Compounding Candidates
 3. plan Worklog / review 复利候选（必要时）
 
+### 0) 沉淀分流（多落点，优先复利最大化）
+
+对每条候选先判断应沉淀到哪里（可多选，但默认只选 ROI 最高的一个）：
+
+- **经验文档（默认）**：写入 `.workflow/context/experience/`（适合“容易忘、下次会遇到、需要提醒/指针”的知识）
+- **规则/自动拦截**：如果可以自动判定且高频，优先沉淀为 hook/lint/CI（把人工检查前移）
+- **Skill/流程升级**：如果是可复用流程或重复步骤，优先沉淀为新 skill 或扩展现有 skill（降低决策疲劳）
+- **长期上下文补齐**：如果属于“考古/服务边界/配置规范”，优先补齐 `.workflow/context/tech/services/` 或 `.workflow/context/business/`
+
+输出要求：对每条候选给出“落点选择 + 理由 + 预期收益（下次如何变快/变稳）”。
+
 ### 经验模板（必须包含）
 
 - 触发条件（When to load）

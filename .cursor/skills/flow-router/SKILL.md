@@ -40,6 +40,10 @@ description: /flow 单入口路由与人工闸门（req→audit→plan→work→
 - 调用 skill `experience-index` 输出匹配的历史经验提醒（最小高信号）
 - 必要时调用 skill `index-manager` 做 Fail Fast 的索引一致性检查
 
+按需（强烈推荐在存量/多服务项目）：
+
+- 调用 skill `service-loader` 生成/补齐服务上下文（`.workflow/context/tech/services/`），用于降低“考古成本”
+
 ### 人工闸门（必须）
 
 每一轮结束都必须输出一个菜单，让用户选择下一步（不能自动推进）：

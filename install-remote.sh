@@ -93,16 +93,13 @@ download_file() {
 info "创建 .cursor 目录结构..."
 mkdir -p .cursor/commands
 mkdir -p .cursor/rules
+mkdir -p .cursor/skills
+mkdir -p .cursor/hooks
 
 # 下载 commands 文件
 info "下载 commands..."
 COMMANDS=(
-    "commands/req.md"
-    "commands/audit.md"
-    "commands/plan.md"
-    "commands/work.md"
-    "commands/review.md"
-    "commands/compound.md"
+    "commands/flow.md"
     "commands/remember.md"
 )
 
@@ -113,7 +110,7 @@ for cmd in "${COMMANDS[@]}"; do
         exit 1
     fi
 done
-success "已下载 commands (7 个文件)"
+success "已下载 commands (2 个文件)"
 
 # 下载 rules 文件
 info "下载 rules..."
@@ -132,6 +129,53 @@ for rule in "${RULES[@]}"; do
     fi
 done
 success "已下载 rules (4 个文件)"
+
+# 下载 hooks 配置与脚本
+info "下载 hooks..."
+HOOK_FILES=(
+    "hooks.json"
+    "hooks/_hook-utils.mjs"
+    "hooks/after-agent-response.mjs"
+    "hooks/audit-after-shell-execution.mjs"
+    "hooks/before-shell-execution.mjs"
+    "hooks/before-submit-prompt.mjs"
+    "hooks/stop.mjs"
+)
+
+for f in "${HOOK_FILES[@]}"; do
+    local_file=".cursor/${f}"
+    if ! download_file ".cursor/${f}" "$local_file"; then
+        error "安装失败"
+        exit 1
+    fi
+done
+success "已下载 hooks (hooks.json + 6 个脚本)"
+
+# 下载 skills
+info "下载 skills..."
+SKILLS=(
+    "skills/audit/SKILL.md"
+    "skills/compound/SKILL.md"
+    "skills/context-engineering/SKILL.md"
+    "skills/experience-depositor/SKILL.md"
+    "skills/experience-index/SKILL.md"
+    "skills/flow-router/SKILL.md"
+    "skills/index-manager/SKILL.md"
+    "skills/plan/SKILL.md"
+    "skills/plan-manager/SKILL.md"
+    "skills/req/SKILL.md"
+    "skills/review/SKILL.md"
+    "skills/work/SKILL.md"
+)
+
+for s in "${SKILLS[@]}"; do
+    local_file=".cursor/${s}"
+    if ! download_file ".cursor/${s}" "$local_file"; then
+        error "安装失败"
+        exit 1
+    fi
+done
+success "已下载 skills (12 个)"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."

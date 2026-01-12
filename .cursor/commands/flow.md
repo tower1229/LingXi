@@ -77,9 +77,12 @@
 - 如果用户选择 **忽略沉淀**：删除该暂存文件并输出“已忽略”
 - 如果用户选择 **沉淀**：
   - 按序处理选中的候选（1-based index）
-  - 对每条候选，执行“即时沉淀”：
-    - 从对话历史与候选描述中提取 Trigger / Symptom / Root cause / Fix / How to verify / Pointers
-    - 按 skill `experience-depositor` 落盘经验文件并更新 `.workflow/context/experience/INDEX.md`
+  - 对每条候选，先做“沉淀分流”（多落点，目标是复利最大化）：
+    - **A. 经验文档**（默认）：按 skill `experience-depositor` 落盘到 `.workflow/context/experience/`
+    - **B. 自动拦截**：如果是高频且可自动判定的问题，优先沉淀为 hook/lint/CI（例如敏感信息、危险命令、格式/约定检查）
+    - **C. Skill/流程升级**：如果是可复用流程或反复出现的步骤，优先沉淀为 skill（执行层）或扩展已有 skill
+    - **D. 长期上下文补齐**：如果是“考古信息/服务边界/配置规范”，优先补齐 `.workflow/context/tech/services/` 或 `.workflow/context/business/`
+  - 对每条候选，输出“推荐沉淀落点 + 理由 + 预期复利”，再执行具体落盘（仍然必须在用户确认的前提下）
   - 全部完成后删除暂存文件
 
 **输出**：只需简短说明“沉淀了几条，文件路径在哪，下次触发条件是什么”。

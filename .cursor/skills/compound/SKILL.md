@@ -40,6 +40,8 @@ description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突�
 - 冲突 → deprecated 旧经验并记录替代关系
 - 重复 → 合并或提示用户选择
 
+> 提醒：沉淀不应只局限于“写经验文档”。对高频可自动判定的问题，优先沉淀为 hook/lint/CI；对重复流程，优先沉淀为 skill（或扩展现有 skill）；对“考古信息”，优先补齐 `.workflow/context/tech/services/` / `.workflow/context/business/`。
+
 ### 4) 索引推进
 
 调用 skill `index-manager`：

@@ -117,16 +117,29 @@ async function main() {
         info('创建 .cursor 目录结构...');
         fs.mkdirSync('.cursor/commands', { recursive: true });
         fs.mkdirSync('.cursor/rules', { recursive: true });
+        fs.mkdirSync('.cursor/skills', { recursive: true });
+        fs.mkdirSync('.cursor/hooks', { recursive: true });
 
         // 复制 commands
         info('复制 commands...');
         copyDir(path.join(scriptDir, '.cursor/commands'), '.cursor/commands');
-        success('已复制 commands (7 个文件)');
+        success('已复制 commands (2 个文件)');
 
         // 复制 rules
         info('复制 rules...');
         copyDir(path.join(scriptDir, '.cursor/rules'), '.cursor/rules');
         success('已复制 rules (4 个文件)');
+
+        // 复制 skills
+        info('复制 skills...');
+        copyDir(path.join(scriptDir, '.cursor/skills'), '.cursor/skills');
+        success('已复制 skills');
+
+        // 复制 hooks（hooks.json + scripts）
+        info('复制 hooks...');
+        copyDir(path.join(scriptDir, '.cursor/hooks'), '.cursor/hooks');
+        fs.copyFileSync(path.join(scriptDir, '.cursor/hooks.json'), '.cursor/hooks.json');
+        success('已复制 hooks');
 
         // 创建 .workflow 目录结构
         info('创建 .workflow 目录结构...');

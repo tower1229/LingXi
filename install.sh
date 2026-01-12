@@ -78,16 +78,29 @@ fi
 info "创建 .cursor 目录结构..."
 mkdir -p .cursor/commands
 mkdir -p .cursor/rules
+mkdir -p .cursor/skills
+mkdir -p .cursor/hooks
 
 # 复制 commands
 info "复制 commands..."
 cp -r "$SCRIPT_DIR/.cursor/commands/"* .cursor/commands/
-success "已复制 commands (7 个文件)"
+success "已复制 commands (2 个文件)"
 
 # 复制 rules
 info "复制 rules..."
 cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
 success "已复制 rules (4 个文件)"
+
+# 复制 skills
+info "复制 skills..."
+cp -r "$SCRIPT_DIR/.cursor/skills/"* .cursor/skills/
+success "已复制 skills"
+
+# 复制 hooks（hooks.json + scripts）
+info "复制 hooks..."
+cp -r "$SCRIPT_DIR/.cursor/hooks/"* .cursor/hooks/
+cp "$SCRIPT_DIR/.cursor/hooks.json" .cursor/hooks.json
+success "已复制 hooks"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."

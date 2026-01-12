@@ -24,6 +24,13 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 - `.workflow/requirements/in-progress/REQ-xxx.md`
 
+### 1.1) （可选但推荐）补齐服务上下文
+
+如果该需求涉及存量系统/多服务协作，先调用 skill `service-loader`：
+
+- 生成/更新 `.workflow/context/tech/services/<service>.md`
+- 只写“概要 + 指针 + 常见坑”，避免长文档膨胀
+
 ### 2) plan 模板（必须可勾选、可复现验证）
 
 ```markdown
