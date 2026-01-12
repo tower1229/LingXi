@@ -82,7 +82,7 @@ Hooks (.cursor/hooks + hooks.json)
   context/
     experience/          # 长期经验库 + INDEX（confirm-only）
     tech/services/       # 服务/模块上下文（“考古资产”）
-    tech/quality-bar.md  # 技术审美/质量标准（人工采纳后写入）
+    tech/quality-bar.md  # 质量准则（人工采纳后写入）
     business/            # 业务边界/协作上下文（可选）
     session/             # 会话暂存（checkpoint、pending candidates）
   workspace/             # 临时工作区（默认 gitignore）
@@ -95,7 +95,7 @@ Hooks (.cursor/hooks + hooks.json)
 - **Single entrypoint**：只使用 `/flow <REQ-xxx|描述>` 驱动生命周期。
 - **Human gates**：任何阶段切换都不能静默自动推进；每轮必须输出菜单，等待用户选择。
 - **Confirm-only compounding**：未收到 `/flow 沉淀 ...` 明确确认前，不得写入 `.workflow/context/experience/`。
-- **审美采纳也需确认**：未收到 `/flow 采纳审美 ...` 明确确认前，不得写入 rules/skills/quality-bar。
+- **质量准则采纳也需确认**：未收到 `/flow 采纳质量准则 ...` 明确确认前，不得写入 rules/skills/quality-bar。
 
 ## 5. 关键状态与产物模型
 
@@ -142,12 +142,12 @@ Hooks (.cursor/hooks + hooks.json)
 - **Strength**：`hypothesis < validated < enforced`（enforced 通常意味着已转为自动拦截/规则化）
 - **Replaces / ReplacedBy**：经验谱系链（新 → 旧 / 旧 → 新）
 
-### 5.4 Quality Bar（技术审美/质量标准）
+### 5.4 Quality Bar（质量准则）
 
-`\.workflow/context/tech/quality-bar.md` 是“从经验中蒸馏出来、团队共识采纳后”的质量门槛。
+`\.workflow/context/tech/quality-bar.md` 是“从经验中蒸馏出来、团队共识采纳后”的质量门槛（质量准则）。
 
-- **写入方式**：只能通过 `/flow 采纳审美 <序号>` 落盘
-- **目的**：把“审美建议”从一次性对话，升级为长期、可执行的质量约束
+- **写入方式**：只能通过 `/flow 采纳质量准则 <序号>` 落盘
+- **目的**：把“质量准则建议”从一次性对话，升级为长期、可执行的质量约束
 
 ## 6. /flow 的状态机与推进协议
 
@@ -158,7 +158,7 @@ Hooks (.cursor/hooks + hooks.json)
 - **创建新需求**：`/flow <需求描述>` → 进入 `req`
 - **继续既有需求**：`/flow REQ-xxx` → 读取 SSoT / plan 状态决定阶段
 - **确认沉淀**：`/flow 沉淀 1,3` / `/flow 沉淀 全部` / `/flow 忽略沉淀`
-- **采纳审美**：`/flow 采纳审美 1,3` / `/flow 忽略审美`
+- **采纳质量准则**：`/flow 采纳质量准则 1,3` / `/flow 忽略质量准则`
 
 ### 6.2 状态来源优先级（flow-router）
 
@@ -278,7 +278,7 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
   - **合并组**：Trigger 关键词重叠 ≥ 60%（或 Tag 相同等高优先规则）
   - **取代链**：新经验覆盖旧经验 → 旧经验 `deprecated`，建立谱系关系（Replaces/ReplacedBy）
 - **输出治理报告**：动作/理由/影响/回滚方式
-- **输出审美建议（只建议）**：1-3 条，等待用户 `/flow 采纳审美` 或 `/flow 忽略审美`
+- **输出质量准则建议（只建议）**：1-3 条，等待用户 `/flow 采纳质量准则` 或 `/flow 忽略质量准则`
 
 ## 9. 安装与复刻（作为模板仓库）
 
@@ -299,7 +299,7 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 ### 10.1 安装脚本“下一步”提示与单入口一致性
 
-本仓库的硬约束是 **只使用 `/flow**`。为避免新用户被误导，安装脚本的“下一步”提示应统一为：
+本仓库的硬约束是 **只使用 `/flow`**。为避免新用户被误导，安装脚本的“下一步”提示应统一为：
 
 - `运行 /flow <需求描述> 创建第一个需求`
 

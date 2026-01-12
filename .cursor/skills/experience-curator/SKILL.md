@@ -1,6 +1,6 @@
 ---
 name: experience-curator
-description: 经验成长循环核心：自动执行合并/取代治理，输出变更报告与审美建议。每次新经验沉淀后由 experience-depositor 自动调用。
+description: 经验成长循环核心：自动执行合并/取代治理，输出变更报告与质量准则建议。每次新经验沉淀后由 experience-depositor 自动调用。
 ---
 
 # Experience Curator
@@ -20,7 +20,7 @@ description: 经验成长循环核心：自动执行合并/取代治理，输出
 - 更新后的 `INDEX.md`（合并/取代后的索引）
 - `INDEX.md.bak`（执行前备份，用于回滚）
 - 变更报告（输出到对话）
-- 技术审美/直觉建议（输出到对话，等待用户采纳）
+- 质量准则建议（输出到对话，等待用户采纳）
 
 ---
 
@@ -98,15 +98,15 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 \`\`\`
 ```
 
-### 5) 输出技术审美/直觉建议（人工闸门）
+### 5) 输出质量准则建议（人工闸门）
 
-基于本轮沉淀的经验，提炼 1-3 条"技术审美/直觉建议"：
+基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"：
 
 ```markdown
-## 成长循环：审美建议（需人工采纳）
+## 成长循环：质量准则建议（需人工采纳）
 
 以下建议从近期沉淀中提炼，可升级为 rules/skills/quality-bar。
-请使用 `/flow 采纳审美 <序号>` 采纳，或 `/flow 忽略审美` 跳过。
+请使用 `/flow 采纳质量准则 <序号>` 采纳，或 `/flow 忽略质量准则` 跳过。
 
 | # | 建议 | 类型 | 落盘目标 |
 |---|---|---|---|
@@ -126,5 +126,5 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 ## 禁止
 
 - 删除任何经验文件（只做 `deprecated` 标记）
-- 自动落盘审美建议（必须等用户 `/flow 采纳审美`）
+- 自动落盘质量准则建议（必须等用户 `/flow 采纳质量准则`）
 - 在没有备份的情况下修改 INDEX

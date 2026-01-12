@@ -141,13 +141,13 @@ chmod +x install.sh
 - 识别候选取代链（新经验覆盖旧经验）→ 旧经验标记 `deprecated`，建立追溯链
 - 输出变更报告（动作/理由/影响/回滚方式）
 
-**技术审美建议（人工采纳）**：
-- 从新经验中提炼 1-3 条"质量判断/风险偏好/工程标准"建议
+**质量准则建议（人工采纳）**：
+- 从新经验中提炼 1-3 条"质量判断/风险偏好/工程标准"（质量准则）建议
 - 你决定是否采纳（可升级为 rules/skills/quality-bar）
 
 ```
-/flow 采纳审美 1,3
-/flow 忽略审美
+/flow 采纳质量准则 1,3
+/flow 忽略质量准则
 ```
 
 ## 目录结构（位置即语义）
@@ -184,5 +184,5 @@ chmod +x install.sh
 - `index-manager`（`.cursor/skills/index-manager/SKILL.md`）：索引与状态（SSoT）
 - `experience-depositor`（`.cursor/skills/experience-depositor/SKILL.md`）：Experience 沉淀与索引
 - `experience-index`（`.cursor/skills/experience-index/SKILL.md`）：经验自动检索与加载（在需求分析/方案设计/代码编写前自动匹配与提醒）
-- `experience-curator`（`.cursor/skills/experience-curator/SKILL.md`）：经验成长循环（合并/取代治理 + 审美建议）
+- `experience-curator`（`.cursor/skills/experience-curator/SKILL.md`）：经验成长循环（合并/取代治理 + 质量准则建议）
 - `context-engineering`（`.cursor/skills/context-engineering/SKILL.md`）：最小高信号上下文原则
