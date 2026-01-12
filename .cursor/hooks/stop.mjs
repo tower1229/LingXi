@@ -2,10 +2,79 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import {
+  fileExists,
   getProjectRootFromHookScriptUrl,
   readStdinJson,
   writeStdoutJson,
 } from "./_hook-utils.mjs";
+
+function parseIndexRow(line) {
+  // markdown table row: | a | b | c |
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("|")) return null;
+  const parts = trimmed.split("|").slice(1, -1).map((s) => s.trim());
+  if (parts.length < 7) return null;
+  const [id, title, status, currentPhase, nextAction, blockers, links] = parts;
+  if (!/^REQ-\d{3,}$/.test(id)) return null;
+  return { id, title, status, currentPhase, nextAction, blockers, links, parts };
+}
+
+async function archiveCompletedRequirements(projectRoot) {
+  const indexPath = path.join(projectRoot, ".workflow/requirements/INDEX.md");
+  let raw;
+  try {
+    raw = await fs.readFile(indexPath, "utf8");
+  } catch {
+    return;
+  }
+
+  const inProgressDir = path.join(projectRoot, ".workflow/requirements/in-progress");
+  const completedDir = path.join(projectRoot, ".workflow/requirements/completed");
+  await fs.mkdir(completedDir, { recursive: true });
+
+  const lines = raw.split(/\r?\n/);
+  let changed = false;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const row = parseIndexRow(lines[i]);
+    if (!row) continue;
+    if (row.status !== "completed") continue;
+
+    // Move artifacts if they still live in in-progress/
+    const artifacts = [`${row.id}.md`, `${row.id}.plan.md`, `${row.id}.review.md`];
+    for (const filename of artifacts) {
+      const src = path.join(inProgressDir, filename);
+      const dst = path.join(completedDir, filename);
+      if (await fileExists(src)) {
+        // If dst already exists, keep it (avoid accidental overwrite).
+        if (!(await fileExists(dst))) {
+          await fs.rename(src, dst);
+        }
+      }
+    }
+
+    // Keep INDEX links consistent with archived location.
+    const linksUpdated = row.links
+      .replaceAll(
+        `.workflow/requirements/in-progress/${row.id}`,
+        `.workflow/requirements/completed/${row.id}`,
+      )
+      .replaceAll(
+        `.workflow\\requirements\\in-progress\\${row.id}`,
+        `.workflow\\requirements\\completed\\${row.id}`,
+      );
+
+    if (linksUpdated !== row.links) {
+      row.parts[6] = linksUpdated;
+      lines[i] = `| ${row.parts.join(" | ")} |`;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await fs.writeFile(indexPath, lines.join("\n"), "utf8");
+  }
+}
 
 async function readPendingCandidates(projectRoot) {
   const pendingFile = path.join(
@@ -23,7 +92,7 @@ async function readPendingCandidates(projectRoot) {
 function buildFollowupMessage(candidates) {
   const lines = candidates.map((c, i) => `${i + 1}. ${c.summary}`);
   return [
-    "检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.workflow/context/experience/）。",
+    '检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.workflow/context/experience/）。',
     "",
     "候选列表：",
     ...lines,
@@ -48,6 +117,14 @@ async function main() {
   if (loopCount >= 5) return;
 
   const projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
+
+  // Housekeeping：将已完成的 REQ 归档到 completed/，并同步修正 INDEX Links
+  try {
+    await archiveCompletedRequirements(projectRoot);
+  } catch {
+    // 不影响主流程
+  }
+
   const pending = await readPendingCandidates(projectRoot);
   if (!pending) return;
 

@@ -61,18 +61,28 @@ async function main() {
   const projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
   const reqId = extractReqId(trimmed);
   if (reqId) {
-    const requirementPath = path.join(
+    const inProgressRequirementPath = path.join(
       projectRoot,
       ".workflow/requirements/in-progress",
       `${reqId}.md`,
     );
+    const completedRequirementPath = path.join(
+      projectRoot,
+      ".workflow/requirements/completed",
+      `${reqId}.md`,
+    );
 
     // Fail Fast：如果用户明确指定了 REQ，但本地不存在，就先拦住，避免“空转”
-    if (!(await fileExists(requirementPath))) {
+    if (
+      !(await fileExists(inProgressRequirementPath)) &&
+      !(await fileExists(completedRequirementPath))
+    ) {
       writeStdoutJson({
         continue: false,
         user_message:
-          `未找到 Requirement：${path.relative(projectRoot, requirementPath)}。\n` +
+          `未找到 Requirement：\n` +
+          `- ${path.relative(projectRoot, inProgressRequirementPath)}\n` +
+          `- ${path.relative(projectRoot, completedRequirementPath)}\n` +
           "如果你是要创建新需求，请用：/flow <需求描述>（不要只给 REQ）。\n" +
           "如果你是要继续已有需求，请先确保对应文件存在（或把 REQ 写回到 .workflow/requirements/INDEX.md 后再试）。",
       });

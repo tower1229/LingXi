@@ -47,9 +47,12 @@
 
 ## 产物（必须落盘）
 
-- `.workflow/requirements/in-progress/<REQ-xxx>.md`（Requirement）
-- `.workflow/requirements/in-progress/<REQ-xxx>.plan.md`（Plan / 执行账本）
-- `.workflow/requirements/in-progress/<REQ-xxx>.review.md`（Review）
+- `.workflow/requirements/in-progress/<REQ-xxx>.md`（Requirement，进行中）
+- `.workflow/requirements/in-progress/<REQ-xxx>.plan.md`（Plan / 执行账本，进行中）
+- `.workflow/requirements/in-progress/<REQ-xxx>.review.md`（Review，进行中）
+- `.workflow/requirements/completed/<REQ-xxx>.md`（Requirement，已完成归档）
+- `.workflow/requirements/completed/<REQ-xxx>.plan.md`（Plan，已完成归档）
+- `.workflow/requirements/completed/<REQ-xxx>.review.md`（Review，已完成归档）
 - `.workflow/requirements/INDEX.md`（SSoT）
 - `.workflow/context/experience/*`（经验沉淀，需用户确认）
 - `.workflow/context/session/*`（checkpoint / 会话临时）
@@ -129,7 +132,7 @@
 **状态来源**（优先级从高到低）：
 
 1. `.workflow/requirements/INDEX.md` 中该 REQ 的 `Current Phase` / `Status` / `Next Action`
-2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
+2. `.workflow/requirements/(in-progress|completed)/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
 3. 文件存在性推断（是否有 requirement/plan/review）
 
 **阶段行为**（简述）：

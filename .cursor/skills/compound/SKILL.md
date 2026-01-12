@@ -48,3 +48,8 @@ description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突�
 
 - 完成沉淀后可推进 Status = `completed`，Current Phase = `compound`
 
+完成归档（建议自动化/强一致）：
+
+- 当索引被推进到 `completed` 后，将该 REQ 的三件套（`.md/.plan.md/.review.md`）从 `requirements/in-progress/` 归档移动到 `requirements/completed/`
+- 同步更新 `.workflow/requirements/INDEX.md` 的 `Links` 指向 `completed/`
+
