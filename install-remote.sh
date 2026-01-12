@@ -98,7 +98,7 @@ mkdir -p .cursor/rules
 info "下载 commands..."
 COMMANDS=(
     "commands/req.md"
-    "commands/review-req.md"
+    "commands/audit.md"
     "commands/plan.md"
     "commands/work.md"
     "commands/review.md"

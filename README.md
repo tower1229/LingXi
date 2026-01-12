@@ -86,7 +86,7 @@ chmod +x install.sh
 
 ## 你能得到什么
 
-- **显式命令**：`/req`、`/review-req`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
+- **显式命令**：`/req`、`/audit`、`/plan`、`/work`、`/review`、`/compound`、`/remember`
 - **产物落盘**：每一步输出写入固定目录，形成可交接、可回放、可复用的状态文件
 - **上下文工程**：只沉淀"最小高信号"上下文（概要 + 指针），避免文档膨胀
 - **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
@@ -111,12 +111,12 @@ chmod +x install.sh
 - `ai/requirements/in-progress/REQ-xxx.md`
 - `ai/requirements/INDEX.md`
 
-### 2) 用 `/review-req` 审查需求（建议执行）
+### 2) 用 `/audit` 审查需求（建议执行）
 
 在进入 Plan 前，先审查 Requirement 的执行风险和不足之处：
 
 ```
-/review-req REQ-xxx
+/audit REQ-xxx
 ```
 
 会输出到对话中（不保存文档）：
@@ -199,7 +199,7 @@ chmod +x install.sh
 ```
 .
 ├── .cursor/
-│   ├── commands/                 # 显式命令：/req /review-req /plan /work /review /compound /remember
+│   ├── commands/                 # 显式命令：/req /audit /plan /work /review /compound /remember
 │   └── rules/                    # 工作流规则与编码规范（自动生效）
 ├── ai/
 │   ├── requirements/             # 需求产物（索引/进行中/已完成）

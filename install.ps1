@@ -93,7 +93,7 @@ New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 Write-Info "下载 commands..."
 $Commands = @(
     "commands/req.md",
-    "commands/review-req.md",
+    "commands/audit.md",
     "commands/plan.md",
     "commands/work.md",
     "commands/review.md",
