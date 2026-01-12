@@ -254,8 +254,9 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 1. hooks 自动抽取候选 → 写入 session 暂存
 2. stop hook 在对话结束 followup 询问用户是否沉淀
 3. 用户明确回复：
-  - `/flow 沉淀 1,3` 或 `/flow 沉淀 全部`：进入沉淀执行
-  - `/flow 忽略沉淀`：清空候选并结束
+
+- `/flow 沉淀 1,3` 或 `/flow 沉淀 全部`：进入沉淀执行
+- `/flow 忽略沉淀`：清空候选并结束
 
 ### 8.2 沉淀分流（Experience Depositor）
 
@@ -322,4 +323,3 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 - plan 如何记录设计决策、任务拆解、验证清单、工作日志
 - review 如何按验收标准做审查并给出推进建议
 - 最终如何归档到 completed 并在 INDEX 中标记 `Status=completed, Current Phase=compound`
-
