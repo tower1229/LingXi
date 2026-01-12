@@ -82,7 +82,7 @@ chmod +x install.sh
 安装完成后，检查以下文件是否存在：
 
 - `.cursor/commands/`（至少包含 `flow.md`）
-- `.cursor/rules/`（7 个规则文件）
+- `.cursor/rules/`（4 个规则文件）
 - `.cursor/hooks.json`（Hooks 配置：门控 + 候选沉淀确认）
 - `.cursor/skills/`（Agent Skills：Nightly）
 - `.workflow/requirements/INDEX.md`
@@ -98,9 +98,9 @@ chmod +x install.sh
 - **经验自动加载**：在 `/flow` 进入任一阶段前自动检索匹配历史经验（experience-index）
 - **结构化状态文件**：状态文件包含当前阶段、下一步动作、阻塞项等信息，便于 Subagent 快速理解状态
 - **阶段性笔记保存**：Work 阶段支持阶段性保存 checkpoint，避免上下文占满，支持长时间任务和跨会话恢复
-- **Context7 集成**：在 Plan 和 Work 阶段自动查询技术文档，确保实现的准确性和最佳实践
+- **技术文档查询**：在 Plan 和 Work 阶段可查询技术文档，确保实现的准确性和最佳实践（可通过 Context7 等工具集成）
 
-> **输出质量如何保证？** `/flow` 不会把原先分散在各命令里的“高质量提示词/模板”丢掉：这些内容被保留在 `.cursor/commands/{req,audit,plan,work,review,compound}.md` 作为阶段 Playbook，`/flow` 进入对应阶段时必须遵循。
+> **输出质量如何保证？** `/flow` 不会把原先分散在各命令里的"高质量提示词/模板"丢掉：这些内容被保留在 `.cursor/skills/{req,audit,plan,work,review,compound}/SKILL.md` 作为阶段 Playbook，`/flow` 进入对应阶段时必须遵循。
 
 ## 快速开始（建议路径）
 
@@ -159,11 +159,11 @@ chmod +x install.sh
 - `.cursor/rules/workflow.mdc`
 - `.cursor/rules/development-specifications.mdc`
 
-## Skill 型 rules（能力库）
+## Agent Skills（能力库）
 
-本模板把可复用流程拆成 **skill rules**（模拟原文的 Skills）。Commands 只负责入口与路由，Skill rules 负责“如何落盘/如何约束/如何回写索引”：
+本模板把可复用流程拆成 **Agent Skills**。Commands 只负责入口与路由，Skills 负责"如何落盘/如何约束/如何回写索引"：
 
-- `.cursor/rules/skill-index-manager.mdc`：索引与状态（SSoT）
-- `.cursor/rules/skill-experience-depositor.mdc`：Experience 沉淀与索引
-- `.cursor/rules/skill-experience-index.mdc`：经验自动检索与加载（在需求分析/方案设计/代码编写前自动匹配与提醒）
-- `.cursor/rules/skill-context-engineering.mdc`：最小高信号上下文原则
+- `index-manager`（`.cursor/skills/index-manager/SKILL.md`）：索引与状态（SSoT）
+- `experience-depositor`（`.cursor/skills/experience-depositor/SKILL.md`）：Experience 沉淀与索引
+- `experience-index`（`.cursor/skills/experience-index/SKILL.md`）：经验自动检索与加载（在需求分析/方案设计/代码编写前自动匹配与提醒）
+- `context-engineering`（`.cursor/skills/context-engineering/SKILL.md`）：最小高信号上下文原则

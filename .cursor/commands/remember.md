@@ -6,10 +6,10 @@
 
 **从最近的对话历史中自动提取“刚解决的问题/踩的坑”**，并沉淀为经验到 `.workflow/context/experience/`，无需依赖 REQ-xxx。这是最低摩擦的“即时沉淀入口”。
 
-## 依赖的技能型 rules（Skill）
+## 依赖的 Skills
 
-- `.cursor/rules/skill-experience-depositor.mdc`
-- `.cursor/rules/skill-context-engineering.mdc`
+- `experience-depositor`（位于 `.cursor/skills/experience-depositor/SKILL.md`）
+- `context-engineering`（位于 `.cursor/skills/context-engineering/SKILL.md`）
 
 ## 使用方式
 
@@ -84,7 +84,7 @@
 
 ### 4) 冲突检测与处理（必须执行）
 
-在沉淀新经验前，必须执行冲突检测（按 `skill-experience-depositor.mdc` 的冲突处理机制）：
+在沉淀新经验前，必须执行冲突检测（按 skill `experience-depositor` 的冲突处理机制）：
 
 1. **读取所有现有经验**：读取 `.workflow/context/experience/INDEX.md` 中的所有 active 经验
 2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
@@ -93,7 +93,7 @@
 
 ### 5) 经验落盘（必须含触发条件与校验方式）
 
-创建 `.workflow/context/experience/<tag>-<title>.md`，按 `skill-experience-depositor.mdc` 的模板写入：
+创建 `.workflow/context/experience/<tag>-<title>.md`，按 skill `experience-depositor` 的模板写入：
 
 ```markdown
 # <Title>

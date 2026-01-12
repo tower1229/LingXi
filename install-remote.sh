@@ -118,13 +118,10 @@ success "已下载 commands (7 个文件)"
 # 下载 rules 文件
 info "下载 rules..."
 RULES=(
-    "rules/workflow.mdc"
-    "rules/development-specifications.mdc"
-    "rules/skill-index-manager.mdc"
-    "rules/skill-experience-depositor.mdc"
-    "rules/skill-experience-index.mdc"
-    "rules/skill-plan-manager.mdc"
-    "rules/skill-context-engineering.mdc"
+    "rules/workflow-core/RULE.md"
+    "rules/ai-artifacts/RULE.md"
+    "rules/development-specifications/RULE.md"
+    "rules/safety-guardrails/RULE.md"
 )
 
 for rule in "${RULES[@]}"; do
@@ -134,7 +131,7 @@ for rule in "${RULES[@]}"; do
         exit 1
     fi
 done
-success "已下载 rules (7 个文件)"
+success "已下载 rules (4 个文件)"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."
@@ -208,8 +205,9 @@ echo ""
 success "安装完成！"
 echo ""
 info "已安装的文件："
-echo "  - .cursor/commands/ (7 个命令文件)"
-echo "  - .cursor/rules/ (7 个规则文件)"
+echo "  - .cursor/commands/ (2 个命令文件)"
+echo "  - .cursor/rules/ (4 个规则文件)"
+echo "  - .cursor/skills/ (Agent Skills)"
 echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："

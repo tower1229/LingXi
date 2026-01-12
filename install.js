@@ -126,7 +126,7 @@ async function main() {
         // 复制 rules
         info('复制 rules...');
         copyDir(path.join(scriptDir, '.cursor/rules'), '.cursor/rules');
-        success('已复制 rules (6 个文件)');
+        success('已复制 rules (4 个文件)');
 
         // 创建 .workflow 目录结构
         info('创建 .workflow 目录结构...');
@@ -210,8 +210,9 @@ async function main() {
         success('安装完成！');
         console.log('');
         info('已安装的文件：');
-        console.log('  - .cursor/commands/ (7 个命令文件)');
-        console.log('  - .cursor/rules/ (7 个规则文件)');
+        console.log('  - .cursor/commands/ (2 个命令文件)');
+        console.log('  - .cursor/rules/ (4 个规则文件)');
+        console.log('  - .cursor/skills/ (Agent Skills)');
         console.log('  - .workflow/ 目录结构');
         console.log('');
         info('下一步：');

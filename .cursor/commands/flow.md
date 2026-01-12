@@ -79,7 +79,7 @@
   - 按序处理选中的候选（1-based index）
   - 对每条候选，执行“即时沉淀”：
     - 从对话历史与候选描述中提取 Trigger / Symptom / Root cause / Fix / How to verify / Pointers
-    - 按 `skill-experience-depositor.mdc` 落盘经验文件并更新 `.workflow/context/experience/INDEX.md`
+    - 按 skill `experience-depositor` 落盘经验文件并更新 `.workflow/context/experience/INDEX.md`
   - 全部完成后删除暂存文件
 
 **输出**：只需简短说明“沉淀了几条，文件路径在哪，下次触发条件是什么”。
@@ -88,12 +88,12 @@
 
 #### 2.1 Fail Fast：确保索引与目录结构存在
 
-- 确保 `.workflow/requirements/INDEX.md` 表头符合 `skill-index-manager.mdc`
+- 确保 `.workflow/requirements/INDEX.md` 表头符合 skill `index-manager` 的要求
 - 确保 `.workflow/context/session/` 与 `.workflow/workspace/` 目录存在（若不存在则创建）
 
 #### 2.2 经验检索（强制执行：每次进入一个阶段前）
 
-进入任一阶段前，必须先按 `skill-experience-index.mdc` 做经验检索，并用“最小高信号”方式提醒风险/背景指针。
+进入任一阶段前，必须先按 skill `experience-index` 做经验检索，并用"最小高信号"方式提醒风险/背景指针。
 
 #### 2.3 阶段路由（状态机）
 

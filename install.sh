@@ -87,7 +87,7 @@ success "已复制 commands (7 个文件)"
 # 复制 rules
 info "复制 rules..."
 cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
-success "已复制 rules (6 个文件)"
+success "已复制 rules (4 个文件)"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."
@@ -156,8 +156,9 @@ echo ""
 success "安装完成！"
 echo ""
 info "已安装的文件："
-echo "  - .cursor/commands/ (7 个命令文件)"
-echo "  - .cursor/rules/ (7 个规则文件)"
+echo "  - .cursor/commands/ (2 个命令文件)"
+echo "  - .cursor/rules/ (4 个规则文件)"
+echo "  - .cursor/skills/ (Agent Skills)"
 echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："
