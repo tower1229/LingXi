@@ -230,7 +230,7 @@ async function main() {
         console.log('');
         info('下一步：');
         console.log('  1. 在 Cursor 中打开项目');
-        console.log('  2. 运行 /req 命令创建第一个需求');
+        console.log('  2. 运行 /flow <需求描述> 创建第一个需求');
         console.log('  3. 查看 README.md 了解完整工作流');
         console.log('');
         info('更多信息：https://github.com/your-org/cursor-workflow');
