@@ -7,7 +7,7 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ## When to Use
 
-- audit 通过且用户确认进入 plan
+- req 完成且用户确认进入 plan
 
 ## Outputs (must write)
 

@@ -2,7 +2,7 @@
 
 ## 命令用途
 
-用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Audit → Plan → Work → Review → Compound），并且：
+用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Compound），并且：
 
 - **保留循环**：允许你在任意阶段反复执行（例如 audit 多次直到满意）
 - **人工闸门**：阶段推进必须明确询问用户确认（不能“自动推进”）
@@ -135,8 +135,8 @@
 **阶段行为**（简述）：
 
 - **req**：生成/更新 Requirement + 更新索引（Status = in-progress, Current Phase = req）
-- **audit**：输出审查报告到对话（不落盘），并给出“可推进判据 + 未决点”；更新索引 Current Phase = audit（Status 可保持 in-progress）
 - **plan**：生成/更新 plan.md（含 Status Summary/Tasks/Validation/Worklog/复利候选）；更新索引 Status = planned, Current Phase = plan
+- **audit**：审查 plan 的技术细节与风险，输出审查报告到对话（不落盘），并给出"可推进判据 + 未决点"；更新索引 Current Phase = audit（Status 可保持 planned）
 - **work**：按 plan 执行实现、边做边验证、持续回写 plan 的任务勾选与 Worklog，并按需写 checkpoint；更新索引 Current Phase = work
 - **review**：生成/更新 review.md（分维度分级 TODO），并把 Blockers/High 回写 plan；更新索引 Status = in-review 或 needs-fix, Current Phase = review
 - **compound**：在 review 与 plan 输入充分时，做复利沉淀（经验/上下文/自动化），并推进索引 Status = completed, Current Phase = compound
@@ -157,13 +157,13 @@ D) 退出
 
 #### 2.4.1 质量闸门（必须，避免过程偏差）
 
-每次阶段输出完成后，必须先给出“是否允许推进”的**显式判据**，并把选择权交还给用户（人工闸门）：
+每次阶段输出完成后，必须先给出"是否允许推进"的**显式判据**，并把选择权交还给用户（人工闸门）：
 
-- **req → plan**：Requirement 已落盘，且关键缺失项=0（若不为 0，则必须建议回到 req 补齐或再 audit 一轮）
-- **audit → plan**：Blockers=0；未决问题有明确处理方式；用户确认“可以进入 plan”
-- **plan → work**：plan 含 Tasks/Validation/Worklog/复利候选小节；用户确认“可以开始 work”
-- **work → review**：Deliverables 关键项完成；验证记录可复现；用户确认“进入 review”
-- **review → compound**：Blockers/High 已处理或明确拒绝并记录原因；用户确认“进入 compound”
+- **req → plan**：Requirement 已落盘，且关键缺失项=0；用户确认"可以进入 plan"
+- **plan → audit**：plan 含 Tasks/Validation/Worklog/复利候选小节；用户确认"可以进入 audit"
+- **audit → work**：Blockers=0；技术风险已评估；未决问题有明确处理方式；用户确认"可以开始 work"
+- **work → review**：Deliverables 关键项完成；验证记录可复现；用户确认"进入 review"
+- **review → compound**：Blockers/High 已处理或明确拒绝并记录原因；用户确认"进入 compound"
 
 > 目的：即使入口极简，阶段切换依然“可观测、可纠偏、可回退”，不会全靠模型自行推进。
 

@@ -1,6 +1,6 @@
 ---
 name: flow-router
-description: /flow 单入口路由与人工闸门（req→audit→plan→work→review→compound），负责阶段判断、循环菜单与推进确认。
+description: /flow 单入口路由与人工闸门（req→plan→audit→work→review→compound），负责阶段判断、循环菜单与推进确认。
 ---
 
 # Flow Router
@@ -29,8 +29,8 @@ description: /flow 单入口路由与人工闸门（req→audit→plan→work→
 ### 阶段执行（调用对应 skills）
 
 - **req**：调用 skill `req`
-- **audit**：调用 skill `audit`
 - **plan**：调用 skill `plan`
+- **audit**：调用 skill `audit`
 - **work**：调用 skill `work`
 - **review**：调用 skill `review`
 - **compound**：调用 skill `compound`
