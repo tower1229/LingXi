@@ -4,7 +4,7 @@
 
 - Use **only** `/flow <REQ-xxx|描述>` to drive the lifecycle (req → audit → plan → work → review → compound).
 - Stage transitions must use **human gates**: never auto-advance without explicit confirmation.
-- Knowledge write-in is **confirm-only**: never write to `ai/context/experience/` unless the user confirms via `/flow 沉淀 ...`.
+- Knowledge write-in is **confirm-only**: never write to `.workflow/context/experience/` unless the user confirms via `/flow 沉淀 ...`.
 
 ## Skills & Rules
 

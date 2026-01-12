@@ -63,7 +63,7 @@ async function main() {
   if (reqId) {
     const requirementPath = path.join(
       projectRoot,
-      "ai/requirements/in-progress",
+      ".workflow/requirements/in-progress",
       `${reqId}.md`,
     );
 
@@ -74,7 +74,7 @@ async function main() {
         user_message:
           `未找到 Requirement：${path.relative(projectRoot, requirementPath)}。\n` +
           "如果你是要创建新需求，请用：/flow <需求描述>（不要只给 REQ）。\n" +
-          "如果你是要继续已有需求，请先确保对应文件存在（或把 REQ 写回到 ai/requirements/INDEX.md 后再试）。",
+          "如果你是要继续已有需求，请先确保对应文件存在（或把 REQ 写回到 .workflow/requirements/INDEX.md 后再试）。",
       });
       return;
     }

@@ -49,20 +49,20 @@ info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
-AI_EXISTS=false
+WORKFLOW_EXISTS=false
 
 if [ -d ".cursor" ]; then
     CURSOR_EXISTS=true
     warning ".cursor 目录已存在"
 fi
 
-if [ -d "ai" ]; then
-    AI_EXISTS=true
-    warning "ai 目录已存在"
+if [ -d ".workflow" ]; then
+    WORKFLOW_EXISTS=true
+    warning ".workflow 目录已存在"
 fi
 
 # 询问是否继续
-if [ "$CURSOR_EXISTS" = true ] || [ "$AI_EXISTS" = true ]; then
+if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
     echo ""
     read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
     echo ""
@@ -136,24 +136,24 @@ for rule in "${RULES[@]}"; do
 done
 success "已下载 rules (7 个文件)"
 
-# 创建 ai 目录结构
-info "创建 ai 目录结构..."
-mkdir -p ai/requirements/in-progress
-mkdir -p ai/requirements/completed
-mkdir -p ai/context/business
-mkdir -p ai/context/tech/services
-mkdir -p ai/context/experience
-mkdir -p ai/context/session
-mkdir -p ai/workspace
+# 创建 .workflow 目录结构
+info "创建 .workflow 目录结构..."
+mkdir -p .workflow/requirements/in-progress
+mkdir -p .workflow/requirements/completed
+mkdir -p .workflow/context/business
+mkdir -p .workflow/context/tech/services
+mkdir -p .workflow/context/experience
+mkdir -p .workflow/context/session
+mkdir -p .workflow/workspace
 
 # 下载 INDEX.md 文件
 info "下载索引文件..."
-if ! download_file "ai/requirements/INDEX.md" "ai/requirements/INDEX.md"; then
+if ! download_file ".workflow/requirements/INDEX.md" ".workflow/requirements/INDEX.md"; then
     error "安装失败"
     exit 1
 fi
 
-if ! download_file "ai/context/experience/INDEX.md" "ai/context/experience/INDEX.md"; then
+if ! download_file ".workflow/context/experience/INDEX.md" ".workflow/context/experience/INDEX.md"; then
     error "安装失败"
     exit 1
 fi
@@ -163,10 +163,10 @@ success "已下载索引文件"
 info "更新 .gitignore..."
 GITIGNORE_ENTRIES=(
     "# Local workspace for temp code clones, generated artifacts, etc."
-    "ai/workspace/"
+    ".workflow/workspace/"
     ""
     "# Session-level context (ephemeral, not a knowledge base)"
-    "ai/context/session/"
+    ".workflow/context/session/"
 )
 
 if [ -f ".gitignore" ]; then
@@ -191,10 +191,10 @@ if [ -f ".gitignore" ]; then
 else
     cat > .gitignore << 'EOF'
 # Local workspace for temp code clones, generated artifacts, etc.
-ai/workspace/
+.workflow/workspace/
 
 # Session-level context (ephemeral, not a knowledge base)
-ai/context/session/
+.workflow/context/session/
 
 # OS / IDE
 .DS_Store
@@ -210,7 +210,7 @@ echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ (7 个命令文件)"
 echo "  - .cursor/rules/ (7 个规则文件)"
-echo "  - ai/ 目录结构"
+echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："
 echo "  1. 在 Cursor 中打开项目"

@@ -1,6 +1,6 @@
 ---
 name: index-manager
-description: 维护 ai/requirements/INDEX.md 为 SSoT：创建/计划/审查/完成时更新状态与链接，Fail Fast 检查缺失/漂移。
+description: 维护 .workflow/requirements/INDEX.md 为 SSoT：创建/计划/审查/完成时更新状态与链接，Fail Fast 检查缺失/漂移。
 ---
 
 # Index Manager
@@ -12,7 +12,7 @@ description: 维护 ai/requirements/INDEX.md 为 SSoT：创建/计划/审查/完
 
 ## Instructions
 
-把 `ai/requirements/INDEX.md` 作为单一事实来源（SSoT），每行至少包含：
+把 `.workflow/requirements/INDEX.md` 作为单一事实来源（SSoT），每行至少包含：
 
 | ID | Title | Status | Current Phase | Next Action | Blockers | Links |
 

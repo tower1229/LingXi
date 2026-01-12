@@ -11,9 +11,9 @@ description: 多维度审查实现并落盘 review.md；把 Blockers/High 回写
 
 ## Outputs (must write)
 
-- `ai/requirements/in-progress/REQ-xxx.review.md`
-- 回写：`ai/requirements/in-progress/REQ-xxx.plan.md`（Blockers/High）
-- 更新：`ai/requirements/INDEX.md`
+- `.workflow/requirements/in-progress/REQ-xxx.review.md`
+- 回写：`.workflow/requirements/in-progress/REQ-xxx.plan.md`（Blockers/High）
+- 更新：`.workflow/requirements/INDEX.md`
 
 ## Instructions
 

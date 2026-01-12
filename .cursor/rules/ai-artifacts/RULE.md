@@ -1,8 +1,8 @@
 ---
-description: "AI artifacts conventions for ai/requirements & ai/context: keep high-signal, index as SSoT, avoid doc bloat."
+description: "AI artifacts conventions for .workflow/requirements & .workflow/context: keep high-signal, index as SSoT, avoid doc bloat."
 globs:
-  - "ai/requirements/**"
-  - "ai/context/**"
+  - ".workflow/requirements/**"
+  - ".workflow/context/**"
 alwaysApply: false
 ---
 
@@ -10,7 +10,7 @@ alwaysApply: false
 
 ## SSoT
 
-- `ai/requirements/INDEX.md` is the single source of truth. Keep it consistent with files on disk.
+- `.workflow/requirements/INDEX.md` is the single source of truth. Keep it consistent with files on disk.
 
 ## High-signal writing
 
@@ -19,5 +19,5 @@ alwaysApply: false
 
 ## Session vs knowledge base
 
-- `ai/context/session/` is ephemeral; don’t treat it as a knowledge base.
-- `ai/context/experience/` is long-term knowledge and is **confirm-only**.
+- `.workflow/context/session/` is ephemeral; don’t treat it as a knowledge base.
+- `.workflow/context/experience/` is long-term knowledge and is **confirm-only**.

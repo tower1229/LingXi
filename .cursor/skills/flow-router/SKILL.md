@@ -22,8 +22,8 @@ description: /flow 单入口路由与人工闸门（req→audit→plan→work→
 
 状态来源优先级：
 
-1. `ai/requirements/INDEX.md` 的 `Status` / `Current Phase` / `Next Action`
-2. `ai/requirements/in-progress/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
+1. `.workflow/requirements/INDEX.md` 的 `Status` / `Current Phase` / `Next Action`
+2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
 3. 文件存在性推断：`<REQ>.md` / `<REQ>.plan.md` / `<REQ>.review.md`
 
 ### 阶段执行（调用对应 skills）
@@ -61,5 +61,5 @@ D) 退出
 - （候选）...
 ```
 
-> Hooks 会在对话结束时弹出确认；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `ai/context/experience/`。
+> Hooks 会在对话结束时弹出确认；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
 

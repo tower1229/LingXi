@@ -11,8 +11,8 @@ description: 按 Plan 执行实现并持续验证：回写 plan 的任务勾选�
 
 ## Outputs (must write)
 
-- 更新：`ai/requirements/in-progress/REQ-xxx.plan.md`（任务勾选 + Worklog + Status Summary）
-- 按需新增：`ai/context/session/<REQ-xxx>-checkpoint-*.md`
+- 更新：`.workflow/requirements/in-progress/REQ-xxx.plan.md`（任务勾选 + Worklog + Status Summary）
+- 按需新增：`.workflow/context/session/<REQ-xxx>-checkpoint-*.md`
 
 ## Instructions
 

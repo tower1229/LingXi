@@ -4,7 +4,7 @@
 
 如果你仍想手动即时沉淀，可继续使用 `/remember`（内部应调用 skill `experience-depositor`）。
 
-**从最近的对话历史中自动提取“刚解决的问题/踩的坑”**，并沉淀为经验到 `ai/context/experience/`，无需依赖 REQ-xxx。这是最低摩擦的“即时沉淀入口”。
+**从最近的对话历史中自动提取“刚解决的问题/踩的坑”**，并沉淀为经验到 `.workflow/context/experience/`，无需依赖 REQ-xxx。这是最低摩擦的“即时沉淀入口”。
 
 ## 依赖的技能型 rules（Skill）
 
@@ -29,8 +29,8 @@
 
 ## 产物（必须落盘）
 
-- `ai/context/experience/<tag>-<title>.md`（一条经验文件）
-- `ai/context/experience/INDEX.md`（更新索引）
+- `.workflow/context/experience/<tag>-<title>.md`（一条经验文件）
+- `.workflow/context/experience/INDEX.md`（更新索引）
 
 ## 执行要点（智能提取）
 
@@ -86,14 +86,14 @@
 
 在沉淀新经验前，必须执行冲突检测（按 `skill-experience-depositor.mdc` 的冲突处理机制）：
 
-1. **读取所有现有经验**：读取 `ai/context/experience/INDEX.md` 中的所有 active 经验
+1. **读取所有现有经验**：读取 `.workflow/context/experience/INDEX.md` 中的所有 active 经验
 2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
 3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
 4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
 
 ### 5) 经验落盘（必须含触发条件与校验方式）
 
-创建 `ai/context/experience/<tag>-<title>.md`，按 `skill-experience-depositor.mdc` 的模板写入：
+创建 `.workflow/context/experience/<tag>-<title>.md`，按 `skill-experience-depositor.mdc` 的模板写入：
 
 ```markdown
 # <Title>
@@ -124,13 +124,13 @@
 
 ## 替代关系（Replaced by / Replaces）（可选，如有冲突则必须）
 
-- **被替代**：此经验已被 `ai/context/experience/<tag>-<new-title>.md` 替代
-- **替代**：此经验替代了 `ai/context/experience/<tag>-<old-title>.md`
+- **被替代**：此经验已被 `.workflow/context/experience/<tag>-<new-title>.md` 替代
+- **替代**：此经验替代了 `.workflow/context/experience/<tag>-<old-title>.md`
 ```
 
 ### 6) 索引更新（必须）
 
-更新 `ai/context/experience/INDEX.md`，新增一行（Status 默认为 `active`）：
+更新 `.workflow/context/experience/INDEX.md`，新增一行（Status 默认为 `active`）：
 
 | Tag | Title | Trigger (when to load) | Status | File |
 
@@ -139,13 +139,13 @@
 - **Tag**：简短标签（用于分类检索）
 - **Title**：经验标题
 - **Trigger**：触发条件摘要（1-2 行）
-- **File**：`ai/context/experience/<tag>-<title>.md`
+- **File**：`.workflow/context/experience/<tag>-<title>.md`
 
 ---
 
 ## 输出要求
 
-- 必须实际创建/更新 `ai/context/experience/` 文件与索引
+- 必须实际创建/更新 `.workflow/context/experience/` 文件与索引
 - 最后用 3-6 行简短说明：从对话中提取了什么经验、触发条件是什么、下次会在什么场景下自动提醒
 
 ## 示例场景
@@ -159,7 +159,7 @@ AI：（分析最近对话）
 - 排查过程：发现配置值必须用引号包裹
 - 解决方案：修改 config/apollo.yaml，给值加引号
 - 验证：重启服务，启动成功
-AI：自动生成 `ai/context/experience/apollo-config-quote-requirement.md`
+AI：自动生成 `.workflow/context/experience/apollo-config-quote-requirement.md`
 ```
 
 ### 场景 2：用户给提示 `/remember 钱包选择`

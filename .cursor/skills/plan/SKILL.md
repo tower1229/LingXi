@@ -11,8 +11,8 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ## Outputs (must write)
 
-- `ai/requirements/in-progress/REQ-xxx.plan.md`
-- `ai/requirements/INDEX.md`
+- `.workflow/requirements/in-progress/REQ-xxx.plan.md`
+- `.workflow/requirements/INDEX.md`
 
 ## Instructions
 
@@ -22,7 +22,7 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ### 1) 读取输入
 
-- `ai/requirements/in-progress/REQ-xxx.md`
+- `.workflow/requirements/in-progress/REQ-xxx.md`
 
 ### 2) plan 模板（必须可勾选、可复现验证）
 

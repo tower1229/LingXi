@@ -20,4 +20,4 @@ This project assumes **Cursor Nightly** with **Agent Skills** enabled. Skills li
 
 ## Confirm-only compounding
 
-- Never write to `ai/context/experience/` unless the user explicitly confirms via `/flow 沉淀 ...`.
+- Never write to `.workflow/context/experience/` unless the user explicitly confirms via `/flow 沉淀 ...`.

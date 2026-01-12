@@ -31,7 +31,7 @@ function extractCompoundingCandidates(text) {
 }
 
 async function ensureSessionDir(projectRoot) {
-  const dir = path.join(projectRoot, "ai/context/session");
+  const dir = path.join(projectRoot, ".workflow/context/session");
   await fs.mkdir(dir, { recursive: true });
   return dir;
 }

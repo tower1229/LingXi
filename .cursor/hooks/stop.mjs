@@ -10,7 +10,7 @@ import {
 async function readPendingCandidates(projectRoot) {
   const pendingFile = path.join(
     projectRoot,
-    "ai/context/session/pending-compounding-candidates.json",
+    ".workflow/context/session/pending-compounding-candidates.json",
   );
   try {
     const raw = await fs.readFile(pendingFile, "utf8");
@@ -23,7 +23,7 @@ async function readPendingCandidates(projectRoot) {
 function buildFollowupMessage(candidates) {
   const lines = candidates.map((c, i) => `${i + 1}. ${c.summary}`);
   return [
-    "检测到本轮输出包含可沉淀的“复利候选”。请先向我确认是否要写入知识库（ai/context/experience/）。",
+    "检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.workflow/context/experience/）。",
     "",
     "候选列表：",
     ...lines,
@@ -33,7 +33,7 @@ function buildFollowupMessage(candidates) {
     "- `/flow 沉淀 全部`：沉淀全部",
     "- `/flow 忽略沉淀`：忽略并清空候选",
     "",
-    "约束：在你确认前，不得写入 ai/context/experience/。",
+    "约束：在你确认前，不得写入 .workflow/context/experience/。",
   ].join("\n");
 }
 

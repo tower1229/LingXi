@@ -19,8 +19,8 @@ export function writeStdoutJson(obj) {
 export function getProjectRootFromHookScriptUrl(scriptUrl) {
   const scriptPath = new URL(scriptUrl).pathname;
   const scriptDir = path.dirname(scriptPath);
-  // hooks/xxx.mjs -> project root is one level up from hooks/
-  return path.resolve(scriptDir, "..");
+  // .cursor/hooks/xxx.mjs -> project root is two levels up from hooks/
+  return path.resolve(scriptDir, "../..");
 }
 
 export async function fileExists(filePath) {

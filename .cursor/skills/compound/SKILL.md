@@ -12,10 +12,10 @@ description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突�
 
 ## Outputs (must write)
 
-- `ai/context/experience/<tag>-<title>.md`
-- `ai/context/experience/INDEX.md`
-- 更新：`ai/requirements/INDEX.md`
-- 按需：`ai/context/tech/services/<service-or-module>.md`
+- `.workflow/context/experience/<tag>-<title>.md`
+- `.workflow/context/experience/INDEX.md`
+- 更新：`.workflow/requirements/INDEX.md`
+- 按需：`.workflow/context/tech/services/<service-or-module>.md`
 
 ## Instructions
 
@@ -31,7 +31,7 @@ description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突�
 
 ### 2) 写入必须确认
 
-未收到用户明确确认前，不得写入 `ai/context/experience/`。
+未收到用户明确确认前，不得写入 `.workflow/context/experience/`。
 
 ### 3) 冲突检测与落盘
 

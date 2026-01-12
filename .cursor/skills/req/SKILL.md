@@ -1,6 +1,6 @@
 ---
 name: req
-description: 将“模糊需求”产出为可执行、可验收的 Requirement（落盘 ai/requirements/in-progress/REQ-xxx.md 并更新 INDEX）。
+description: 将“模糊需求”产出为可执行、可验收的 Requirement（落盘 .workflow/requirements/in-progress/REQ-xxx.md 并更新 INDEX）。
 ---
 
 # Req
@@ -12,8 +12,8 @@ description: 将“模糊需求”产出为可执行、可验收的 Requirement�
 
 ## Outputs (must write)
 
-- `ai/requirements/in-progress/REQ-xxx.md`
-- `ai/requirements/INDEX.md`
+- `.workflow/requirements/in-progress/REQ-xxx.md`
+- `.workflow/requirements/INDEX.md`
 
 ## Instructions
 

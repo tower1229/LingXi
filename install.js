@@ -82,10 +82,10 @@ async function main() {
 
         // 检查是否在正确的目录
         const cursorPath = path.join(scriptDir, '.cursor');
-        const aiPath = path.join(scriptDir, 'ai');
+        const workflowPath = path.join(scriptDir, '.workflow');
 
-        if (!fs.existsSync(cursorPath) || !fs.existsSync(aiPath)) {
-            error('未找到 .cursor 或 ai 目录');
+        if (!fs.existsSync(cursorPath) || !fs.existsSync(workflowPath)) {
+            error('未找到 .cursor 或 .workflow 目录');
             error('请确保在 cursor-workflow 模板仓库的根目录运行此脚本');
             process.exit(1);
         }
@@ -94,18 +94,18 @@ async function main() {
 
         // 检查目标目录是否存在
         const cursorExists = fs.existsSync('.cursor');
-        const aiExists = fs.existsSync('ai');
+        const workflowExists = fs.existsSync('.workflow');
 
         if (cursorExists) {
             warning('.cursor 目录已存在');
         }
 
-        if (aiExists) {
-            warning('ai 目录已存在');
+        if (workflowExists) {
+            warning('.workflow 目录已存在');
         }
 
         // 询问是否继续
-        if (cursorExists || aiExists) {
+        if (cursorExists || workflowExists) {
             const response = await readInputSync('是否继续？这将覆盖现有文件 (y/N): ');
             if (response.toLowerCase() !== 'y') {
                 info('安装已取消');
@@ -128,31 +128,31 @@ async function main() {
         copyDir(path.join(scriptDir, '.cursor/rules'), '.cursor/rules');
         success('已复制 rules (6 个文件)');
 
-        // 创建 ai 目录结构
-        info('创建 ai 目录结构...');
-        const aiDirs = [
-            'ai/requirements/in-progress',
-            'ai/requirements/completed',
-            'ai/context/business',
-            'ai/context/tech/services',
-            'ai/context/experience',
-            'ai/context/session',
-            'ai/workspace',
+        // 创建 .workflow 目录结构
+        info('创建 .workflow 目录结构...');
+        const workflowDirs = [
+            '.workflow/requirements/in-progress',
+            '.workflow/requirements/completed',
+            '.workflow/context/business',
+            '.workflow/context/tech/services',
+            '.workflow/context/experience',
+            '.workflow/context/session',
+            '.workflow/workspace',
         ];
 
-        for (const dir of aiDirs) {
+        for (const dir of workflowDirs) {
             fs.mkdirSync(dir, { recursive: true });
         }
 
         // 复制 INDEX.md 文件
         info('复制索引文件...');
         fs.copyFileSync(
-            path.join(scriptDir, 'ai/requirements/INDEX.md'),
-            'ai/requirements/INDEX.md'
+            path.join(scriptDir, '.workflow/requirements/INDEX.md'),
+            '.workflow/requirements/INDEX.md'
         );
         fs.copyFileSync(
-            path.join(scriptDir, 'ai/context/experience/INDEX.md'),
-            'ai/context/experience/INDEX.md'
+            path.join(scriptDir, '.workflow/context/experience/INDEX.md'),
+            '.workflow/context/experience/INDEX.md'
         );
         success('已复制索引文件');
 
@@ -160,10 +160,10 @@ async function main() {
         info('更新 .gitignore...');
         const gitignoreEntries = [
             '# Local workspace for temp code clones, generated artifacts, etc.',
-            'ai/workspace/',
+            '.workflow/workspace/',
             '',
             '# Session-level context (ephemeral, not a knowledge base)',
-            'ai/context/session/',
+            '.workflow/context/session/',
         ];
 
         if (fs.existsSync('.gitignore')) {
@@ -191,10 +191,10 @@ async function main() {
             // 创建 .gitignore
             const gitignoreContent = [
                 '# Local workspace for temp code clones, generated artifacts, etc.',
-                'ai/workspace/',
+                '.workflow/workspace/',
                 '',
                 '# Session-level context (ephemeral, not a knowledge base)',
-                'ai/context/session/',
+                '.workflow/context/session/',
                 '',
                 '# OS / IDE',
                 '.DS_Store',
@@ -212,7 +212,7 @@ async function main() {
         info('已安装的文件：');
         console.log('  - .cursor/commands/ (7 个命令文件)');
         console.log('  - .cursor/rules/ (7 个规则文件)');
-        console.log('  - ai/ 目录结构');
+        console.log('  - .workflow/ 目录结构');
         console.log('');
         info('下一步：');
         console.log('  1. 在 Cursor 中打开项目');

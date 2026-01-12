@@ -65,18 +65,18 @@ Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
-$AiExists = Test-Path "ai"
+$WorkflowExists = Test-Path ".workflow"
 
 if ($CursorExists) {
     Write-Warning ".cursor 目录已存在"
 }
 
-if ($AiExists) {
-    Write-Warning "ai 目录已存在"
+if ($WorkflowExists) {
+    Write-Warning ".workflow 目录已存在"
 }
 
 # 询问是否继续
-if ($CursorExists -or $AiExists) {
+if ($CursorExists -or $WorkflowExists) {
     $response = Read-Host "是否继续？这将覆盖现有文件 (y/N)"
     if ($response -ne "y" -and $response -ne "Y") {
         Write-Info "安装已取消"
@@ -131,28 +131,28 @@ foreach ($rule in $Rules) {
 }
 Write-Success "已下载 rules (7 个文件)"
 
-# 创建 ai 目录结构
-Write-Info "创建 ai 目录结构..."
+# 创建 .workflow 目录结构
+Write-Info "创建 .workflow 目录结构..."
 @(
-    "ai\requirements\in-progress",
-    "ai\requirements\completed",
-    "ai\context\business",
-    "ai\context\tech\services",
-    "ai\context\experience",
-    "ai\context\session",
-    "ai\workspace"
+    ".workflow\requirements\in-progress",
+    ".workflow\requirements\completed",
+    ".workflow\context\business",
+    ".workflow\context\tech\services",
+    ".workflow\context\experience",
+    ".workflow\context\session",
+    ".workflow\workspace"
 ) | ForEach-Object {
     New-Item -ItemType Directory -Force -Path $_ | Out-Null
 }
 
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
-if (-not (Download-File "ai/requirements/INDEX.md" "ai\requirements\INDEX.md")) {
+if (-not (Download-File ".workflow/requirements/INDEX.md" ".workflow\requirements\INDEX.md")) {
     Write-Error "安装失败"
     exit 1
 }
 
-if (-not (Download-File "ai/context/experience/INDEX.md" "ai\context\experience\INDEX.md")) {
+if (-not (Download-File ".workflow/context/experience/INDEX.md" ".workflow\context\experience\INDEX.md")) {
     Write-Error "安装失败"
     exit 1
 }
@@ -162,10 +162,10 @@ Write-Success "已下载索引文件"
 Write-Info "更新 .gitignore..."
 $GitignoreEntries = @(
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    "ai/workspace/",
+    ".workflow/workspace/",
     "",
     "# Session-level context (ephemeral, not a knowledge base)",
-    "ai/context/session/"
+    ".workflow/context/session/"
 )
 
 if (Test-Path ".gitignore") {
@@ -191,10 +191,10 @@ if (Test-Path ".gitignore") {
 } else {
     @(
         "# Local workspace for temp code clones, generated artifacts, etc.",
-        "ai/workspace/",
+        ".workflow/workspace/",
         "",
         "# Session-level context (ephemeral, not a knowledge base)",
-        "ai/context/session/",
+        ".workflow/context/session/",
         "",
         "# OS / IDE",
         ".DS_Store",
@@ -210,7 +210,7 @@ Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ (7 个命令文件)"
 Write-Host "  - .cursor/rules/ (7 个规则文件)"
-Write-Host "  - ai/ 目录结构"
+Write-Host "  - .workflow/ 目录结构"
 Write-Host ""
 Write-Info "下一步："
 Write-Host "  1. 在 Cursor 中打开项目"

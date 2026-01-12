@@ -1,6 +1,6 @@
 ---
 name: experience-index
-description: 在需求分析/方案设计/编码/审查/沉淀前，按 Trigger 匹配 ai/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
+description: 在需求分析/方案设计/编码/审查/沉淀前，按 Trigger 匹配 .workflow/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
 ---
 
 # Experience Index
@@ -11,7 +11,7 @@ description: 在需求分析/方案设计/编码/审查/沉淀前，按 Trigger 
 
 ## Instructions
 
-1. 读取 `ai/context/experience/INDEX.md`
+1. 读取 `.workflow/context/experience/INDEX.md`
 2. 只匹配 Status = `active` 的经验（过滤 deprecated）
 3. 基于当前场景（需求描述/阶段/涉及模块）做关键词 + 语义匹配 Trigger
 4. 结构化输出提醒（尽量精简）：

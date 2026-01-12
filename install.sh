@@ -41,8 +41,8 @@ check_command() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 检查是否在正确的目录
-if [ ! -d "$SCRIPT_DIR/.cursor" ] || [ ! -d "$SCRIPT_DIR/ai" ]; then
-    error "未找到 .cursor 或 ai 目录"
+if [ ! -d "$SCRIPT_DIR/.cursor" ] || [ ! -d "$SCRIPT_DIR/.workflow" ]; then
+    error "未找到 .cursor 或 .workflow 目录"
     error "请确保在 cursor-workflow 模板仓库的根目录运行此脚本"
     exit 1
 fi
@@ -51,20 +51,20 @@ info "开始安装 Cursor Workflow..."
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
-AI_EXISTS=false
+WORKFLOW_EXISTS=false
 
 if [ -d ".cursor" ]; then
     CURSOR_EXISTS=true
     warning ".cursor 目录已存在"
 fi
 
-if [ -d "ai" ]; then
-    AI_EXISTS=true
-    warning "ai 目录已存在"
+if [ -d ".workflow" ]; then
+    WORKFLOW_EXISTS=true
+    warning ".workflow 目录已存在"
 fi
 
 # 询问是否继续
-if [ "$CURSOR_EXISTS" = true ] || [ "$AI_EXISTS" = true ]; then
+if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
     echo ""
     read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
     echo ""
@@ -89,30 +89,30 @@ info "复制 rules..."
 cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
 success "已复制 rules (6 个文件)"
 
-# 创建 ai 目录结构
-info "创建 ai 目录结构..."
-mkdir -p ai/requirements/in-progress
-mkdir -p ai/requirements/completed
-mkdir -p ai/context/business
-mkdir -p ai/context/tech/services
-mkdir -p ai/context/experience
-mkdir -p ai/context/session
-mkdir -p ai/workspace
+# 创建 .workflow 目录结构
+info "创建 .workflow 目录结构..."
+mkdir -p .workflow/requirements/in-progress
+mkdir -p .workflow/requirements/completed
+mkdir -p .workflow/context/business
+mkdir -p .workflow/context/tech/services
+mkdir -p .workflow/context/experience
+mkdir -p .workflow/context/session
+mkdir -p .workflow/workspace
 
 # 复制 INDEX.md 文件
 info "复制索引文件..."
-cp "$SCRIPT_DIR/ai/requirements/INDEX.md" ai/requirements/INDEX.md
-cp "$SCRIPT_DIR/ai/context/experience/INDEX.md" ai/context/experience/INDEX.md
+cp "$SCRIPT_DIR/.workflow/requirements/INDEX.md" .workflow/requirements/INDEX.md
+cp "$SCRIPT_DIR/.workflow/context/experience/INDEX.md" .workflow/context/experience/INDEX.md
 success "已复制索引文件"
 
 # 更新 .gitignore
 info "更新 .gitignore..."
 GITIGNORE_ENTRIES=(
     "# Local workspace for temp code clones, generated artifacts, etc."
-    "ai/workspace/"
+    ".workflow/workspace/"
     ""
     "# Session-level context (ephemeral, not a knowledge base)"
-    "ai/context/session/"
+    ".workflow/context/session/"
 )
 
 if [ -f ".gitignore" ]; then
@@ -139,10 +139,10 @@ else
     # 创建 .gitignore
     cat > .gitignore << 'EOF'
 # Local workspace for temp code clones, generated artifacts, etc.
-ai/workspace/
+.workflow/workspace/
 
 # Session-level context (ephemeral, not a knowledge base)
-ai/context/session/
+.workflow/context/session/
 
 # OS / IDE
 .DS_Store
@@ -158,7 +158,7 @@ echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ (7 个命令文件)"
 echo "  - .cursor/rules/ (7 个规则文件)"
-echo "  - ai/ 目录结构"
+echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："
 echo "  1. 在 Cursor 中打开项目"

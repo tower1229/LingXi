@@ -54,27 +54,27 @@ chmod +x install.sh
    cp -r cursor-workflow/.cursor /path/to/your-project/
    ```
 
-2. **复制 `ai` 目录结构**：
+2. **复制 `.workflow` 目录结构**：
 
    ```bash
    # 创建目录结构
-   mkdir -p ai/requirements/{in-progress,completed}
-   mkdir -p ai/context/{business,tech/services,experience,session}
-   mkdir -p ai/workspace
+   mkdir -p .workflow/requirements/{in-progress,completed}
+   mkdir -p .workflow/context/{business,tech/services,experience,session}
+   mkdir -p .workflow/workspace
 
    # 复制索引文件
-   cp cursor-workflow/ai/requirements/INDEX.md ai/requirements/
-   cp cursor-workflow/ai/context/experience/INDEX.md ai/context/experience/
+   cp cursor-workflow/.workflow/requirements/INDEX.md .workflow/requirements/
+   cp cursor-workflow/.workflow/context/experience/INDEX.md .workflow/context/experience/
    ```
 
 3. **更新 `.gitignore`**（如果存在）：
 
    ```gitignore
    # Local workspace for temp code clones, generated artifacts, etc.
-   ai/workspace/
+   .workflow/workspace/
 
    # Session-level context (ephemeral, not a knowledge base)
-   ai/context/session/
+   .workflow/context/session/
    ```
 
 ### 验证安装
@@ -85,16 +85,16 @@ chmod +x install.sh
 - `.cursor/rules/`（7 个规则文件）
 - `.cursor/hooks.json`（Hooks 配置：门控 + 候选沉淀确认）
 - `.cursor/skills/`（Agent Skills：Nightly）
-- `ai/requirements/INDEX.md`
-- `ai/context/experience/INDEX.md`
+- `.workflow/requirements/INDEX.md`
+- `.workflow/context/experience/INDEX.md`
 
 ## 你能得到什么
 
 - **单入口命令**：`/flow <REQ|描述>`（内部状态机路由 + 循环选项 + 人工闸门）
 - **产物落盘**：每一步输出写入固定目录，形成可交接、可回放、可复用的状态文件
 - **上下文工程**：只沉淀"最小高信号"上下文（概要 + 指针），避免文档膨胀
-- **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
-- **候选沉淀确认（Hooks）**：检测到“复利候选”后自动弹出确认（你确认后才会写入 `ai/context/experience/`）
+- **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `.workflow/context/` 资产，让下一次更快
+- **候选沉淀确认（Hooks）**：检测到"复利候选"后自动弹出确认（你确认后才会写入 `.workflow/context/experience/`）
 - **经验自动加载**：在 `/flow` 进入任一阶段前自动检索匹配历史经验（experience-index）
 - **结构化状态文件**：状态文件包含当前阶段、下一步动作、阻塞项等信息，便于 Subagent 快速理解状态
 - **阶段性笔记保存**：Work 阶段支持阶段性保存 checkpoint，避免上下文占满，支持长时间任务和跨会话恢复
@@ -140,7 +140,7 @@ chmod +x install.sh
 │   ├── commands/                 # 单入口命令：/flow
 │   ├── rules/                    # 工作流规则与编码规范（自动生效）
 │   └── hooks.json                # Hooks：门控 + 候选沉淀确认
-├── ai/
+├── .workflow/
 │   ├── requirements/             # 需求产物（索引/进行中/已完成）
 │   │   ├── INDEX.md              # 状态索引（包含当前阶段、下一步动作、阻塞项）
 │   │   ├── in-progress/

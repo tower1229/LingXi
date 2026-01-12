@@ -1,6 +1,6 @@
 ---
 name: experience-depositor
-description: 将“过程中的坑/隐性约束/排查结论”沉淀到 ai/context/experience，并维护 INDEX；支持冲突检测与 deprecated 处理。
+description: 将“过程中的坑/隐性约束/排查结论”沉淀到 .workflow/context/experience，并维护 INDEX；支持冲突检测与 deprecated 处理。
 ---
 
 # Experience Depositor
@@ -14,8 +14,8 @@ description: 将“过程中的坑/隐性约束/排查结论”沉淀到 ai/cont
 
 ### 输入来源（优先级）
 
-1. `ai/context/session/pending-compounding-candidates.json`（hooks 暂存候选）
-2. `ai/requirements/in-progress/<REQ-xxx>.plan.md` 的 Compounding Candidates
+1. `.workflow/context/session/pending-compounding-candidates.json`（hooks 暂存候选）
+2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 Compounding Candidates
 3. plan Worklog / review 复利候选（必要时）
 
 ### 经验模板（必须包含）
@@ -29,8 +29,8 @@ description: 将“过程中的坑/隐性约束/排查结论”沉淀到 ai/cont
 
 落盘：
 
-- `ai/context/experience/<tag>-<title>.md`
-- 更新 `ai/context/experience/INDEX.md`
+- `.workflow/context/experience/<tag>-<title>.md`
+- 更新 `.workflow/context/experience/INDEX.md`
 
 ### 冲突检测（必须）
 
