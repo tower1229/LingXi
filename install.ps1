@@ -118,6 +118,7 @@ $Rules = @(
     "rules/skill-index-manager.mdc",
     "rules/skill-experience-depositor.mdc",
     "rules/skill-experience-index.mdc",
+    "rules/skill-plan-manager.mdc",
     "rules/skill-context-engineering.mdc"
 )
 
@@ -128,7 +129,7 @@ foreach ($rule in $Rules) {
         exit 1
     }
 }
-Write-Success "已下载 rules (6 个文件)"
+Write-Success "已下载 rules (7 个文件)"
 
 # 创建 ai 目录结构
 Write-Info "创建 ai 目录结构..."
@@ -208,7 +209,7 @@ Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ (7 个命令文件)"
-Write-Host "  - .cursor/rules/ (6 个规则文件)"
+Write-Host "  - .cursor/rules/ (7 个规则文件)"
 Write-Host "  - ai/ 目录结构"
 Write-Host ""
 Write-Info "下一步："

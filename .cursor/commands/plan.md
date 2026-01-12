@@ -161,6 +161,14 @@
 ## 执行记录（Worklog）
 
 - YYYY-MM-DD: 完成 xxx；验证方式：xxx；结果：PASS/FAIL（附简短原因）
+
+## 复利候选（Compounding Candidates）
+
+> 目的：把本次实现中“返工/排查/隐性约束/可自动拦截点”记录为候选输入，供 `/compound <REQ-xxx>` 直接转化为可复用资产。
+>
+> 规则：每条候选必须包含 Trigger / Symptom / Root cause / Fix / How to verify / Pointers。
+
+- [ ] （候选）...
 ```
 
 - **任务粒度**：计划要能直接驱动 `/work` 顺序执行（避免"大而空"的任务）

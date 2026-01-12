@@ -211,7 +211,7 @@ async function main() {
         console.log('');
         info('已安装的文件：');
         console.log('  - .cursor/commands/ (7 个命令文件)');
-        console.log('  - .cursor/rules/ (6 个规则文件)');
+        console.log('  - .cursor/rules/ (7 个规则文件)');
         console.log('  - ai/ 目录结构');
         console.log('');
         info('下一步：');

@@ -123,6 +123,7 @@ RULES=(
     "rules/skill-index-manager.mdc"
     "rules/skill-experience-depositor.mdc"
     "rules/skill-experience-index.mdc"
+    "rules/skill-plan-manager.mdc"
     "rules/skill-context-engineering.mdc"
 )
 
@@ -133,7 +134,7 @@ for rule in "${RULES[@]}"; do
         exit 1
     fi
 done
-success "已下载 rules (6 个文件)"
+success "已下载 rules (7 个文件)"
 
 # 创建 ai 目录结构
 info "创建 ai 目录结构..."
@@ -208,7 +209,7 @@ success "安装完成！"
 echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ (7 个命令文件)"
-echo "  - .cursor/rules/ (6 个规则文件)"
+echo "  - .cursor/rules/ (7 个规则文件)"
 echo "  - ai/ 目录结构"
 echo ""
 info "下一步："

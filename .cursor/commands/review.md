@@ -56,6 +56,16 @@
 
 ## 总结（3-6 行）
 
+## 复利候选（Compounding Candidates）
+
+> 目的：把“审查中暴露的系统性问题”转化为可复用资产（automation / experience / context），而不是仅留下待办。
+>
+> 规则：候选必须能让“下次更快更稳”，并包含 Trigger / Symptom / Root cause / Fix / How to verify / Pointers。
+>
+> 回写：候选如需执行（补测试/加 lint/补服务文档），应同步回 `plan.md` 的 Tasks 或 `复利候选` 小节，避免只停留在 review。
+
+- [ ] （候选）...
+
 ## 多维度审查结果
 
 ### 1. 功能审查

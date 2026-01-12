@@ -22,8 +22,7 @@
 ## 产物（必须落盘）
 
 - `ai/context/experience/<tag>-<title>.md`（按需，多条）
-- `ai/context/experience/INDEX.md`
--（按需）`ai/context/tech/services/<service-or-module>.md`
+- `ai/context/experience/INDEX.md` -（按需）`ai/context/tech/services/<service-or-module>.md`
 - `ai/requirements/INDEX.md`
 
 ## 执行要点（入口 + 路由）
@@ -35,6 +34,7 @@
 调用 `skill-experience-index.mdc`，检查是否已有相似或重复的经验，避免重复沉淀。
 
 **执行步骤：**
+
 1. 读取 `ai/context/experience/INDEX.md`
 2. 匹配所有 Status = `active` 的经验
 3. 根据本次 Plan/Worklog/Review 中提取的候选经验进行语义匹配
@@ -42,7 +42,13 @@
 
 ### 第二步：提取候选经验
 
-- **提取候选**：从本次 Plan/Worklog/Review 中提取高价值条目（优先"返工/排查/隐性约束/可自动拦截"）
+- **提取候选（优先顺序）**：
+
+  1. `ai/requirements/in-progress/<REQ-xxx>.plan.md` 的 **复利候选（Compounding Candidates）**（优先）
+  2. plan 的 Worklog（返工/排查/关键决策/验证记录）
+  3. `ai/requirements/in-progress/<REQ-xxx>.review.md` 的复利候选与高价值审查结论（避免仅搬运已修复的 TODO）
+
+- **筛选原则**：优先“可自动拦截/可复用教训/隐性约束”，避免沉淀一次性的、已修复且无复用价值的细节。
 
 ### 第三步：冲突检测与处理
 
@@ -55,7 +61,7 @@
 ### 第四步：经验落盘
 
 - **经验落盘**：按 `skill-experience-depositor.mdc` 的模板写入（必须含触发条件与校验方式）
-- **索引维护**：更新 `ai/context/experience/INDEX.md`（新增行/更新Status）与 `ai/requirements/INDEX.md`（推进状态）
+- **索引维护**：更新 `ai/context/experience/INDEX.md`（新增行/更新 Status）与 `ai/requirements/INDEX.md`（推进状态）
 - **上下文补齐**：缺少服务/模块概要时补 `ai/context/tech/services/`（只写概要+指针）
 - **自动化优先**：可被 lint/test/script 拦截的问题优先固化（否则至少沉淀为 experience）
 
@@ -65,4 +71,3 @@
 
 - 必须实际创建/更新 `ai/context/` 文件与索引
 - 最后用 3-6 行说明：新增/更新了哪些沉淀资产，下次会如何复用
-

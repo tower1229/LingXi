@@ -6,7 +6,7 @@
 
 ## 依赖的技能型 rules（Skill）
 
-- `.cursor/rules/skill-plan-manager.mdc`（Worklog/验证方式/任务勾选）
+- `.cursor/rules/skill-plan-manager.mdc`（Plan 作为执行账本：Worklog/验证方式/任务勾选/复利候选）
 - `.cursor/rules/skill-context-engineering.mdc`
 - `.cursor/rules/skill-experience-index.mdc`（自动检索与加载历史经验）
 - `.cursor/rules/development-specifications.mdc`

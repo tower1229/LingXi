@@ -80,7 +80,7 @@ chmod +x install.sh
 安装完成后，检查以下文件是否存在：
 
 - `.cursor/commands/` (7 个命令文件)
-- `.cursor/rules/` (6 个规则文件)
+- `.cursor/rules/` (7 个规则文件)
 - `ai/requirements/INDEX.md`
 - `ai/context/experience/INDEX.md`
 
@@ -91,7 +91,7 @@ chmod +x install.sh
 - **上下文工程**：只沉淀"最小高信号"上下文（概要 + 指针），避免文档膨胀
 - **复合沉淀（复利）**：把踩坑/流程/可自动化拦截点转为 `ai/context/` 资产，让下一次更快
 - **即时沉淀**：`/remember` 让你在解决问题当下立即沉淀经验，无需等 `/compound`
-- **经验自动加载**：在 `/req`、`/plan`、`/work` 执行前自动检索匹配的历史经验，主动提醒相关风险与背景文档（复刻原文的 experience-index Skill）
+- **经验自动加载**：在 `/req`、`/audit`、`/plan`、`/work`、`/review`、`/compound` 执行前自动检索匹配的历史经验，主动提醒相关风险与背景文档（experience-index）
 - **结构化状态文件**：状态文件包含当前阶段、下一步动作、阻塞项等信息，便于 Subagent 快速理解状态
 - **阶段性笔记保存**：Work 阶段支持阶段性保存 checkpoint，避免上下文占满，支持长时间任务和跨会话恢复
 - **Context7 集成**：在 Plan 和 Work 阶段自动查询技术文档，确保实现的准确性和最佳实践
