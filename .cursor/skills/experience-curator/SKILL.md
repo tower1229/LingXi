@@ -1,14 +1,9 @@
 ---
 name: experience-curator
-description: 经验成长循环核心：自动执行合并/取代治理，输出变更报告与质量准则建议。每次新经验沉淀后由 experience-depositor 自动调用。
+description: 此 Skill 是经验成长循环核心，在 experience-depositor 成功写入新经验后自动激活，执行合并/取代治理，输出变更报告与质量准则建议。不应由用户直接调用。
 ---
 
 # Experience Curator
-
-## When to Use
-
-- 由 `experience-depositor` 在成功写入新经验后**自动调用**
-- 不应由用户直接调用
 
 ## Inputs
 

@@ -1,13 +1,9 @@
 ---
 name: plan
-description: 基于 Requirement 生成可执行计划（任务拆解+验证方式+交付物），落盘 REQ.plan.md 并更新 INDEX。
+description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+验证方式+交付物）。当 req 完成且用户确认进入 plan 阶段时激活，落盘 REQ.plan.md 并更新 INDEX。
 ---
 
 # Plan
-
-## When to Use
-
-- req 完成且用户确认进入 plan
 
 ## Outputs (must write)
 

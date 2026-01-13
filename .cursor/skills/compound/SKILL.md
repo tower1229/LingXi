@@ -1,14 +1,9 @@
 ---
 name: compound
-description: 围绕 REQ 做复利沉淀：从 plan/review 提取候选，冲突检测，写 experience 与索引；写入必须用户确认。
+description: 此 Skill 围绕 REQ 做复利沉淀。当 review 完成且用户确认进入 compound，或 /flow 沉淀 ... 需要落盘候选经验时激活，从 plan/review 提取候选，冲突检测，写 experience 与索引（写入必须用户确认）。
 ---
 
 # Compound
-
-## When to Use
-
-- review 完成且用户确认进入 compound
-- 或 `/flow 沉淀 ...` 需要落盘候选经验时
 
 ## Outputs (must write)
 

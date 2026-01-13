@@ -1,13 +1,9 @@
 ---
 name: work
-description: 按 Plan 执行实现并持续验证：回写 plan 的任务勾选与 Worklog，必要时写 checkpoint，阶段推进需人工确认。
+description: 此 Skill 按 Plan 执行实现并持续验证。当 plan 生成完成且用户确认开始 work 时激活，回写 plan 的任务勾选与 Worklog，必要时写 checkpoint，阶段推进需人工确认。
 ---
 
 # Work
-
-## When to Use
-
-- plan 生成完成且用户确认开始 work
 
 ## Outputs (must write)
 

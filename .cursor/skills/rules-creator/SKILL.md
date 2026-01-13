@@ -1,15 +1,9 @@
 ---
 name: rules-creator
-description: Create or update Cursor Rules (qs-* quality standards). Use when adopting quality standard suggestions, creating new rules in .cursor/rules/, or configuring rule frontmatter (alwaysApply, globs, description).
+description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）。当用户确认采纳质量准则建议、需要创建新的 qs-{type}-{scope} 规则、或需要向现有规则追加内容时激活，负责配置 frontmatter（alwaysApply/globs/description）并更新索引。
 ---
 
 # Rules Creator
-
-## When to Use
-
-- 用户确认采纳质量准则建议时
-- 需要创建新的 `qs-{type}-{scope}` 规则时
-- 需要向现有规则追加内容时
 
 ## Inputs（从上下文获取）
 

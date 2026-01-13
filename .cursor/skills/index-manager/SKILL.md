@@ -1,14 +1,9 @@
 ---
 name: index-manager
-description: 维护 .workflow/requirements/INDEX.md 为 SSoT：创建/计划/审查/完成时更新状态与链接，Fail Fast 检查缺失/漂移。
+description: 此 Skill 维护 .workflow/requirements/INDEX.md 为 SSoT（单一事实来源）。当任何 REQ 产物变更（创建/计划/审查/完成）后，或进入 /flow REQ-xxx 时需做一次 Fail Fast 索引与文件一致性检查时激活。
 ---
 
 # Index Manager
-
-## When to Use
-
-- 任何 REQ 产物变更（创建/计划/审查/完成）后
-- 进入 `/flow REQ-xxx` 时做一次 Fail Fast：索引与文件一致性检查
 
 ## Instructions
 

@@ -1,14 +1,9 @@
 ---
 name: flow-router
-description: Route /flow commands through workflow phases (req→plan→audit→work→review→compound). Use when user enters /flow command to manage requirements lifecycle with human gates.
+description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req→plan→audit→work→review→compound）。当用户输入 /flow <REQ-xxx|描述> 命令时激活，负责判断当前阶段、支持重复执行（如 audit 多次）、并在推进前请求用户确认（人工闸门）。
 ---
 
 # Flow Router
-
-## When to Use
-
-- 当用户输入 `/flow <REQ-xxx|描述>` 时
-- 当需要判断当前 REQ 所处阶段、允许重复执行（例如 audit 多次）、并在推进前请求用户确认时
 
 ## Instructions
 

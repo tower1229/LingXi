@@ -1,14 +1,9 @@
 ---
 name: req
-description: 将“模糊需求”产出为可执行、可验收的 Requirement（落盘 .workflow/requirements/in-progress/REQ-xxx.md 并更新 INDEX）。
+description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirement。当用户通过 /flow <需求描述> 创建新需求，或 /flow REQ-xxx 但 requirement 缺失需补齐时激活，落盘 .workflow/requirements/in-progress/REQ-xxx.md 并更新 INDEX。
 ---
 
 # Req
-
-## When to Use
-
-- `/flow <需求描述>` 创建新需求
-- `/flow REQ-xxx` 但 requirement 缺失或需要补齐时
 
 ## Outputs (must write)
 
@@ -19,7 +14,7 @@ description: 将“模糊需求”产出为可执行、可验收的 Requirement�
 
 ### 0) Experience Index（强制）
 
-先调用 skill `experience-index`，输出相关历史经验提醒（只给指针与高风险点）。
+执行前，`experience-index` 会自动匹配历史经验提醒（只给指针与高风险点）。
 
 ### 1) 需求类型与复杂度判断
 
@@ -27,7 +22,7 @@ description: 将“模糊需求”产出为可执行、可验收的 Requirement�
 
 ### 2) Fail Fast：缺失信息一次性问清
 
-如果“必要信息缺失”，必须一次性列出问题并给出 2-3 个选项，等待用户选择后再落盘。
+如果"必要信息缺失"，必须一次性列出问题并给出 2-3 个选项，等待用户选择后再落盘。
 
 ### 3) Requirement 落盘模板（不写实现方案）
 
@@ -100,9 +95,8 @@ description: 将“模糊需求”产出为可执行、可验收的 Requirement�
 
 ### 4) 更新索引（SSoT）
 
-调用 skill `index-manager`：
+遵循 `index-manager` 的指引更新索引：
 
 - Status：`in-progress`
 - Current Phase：`req`
 - Links：至少包含 requirement 路径
-
