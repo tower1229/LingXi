@@ -1,8 +1,7 @@
 ---
-
-## name: experience-depositor
-
+name: experience-depositor
 description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .workflow/context/experience。当用户通过 /flow 沉淀 ... 或 /remember ... 命令确认复利沉淀时激活。
+---
 
 # Experience Depositor
 
@@ -43,17 +42,18 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 **experience-curator 执行内容**：
 
 1. **经验治理（自动执行，无需人工审核）**
-  - 备份 INDEX → `INDEX.md.bak`
-  - 识别候选合并组：Tag 相同 / Trigger 关键词重叠 ≥ 60% → 合并
-  - 识别候选取代链：新经验是旧经验升级版 → 旧经验 `deprecated`，建立 `Replaces/ReplacedBy` 追溯
-  - 更新 INDEX（Scope/Strength 取更优值）
-  - 输出变更报告（动作/理由/影响/回滚命令）
+   - 备份 INDEX → `INDEX.md.bak`
+   - 识别候选合并组：Tag 相同 / Trigger 关键词重叠 ≥ 60% → 合并
+   - 识别候选取代链：新经验是旧经验升级版 → 旧经验 `deprecated`，建立 `Replaces/ReplacedBy` 追溯
+   - 更新 INDEX（Scope/Strength 取更优值）
+   - 输出变更报告（动作/理由/影响/回滚命令）
+
 2. **质量准则建议（仅建议，需人工审核）**
-  - 从本轮新增经验中抽象 1-3 条"质量准则建议"（质量判断/风险偏好/工程标准）
-  - 每条建议必须指定 Type（always/fs/i/m）和 Scope
-  - 目标规则格式：`qs-{type}-{scope}`
-  - 明确标注为建议，不得自动写入 rules
-  - 给出采纳入口：`/flow 采纳质量准则 <序号>` 或 `/flow 忽略质量准则`
+   - 从本轮新增经验中抽象 1-3 条"质量准则建议"（质量判断/风险偏好/工程标准）
+   - 每条建议必须指定 Type（always/fs/i/m）和 Scope
+   - 目标规则格式：`qs-{type}-{scope}`
+   - 明确标注为建议，不得自动写入 rules
+   - 给出采纳入口：`/flow 采纳质量准则 <序号>` 或 `/flow 忽略质量准则`
 
 ### 经验模板（必须包含）
 
@@ -96,4 +96,3 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 - 触发条件相同/相似，且解决方案矛盾 → 冲突：旧经验标记 deprecated，新经验记录替代关系
 - 触发条件相近且解决方案相同/相似 → 重复：默认合并（或请求用户确认合并策略）
-
