@@ -18,7 +18,7 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ### 0) Experience Index（强制）
 
-先调用 skill `experience-index`。
+执行前，`experience-index` 会自动匹配历史经验提醒。
 
 ### 1) 读取输入
 
@@ -26,7 +26,7 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ### 1.1) （可选但推荐）补齐服务上下文
 
-如果该需求涉及存量系统/多服务协作，先调用 skill `service-loader`：
+如果该需求涉及存量系统/多服务协作，参考 `service-loader` 补齐服务上下文：
 
 - 生成/更新 `.workflow/context/tech/services/<service>.md`
 - 只写“概要 + 指针 + 常见坑”，避免长文档膨胀
@@ -64,7 +64,7 @@ description: 基于 Requirement 生成可执行计划（任务拆解+验证方�
 
 ### 3) 更新索引（SSoT）
 
-调用 skill `index-manager`：
+遵循 `index-manager` 的指引更新索引：
 
 - Status：`planned`
 - Current Phase：`plan`

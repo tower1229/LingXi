@@ -37,7 +37,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 ### 1) 读取索引与新经验
 
 - 读取 `INDEX.md` 中所有 `Status = active` 的经验
-- 识别本轮新增的经验（由 `experience-depositor` 传入）
+- 识别本轮新增的经验（从对话上下文获取）
 - 读取本轮新增经验文件内容，确保包含并可提取以下结构化字段：
   - `Decision Shape`（Decision being made / Alternatives rejected / Discriminating signal）
   - `Judgment Capsule`（I used to think / Now I believe / decisive variable）
@@ -105,21 +105,26 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 
 ### 5) 输出质量准则建议（人工闸门）
 
-基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）：
+基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）。
+
+> 类型选择、Scope 选择、模板等操作指南详见 Skill `rules-creator`。
+> 规则目录详见 `.workflow/context/tech/quality-standards-schema.md`。
+
+**输出格式**：
 
 ```markdown
 ## 成长循环：质量准则建议（需人工采纳）
 
-以下建议从近期沉淀中提炼，可升级为 rules/skills/quality-bar。
+以下建议从近期沉淀中提炼，采纳后将由 `rules-creator` Skill 创建规则。
 请使用 `/flow 采纳质量准则 <序号>` 采纳，或 `/flow 忽略质量准则` 跳过。
 
-| # | 建议 | 类型 | 落盘目标 |
-|---|---|---|---|
-| 1 | 涉及用户数据的变更必须有审计日志 | 红线/规则 | `.cursor/rules/` |
-| 2 | 跨服务调用应先检查超时配置 | 检查清单 | `.cursor/skills/` |
-| 3 | 数据库 DDL 变更需同步更新 ERD | 流程约束 | `.workflow/context/tech/quality-bar.md` |
+| # | 建议 | Type | Scope | 目标规则 |
+|---|------|------|-------|----------|
+| 1 | 涉及用户数据的变更必须有审计日志 | always | security | qs-always-security |
+| 2 | 跨服务调用应先检查超时配置 | i | backend | qs-i-backend |
+| 3 | 组件必须定义 Props 类型 | fs | frontend | qs-fs-frontend |
 
-建议写法（建议本身应当是“判断结构”）：
+建议写法（建议本身应当是"判断结构"）：
 - Surface signal：...
 - Hidden risk：...
 - Decisive variable：...
@@ -129,9 +134,9 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 **建议提炼规则**：
 
 - 从新增经验的 `Judgment Capsule` 中抽象可复用的判断标准（I used to think → Now I believe → decisive variable）
-- 若 Capsule 缺失/质量差，优先提示“需要补齐 Decision Shape/Capsule”，不要强行输出泛化口号
+- 若 Capsule 缺失/质量差，优先提示"需要补齐 Decision Shape/Capsule"，不要强行输出泛化口号
 - 如果某类问题反复出现（Trigger 相似的经验 ≥ 2 条），优先建议升级为自动拦截
-- 建议必须标注"类型"和"落盘目标"，方便用户决策
+- 优先选择已存在的规则（插入），避免创建过多新规则
 
 ---
 

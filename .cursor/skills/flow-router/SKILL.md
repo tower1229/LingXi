@@ -1,6 +1,6 @@
 ---
 name: flow-router
-description: /flow 单入口路由与人工闸门（req→plan→audit→work→review→compound），负责阶段判断、循环菜单与推进确认。
+description: Route /flow commands through workflow phases (req→plan→audit→work→review→compound). Use when user enters /flow command to manage requirements lifecycle with human gates.
 ---
 
 # Flow Router
@@ -26,23 +26,24 @@ description: /flow 单入口路由与人工闸门（req→plan→audit→work→
 2. `.workflow/requirements/(in-progress|completed)/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
 3. 文件存在性推断：`<REQ>.md` / `<REQ>.plan.md` / `<REQ>.review.md`
 
-### 阶段执行（调用对应 skills）
+### 阶段执行（遵循对应 skill 的指引）
 
-- **req**：调用 skill `req`
-- **plan**：调用 skill `plan`
-- **audit**：调用 skill `audit`
-- **work**：调用 skill `work`
-- **review**：调用 skill `review`
-- **compound**：调用 skill `compound`
+每个阶段有对应的 skill 提供执行指南：
 
-每个阶段执行前：
+| 阶段 | 对应 Skill | 说明 |
+|------|-----------|------|
+| req | `req` | 需求澄清与定义 |
+| plan | `plan` | 任务拆解与计划 |
+| audit | `audit` | 技术审查与风险评估 |
+| work | `work` | 实现与验证 |
+| review | `review` | 多维度审查 |
+| compound | `compound` | 复利沉淀 |
 
-- 调用 skill `experience-index` 输出匹配的历史经验提醒（最小高信号）
-- 必要时调用 skill `index-manager` 做 Fail Fast 的索引一致性检查
+Agent 会根据阶段自动激活相关 skill（基于 skill 的 description 匹配）。
 
-按需（强烈推荐在存量/多服务项目）：
+**每个阶段执行前**，`experience-index` 会自动匹配历史经验提醒。
 
-- 调用 skill `service-loader` 生成/补齐服务上下文（`.workflow/context/tech/services/`），用于降低“考古成本”
+**按需**（存量/多服务项目），`service-loader` 可生成服务上下文降低"考古成本"。
 
 ### 人工闸门（必须）
 
@@ -66,4 +67,3 @@ D) 退出
 ```
 
 > Hooks 会在对话结束时弹出确认；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
-

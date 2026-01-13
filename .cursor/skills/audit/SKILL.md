@@ -17,7 +17,7 @@ description: 审查 Plan 的技术细节、可行性与风险（输出到对话�
 
 ### 0) Experience Index（强制）
 
-先调用 skill `experience-index`，输出与该需求相关的历史坑/风险提醒。
+执行前，`experience-index` 会自动匹配并输出与该需求相关的历史坑/风险提醒。
 
 ### 1) 审查维度
 

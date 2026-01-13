@@ -18,7 +18,7 @@ description: 按 Plan 执行实现并持续验证：回写 plan 的任务勾选�
 
 ### 0) Experience Index（强制）
 
-进入代码编写前先调用 skill `experience-index`。
+进入代码编写前，`experience-index` 会自动匹配历史经验提醒。
 
 ### 1) 状态恢复
 

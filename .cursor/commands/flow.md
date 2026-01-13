@@ -12,10 +12,10 @@
 
 - **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用），详见 [Cursor Agent Skills](https://cursor.com/cn/docs/context/skills)。
 
-## 依赖的 Agent Skills（质量来源，必须遵循）
+## 依赖的 Agent Skills（质量来源）
 
-> 说明：`/flow` 的“高质量提示词/模板/检查清单”不在本文件里重复维护，而是下沉到 `.cursor/skills/`，由 Agent 按需加载。
-> `/flow` 在进入对应阶段时，**必须调用并遵循对应 Skill**，以保证输出质量稳定。
+> 说明：`/flow` 的“高质量提示词/模板/检查清单”不在本文件里重复维护，而是下沉到 `.cursor/skills/`，由 Agent 按需自动激活。
+> `/flow` 在进入对应阶段时，**会根据阶段和上下文自动匹配相关 Skill（基于 description）**，以保证输出质量稳定。
 
 - 路由：`flow-router`
 - 阶段：
@@ -71,7 +71,7 @@
 4. **创建新需求**：`/flow <需求描述>`（无 REQ）
 
 > **禁止**：在用户没有明确确认"沉淀"的情况下写入 `.workflow/context/experience/`。
-> **禁止**：在用户没有明确确认"采纳质量准则"的情况下写入 rules/skills/quality-bar。
+> **禁止**：在用户没有明确确认"采纳质量准则"的情况下写入 `.cursor/rules/qs-*`。
 
 ### 1) 沉淀确认路径（/flow 沉淀 / 忽略沉淀）
 
@@ -85,7 +85,7 @@
 - 如果用户选择 **沉淀**：
   - 按序处理选中的候选（1-based index）
   - 对每条候选，先做“沉淀分流”（多落点，目标是复利最大化）：
-    - **A. 经验文档**（默认）：按 skill `experience-depositor` 落盘到 `.workflow/context/experience/`
+    - **A. 经验文档**（默认）：遵循 `experience-depositor` 的指引落盘到 `.workflow/context/experience/`
     - **B. 自动拦截**：如果是高频且可自动判定的问题，优先沉淀为 hook/lint/CI（例如敏感信息、危险命令、格式/约定检查）
     - **C. Skill/流程升级**：如果是可复用流程或反复出现的步骤，优先沉淀为 skill（执行层）或扩展已有 skill
     - **D. 长期上下文补齐**：如果是“考古信息/服务边界/配置规范”，优先补齐 `.workflow/context/tech/services/` 或 `.workflow/context/business/`
@@ -101,18 +101,19 @@
 
 **触发条件**：成长循环输出"质量准则建议"后，用户选择采纳或忽略。
 
-**输入**：成长循环输出的质量准则建议列表（在对话上下文中）。
+**输入**：成长循环输出的质量准则建议列表（在对话上下文中），格式包含 Type、Scope、目标规则。
 
 **行为**：
 
 - 如果用户选择 **忽略质量准则**：输出"已忽略质量准则建议"，不做任何落盘
 - 如果用户选择 **采纳质量准则**：
-  - 按序号解析用户选择的建议（1-based index，如 `1,3` 表示采纳第 1 和第 3 条）
-  - 对每条选中的建议，按其"落盘目标"执行写入：
-    - **红线/规则** → 新增或追加到 `.cursor/rules/` 对应规则文件
-    - **检查清单/流程** → 新增或追加到 `.cursor/skills/` 对应技能文件
-    - **质量标准** → 追加到 `.workflow/context/tech/quality-bar.md`
-  - 输出落盘结果（写入了哪些文件、内容摘要）
+  1. 按序号解析用户选择的建议（1-based index，如 `1,3` 表示采纳第 1 和第 3 条）
+  2. 对每条选中的建议，遵循 `rules-creator` 的指引执行规则创建：
+     - 从对话上下文获取：准则内容、Type、Scope、来源经验
+     - 类型确认与模板选择
+     - 创建/更新规则文件
+     - 配置正确的 frontmatter
+     - 更新索引文件
 
 **输出**：简短说明"采纳了几条质量准则建议，落盘到哪些文件"。
 
@@ -120,12 +121,12 @@
 
 #### 2.1 Fail Fast：确保索引与目录结构存在
 
-- 确保 `.workflow/requirements/INDEX.md` 表头符合 skill `index-manager` 的要求
+- 确保 `.workflow/requirements/INDEX.md` 表头符合 `index-manager` 的要求
 - 确保 `.workflow/context/session/` 与 `.workflow/workspace/` 目录存在（若不存在则创建）
 
 #### 2.2 经验检索（强制执行：每次进入一个阶段前）
 
-进入任一阶段前，必须先按 skill `experience-index` 做经验检索，并用"最小高信号"方式提醒风险/背景指针。
+进入任一阶段前，`experience-index` 会自动匹配历史经验，并用"最小高信号"方式提醒风险/背景指针。
 
 #### 2.3 阶段路由（状态机）
 

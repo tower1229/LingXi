@@ -1,9 +1,8 @@
 ---
-description: "Workflow core: /flow single entry, human gates, confirm-only compounding (Skills-first on Nightly)."
 alwaysApply: true
 ---
 
-# Workflow Core (Always Apply)
+# Workflow Core
 
 ## Nightly / Skills-first
 
@@ -21,3 +20,7 @@ This project assumes **Cursor Nightly** with **Agent Skills** enabled. Skills li
 ## Confirm-only compounding
 
 - Never write to `.workflow/context/experience/` unless the user explicitly confirms via `/flow 沉淀 ...`.
+
+---
+
+Source: Migrated from workflow-core (2026-01-13)

@@ -58,7 +58,7 @@ Execution Layer (.cursor/skills)
   v
 Artifacts & Long-term Context (.workflow/**)
   - requirements: REQ 三件套 + INDEX（SSoT）
-  - context: experience / services / business / quality-bar
+  - context: experience / services / business / quality-standards
   - session: checkpoint / 暂存候选
   |
   v
@@ -87,7 +87,7 @@ Hooks (.cursor/hooks + hooks.json)
   context/
     experience/          # 长期经验库 + INDEX（confirm-only）
     tech/services/       # 服务/模块上下文（“考古资产”）
-    tech/quality-bar.md  # 质量准则（人工采纳后写入）
+    tech/quality-standards-*.md  # 质量准则 Schema 与 Index
     business/            # 业务边界/协作上下文（可选）
     session/             # 会话暂存（checkpoint、pending candidates）
   workspace/             # 临时工作区（默认 gitignore）
@@ -100,7 +100,7 @@ Hooks (.cursor/hooks + hooks.json)
 - **Single entrypoint**：只使用 `/flow <REQ-xxx|描述>` 驱动生命周期。
 - **Human gates**：任何阶段切换都不能静默自动推进；每轮必须输出菜单，等待用户选择。
 - **Confirm-only compounding**：未收到 `/flow 沉淀 ...` 明确确认前，不得写入 `.workflow/context/experience/`。
-- **质量准则采纳也需确认**：未收到 `/flow 采纳质量准则 ...` 明确确认前，不得写入 rules/skills/quality-bar。
+- **质量准则采纳也需确认**：未收到 `/flow 采纳质量准则 ...` 明确确认前，不得写入 `.cursor/rules/qs-*`。
 
 ## 5. 关键状态与产物模型
 
