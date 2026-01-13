@@ -1,6 +1,6 @@
 ---
 name: audit
-description: 此 Skill 审查 Plan 的技术细节、可行性与风险。当 /flow REQ-xxx 在 plan 完成后、进入 work 前需要反复审查时激活，支持多次循环，产出明确的推进判据与待澄清项（仅输出到对话，不落盘）。
+description: 此 Skill 审查 Plan 的技术细节、可行性与风险。当 /flow REQ-xxx 在 plan 完成后、进入 work 前需要反复审查时激活，支持多次循环，产出明确的推进判据与待澄清项（仅输出到对话，不写入）。
 ---
 
 # Audit

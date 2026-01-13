@@ -27,7 +27,7 @@
 
 ---
 
-## 产物（必须落盘）
+## 产物（必须写入）
 
 - `.workflow/context/experience/<tag>-<title>.md`（一条经验文件）
 - `.workflow/context/experience/INDEX.md`（更新索引）
@@ -82,7 +82,18 @@
 
 **禁止问多个问题**；如果多个信息缺失，优先推断最容易的，只问最关键的那个。
 
-### 4) 冲突检测与处理（必须执行）
+### 2.5) 成长过滤器（强制：决定进 session 还是进 experience）
+
+在决定"写入经验文档（长期）"之前，对每条候选先回答一个问题：
+
+> **如果我一年后在完全不同的项目里再遇到类似局面，这条信息还能帮我提前做出正确判断吗？**
+
+- 若答案是 **否**：不写入 experience，改为沉淀到 **session/worklog**（项目记录），并说明原因
+- 若答案是 **是**：允许写入 experience（长期判断资产）
+
+> 目的：避免 experience 退化为"事实堆叠/案例百科"，把长期资产留给"可迁移的判断结构"。
+
+### 3) 冲突检测与处理（必须执行）
 
 在沉淀新经验前，必须执行冲突检测（按 skill `experience-depositor` 的冲突处理机制）：
 
@@ -91,7 +102,18 @@
 3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
 4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
 
-### 5) 经验落盘（必须含触发条件与校验方式）
+### 5) 经验写入（必须含 Decision Shape 与 Judgment Capsule）
+
+每条经验必须补齐以下两段（哪怕每段只写 3 行）：
+
+- **Decision Shape（判断结构）**
+  - Decision being made: 我当时在判断什么
+  - Alternatives rejected: 我拒绝了哪些备选方案（至少 1 个）
+  - Discriminating signal: 我靠什么可观测信号做出分叉
+- **Judgment Capsule（认知蒸馏）**
+  - I used to think:
+  - Now I believe:
+  - Because the decisive variable is:
 
 创建 `.workflow/context/experience/<tag>-<title>.md`，按 skill `experience-depositor` 的模板写入：
 
@@ -122,6 +144,18 @@
 
 - `path/to/file`：说明看什么
 
+## Decision Shape（判断结构）
+
+- Decision being made: 我当时在判断什么
+- Alternatives rejected: 我拒绝了哪些备选方案（至少 1 个）
+- Discriminating signal: 我靠什么可观测信号做出分叉
+
+## Judgment Capsule（认知蒸馏）
+
+- I used to think:
+- Now I believe:
+- Because the decisive variable is:
+
 ## 替代关系（Replaced by / Replaces）（可选，如有冲突则必须）
 
 - **被替代**：此经验已被 `.workflow/context/experience/<tag>-<new-title>.md` 替代
@@ -140,6 +174,13 @@
 - **Title**：经验标题
 - **Trigger**：触发条件摘要（1-2 行）
 - **File**：`.workflow/context/experience/<tag>-<title>.md`
+
+### 7) 触发 curator（自动执行）
+
+当本次沉淀**实际新增**了经验文件后，需执行 `experience-curator` 的治理流程：
+
+1. **经验治理（自动执行）**：合并/取代、更新 INDEX
+2. **质量准则建议（仅建议）**：输出 1-3 条建议，等待用户采纳
 
 ---
 
@@ -184,9 +225,9 @@ AI：这个问题会在什么场景下再次出现？
 AI：自动生成经验文件（补充触发条件）
 ```
 
-## 与 `/compound` 的区别
+## 与 `/flow 沉淀` 的区别
 
 - **`/remember`**：即时沉淀**单条经验**，不需要 REQ-xxx，最低摩擦
-- **`/compound`**：围绕一个 **REQ-xxx** 做**系统性复利收尾**（多条经验 + 上下文补齐 + 需求状态推进）
+- **`/flow 沉淀`**：围绕一个 **REQ-xxx** 做**系统性复利收尾**（多条经验 + 上下文补齐 + 需求状态推进）
 
 两者互补，不冲突。

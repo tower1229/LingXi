@@ -138,5 +138,5 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 ## 禁止
 
 - 删除任何经验文件（只做 `deprecated` 标记）
-- 自动落盘质量准则建议（必须等用户 `/flow 采纳质量准则`）
+- 自动写入质量准则建议（必须等用户 `/flow 采纳质量准则`）
 - 在没有备份的情况下修改 INDEX

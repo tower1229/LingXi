@@ -7,7 +7,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 ## Inputs（从上下文获取）
 
-1. `.workflow/context/session/pending-compounding-candidates.json`（hooks 暂存候选）
+1. `.workflow/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + experience-collector 生成）
 2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 Compounding Candidates
 3. plan Worklog / review 复利候选（必要时）
 
@@ -79,7 +79,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 > 目的：确保经验一定能上升为"判断结构"，而不是仅成为"做过什么/怎么做"的文档。
 
-落盘：
+写入：
 
 - `.workflow/context/experience/<tag>-<title>.md`
 - 更新 `.workflow/context/experience/INDEX.md`

@@ -10,8 +10,8 @@ This project assumes **Cursor Nightly** with **Agent Skills** enabled. Skills li
 
 ## Single entrypoint
 
-- Use **only** `/flow <REQ-xxx|描述>` to drive the workflow (req → plan → audit → work → review → compound).
-- Never ask users to run `/req /audit /plan /work /review /compound` in this repo.
+- Use **only** `/flow <REQ-xxx|描述>` to drive the workflow (req → plan → audit → work → review → archive).
+- Never ask users to run `/req /audit /plan /work /review /archive` in this repo.
 
 ## Human gates (no silent drift)
 

@@ -2,11 +2,11 @@
 
 ## 命令用途
 
-用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Compound），并且：
+用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive），并且：
 
 - **保留循环**：允许你在任意阶段反复执行（例如 audit 多次直到满意）
 - **人工闸门**：阶段推进必须明确询问用户确认（不能“自动推进”）
-- **产物落盘**：遵循既有 `.workflow/requirements/` 与 `.workflow/context/` 约定
+- **产物写入**：遵循既有 `.workflow/requirements/` 与 `.workflow/context/` 约定
 
 ## 前置要求（必须）
 
@@ -26,12 +26,12 @@
   - `plan`
   - `work`
   - `review`
-  - `compound`
+  - `archive`
 - 底座：
   - `index-manager`
   - `experience-index`
   - `experience-collector`（背景收集）
-  - `experience-depositor`（前台落盘）
+  - `experience-depositor`（前台写入）
 
 ---
 
@@ -48,7 +48,7 @@
 
 ---
 
-## 产物（必须落盘）
+## 产物（必须写入）
 
 - `.workflow/requirements/in-progress/<REQ-xxx>.md`（Requirement，进行中）
 - `.workflow/requirements/in-progress/<REQ-xxx>.plan.md`（Plan / 执行账本，进行中）
@@ -78,7 +78,7 @@
 
 ### 1) 沉淀确认路径（/flow 沉淀 / 忽略沉淀）
 
-**输入**：读取候选暂存（由 EXP-CANDIDATE + experience-collector 生成；兼容 hooks 兜底）：
+**输入**：读取候选暂存（由 EXP-CANDIDATE + experience-collector 生成）：
 
 - `.workflow/context/session/pending-compounding-candidates.json`
 
@@ -101,7 +101,7 @@
 
 **行为**：
 
-- 如果用户选择 **忽略质量准则**：输出"已忽略质量准则建议"，不做任何落盘
+- 如果用户选择 **忽略质量准则**：输出"已忽略质量准则建议"，不做任何写入
 - 如果用户选择 **采纳质量准则**：
   1. 按序号解析用户选择的建议（1-based index，如 `1,3` 表示采纳第 1 和第 3 条）
   2. 对每条选中的建议，遵循 `rules-creator` 的指引执行规则创建：
@@ -111,7 +111,7 @@
      - 配置正确的 frontmatter
      - 更新索引文件
 
-**输出**：简短说明"采纳了几条质量准则建议，落盘到哪些文件"。
+**输出**：简短说明"采纳了几条质量准则建议，写入到哪些文件"。
 
 ### 2) 继续/创建需求路径（/flow REQ-xxx 或 /flow <描述>）
 
@@ -136,10 +136,10 @@
 
 - **req**：生成/更新 Requirement + 更新索引（Status = in-progress, Current Phase = req）
 - **plan**：生成/更新 plan.md（含 Status Summary/Tasks/Validation/Worklog/复利候选）；更新索引 Status = planned, Current Phase = plan
-- **audit**：审查 plan 的技术细节与风险，输出审查报告到对话（不落盘），并给出"可推进判据 + 未决点"；更新索引 Current Phase = audit（Status 可保持 planned）
+- **audit**：审查 plan 的技术细节与风险，输出审查报告到对话（不写入），并给出"可推进判据 + 未决点"；更新索引 Current Phase = audit（Status 可保持 planned）
 - **work**：按 plan 执行实现、边做边验证、持续回写 plan 的任务勾选与 Worklog，并按需写 checkpoint；更新索引 Current Phase = work
 - **review**：生成/更新 review.md（分维度分级 TODO），并把 Blockers/High 回写 plan；更新索引 Status = in-review 或 needs-fix, Current Phase = review
-- **compound**：在 review 与 plan 输入充分时，做复利沉淀（经验/上下文/自动化），并推进索引 Status = completed, Current Phase = compound
+- **archive**：当用户明确确认任务完成（Status = completed）时激活，负责归档 REQ 三件套和更新索引
 
 #### 2.4 循环选项菜单（每轮结束必须输出）
 
@@ -159,15 +159,15 @@ D) 退出
 
 每次阶段输出完成后，必须先给出"是否允许推进"的**显式判据**，并把选择权交还给用户（人工闸门）：
 
-- **req → plan**：Requirement 已落盘，且关键缺失项=0；用户确认"可以进入 plan"
+- **req → plan**：Requirement 已写入，且关键缺失项=0；用户确认"可以进入 plan"
 - **plan → audit**：plan 含 Tasks/Validation/Worklog/复利候选小节；用户确认"可以进入 audit"
 - **audit → work**：Blockers=0；技术风险已评估；未决问题有明确处理方式；用户确认"可以开始 work"
 - **work → review**：Deliverables 关键项完成；验证记录可复现；用户确认"进入 review"
-- **review → compound**：Blockers/High 已处理或明确拒绝并记录原因；用户确认"进入 compound"
+- **review → archive**：Blockers/High 已处理或明确拒绝并记录原因；用户确认"任务完成"后进入 archive
 
 > 目的：即使入口极简，阶段切换依然“可观测、可纠偏、可回退”，不会全靠模型自行推进。
 
-#### 2.5 经验候选输出约定（第一现场）
+#### 2.5 经验候选输出约定（即时捕获）
 
 当出现纠正/取舍/根因/覆盖缺口等判断时，直接输出结构化候选（HTML 注释），由 subagent 处理：
 
@@ -187,13 +187,12 @@ D) 退出
 -->
 ```
 
-- `experience-collector` 背景收集并暂存；`experience-depositor` 在确认后落盘。
-- 兼容：如有 `复利候选` 小节，afterAgentResponse hook 兜底抽取。
+- `experience-collector` 背景收集并暂存；`experience-depositor` 在确认后写入。
 
 ---
 
 ## 输出要求
 
-- 必须落盘该轮产生的文件（如 req/plan/review/experience）
+- 必须写入该轮产生的文件（如 req/plan/review/experience）
 - 必须更新 `.workflow/requirements/INDEX.md`
 - 最后只用 3-6 行说明：当前阶段、进度、阻塞项、下一步需要你选 A/B/C/D

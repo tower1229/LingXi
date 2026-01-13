@@ -130,7 +130,6 @@ Write-Info "下载 hooks..."
 $HookFiles = @(
     "hooks.json",
     "hooks/_hook-utils.mjs",
-    "hooks/after-agent-response.mjs",
     "hooks/audit-after-shell-execution.mjs",
     "hooks/before-shell-execution.mjs",
     "hooks/before-submit-prompt.mjs",
@@ -150,7 +149,7 @@ Write-Success "已下载 hooks (hooks.json + 6 个脚本)"
 Write-Info "下载 skills..."
 $Skills = @(
     "skills/audit/SKILL.md",
-    "skills/compound/SKILL.md",
+    "skills/archive/SKILL.md",
     "skills/context-engineering/SKILL.md",
     "skills/experience-depositor/SKILL.md",
     "skills/experience-index/SKILL.md",

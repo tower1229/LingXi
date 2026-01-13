@@ -1,6 +1,6 @@
 ---
 name: flow-router
-description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req→plan→audit→work→review→compound）。当用户输入 /flow <REQ-xxx|描述> 命令时激活，负责判断当前阶段、支持重复执行（如 audit 多次）、并在推进前请求用户确认（人工闸门）。
+description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req→plan→audit→work→review→archive）。当用户输入 /flow <REQ-xxx|描述> 命令时激活，负责判断当前阶段、支持重复执行（如 audit 多次）、并在推进前请求用户确认（人工闸门）。
 ---
 
 # Flow Router
@@ -11,7 +11,7 @@ description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req�
 
 - `/flow <描述>`：创建新需求并进入 req 阶段
 - `/flow REQ-xxx`：继续该需求，读取状态并进入合适阶段
-- `/flow 沉淀 ...` / `/flow 忽略沉淀`：处理 hooks 暂存的候选沉淀确认
+- `/flow 沉淀 ...` / `/flow 忽略沉淀`：处理 subagent 暂存的候选沉淀确认
 
 ### 状态机（SSoT 优先）
 
@@ -32,7 +32,7 @@ description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req�
 | audit | `audit` | 技术审查与风险评估 |
 | work | `work` | 实现与验证 |
 | review | `review` | 多维度审查 |
-| compound | `compound` | 复利沉淀 |
+| archive | `archive` | 归档 |
 
 Agent 会根据阶段自动激活相关 skill（基于 skill 的 description 匹配）。
 
@@ -52,13 +52,19 @@ C) 回退到上一阶段（说明原因与影响）
 D) 退出
 ```
 
-### 复利候选（用于 hooks 自动发现）
+### 复利候选（通过 EXP-CANDIDATE 自动收集）
 
-当你识别到可沉淀点时，在回复中追加：
+当你识别到可沉淀点时，在回复中输出结构化注释：
 
-```text
-## 复利候选（Compounding Candidates）
-- （候选）...
+```html
+<!-- EXP-CANDIDATE {
+  "stage": "work",
+  "trigger": "...",
+  "decision": "...",
+  "solution": "...",
+  "verify": "...",
+  "pointers": [...]
+} -->
 ```
 
-> Hooks 会在对话结束时弹出确认；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
+> experience-collector 会在后台自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。

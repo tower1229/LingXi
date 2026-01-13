@@ -1,6 +1,6 @@
 ---
 name: review
-description: 此 Skill 多维度审查实现并落盘 review.md。当 work 阶段交付物完成且用户确认进入 review 时激活，把 Blockers/High 回写到 plan，阶段推进需人工确认。
+description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶段交付物完成且用户确认进入 review 时激活，把 Blockers/High 回写到 plan，阶段推进需人工确认。
 ---
 
 # Review
@@ -17,7 +17,7 @@ description: 此 Skill 多维度审查实现并落盘 review.md。当 work 阶�
 
 执行前，`experience-index` 会自动匹配历史经验，结合本次改动与审查维度提醒历史坑。
 
-### 0.1) 经验候选捕获（第一现场）
+### 0.1) 经验候选捕获（即时捕获）
 
 审查过程中，如发生以下情况，立即输出经验候选（HTML 注释包裹，不干扰对话）：
 

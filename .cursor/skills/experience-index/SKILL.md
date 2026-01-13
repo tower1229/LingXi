@@ -1,6 +1,6 @@
 ---
 name: experience-index
-description: 此 Skill 在 /flow 进入 req/audit/plan/work/review/compound 任一阶段前自动激活，按 Trigger 匹配 .workflow/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
+description: 此 Skill 在 /flow 进入 req/audit/plan/work/review/archive 任一阶段前自动激活，按 Trigger 匹配 .workflow/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
 ---
 
 # Experience Index

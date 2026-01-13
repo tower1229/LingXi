@@ -1,6 +1,6 @@
 ---
 name: plan-manager
-description: 此 Skill 把 REQ.plan.md 当作执行账本。当 work/review/compound 阶段推进时，或每完成一个"最小步"后要回写执行账本时激活，确保状态摘要/任务勾选/Worklog/复利候选必须回写，保证可交接与可复现验证。
+description: 此 Skill 把 REQ.plan.md 当作执行账本。当 work/review/archive 阶段推进时，或每完成一个"最小步"后要回写执行账本时激活，确保状态摘要/任务勾选/Worklog/复利候选必须回写，保证可交接与可复现验证。
 ---
 
 # Plan Manager
@@ -11,7 +11,7 @@ description: 此 Skill 把 REQ.plan.md 当作执行账本。当 work/review/comp
 
 每次推进都更新：
 
-- 当前阶段：work / review / compound
+- 当前阶段：work / review / archive
 - 进度：X/Y
 - 当前任务：一句话
 - 阻塞项：无/具体阻塞

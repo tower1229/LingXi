@@ -16,11 +16,6 @@
                 "command": "node hooks/audit-after-shell-execution.mjs"
             }
         ],
-        "afterAgentResponse": [
-            {
-                "command": "node hooks/after-agent-response.mjs"
-            }
-        ],
         "stop": [
             {
                 "command": "node hooks/stop.mjs"
