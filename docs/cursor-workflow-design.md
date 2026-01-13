@@ -1,13 +1,13 @@
 # cursor-workflow 设计文档（基于 Cursor Nightly：Rules × Commands × Skills × Hooks）
 
-> **定位**：这是一个“技能优先（Skills-first）”的 Cursor 工作流模板仓库，用**单入口**命令 `/flow <REQ-xxx|描述>` 驱动需求全生命周期（req → plan → audit → work → review → compound），并通过 **人工闸门（human gates）** 与 **确认式沉淀（confirm-only compounding）** 保证过程可控、产物可追溯、经验可复利。
+> **定位**：这是一个“技能优先（Skills-first）”的 Cursor 工作流模板仓库，用**单入口**命令 `/flow <REQ-xxx|描述>` 驱动需求全生命周期（req → plan → audit → work → review → compound），并通过 **人工闸门（human gates）** 与 **确认式沉淀（confirm-only knowledge capture）** 保证过程可控、产物可追溯、知识可复用、质量可持续改进。
 
 ## 1. 背景与设计理念
 
-本仓库的设计核心是把 AI 辅助研发做成一套“可长期复用、越用越快”的工程系统，重点解决两类根问题：
+本仓库的设计核心是把 AI 辅助研发做成一套“可长期复用、可持续改进”的工程系统，重点解决两类根问题：
 
 - **上下文工程（Context Engineering）**：在正确的时刻给到**最小高信号**信息（先指针后细节、分层加载、按需展开），避免上下文膨胀导致偏航。
-- **复合工程（Compounding Engineering）**：把执行过程中的“坑/隐性约束/排查结论/验证方法/决策理由”沉淀为系统资产，让后续同类工作边际成本下降。
+- **知识沉淀与自动化改进（Knowledge Capture & Automation）**：把执行过程中的“缺陷模式/隐性约束/排查结论/验证方法/决策依据”沉淀为可检索、可执行的系统资产，用于降低重复错误与返工。
 
 为让上述理念可落地，本仓库采用 Cursor 可用的能力组合出一个工程化闭环：
 
@@ -23,7 +23,7 @@
 - **入口极简**：用户只需表达意图（`/flow <描述>` 或 `/flow REQ-xxx`），无需记忆一堆子命令。
 - **可观测、可纠偏、可回退**：用索引（SSoT）+ 账本（plan）+ review 形成闭环；关键推进点必须人工确认。
 - **最小高信号上下文**：强调“指针优先、按需加载、避免文档膨胀”。
-- **复合沉淀（复利）**：把“返工原因/隐性约束/排查结论/可自动化拦截点”转成长期资产（经验库、规则、技能、服务上下文）。
+- **知识沉淀与可执行约束**：把“返工原因/隐性约束/排查结论/可自动拦截点”转成长期资产（经验库、规则、技能、服务上下文），并在后续会话的恰当节点自动加载。
 
 ### 2.2 非目标
 
@@ -63,8 +63,7 @@ Artifacts & Long-term Context (.workflow/**)
   |
   v
 Hooks (.cursor/hooks + hooks.json)
-  - 提交前门控（/flow 形态 & secrets）
-  - shell 执行门控（yarn/危险命令/git 写操作）
+  - 提交前门控（/flow 形态校验 + REQ 存在性检查）
   - 输出后候选抽取 + stop 时 followup 提醒
   - completed 自动归档（in-progress -> completed + INDEX Links 修正）
 ```
@@ -86,7 +85,7 @@ Hooks (.cursor/hooks + hooks.json)
     completed/           # 已完成归档三件套
   context/
     experience/          # 长期经验库 + INDEX（confirm-only）
-    tech/services/       # 服务/模块上下文（“考古资产”）
+    tech/services/       # 服务/模块上下文（长期可复用的服务说明）
     tech/quality-standards-*.md  # 质量准则 Schema 与 Index
     business/            # 业务边界/协作上下文（可选）
     session/             # 会话暂存（checkpoint、pending candidates）
@@ -99,7 +98,7 @@ Hooks (.cursor/hooks + hooks.json)
 
 - **Single entrypoint**：只使用 `/flow <REQ-xxx|描述>` 驱动生命周期。
 - **Human gates**：任何阶段切换都不能静默自动推进；每轮必须输出菜单，等待用户选择。
-- **Confirm-only compounding**：未收到 `/flow 沉淀 ...` 明确确认前，不得写入 `.workflow/context/experience/`。
+- **Confirm-only knowledge capture**：未收到 `/flow 沉淀 ...` 明确确认前，不得写入 `.workflow/context/experience/`。
 - **质量准则采纳也需确认**：未收到 `/flow 采纳质量准则 ...` 明确确认前，不得写入 `.cursor/rules/qs-*`。
 
 ## 5. 关键状态与产物模型
@@ -125,12 +124,22 @@ Hooks (.cursor/hooks + hooks.json)
 `REQ-xxx.plan.md` 不只是计划，也是“执行 ledger”：
 
 - **Status Summary**：阶段/进度/当前任务/阻塞项/上次更新
-- **Tasks**：可勾选、可拆分为最小步
-- **Validation**：每步验证方式必须可复现
+- **Files to Change**：需要创建/修改的文件清单（含测试文件）
+- **Tasks**：可勾选、可拆分为最小步；任务需标注依赖关系
+- **Test Specifications / Validation**：验证方式必须可复现；中等以上复杂度需包含“可测试行为清单 + 输入/输出/边界条件”的测试规格，并将测试任务作为必选分类
 - **Worklog**：记录做了什么、为什么、如何验证、结果、指针
-- **Compounding Candidates**：持续输出“可沉淀点”，供 hooks 抽取与后续确认沉淀
+- **Compounding Candidates**：持续输出“待沉淀候选”，供 hooks 抽取与后续确认沉淀（仅在用户确认后进入长期知识库或规则/技能）
 
 `plan-manager` Skill 明确规定了这些字段必须持续回写。
+
+#### 5.2.1 测试设计与执行链路（概览）
+
+工作流中与测试相关的职责分配如下：
+
+- **plan 阶段**：定义“可测试行为清单”和对应的测试规格（输入/输出/边界条件），并将测试任务显式加入任务清单与文件变更清单。
+- **audit 阶段**：审查计划中的测试任务与测试规格是否完整，测试缺失可作为阻塞项处理。
+- **work 阶段**：在任务开始前、每个任务完成后、进入 review 前执行测试并记录结果；单元测试要求隔离依赖、按行为编写、使用 AAA（Arrange–Act–Assert）结构。
+- **review 阶段**：审查测试覆盖情况与测试质量，测试覆盖不足应作为需要修正的问题回写到 plan。
 
 ### 5.3 Experience Index（长期经验库索引）
 
@@ -150,7 +159,7 @@ Hooks (.cursor/hooks + hooks.json)
 两类 Trigger 的分工：
 
 - **Trigger (when to load)**：偏工程检索（关键词/场景），用于在正确时刻加载
-- **Surface signal / Hidden risk**：偏认知触发（风险嗅觉），用于在相似“风险味道”出现时提醒警觉
+- **Surface signal / Hidden risk**：偏风险提示，用于在相似信号出现时提醒关注潜在问题
 
 ### 5.4 Quality Bar（质量准则）
 
@@ -184,7 +193,18 @@ Hooks (.cursor/hooks + hooks.json)
 
 - **必须**调用 `experience-index`：按 Trigger 匹配 active 经验，输出“最小高信号”的风险提醒与指针。
 - **按需**调用 `index-manager`：做 Fail Fast（索引与文件一致性）。
-- **推荐**调用 `service-loader`：当涉及存量/多服务系统时，先补齐服务上下文，降低“考古成本”。
+- **推荐**调用 `service-loader`：当涉及存量/多服务系统时，先补齐服务上下文，降低理解与定位成本。
+- **按需**调用外部知识工具（如 WebSearch、MCP）：在 req/plan 阶段用于补齐外部最佳实践与方案信息（结果不单独落盘，需融入产物表述）。
+
+### 6.3.1 阶段职责概览
+
+| 阶段 | 目标 | 关键活动 | 主要产物 |
+|---|---|---|---|
+| req | 明确需求边界与验收标准 | 项目上下文分析、类型/复杂度判断、必要信息一次性澄清、外部参考（按需） | `REQ-xxx.md` |
+| plan | 形成可执行、可验证的计划 | 任务拆解（含依赖与文件清单）、外部参考（按需）、测试设计（行为提取/规格） | `REQ-xxx.plan.md` |
+| audit | 降低进入 work 的风险 | 审查技术风险、任务完整性、测试规格、规范符合度，给出是否可推进判据 | 对话输出（不落盘） |
+| work | 按计划实现并持续验证 | 按任务推进、按节奏执行测试、记录验证结果与证据、必要时 checkpoint | 回写 `REQ-xxx.plan.md` + 可选 checkpoint |
+| review | 多维度验收与回归风险控制 | 功能/安全/性能/架构/可维护性/回归风险 + 测试覆盖审查 | `REQ-xxx.review.md` + 回写 plan |
 
 ### 6.4 人工闸门（循环菜单）
 
@@ -204,29 +224,31 @@ D) 退出
 
 hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
-### 7.1 beforeSubmitPrompt：输入门控（/flow 形态 + secrets + Fail Fast）
+### 7.1 beforeSubmitPrompt：输入门控（/flow 形态校验 + Fail Fast）
 
 脚本：`.cursor/hooks/before-submit-prompt.mjs`
 
-- **敏感信息检测**：如 AWS Key / GitHub Token / OpenAI Key / 私钥块等，直接拦截提交。
 - **/flow 空参数拦截**：`/flow` 必须带参数，否则给出用法提示。
-- **指定 REQ 不存在则拦截**：用户输入 `/flow REQ-xxx` 但本地找不到对应 requirement 文件，直接 fail fast，避免“空转”。
+- **指定 REQ 不存在则拦截**：用户输入 `/flow REQ-xxx` 但本地找不到对应 requirement 文件，直接 fail fast，避免无效执行。
 
-### 7.2 beforeShellExecution：执行门控（统一 yarn + 危险命令确认 + git 写操作确认）
+> **注意**：workflow 不负责敏感信息检测等用户偏好相关的事项，这些应由用户自行管理或通过其他工具处理。
+
+### 7.2 beforeShellExecution：占位符（已移除用户偏好检查）
 
 脚本：`.cursor/hooks/before-shell-execution.mjs`
 
-- **统一 yarn**：拦截 `npm/pnpm/npx`，要求改用 `yarn ...`
-- **危险命令**：`rm -rf` / `mkfs` / `dd if=` / `shutdown` / `reboot` → 需要用户显式批准
-- **git 写操作**：commit/push/rebase/reset/checkout/cherry-pick → 需要用户显式批准
+- 该 hook 仅作为占位符保留，不执行任何检查。
+- workflow 不负责包管理器选择、命令风险判断、git 操作确认等用户偏好相关的事项。
 
-### 7.3 afterAgentResponse：复利候选抽取（写入 session 暂存）
+> **注意**：如需包管理器统一、危险命令拦截等功能，应由项目级规则或用户自行配置，而非 workflow 职责。
+
+### 7.3 afterAgentResponse：沉淀候选抽取（写入 session 暂存）
 
 脚本：`.cursor/hooks/after-agent-response.mjs`
 
 抽取逻辑要点：
 
-- 只要输出文本里出现 `复利候选` 或 `Compounding Candidates` 小节，就会从该小节向下扫描：
+- 只要输出文本里出现 `沉淀候选` / `复利候选` 或 `Compounding Candidates` 小节，就会从该小节向下扫描：
   - 识别 `- ...` / `- [ ] ...` / `- [x] ...` 行作为候选
   - 遇到下一个 `##`/`###` 标题停止
   - 最多保留 8 条
@@ -242,7 +264,7 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 - 若存在 pending candidates 且尚未 asked，则输出 followup 提示：
   - 候选列表（1-based）
   - 引导用户使用 `/flow 沉淀 ...` 或 `/flow 忽略沉淀`
-- 同时做 housekeeping：把 `Status=completed` 的 REQ 产物归档到 `requirements/completed/` 并修正 INDEX Links。
+- 同时做清理工作：把 `Status=completed` 的 REQ 产物归档到 `requirements/completed/` 并修正 INDEX Links。
 
 ### 7.5 afterShellExecution：审计日志（可选）
 
@@ -250,14 +272,14 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 - 将每次 shell 执行的 `command/duration/output_head` 追加记录到系统临时目录日志（不影响主流程）。
 
-## 8. 复合沉淀（Compounding）与成长循环（Curate）
+## 8. 知识沉淀（Compounding）与治理（Curate）
 
-### 8.1 复利候选 → 确认沉淀
+### 8.1 沉淀候选 → 确认沉淀
 
 1. Agent 在回复中追加：
 
 ```text
-## 复利候选（Compounding Candidates）
+## 沉淀候选（Compounding Candidates）
 - （候选）...
 ```
 
@@ -270,22 +292,22 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 ### 8.2 沉淀分流（Experience Depositor）
 
-`experience-depositor` 的核心不是“只写经验文档”，而是先做 **沉淀分流（多落点，ROI 优先）**：
+`experience-depositor` 的核心不是“只写经验文档”，而是先做**沉淀分流**（将知识与改进点放到最合适的载体）：
 
 - **经验文档**（默认）：写入 `.workflow/context/experience/`
 - **规则/自动拦截**：高频且可自动判定 → 优先 hook/lint/CI
 - **Skill/流程升级**：重复执行的流程 → 优先固化为 skill
-- **长期上下文补齐**：考古类信息 → `.workflow/context/tech/services/` 或 `.workflow/context/business/`
+- **长期上下文补齐**：与存量系统理解相关的信息 → `.workflow/context/tech/services/` 或 `.workflow/context/business/`
 
-在写入 experience 之前，必须先做一个“成长过滤器”判断：
+在写入 experience 之前，必须先做一个“长期资产筛选”判断：
 
-- **一年后在完全不同项目**再遇到类似局面，这条信息还能否帮助我**提前做出正确判断**？
-  - 否 → 不进 experience（留在 session/worklog 作为项目记录）
-  - 是 → 进入 experience（长期判断资产）
+- **可迁移性**：该信息是否能在不同项目/不同时间点复用，用于提前识别风险或指导决策？
+  - 否 → 不进 experience（保留在 session/worklog 作为项目记录）
+  - 是 → 进入 experience（长期可复用知识）
 
-> 这体现了“文档不是终点，自动化与可执行资产优先”的复合工程思想。
+> 目的：控制长期知识库的噪声密度，优先沉淀可复用、可检索、可执行的内容。
 
-### 8.3 成长循环（Experience Curator，自动执行）
+### 8.3 治理流程（Experience Curator，自动执行）
 
 当本轮沉淀**实际新增**经验文件后，`experience-depositor` 必须自动触发 `experience-curator`：
 
@@ -296,9 +318,9 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 - **输出治理报告**：动作/理由/影响/回滚方式
 - **输出质量准则建议（只建议）**：1-3 条，等待用户 `/flow 采纳质量准则` 或 `/flow 忽略质量准则`
 
-成长循环的“抽象上升”要求：
+治理过程的抽象要求：
 
-- 质量准则建议应优先基于经验的 **Judgment Capsule**（I used to think → Now I believe → decisive variable）抽象，而不是复述案例/步骤
+- 质量准则建议应优先基于经验中的“决策记录摘要”（决策点/备选方案/选择理由/关键判据）抽象，而不是复述案例步骤
 
 ## 9. 安装与复刻（作为模板仓库）
 
@@ -319,5 +341,5 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 - **新增阶段能力**：优先新增/扩展 `.cursor/skills/*`，而不是增加新的命令入口。
 - **增强自动化拦截**：把高频错误从“经验”升级为 hook/lint/CI（Strength → enforced）。
-- **服务上下文建设**：当项目复杂度上升，优先补齐 `tech/services/*` 作为“考古资产”，并在 plan 阶段强制引用指针。
+- **服务上下文建设**：当项目复杂度上升，优先补齐 `tech/services/*` 作为长期可复用的服务说明，并在 plan 阶段强制引用指针。
 - **经验治理策略**：合并/取代规则保持可解释、可回滚，避免引入不可控的黑盒聚类。

@@ -12,33 +12,9 @@ function extractReqId(prompt) {
   return match?.[0] ?? null;
 }
 
-function detectSecretLike(prompt) {
-  const patterns = [
-    { name: "AWS Access Key", re: /\bAKIA[0-9A-Z]{16}\b/ },
-    { name: "GitHub Token", re: /\bghp_[A-Za-z0-9]{20,}\b/ },
-    { name: "OpenAI Key", re: /\bsk-[A-Za-z0-9]{20,}\b/ },
-    { name: "Private Key Block", re: /BEGIN (RSA|OPENSSH|EC) PRIVATE KEY/ },
-    { name: "Slack Token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
-  ];
-
-  for (const p of patterns) {
-    if (p.re.test(prompt)) return p.name;
-  }
-  return null;
-}
-
 async function main() {
   const input = await readStdinJson();
   const prompt = typeof input.prompt === "string" ? input.prompt : "";
-
-  const secretLike = detectSecretLike(prompt);
-  if (secretLike) {
-    writeStdoutJson({
-      continue: false,
-      user_message: `检测到可能的敏感信息（${secretLike}）。请先移除/打码后再提交。`,
-    });
-    return;
-  }
 
   const trimmed = prompt.trim();
   if (!(trimmed === "/flow" || trimmed.startsWith("/flow "))) {
@@ -72,7 +48,7 @@ async function main() {
       `${reqId}.md`,
     );
 
-    // Fail Fast：如果用户明确指定了 REQ，但本地不存在，就先拦住，避免“空转”
+    // Fail Fast：如果用户明确指定了 REQ，但本地不存在，就先拦住，避免无效执行
     if (
       !(await fileExists(inProgressRequirementPath)) &&
       !(await fileExists(completedRequirementPath))
@@ -94,10 +70,9 @@ async function main() {
 }
 
 main().catch((err) => {
-  // Hook 出错时默认放行，避免把工作流“锁死”
+  // Hook 出错时默认放行，避免把工作流"锁死"
   writeStdoutJson({
     continue: true,
     user_message: `Hook 脚本执行异常，已放行（${String(err?.message ?? err)}）`,
   });
 });
-
