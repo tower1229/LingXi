@@ -14,7 +14,8 @@
 - **Rules**：提供常驻约束（红线、规范、写作风格）
 - **Commands**：提供极简入口（`/flow`），把复杂度隐藏在系统内部
 - **Skills**：承载阶段 Playbook（高质量模板、检查清单、落盘规范）
-- **Hooks**：提供自动门控、候选沉淀提醒、危险操作确认等自动化能力
+- **Subagents**：隔离上下文的辅助执行者（经验收集/落盘），减少主对话干扰
+- **Hooks**：提供自动门控、候选提醒、归档等自动化能力
 
 ## 2. 目标与非目标
 
@@ -30,6 +31,7 @@
 - **不追求全自动推进**：阶段切换不自动完成，必须通过“菜单 + 明确确认”。
 - **不将 session 当知识库**：`.workflow/context/session/` 只用于续航与交接（checkpoint、暂存），不是长期知识。
 - **不在未确认时写入经验库**：任何 `.workflow/context/experience/` 写入必须走 `/flow 沉淀 ...` 的明确确认路径。
+- **不在主对话复制长日志**：依赖 EXP-CANDIDATE 结构化捕获高信号判断，子代理落盘，避免为“传递上下文”写冗长叙述。
 
 ## 3. 总体架构（分层）
 
@@ -99,6 +101,7 @@ Hooks (.cursor/hooks + hooks.json)
 - **Single entrypoint**：只使用 `/flow <REQ-xxx|描述>` 驱动生命周期。
 - **Human gates**：任何阶段切换都不能静默自动推进；每轮必须输出菜单，等待用户选择。
 - **Confirm-only knowledge capture**：未收到 `/flow 沉淀 ...` 明确确认前，不得写入 `.workflow/context/experience/`。
+- **第一现场捕获，分层处理**：经验候选在 req/plan/work/review 的现场输出结构化 EXP-CANDIDATE，由后台 subagent 收集、前台 subagent 落盘。
 - **质量准则采纳也需确认**：未收到 `/flow 采纳质量准则 ...` 明确确认前，不得写入 `.cursor/rules/qs-*`。
 
 ## 5. 关键状态与产物模型
@@ -205,6 +208,7 @@ Hooks (.cursor/hooks + hooks.json)
 | audit | 降低进入 work 的风险 | 审查技术风险、任务完整性、测试规格、规范符合度，给出是否可推进判据 | 对话输出（不落盘） |
 | work | 按计划实现并持续验证 | 按任务推进、按节奏执行测试、记录验证结果与证据、必要时 checkpoint | 回写 `REQ-xxx.plan.md` + 可选 checkpoint |
 | review | 多维度验收与回归风险控制 | 功能/安全/性能/架构/可维护性/回归风险 + 测试覆盖审查 | `REQ-xxx.review.md` + 回写 plan |
+| compound | 复利沉淀编排与归档 | 确认沉淀 → 调用 experience-depositor → 触发 curator → 归档 | `experience/*` + `requirements/completed/*` |
 
 ### 6.4 人工闸门（循环菜单）
 
@@ -242,15 +246,16 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 > **注意**：如需包管理器统一、危险命令拦截等功能，应由项目级规则或用户自行配置，而非 workflow 职责。
 
-### 7.3 afterAgentResponse：沉淀候选抽取（写入 session 暂存）
+### 7.3 afterAgentResponse：候选抽取（兼容路径）
 
 脚本：`.cursor/hooks/after-agent-response.mjs`
 
-抽取逻辑要点：
+用途：兼容旧的“复利候选”小节抽取。主路径改为在阶段技能中输出 `EXP-CANDIDATE` 注释，由 subagent 处理；若未输出注释但仍有小节，则本 hook 兜底抽取。
 
-- 只要输出文本里出现 `沉淀候选` / `复利候选` 或 `Compounding Candidates` 小节，就会从该小节向下扫描：
-  - 识别 `- ...` / `- [ ] ...` / `- [x] ...` 行作为候选
-  - 遇到下一个 `##`/`###` 标题停止
+抽取逻辑（兼容小节）：
+
+- 当输出包含 `沉淀候选` / `复利候选` 或 `Compounding Candidates` 小节时：
+  - 识别 `- ...` / `- [ ] ...` / `- [x] ...` 行作为候选，遇到下一个 `##`/`###` 标题停止
   - 最多保留 8 条
 - 写入暂存文件（若不存在则创建目录）：
   - `.workflow/context/session/pending-compounding-candidates.json`
@@ -274,23 +279,21 @@ hooks 在 `.cursor/hooks.json` 注册，脚本位于 `.cursor/hooks/`。
 
 ## 8. 知识沉淀（Compounding）与治理（Curate）
 
-### 8.1 沉淀候选 → 确认沉淀
+### 8.1 第一现场捕获 → Subagent 暂存 → 确认沉淀
 
-1. Agent 在回复中追加：
+1. 在 req/plan/work/review 现场，当出现纠正/取舍/根因/覆盖缺口等判断时，输出 `EXP-CANDIDATE` 注释（结构化 JSON，含 stage/trigger/decision/...）。
+2. 后台 subagent `experience-collector`：
+   - 解析注释
+   - 应用“成长过滤器”（一年后跨项目仍有价值才保留）
+   - 结合最小高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、文件指针）暂存到 `.workflow/context/session/pending-compounding-candidates.json`
+3. stop hook 在对话结束时提醒有待沉淀候选（若尚未确认）。
+4. 用户明确回复：
+   - `/flow 沉淀 1,3` 或 `/flow 沉淀 全部`：进入落盘
+   - `/flow 忽略沉淀`：清空待处理项
 
-```text
-## 沉淀候选（Compounding Candidates）
-- （候选）...
-```
+> 兼容：若未输出注释但仍有 `复利候选` 小节，afterAgentResponse hook 兜底抽取。
 
-1. hooks 自动抽取候选 → 写入 session 暂存
-2. stop hook 在对话结束 followup 询问用户是否沉淀
-3. 用户明确回复：
-
-- `/flow 沉淀 1,3` 或 `/flow 沉淀 全部`：进入沉淀执行
-- `/flow 忽略沉淀`：清空候选并结束
-
-### 8.2 沉淀分流（Experience Depositor）
+### 8.2 沉淀分流（Experience Depositor + Compound 编排）
 
 `experience-depositor` 的核心不是“只写经验文档”，而是先做**沉淀分流**（将知识与改进点放到最合适的载体）：
 

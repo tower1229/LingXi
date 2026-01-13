@@ -30,7 +30,8 @@
 - 底座：
   - `index-manager`
   - `experience-index`
-  - `experience-depositor`
+  - `experience-collector`（背景收集）
+  - `experience-depositor`（前台落盘）
 
 ---
 
@@ -77,7 +78,7 @@
 
 ### 1) 沉淀确认路径（/flow 沉淀 / 忽略沉淀）
 
-**输入**：读取候选暂存文件（由 hooks 生成）：
+**输入**：读取候选暂存（由 EXP-CANDIDATE + experience-collector 生成；兼容 hooks 兜底）：
 
 - `.workflow/context/session/pending-compounding-candidates.json`
 
@@ -85,17 +86,10 @@
 
 - 如果用户选择 **忽略沉淀**：删除该暂存文件并输出“已忽略”
 - 如果用户选择 **沉淀**：
-  - 按序处理选中的候选（1-based index）
-  - 对每条候选，先做“沉淀分流”（多落点，目标是复利最大化）：
-    - **A. 经验文档**（默认）：遵循 `experience-depositor` 的指引落盘到 `.workflow/context/experience/`
-    - **B. 自动拦截**：如果是高频且可自动判定的问题，优先沉淀为 hook/lint/CI（例如格式/约定检查、代码规范校验）
-    - **C. Skill/流程升级**：如果是可复用流程或反复出现的步骤，优先沉淀为 skill（执行层）或扩展已有 skill
-    - **D. 长期上下文补齐**：如果是“考古信息/服务边界/配置规范”，优先补齐 `.workflow/context/tech/services/` 或 `.workflow/context/business/`
-  - 对每条候选，输出“推荐沉淀落点 + 理由 + 预期复利”，再执行具体落盘（仍然必须在用户确认的前提下）
-  - **成长循环（自动触发）**：当本轮新增经验落盘完成后，必须自动执行：
-    - **经验治理（自动执行，无需人工审核）**：生成候选合并组/候选取代链，并直接落盘执行（合并/取代/索引更新），随后输出变更报告与回滚说明
-    - **质量准则建议（需人工审核）**：只给建议与选项，由用户决定是否采纳（可升级为 rules/skills/checklists）
-  - 全部完成后删除暂存文件
+  - 由 `experience-depositor` 展示候选摘要，支持全选/部分选择
+  - `experience-depositor` 执行沉淀分流（经验文档 / hook|lint|CI / skill 升级 / 服务上下文），并写入 experience/INDEX（需用户确认）
+  - 若新增经验，自动触发 `experience-curator`（合并/取代 + 治理报告 + 质量准则建议）
+  - 处理完所选候选后，从暂存中移除；未选项保留
 
 **输出**：只需简短说明"沉淀了几条，文件路径在哪，下次触发条件是什么"。
 
@@ -173,16 +167,28 @@ D) 退出
 
 > 目的：即使入口极简，阶段切换依然“可观测、可纠偏、可回退”，不会全靠模型自行推进。
 
-#### 2.5 复利候选输出约定（用于 Hooks 自动发现）
+#### 2.5 经验候选输出约定（第一现场）
 
-当你在任意阶段识别到“可沉淀点”（例如：返工原因、隐性约束、可自动拦截点、典型排查结论），必须在当轮回复中追加一个小节：
+当出现纠正/取舍/根因/覆盖缺口等判断时，直接输出结构化候选（HTML 注释），由 subagent 处理：
 
 ```text
-## 复利候选（Compounding Candidates）
-- （候选）...
+<!-- EXP-CANDIDATE
+{
+  "stage": "work",
+  "trigger": "当发现 root cause 并更换方案",
+  "decision": "实现/修复/接口/边界的取舍",
+  "alternatives": ["原方案A（放弃，因为...）"],
+  "signal": "判断依据/风险信号/失败证据",
+  "solution": "新的实现/修复方案",
+  "verify": "测试/验证步骤与结果期望",
+  "pointers": ["path/to/file"],
+  "notes": "可选补充"
+}
+-->
 ```
 
-> Hooks 会在对话结束时自动弹出“是否沉淀”的确认；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
+- `experience-collector` 背景收集并暂存；`experience-depositor` 在确认后落盘。
+- 兼容：如有 `复利候选` 小节，afterAgentResponse hook 兜底抽取。
 
 ---
 

@@ -14,23 +14,23 @@ description: 此 Skill 围绕 REQ 做复利沉淀。当 review 完成且用户�
 
 ## Instructions
 
-### 0) 先检查重复（强制）
+### 0) 入口与重复检查（强制）
 
-执行前，`experience-index` 会自动匹配历史经验，避免重复沉淀同类经验。
+- 执行前，`experience-index` 自动匹配历史经验，避免重复沉淀。
+- 支持入口：review 结束后、用户 `/flow 沉淀 ...`、或阶段结束提示。
 
-### 1) 提取候选（优先顺序）
+### 1) 提取候选（按优先顺序）
 
-1. plan 的 Compounding Candidates
-2. plan Worklog（返工/排查/关键决策/验证）
-3. review 的复利候选
+1. `.workflow/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + subagent 收集）
+2. 如无暂存，再回溯 plan 的 Compounding Candidates / Worklog / review 复利候选
 
-### 2) 写入必须确认
+### 2) 写入必须确认（人工闸门）
 
-未收到用户明确确认前，不得写入 `.workflow/context/experience/`。
+未收到用户明确确认前，不得写入 `.workflow/context/experience/`。确认后调用 `experience-depositor` 执行落盘。
 
-### 3) 冲突检测与落盘
+### 3) 冲突检测与落盘（委托 depositor + curator）
 
-遵循 `experience-depositor` 的指引进行冲突检测：
+调用 `experience-depositor` 执行：
 
 - 冲突 → deprecated 旧经验并记录替代关系
 - 重复 → 合并或提示用户选择
@@ -47,4 +47,6 @@ description: 此 Skill 围绕 REQ 做复利沉淀。当 review 完成且用户�
 
 - 当索引被推进到 `completed` 后，将该 REQ 的三件套（`.md/.plan.md/.review.md`）从 `requirements/in-progress/` 归档移动到 `requirements/completed/`
 - 同步更新 `.workflow/requirements/INDEX.md` 的 `Links` 指向 `completed/`
+
+> 轻量化：如果仅需落盘候选而不进入完整 compound，会话可直接 `/flow 沉淀` 触发 `experience-depositor`，compound 负责归档与索引推进。
 
