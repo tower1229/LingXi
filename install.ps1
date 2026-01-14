@@ -108,11 +108,13 @@ foreach ($cmd in $Commands) {
 Write-Success "已下载 commands (2 个文件)"
 
 # 下载 rules（项目级质量准则）
+# 使用硬编码列表，明确控制哪些文件被安装
+# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 Write-Info "下载 rules..."
 $Rules = @(
-    "rules/ai-artifacts/RULE.md",
-    "rules/development-specifications/RULE.md",
-    "rules/safety-guardrails/RULE.md"
+    "rules/qs-always-general/RULE.md",
+    "rules/quality-standards-index.md",
+    "rules/quality-standards-schema.md"
 )
 
 foreach ($rule in $Rules) {
@@ -122,7 +124,7 @@ foreach ($rule in $Rules) {
         exit 1
     }
 }
-Write-Success "已下载 rules (3 个文件)"
+Write-Success "已下载 rules (1 个规则 + 2 个索引文件)"
 
 # 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此下载
 
@@ -249,8 +251,8 @@ Write-Host ""
 Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
-Write-Host "  - .cursor/commands/ (2 个命令文件)"
-Write-Host "  - .cursor/rules/ (4 个规则文件)"
+Write-Host "  - .cursor/commands/ (2 个命令)"
+Write-Host "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
 Write-Host "  - .cursor/skills/ (Agent Skills)"
 Write-Host "  - .workflow/ 目录结构"
 Write-Host ""

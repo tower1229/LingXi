@@ -87,9 +87,18 @@ cp -r "$SCRIPT_DIR/.cursor/commands/"* .cursor/commands/
 success "已复制 commands (2 个文件)"
 
 # 复制 rules（项目级质量准则）
+# 使用硬编码列表，明确控制哪些文件被安装
+# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 info "复制 rules..."
-cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
-success "已复制 rules"
+
+# 规则目录
+cp -r "$SCRIPT_DIR/.cursor/rules/qs-always-general" .cursor/rules/
+
+# 索引文件
+cp "$SCRIPT_DIR/.cursor/rules/quality-standards-index.md" .cursor/rules/
+cp "$SCRIPT_DIR/.cursor/rules/quality-standards-schema.md" .cursor/rules/
+
+success "已复制 rules (1 个规则 + 2 个索引文件)"
 
 # 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此复制
 
@@ -171,8 +180,8 @@ echo ""
 success "安装完成！"
 echo ""
 info "已安装的文件："
-echo "  - .cursor/commands/ (2 个命令文件)"
-echo "  - .cursor/rules/ (4 个规则文件)"
+echo "  - .cursor/commands/ (2 个命令)"
+echo "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
 echo "  - .cursor/skills/ (Agent Skills)"
 echo "  - .workflow/ 目录结构"
 echo ""

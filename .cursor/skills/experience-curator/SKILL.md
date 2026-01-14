@@ -13,9 +13,10 @@ description: 此 Skill 是经验成长循环核心，在 experience-depositor �
 ## Outputs (must write)
 
 - 更新后的 `INDEX.md`（合并/取代后的索引）
-- `INDEX.md.bak`（执行前备份，用于回滚）
 - 变更报告（输出到对话）
 - 质量准则建议（输出到对话，等待用户采纳）
+
+注：`INDEX.md.bak`（执行前备份）会在治理完成后自动删除
 
 ---
 
@@ -28,6 +29,8 @@ description: 此 Skill 是经验成长循环核心，在 experience-depositor �
 ```bash
 cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.bak
 ```
+
+注：备份文件会在治理完成后（步骤 6）自动删除
 
 ### 1) 读取索引与新经验
 
@@ -135,6 +138,24 @@ overlap = |keywords(new) ∩ keywords(old)| / |keywords(old)|
 - 必须备份 INDEX 后再执行任何治理动作
 - 必须输出统一格式的治理报告（执行动作/影响范围/回滚方式）
 - 必须等待用户明确采纳后才写入质量准则（不得自动写入）
+
+### 6) 清理备份文件（必须执行）
+
+治理流程结束后，必须删除备份文件：
+
+```bash
+rm .workflow/context/experience/INDEX.md.bak
+```
+
+**执行时机**：
+- 在步骤 4（变更报告）和步骤 5（质量准则建议）都完成后
+- 无论有无变更，都必须删除备份
+- 删除操作静默执行，不输出任何信息
+
+**原因**：
+- 备份仅用于治理过程中的回滚保护
+- 治理成功后备份无用，避免留下垃圾文件
+- 下次执行时会重新创建新的备份
 
 ---
 

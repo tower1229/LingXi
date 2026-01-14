@@ -126,9 +126,28 @@ async function main() {
         success('已复制 commands (2 个文件)');
 
         // 复制 rules（项目级质量准则）
+        // 使用硬编码列表，明确控制哪些文件被安装
+        // 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
         info('复制 rules...');
-        copyDir(path.join(scriptDir, '.cursor/rules'), '.cursor/rules');
-        success('已复制 rules');
+        const rulesToCopy = [
+            // 规则目录
+            { type: 'dir', path: 'qs-always-general' },
+            // 索引文件
+            { type: 'file', path: 'quality-standards-index.md' },
+            { type: 'file', path: 'quality-standards-schema.md' },
+        ];
+
+        for (const rule of rulesToCopy) {
+            const srcPath = path.join(scriptDir, '.cursor/rules', rule.path);
+            const destPath = path.join('.cursor/rules', rule.path);
+            
+            if (rule.type === 'dir') {
+                copyDir(srcPath, destPath);
+            } else {
+                fs.copyFileSync(srcPath, destPath);
+            }
+        }
+        success('已复制 rules (1 个规则 + 2 个索引文件)');
 
         // 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此复制
 
@@ -225,8 +244,8 @@ async function main() {
         success('安装完成！');
         console.log('');
         info('已安装的文件：');
-        console.log('  - .cursor/commands/ (2 个命令文件)');
-        console.log('  - .cursor/rules/ (4 个规则文件)');
+        console.log('  - .cursor/commands/ (2 个命令)');
+        console.log('  - .cursor/rules/ (1 个规则 + 2 个索引文件)');
         console.log('  - .cursor/skills/ (Agent Skills)');
         console.log('  - .workflow/ 目录结构');
         console.log('');
