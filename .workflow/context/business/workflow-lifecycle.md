@@ -65,7 +65,7 @@
   - **关键决策点**：
     - 信息收集方式：引导式收集，而非自动分析
     - 文档生成：基于模板生成，确保一致性
-  - **指针**：`.cursor/commands/init.md`、`.cursor/commands/references/business-context-template.md`
+  - **指针**：`.cursor/commands/init.md`、`references/business-context-template.md`
 
 ## 4) 业务规则（Rules）
 

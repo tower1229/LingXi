@@ -192,6 +192,6 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 
 ## 参考
 
-- [Service Loader SKILL.md](../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制参考
-- [Experience Depositor SKILL.md](../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制参考
-- [Data Models](./data-models.md) - 数据模型定义
+- [Service Loader SKILL.md](../../../../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制参考
+- [Experience Depositor SKILL.md](../../../../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制参考
+- [Data Models](../../../../docs/02-design/data-models.md) - 数据模型定义

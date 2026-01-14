@@ -92,7 +92,7 @@
 
 #### 2.1 业务上下文文档
 
-- 使用 [Business Context 模板](references/business-context-template.md) 创建业务上下文文档
+- 使用 [Business Context 模板](../../.workflow/context/business/references/business-context-template.md) 创建业务上下文文档
 - 至少生成 1 个业务上下文文档示例
 - 文档应包含：业务定位、边界、流程、规则、协作、FAQ
 
@@ -222,7 +222,7 @@ AI：（收集信息后）
 
 ## 参考
 
-- [Business Context 模板](references/business-context-template.md) - 业务上下文模板规范
+- [Business Context 模板](../../.workflow/context/business/references/business-context-template.md) - 业务上下文模板规范
 - [Service Loader SKILL.md](../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制
 - [Experience Depositor SKILL.md](../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制
 - [Flow 命令](./flow.md) - 主工作流命令
