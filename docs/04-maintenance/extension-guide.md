@@ -71,7 +71,7 @@
 ### 步骤
 
 1. **确定 Rule 类型和 Scope**
-   - 参考 `.workflow/context/tech/quality-standards-schema.md`
+   - 参考 `.cursor/rules/quality-standards-schema.md`
    - 选择 Type（always/fs/i/m）和 Scope
 
 2. **使用 rules-creator Skill**
@@ -83,7 +83,7 @@
    - 格式：遵循现有 Rule 的格式
 
 4. **更新索引**
-   - 更新 `.workflow/context/tech/quality-standards-schema.md`
+   - 更新 `.cursor/rules/quality-standards-schema.md`
    - 标记规则状态
 
 ### Rule 类型

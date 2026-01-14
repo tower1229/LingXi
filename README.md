@@ -122,5 +122,5 @@ irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1
 
 - 需求过程：`.workflow/requirements/`
 - 经验库：`.workflow/context/experience/`
-- 质量准则（可复用）：`.cursor/rules/qs-*`（参考 `.workflow/context/tech/quality-standards-index.md`）
+- 质量准则（可复用）：`.cursor/rules/qs-*`（参考 `.cursor/rules/quality-standards-index.md`）
 

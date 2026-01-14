@@ -255,7 +255,7 @@ scope:
 
 ### Schema 索引
 
-位置：`.workflow/context/tech/quality-standards-schema.md`
+位置：`.cursor/rules/quality-standards-schema.md`
 
 定义所有可能的规则组合，作为智慧沉淀时的"选择菜单"。
 
@@ -361,4 +361,4 @@ scope:
 参考：
 - [Requirements Index](../../.workflow/requirements/INDEX.md)
 - [Experience Index](../../.workflow/context/experience/INDEX.md)
-- [Quality Standards Schema](../../.workflow/context/tech/quality-standards-schema.md)
+- [Quality Standards Schema](../../.cursor/rules/quality-standards-schema.md)

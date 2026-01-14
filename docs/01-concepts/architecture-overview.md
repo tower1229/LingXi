@@ -144,8 +144,7 @@ graph TB
 ├── context/
 │   ├── experience/           # 长期经验库 + INDEX
 │   ├── tech/
-│   │   ├── services/        # 服务上下文
-│   │   └── quality-standards-*.md  # 质量准则
+│   │   └── services/        # 服务上下文
 │   ├── business/             # 业务边界（可选）
 │   └── session/              # 会话暂存
 └── workspace/                # 临时工作区
@@ -308,8 +307,7 @@ stateDiagram-v2
 ├── context/
 │   ├── experience/      # 长期经验库 + INDEX（confirm-only）
 │   ├── tech/
-│   │   ├── services/    # 服务/模块上下文
-│   │   └── quality-standards-*.md  # 质量准则
+│   │   └── services/    # 服务/模块上下文
 │   ├── business/        # 业务边界/协作上下文（可选）
 │   └── session/         # 会话暂存（checkpoint、pending candidates）
 └── workspace/           # 临时工作区（默认 gitignore）

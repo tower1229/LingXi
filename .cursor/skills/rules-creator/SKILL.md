@@ -14,8 +14,8 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 ## Outputs
 
 - 创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`
-- 更新 `.workflow/context/tech/quality-standards-index.md`
-- 更新 `.workflow/context/tech/quality-standards-schema.md`（状态变更）
+- 更新 `.cursor/rules/quality-standards-index.md`
+- 更新 `.cursor/rules/quality-standards-schema.md`（状态变更）
 
 ---
 
@@ -176,14 +176,14 @@ Source: {来源经验}
 
 ### 6) 更新索引
 
-更新 `.workflow/context/tech/quality-standards-index.md`：
+更新 `.cursor/rules/quality-standards-index.md`：
 
 1. **规则统计**：更新各类型数量
 2. **已创建规则清单**：新增/更新行
 3. **准则溯源**：新增行（准则描述、规则文件、来源、采纳日期）
 4. **变更记录**：追加行
 
-同时更新 `.workflow/context/tech/quality-standards-schema.md`：
+同时更新 `.cursor/rules/quality-standards-schema.md`：
 - 将对应规则的状态从 `⏳ 按需` 改为 `✅ 已创建`
 
 ---
@@ -272,7 +272,7 @@ globs 必须根据项目实际目录结构配置：
 1. {创建/更新} .cursor/rules/qs-{type}-{scope}/RULE.md
 2. 配置 {frontmatter 说明}
 3. 插入准则内容
-4. 更新 quality-standards-index.md
+4. 更新 .cursor/rules/quality-standards-index.md
 
 确认？ A) 确认 / B) 调整 / C) 取消
 ```

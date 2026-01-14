@@ -103,7 +103,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）。
 
 > 类型选择、Scope 选择、模板等操作指南详见 Skill `rules-creator`。
-> 规则目录详见 `.workflow/context/tech/quality-standards-schema.md`。
+> 规则目录详见 `.cursor/rules/quality-standards-schema.md`。
 
 **输出格式**：
 
