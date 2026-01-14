@@ -164,7 +164,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 
 | # | 建议 | Type | Scope | 目标规则 |
 |---|------|------|-------|----------|
-| 1 | 涉及用户数据的变更必须有审计日志 | always | security | qs-always-security |
+| 1 | 涉及用户数据的变更必须有审计日志 | always | security | qs-always-security（需创建） |
 | 2 | 跨服务调用应先检查超时配置 | i | backend | qs-i-backend |
 | 3 | 组件必须定义 Props 类型 | fs | frontend | qs-fs-frontend |
 

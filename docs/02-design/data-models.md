@@ -208,6 +208,8 @@ Plan 不只是计划，也是"执行 ledger"，记录执行过程中的所有信
 
 `.cursor/rules/qs-{type}-{scope}/RULE.md`
 
+**注意**：workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此目录管理。本目录仅用于项目级质量准则。
+
 ### 命名规则
 
 ```
@@ -220,7 +222,6 @@ type:
   - m: 手动引用（@qs-m-xxx）
 
 scope:
-  - workflow: 工作流/协作
   - security: 安全合规
   - design: 设计规范
   - frontend: 前端开发
@@ -228,6 +229,8 @@ scope:
   - database: 数据库
   - general: 通用规范
   - ops: 运维部署
+
+**注意**：Scope 只是分类标签，不准确不影响规则功能。AI 根据上下文自行选择合适的 scope。
 ```
 
 ### 类型定义
@@ -236,17 +239,17 @@ scope:
 
 - **alwaysApply**：`true`
 - **约束**：必须极精炼，每个规则 < 50 行，总计 < 150 行
-- **示例**：`qs-always-workflow`、`qs-always-security`、`qs-always-general`
+- **示例**：`qs-always-general`
 
 #### fs（文件模式匹配）
 
 - **globs**：根据项目实际目录结构配置
-- **示例**：`qs-fs-workflow-artifacts`（globs: `.workflow/**`）
+- **示例**：`qs-fs-frontend`（globs: `**/components/**/*.tsx`）
 
 #### i（AI 智能判断）
 
 - **description**：用英文描述规则提供什么
-- **示例**：`qs-i-security`（description: "Security guidelines for authentication, authorization, and secure coding practices"）
+- **示例**：`qs-i-frontend`（description: "Frontend development standards for component architecture and state management"）
 
 #### m（手动引用）
 

@@ -112,10 +112,9 @@ for cmd in "${COMMANDS[@]}"; do
 done
 success "已下载 commands (2 个文件)"
 
-# 下载 rules 文件
+# 下载 rules 文件（项目级质量准则）
 info "下载 rules..."
 RULES=(
-    "rules/workflow-core/RULE.md"
     "rules/ai-artifacts/RULE.md"
     "rules/development-specifications/RULE.md"
     "rules/safety-guardrails/RULE.md"
@@ -128,7 +127,9 @@ for rule in "${RULES[@]}"; do
         exit 1
     fi
 done
-success "已下载 rules (4 个文件)"
+success "已下载 rules (3 个文件)"
+
+# 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此下载
 
 # 下载 hooks 配置与脚本
 info "下载 hooks..."

@@ -1,11 +1,6 @@
----
-globs:
-  - ".workflow/requirements/**"
-  - ".workflow/context/**"
-alwaysApply: false
----
-
 # Workflow Artifacts Conventions
+
+> This nested AGENTS.md applies when processing files within `.workflow/` directory or its subdirectories.
 
 ## SSoT
 
@@ -20,7 +15,3 @@ alwaysApply: false
 
 - `.workflow/context/session/` is ephemeral; don't treat it as a knowledge base.
 - `.workflow/context/experience/` is long-term knowledge and is **confirm-only**.
-
----
-
-Source: Migrated from ai-artifacts (2026-01-13)

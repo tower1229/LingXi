@@ -86,10 +86,12 @@ info "复制 commands..."
 cp -r "$SCRIPT_DIR/.cursor/commands/"* .cursor/commands/
 success "已复制 commands (2 个文件)"
 
-# 复制 rules
+# 复制 rules（项目级质量准则）
 info "复制 rules..."
 cp -r "$SCRIPT_DIR/.cursor/rules/"* .cursor/rules/
-success "已复制 rules (4 个文件)"
+success "已复制 rules"
+
+# 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此复制
 
 # 复制 skills
 info "复制 skills..."

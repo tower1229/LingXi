@@ -70,21 +70,28 @@
 
 ### 步骤
 
-1. **确定 Rule 类型和 Scope**
-   - 参考 `.cursor/rules/quality-standards-schema.md`
-   - 选择 Type（always/fs/i/m）和 Scope
+1. **确定 Rule 类型（Type）[核心]**
+   - Type 是关键，决定规则如何应用（always/fs/i/m）
+   - 参考 `rules-creator` Skill 的决策树
 
-2. **使用 rules-creator Skill**
+2. **确定 Rule 范围（Scope）[可选]**
+   - Scope 只是分类标签，不准确不影响规则功能
+   - AI 根据上下文自行选择合适的 scope
+   - 参考 `.cursor/rules/quality-standards-schema.md` 作为参考
+
+3. **使用 rules-creator Skill**
    - 遵循 `rules-creator` Skill 的指引
    - 选择正确的模板和 frontmatter
 
-3. **创建 Rule 文件**
+4. **创建 Rule 文件**
    - 位置：`.cursor/rules/qs-{type}-{scope}/RULE.md`
    - 格式：遵循现有 Rule 的格式
 
-4. **更新索引**
+5. **更新索引**
    - 更新 `.cursor/rules/quality-standards-schema.md`
    - 标记规则状态
+
+**注意**：workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此流程中创建。
 
 ### Rule 类型
 

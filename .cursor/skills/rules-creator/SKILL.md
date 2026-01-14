@@ -13,15 +13,19 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 
 ## Outputs
 
-- 创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`
+- 创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`（项目级质量准则）
 - 更新 `.cursor/rules/quality-standards-index.md`
 - 更新 `.cursor/rules/quality-standards-schema.md`（状态变更）
+
+**注意**：本 Skill 只创建项目级质量准则。workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此 Skill 管理。
 
 ---
 
 ## Instructions
 
-### 1) 确定规则类型（Type）
+### 1) 确定规则类型（Type）[核心]
+
+**Type 是关键**：决定规则如何应用（always/fs/i/m），必须准确选择。
 
 使用以下决策树：
 
@@ -35,13 +39,14 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
                   └─ 否 → m (manual)
 ```
 
-### 2) 确定规则范围（Scope）
+### 2) 确定规则范围（Scope）[可选]
 
-从 8 个标准 scope 中选择：
+**Scope 只是分类标签**：不准确不影响规则功能，AI 根据上下文自行选择合适的 scope。
+
+参考 scope 列表（可根据项目需要扩展）：
 
 | Scope | 适用领域 |
 |-------|---------|
-| `workflow` | 工作流/协作/流程 |
 | `security` | 安全合规/权限/密钥 |
 | `design` | 设计规范/UI/UX |
 | `frontend` | 前端开发/组件/状态 |
@@ -49,6 +54,8 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 | `database` | 数据库/SQL/迁移 |
 | `general` | 通用规范/代码风格 |
 | `ops` | 运维/部署/CI/CD |
+
+**选择原则**：根据上下文和项目类型自行判断，无需强制匹配标准列表。
 
 ### 3) 检查目标规则是否存在
 

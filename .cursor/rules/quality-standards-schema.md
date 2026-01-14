@@ -4,6 +4,11 @@
 > 规则文件按需创建，不预先生成。
 >
 > **创建规则时**，请使用 Skill `rules-creator`，它包含类型选择、模板、最佳实践等操作指南。
+>
+> **注意**：
+> - workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此目录管理。
+> - workflow 只默认提供 `qs-always-general` 作为最基本的初始规则，其他规则由项目通过 `/flow 沉淀` 和 `rules-creator` Skill 按需创建。
+> - 本目录仅用于项目级质量准则（`.cursor/rules/qs-*`）。
 
 ---
 
@@ -19,7 +24,6 @@ type:
   - m: 手动引用（@qs-m-xxx）
 
 scope:
-  - workflow: 工作流/协作
   - security: 安全合规
   - design: 设计规范
   - frontend: 前端开发
@@ -39,7 +43,6 @@ scope:
 
 | 规则名 | 状态 | 用途 |
 |--------|------|------|
-| qs-always-workflow | ✅ 已创建 | 工作流核心约束 |
 | qs-always-security | ⏳ 按需 | 安全红线 |
 | qs-always-general | ✅ 已创建 | 核心开发原则 |
 | qs-always-design | ⏳ 按需 | 设计红线（如有必要） |
@@ -50,7 +53,6 @@ scope:
 
 | 规则名 | 状态 | globs（示例） | 用途 |
 |--------|------|---------------|------|
-| qs-fs-workflow-artifacts | ✅ 已创建 | `.workflow/**` | 工作流产物规范 |
 | qs-fs-design | ⏳ 按需 | `**/design/**`, `**/styles/**` | 设计文件规范 |
 | qs-fs-frontend | ⏳ 按需 | `**/components/**/*.tsx` | 前端文件规范 |
 | qs-fs-backend | ⏳ 按需 | `**/api/**`, `**/routes/**` | 后端文件规范 |
@@ -63,7 +65,7 @@ scope:
 
 | 规则名 | 状态 | description | 用途 |
 |--------|------|-------------|------|
-| qs-i-security | ✅ 已创建 | Security guidelines for authentication, authorization, and secure coding practices | 安全场景建议 |
+| qs-i-security | ⏳ 按需 | Security guidelines for authentication, authorization, and secure coding practices | 安全场景建议 |
 | qs-i-design | ⏳ 按需 | Design system standards for UI/UX patterns, visual consistency, and accessibility | 设计场景建议 |
 | qs-i-frontend | ⏳ 按需 | Frontend development standards for component architecture and state management | 前端场景建议 |
 | qs-i-backend | ⏳ 按需 | Backend development standards for API design, service architecture, and error handling | 后端场景建议 |

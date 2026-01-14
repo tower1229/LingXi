@@ -7,13 +7,23 @@
 #### 设计目标
 - 提供**系统级指令**，在提示级别提供持久、可重用的上下文
 - 将提示词、脚本等内容打包，便于在团队内管理和共享工作流
+- 支持从对话中生成规则（`/Generate Cursor Rules` 命令）
 
 #### 能力边界
+- **三种存储位置**：
+  - **Project Rules**：存储在项目的 `.cursor/rules/` 目录中，版本控制，作用于代码库
+  - **User Rules**：在 Cursor 设置中全局定义，跨项目应用，用于个人偏好或编码标准
+  - **AGENTS.md**：项目根目录的 Markdown 文件，作为 `.cursor/rules/` 的简化替代方案
 - **四种应用类型**：
   - `Always Apply`：应用于每个聊天会话（必须极精炼，< 50 行）
   - `Apply Intelligently`：Agent 根据描述判断相关时应用
   - `Apply to Specific Files`：文件匹配指定模式时应用（globs）
   - `Apply Manually`：在对话中被 @ 提及时应用
+- **规则管理**：
+  - 使用 `New Cursor Rule` 命令创建规则
+  - 通过 `Cursor Settings > Rules` 管理规则
+  - 使用 `/Generate Cursor Rules` 从对话中生成规则
+  - 使用 `/rules` 命令从命令行创建和编辑规则
 
 #### 适用场景
 - 沉淀与代码库相关的领域知识
@@ -25,13 +35,13 @@
 - 应控制在 500 行以内
 - 应聚焦、可操作、范围明确
 - Always Apply 规则必须极精炼（< 50 行，总计 < 150 行）
+- Project Rules 可以分层组织，支持嵌套规则
 
 #### 当前 workflow 使用情况
-- ✅ `qs-always-workflow`：核心约束（Always Apply）
-- ✅ `qs-always-general`：通用规范（Always Apply）
-- ✅ `qs-fs-workflow-artifacts`：工作流产物规范（File-scoped）
-- ✅ `qs-i-security`：安全场景建议（Intelligent）
-- **评估**：使用合理，符合各类型的设计目标
+- **Workflow 工具规则**：使用 `AGENTS.md`（根目录 `AGENTS.md` 全局约束）
+- **项目级规则**（`.cursor/rules/qs-*`）：
+  - ✅ `qs-always-general`：通用规范（Always Apply，workflow 默认提供的初始规则）
+- **评估**：使用合理，符合各类型的设计目标，规则分离清晰。workflow 只默认提供 `qs-always-general` 作为最基本的初始规则，其他规则由项目通过 `/flow 沉淀` 和 `rules-creator` Skill 按需创建
 
 ---
 
@@ -46,6 +56,16 @@
 - 支持参数：命令名之后的内容会包含在模型提示中
 - **适合**：单一用途、可重复的操作（如生成变更日志、格式化等）
 - **不适合**：需要上下文隔离的复杂任务（应用 Subagents）
+
+#### 内置命令
+- **模型管理**：
+  - `agent models` 命令或 `--list-models` 标志列出可用模型
+  - `/models` 命令切换模型
+- **规则管理**：
+  - `/rules` 命令从命令行创建和编辑规则
+  - `/Generate Cursor Rules` 从对话中生成规则
+- **MCP 服务器控制**：
+  - `/mcp enable` 和 `/mcp disable` 动态启用/禁用 MCP 服务器
 
 #### 适用场景
 - 代码审查清单
@@ -70,13 +90,19 @@
 #### 设计目标
 - 可移植、受版本控制的包，用于**教会 Agent 如何执行特定领域的任务**
 - Agent 会根据上下文决定何时使用（基于 description 匹配）
+- 扩展 AI Agent 的专业能力和专业知识
 
 #### 能力边界
-- 自动发现：从 `.cursor/skills/` 或 `~/.cursor/skills/` 加载
-- Agent 自动匹配：根据 description 判断何时使用
-- 手动调用：在对话中输入 `/` 搜索技能名称
+- **平台要求**：需要 **Cursor Nightly** 版本，Agent Skills 功能在 Nightly 渠道可用
+- **自动发现**：从 `.cursor/skills/` 或 `~/.cursor/skills/` 加载
+- **Agent 自动匹配**：根据 description 判断何时使用
+- **手动调用**：在对话中输入 `/` 搜索技能名称
 - **适合**：特定领域的知识和工作流
 - **不适合**：需要独立上下文窗口的长时间任务（应用 Subagents）
+
+#### 状态说明
+- **开发状态**：截至 2025 年 12 月，Agent Skills 功能在 Nightly 版本中可用，但可能仍在持续完善中
+- **文档状态**：官方文档已包含 Skills 相关内容，但功能完整性和稳定性可能因版本而异
 
 #### 适用场景
 - 阶段 Playbook（req、plan、audit、work、review、archive）
@@ -87,11 +113,13 @@
 - 需要明确的 description 以便 Agent 匹配
 - 不应过长（保持精炼）
 - 与主 Agent 共享上下文窗口
+- 需要 Nightly 版本支持
 
 #### 当前 workflow 使用情况
 - ✅ **阶段 Skills**：req、plan、audit、work、review、archive（合理）
 - ✅ **底座 Skills**：index-manager、plan-manager、experience-index、experience-curator、experience-depositor（合理）
-- ✅ **工具 Skills**：service-loader、context-engineering、rules-creator（合理）
+- ✅ **工具 Skills**：service-loader、context-engineering、rules-creator、flow-router（合理）
+- ✅ **技能创建工具**：skill-creator（用于创建新技能）
 - **评估**：使用合理，Skills 承载阶段逻辑和检查清单，符合设计目标
 
 ---
@@ -116,6 +144,10 @@
   - 单一用途的简单任务（应用 Commands 或 Skills）
   - 可以一次性完成的任务
 
+#### 状态说明
+- **开发状态**：截至 2025 年 12 月，Subagents 功能仍在开发中，团队正在完善集成和文档
+- **可用性**：功能可能已在部分版本中可用，但完整功能和官方文档仍在完善中
+
 #### 适用场景
 - 验证代理（verifier）：独立核实已完成的工作
 - 调试器（debugger）：根因分析
@@ -127,6 +159,7 @@
 - **Token 消耗**：多个上下文同时运行，消耗更高
 - **延迟**：对于简单任务可能比主代理更慢
 - **并行运行 5 个子代理 ≈ 单个 agent 约 5 倍的 tokens**
+- **功能完整性**：功能可能仍在完善中，某些特性可能不稳定
 
 #### 当前 workflow 使用情况
 - ✅ `experience-collector`：
@@ -144,15 +177,45 @@
 #### 设计目标
 - 通过自定义脚本**观察、控制和扩展 agent 循环**
 - 在 agent 循环中定义的各阶段之前或之后运行
+- 允许运行时自定义 agent 行为
 
 #### 能力边界
-- **Agent Hooks**：`beforeShellExecution`、`afterShellExecution`、`beforeMCPExecution`、`afterMCPExecution`、`beforeReadFile`、`afterFileEdit`、`beforeSubmitPrompt`、`stop`、`afterAgentResponse`、`afterAgentThought`
-- **Tab Hooks**：`beforeTabFileRead`、`afterTabFileEdit`（仅适用于内联补全）
+- **配置文件**：`hooks.json` 文件，可放置在项目级（`.cursor/hooks.json`）或全局（`~/.cursor/hooks.json`）
+- **配置格式**：
+  ```json
+  {
+    "version": 1,
+    "hooks": {
+      "hookName": [
+        {
+          "command": "path/to/your/script.sh"
+        }
+      ]
+    }
+  }
+  ```
+- **Agent Hooks**：
+  - `beforeShellExecution`：执行 shell 命令前触发
+  - `afterShellExecution`：执行 shell 命令后触发
+  - `beforeMCPExecution`：执行 MCP 工具前触发
+  - `afterMCPExecution`：执行 MCP 工具后触发
+  - `beforeReadFile`：读取文件前触发
+  - `afterFileEdit`：编辑文件后触发
+  - `beforeSubmitPrompt`：提交提示前触发
+  - `afterAgentResponse`：Agent 生成响应后触发
+  - `afterAgentThought`：Agent 处理思考后触发
+  - `stop`：Agent 任务结束时触发
+- **Tab Hooks**（仅适用于内联补全）：
+  - `beforeTabFileRead`：Tab 读取文件前触发
+  - `afterTabFileEdit`：Tab 编辑文件后触发
 - **适合**：
   - 在编辑后运行代码格式化工具
   - 为事件添加分析统计
   - 扫描敏感个人信息（PII）或机密数据
   - 为高风险操作加上门控（例如 SQL 写入）
+  - 阻止危险命令执行
+  - 自动化 Git 操作（如与 GitButler 集成）
+  - 记录 Agent 响应用于审计或分析
 - **不适合**：
   - 复杂的业务逻辑（应在 Skills 中）
   - 需要 AI 推理的任务（应在 Skills 或 Subagents 中）
@@ -161,17 +224,19 @@
 - 输入门控（`beforeSubmitPrompt`）：校验 prompt 格式
 - 命令拦截（`beforeShellExecution`）：阻止危险命令
 - 自动归档（`stop`）：对话结束时自动归档
-- 审计日志（`afterShellExecution`）：记录命令执行
+- 审计日志（`afterShellExecution`、`afterAgentResponse`）：记录命令执行和响应
+- Git 集成（`afterFileEdit`、`stop`）：自动提交和分支管理
 
 #### 限制
-- 需要编写脚本（Node.js 或其他）
+- 需要编写脚本（Node.js 或其他可执行脚本）
 - 有性能开销（每次触发都会执行）
 - 错误处理需要谨慎（避免阻塞主流程）
+- 脚本必须可执行且有必要的权限
 
 #### 当前 workflow 使用情况
 - ✅ `before-submit-prompt`：输入门控（/flow 形态校验 + REQ 存在性检查）（合理）
 - ✅ `stop`：对话结束时 followup 提醒 + 自动归档（合理）
-- ✅ `audit-after-shell-execution`：审计日志（合理）
+- ✅ `after-shell-execution`：审计日志（合理）
 - ⚠️ `before-shell-execution`：占位符，不执行任何检查（可能可以移除或利用）
 - **评估**：使用基本合理，但 `before-shell-execution` 可能可以更好地利用
 
@@ -185,7 +250,7 @@
 graph TB
     User[User]
     Command[Command: /flow]
-    Rule[Rules: qs-always-workflow]
+    Rule[Rules: AGENTS.md + qs-*]
     Skill[Skills: flow-router + stage-skills]
     Subagent[Subagents: experience-collector/depositor]
     Hook[Hooks: before-submit-prompt/stop]
@@ -212,14 +277,14 @@ graph TB
 - ✅ **符合设计**：Commands 用于规范流程，提升效率
 - ⚠️ **可优化**：可以考虑将 `/flow` 的部分逻辑下沉到 Rule（如 Always Apply 的核心约束）
 
-#### 2. 约束层：Rule vs Skill
+#### 2. 约束层：AGENTS.md vs Rule vs Skill
 
-**当前选择**：Rule (`qs-always-workflow`)
+**当前选择**：AGENTS.md（根目录和嵌套）
 
 **评估**：
-- ✅ **合理**：Rule 适合系统级指令、常驻约束
-- ✅ **符合设计**：Always Apply 规则用于核心约束
-- ✅ **精炼**：规则内容简洁，符合 < 50 行要求
+- ✅ **合理**：AGENTS.md 适合 workflow 工具的全局约束和目录作用域约束
+- ✅ **符合设计**：workflow 工具规则与项目级规则分离，架构清晰
+- ✅ **精炼**：规则内容简洁，符合设计原则
 
 #### 3. 路由层：Skill vs Subagent
 
@@ -334,17 +399,22 @@ graph TB
 
 ### 优化 5：Rules 是否可以更好地利用？
 
-**当前**：4 条 Rules（always-workflow、always-general、fs-workflow-artifacts、i-security）
+**当前**：
+- Workflow 工具规则：AGENTS.md（根目录）
+- 项目级规则：1 条（`qs-always-general`，workflow 默认提供的初始规则）
 
 **分析**：
-- **Always Apply**：已使用，合理
-- **File-scoped**：已使用，合理
-- **Intelligent**：已使用，合理
-- **Manual**：未使用
+- **Always Apply**：已使用（`qs-always-general`），合理
+- **Intelligent**：未使用（由项目按需创建）
+- **File-scoped**：未使用（由项目按需创建）
+- **Manual**：未使用（由项目按需创建）
 
 **建议**：
-- **保持现状**：当前 Rules 使用合理
-- **可选扩展**：可以考虑添加 Manual Rules（如 `@code-review-checklist`）
+- **保持现状**：workflow 只提供最基本的初始规则，符合设计原则
+- **可选扩展**：项目可根据需要创建：
+  - File-scoped Rules（如针对特定文件类型的规范）
+  - Intelligent Rules（如安全、设计等场景建议）
+  - Manual Rules（如 `@code-review-checklist`）
 
 ### 优化 6：Commands 是否可以扩展？
 
@@ -398,8 +468,8 @@ graph TB
    - **建议**：保持现状（符合设计理念）
 
 4. **Rules 扩展**：
-   - **当前**：4 条 Rules
-   - **考虑**：可以添加 Manual Rules
+   - **当前**：AGENTS.md（工作流工具规则）+ 1 条项目级规则（`qs-always-general`，workflow 默认提供）
+   - **考虑**：可以添加 File-scoped 和 Manual Rules
    - **建议**：按需扩展
 
 ### 总体评估
@@ -421,6 +491,78 @@ graph TB
 
 ---
 
+## 其他重要能力
+
+### 6. Background Agents（后台代理）
+
+#### 设计目标
+- 允许 Agent **自主执行任务**，与用户活动并行运行
+- 提高工作流效率，无需持续的用户提示
+
+#### 能力边界
+- 在后台独立运行，不阻塞用户操作
+- 可以执行长时间任务
+- 适合：需要持续监控或定期执行的任务
+
+#### 状态说明
+- **发布时间**：2025 年 5 月（Cursor 0.50）
+- **功能**：允许 Agent 在后台自主执行任务
+
+### 7. Agent Autocomplete（Agent 自动补全）
+
+#### 设计目标
+- 提供**预测性编码建议**
+- 在输入时提供智能补全
+
+#### 能力边界
+- 基于上下文的代码补全
+- 预测性建议
+
+#### 状态说明
+- **发布时间**：2025 年 9 月（Cursor 1.7）
+
+### 8. Voice Mode（语音模式）
+
+#### 设计目标
+- 通过**语音命令**控制 AI Agent
+- 支持语音输入
+
+#### 能力边界
+- 语音到文本转换
+- 语音命令执行
+
+#### 状态说明
+- **发布时间**：2025 年下半年
+
+### 9. Multimodal Inputs（多模态输入）
+
+#### 设计目标
+- 支持**图像上下文**处理
+- 允许 Agent 处理视觉输入（如 UI 截图）
+
+#### 能力边界
+- 图像识别和分析
+- 基于视觉上下文的调试
+
+#### 状态说明
+- **发布时间**：2025 年下半年
+
+### 10. Unified Agent Mode（统一 Agent 模式）
+
+#### 设计目标
+- 将之前的 Chat 和 Composer 界面统一为**单一、自适应的 AI 体验**
+- 默认 Agent 模式
+
+#### 能力边界
+- 统一的 AI 交互界面
+- 自适应工作流
+
+#### 状态说明
+- **发布时间**：2025 年 2 月
+- **特性**：UI 刷新、新主题、集成网络搜索
+
+---
+
 ## 参考
 
 - [Cursor Rules 文档](https://cursor.com/cn/docs/context/rules)
@@ -428,3 +570,5 @@ graph TB
 - [Cursor Skills 文档](https://cursor.com/cn/docs/context/skills)
 - [Cursor Subagents 文档](https://cursor.com/cn/docs/agent/subagents)
 - [Cursor Hooks 文档](https://cursor.com/cn/docs/agent/hooks)
+- [Cursor Changelog](https://cursor.com/changelog)
+- [Cursor 社区论坛](https://forum.cursor.com)

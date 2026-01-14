@@ -290,11 +290,15 @@ stateDiagram-v2
 .cursor/
 ├── agents/              # Subagents（后台/前台辅助执行者）
 ├── commands/            # 入口命令（单入口 /flow）
-├── rules/               # 规则（常驻约束，部分 alwaysApply）
+├── rules/               # 项目级质量准则（qs-* 规则）
 ├── skills/              # 阶段 Playbook（Nightly Agent Skills）
 ├── hooks.json           # Hook 注册
 └── hooks/               # Hook 脚本（Node.js）
 ```
+
+**规则分离原则**：
+- **Workflow 工具规则**：使用 `AGENTS.md`（根目录或嵌套子目录）实现
+- **项目级质量准则**：使用 `.cursor/rules/qs-{type}-{scope}/RULE.md` 实现
 
 ### .workflow/ 目录
 
@@ -348,6 +352,6 @@ stateDiagram-v2
 1. **新增阶段**：在 `.cursor/skills/` 添加新 Skill，在 `flow-router` 注册
 2. **新增 Skill**：遵循 Skill 规范，在对应目录创建
 3. **新增 Hook**：在 `.cursor/hooks/` 创建脚本，在 `hooks.json` 注册
-4. **新增 Rule**：在 `.cursor/rules/` 创建，遵循命名规范
+4. **新增项目 Rule**：在 `.cursor/rules/` 创建，遵循命名规范（workflow 工具规则使用 `AGENTS.md`）
 
 详见 [扩展指南](../04-maintenance/extension-guide.md)。
