@@ -175,6 +175,25 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 ### Low
 ```
 
+### 3.5) Trade-off Record 输出（可选）
+
+在审查结论或取舍判断处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+
+**输出时机**：
+- 在审查过程中发现需要取舍的问题（如质量 vs 速度、功能 vs 复杂度）
+- 明确接受某个审查发现的风险（而非要求修复）
+- 拒绝某个修复方案，且拒绝理由值得记录
+
+**输出格式**（最小字段）：
+- 决策点：正在做什么决策
+- 备选方案：所有考虑的方案（含被拒绝的）
+- 拒绝理由：为什么拒绝某些方案
+- 接受的风险（可选）：选择当前方案时接受的风险
+- 影响范围（可选）：该决策影响哪些模块/功能
+- 回滚线索（可选）：如何回滚该决策（指针）
+
+**精简原则**：指针优先，详细内容以指针承载。Trade-off Record 可作为 EXP-CANDIDATE 的高质量输入。
+
 ### 4) 回写与索引更新（Fail Fast）
 
 - Blockers/High 必须同步回 plan 的 Tasks（避免 TODO 漂移）
@@ -183,7 +202,7 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 
 ### 5) 可推进判据检查（review → archive）
 
-在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `review → archive` 检查清单：
+在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `review → archive` 检查清单：
 
 - review 文件已写入
 - Blockers/High 已处理

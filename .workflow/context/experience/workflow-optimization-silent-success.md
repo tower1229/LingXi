@@ -53,8 +53,8 @@
 
 ## 关联指针（Pointers）
 
-- `docs/02-design/workflow-optimization-silent-success.md`：完整优化方案
-- `docs/02-design/gate-protocol.md`：推进判据检查
+- `references/workflow-optimization-silent-success.md`：完整优化方案
+- `.cursor/skills/flow-router/references/gate-protocol.md`：推进判据检查
 - `.cursor/skills/audit/SKILL.md`：审查报告输出要求
 - `.cursor/skills/flow-router/SKILL.md`：菜单输出要求
 

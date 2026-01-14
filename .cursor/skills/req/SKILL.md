@@ -261,9 +261,28 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 - Current Phase：`req`
 - Links：至少包含 requirement 路径
 
+### 6.5) Trade-off Record 输出（可选）
+
+在需求澄清过程中，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+
+**输出时机**：
+- 明确了不做的范围（非目标）且有明确理由
+- 选择了某个需求范围/验收标准，拒绝了其他选项
+- 接受了某个风险（而非规避）
+
+**输出格式**（最小字段）：
+- 决策点：正在做什么决策
+- 备选方案：所有考虑的方案（含被拒绝的）
+- 拒绝理由：为什么拒绝某些方案
+- 接受的风险（可选）：选择当前方案时接受的风险
+- 影响范围（可选）：该决策影响哪些模块/功能
+- 回滚线索（可选）：如何回滚该决策（指针）
+
+**精简原则**：指针优先，详细内容以指针承载。Trade-off Record 可作为 EXP-CANDIDATE 的高质量输入。
+
 ### 7) 可推进判据检查（req → plan）
 
-在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `req → plan` 检查清单：
+在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `req → plan` 检查清单：
 
 - Requirement 文件已写入
 - Requirement 内容完整

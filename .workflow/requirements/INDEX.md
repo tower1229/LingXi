@@ -8,4 +8,5 @@
 | REQ-002 | 创建验证 INDEX.md 格式的 Node.js 脚本 | completed | archive | 已完成 |  | `.workflow/requirements/completed/REQ-002.md` / `.plan.md` / `.review.md` |
 | REQ-003 | Workflow 初始化 - 项目上下文沉淀 | completed | archive | 已完成 |  | `.workflow/requirements/completed/REQ-003.md` / `.plan.md` / `.review.md` |
 | REQ-004 | 计划实施Phase A（P0）：纪律底盘 | completed | archive | 已完成 |  | `.workflow/requirements/completed/REQ-004.md` / `.plan.md` / `.review.md` |
+| REQ-005 | Phase B（P0）：价值取向捕获（可行性与实施方案） | planned | work | 进行中 |  | `.workflow/requirements/in-progress/REQ-005.md` / `.plan.md` |
 

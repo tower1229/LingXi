@@ -50,8 +50,7 @@ isProject: false
 
 参考文件：
 
-- [.cursor/skills/index-manager/SKILL.md](.cursor/skills/index-manager/SKILL.md) - 定义了验证规则
-- [docs/02-design/data-models.md](docs/02-design/data-models.md) - 定义了数据模型
+- [.cursor/skills/index-manager/SKILL.md](.cursor/skills/index-manager/SKILL.md) - 定义了数据模型和验证规则（INDEX.md 结构定义）
 - [.cursor/hooks/stop.mjs](.cursor/hooks/stop.mjs) - 包含解析逻辑参考
 - [install.js](install.js) - Node.js 脚本风格参考
 

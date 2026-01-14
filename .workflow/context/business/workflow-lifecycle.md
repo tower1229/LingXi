@@ -53,7 +53,7 @@
     - 成长过滤器：判断是否进入长期知识库
     - 沉淀分流：判断应沉淀到哪里（experience/rules/skills/context）
     - 冲突检测：检查与现有经验的冲突
-  - **指针**：`.cursor/skills/experience-depositor/SKILL.md`、`docs/02-design/knowledge-compounding.md`
+  - **指针**：`.cursor/skills/experience-depositor/SKILL.md`、`references/knowledge-compounding.md`
 
 - **项目初始化流程**：
   1. 用户执行 `/init` 命令
@@ -65,7 +65,7 @@
   - **关键决策点**：
     - 信息收集方式：引导式收集，而非自动分析
     - 文档生成：基于模板生成，确保一致性
-  - **指针**：`.cursor/commands/init.md`、`docs/02-design/business-context-template.md`
+  - **指针**：`.cursor/commands/init.md`、`.cursor/commands/references/business-context-template.md`
 
 ## 4) 业务规则（Rules）
 
@@ -79,7 +79,7 @@
   - 成长过滤器：判断经验是否进入长期知识库（"一年后，在完全不同的项目里，这条信息还能帮我提前做出正确判断吗？"）
   - 沉淀分流：将知识放到最合适的载体（experience/rules/skills/context）
   - 经验治理：自动合并/取代，保持经验库精炼
-  - 指针：`.cursor/skills/experience-depositor/SKILL.md`、`docs/02-design/knowledge-compounding.md`
+  - 指针：`.cursor/skills/experience-depositor/SKILL.md`、`references/knowledge-compounding.md`
 
 ## 5) 协作上下文（Collaboration）
 

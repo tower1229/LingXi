@@ -233,7 +233,26 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 - [ ] 单元测试规格包含输入/输出/边界条件
 - [ ] 复杂任务有规范引用
 
-### 6) 更新索引
+### 6) Trade-off Record 输出（可选）
+
+在任务拆解或关键决策点处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+
+**输出时机**：
+- 在多个技术方案中选择其一（如选择数据库、框架、架构模式）
+- 明确接受某个技术风险（而非规避）
+- 拒绝某个方案，且拒绝理由值得记录
+
+**输出格式**（最小字段）：
+- 决策点：正在做什么决策
+- 备选方案：所有考虑的方案（含被拒绝的）
+- 拒绝理由：为什么拒绝某些方案
+- 接受的风险（可选）：选择当前方案时接受的风险
+- 影响范围（可选）：该决策影响哪些模块/功能
+- 回滚线索（可选）：如何回滚该决策（指针）
+
+**精简原则**：指针优先，详细内容以指针承载。Trade-off Record 可作为 EXP-CANDIDATE 的高质量输入。
+
+### 7) 更新索引
 
 遵循 `index-manager` 的指引更新索引：
 
@@ -241,9 +260,9 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 - Current Phase：`plan`
 - Links：补充 plan 路径
 
-### 7) 可推进判据检查（plan → audit）
+### 8) 可推进判据检查（plan → audit）
 
-在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `plan → audit` 检查清单：
+在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `plan → audit` 检查清单：
 
 - plan 文件已写入
 - plan 含 Tasks 小节

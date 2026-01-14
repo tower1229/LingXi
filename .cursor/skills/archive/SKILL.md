@@ -44,7 +44,7 @@ description: 归档阶段。当用户明确确认任务完成（Status = complet
 
 ### 3) 可推进判据检查（review → archive）
 
-在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `review → archive` 检查清单：
+在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `review → archive` 检查清单：
 
 - review 文件已写入
 - Blockers/High 已处理
