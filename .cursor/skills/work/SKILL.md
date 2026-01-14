@@ -1,13 +1,13 @@
 ---
 name: work
-description: 此 Skill 按 Plan 执行实现并持续验证。当 plan 生成完成且用户确认开始 work 时激活，回写 plan 的任务勾选与 Worklog，必要时写 checkpoint，阶段推进需人工确认。
+description: 此 Skill 按 Plan 执行实现并持续验证。当 plan 生成完成且用户确认开始 work 时激活，回写 plan 的任务勾选与 Status Summary，必要时写 checkpoint，阶段推进需人工确认。
 ---
 
 # Work
 
 ## Outputs (must write)
 
-- 更新：`.workflow/requirements/in-progress/REQ-xxx.plan.md`（任务勾选 + Worklog + Status Summary）
+- 更新：`.workflow/requirements/in-progress/REQ-xxx.plan.md`（任务勾选 + Status Summary）
 - 按需新增：`.workflow/context/session/<REQ-xxx>-checkpoint-*.md`
 
 ## Instructions
@@ -84,30 +84,23 @@ describe('功能名称', () => {
 });
 ```
 
-#### 2.3 测试结果记录
+#### 2.3 测试结果记录（可选）
 
-在 Worklog 中记录测试执行结果：
+测试执行后，可在 Status Summary 中记录测试结果（可选，仅在需要时更新）：
 
 ```markdown
-- YYYY-MM-DD HH:MM: 运行测试
-  - 命令: `yarn test src/__tests__/user.test.ts`
-  - 结果: 5 passed, 0 failed
-  - 覆盖: B1, B2, B3 行为已验证
+- **测试状态**（可选）：单元测试 5 passed / 5 total，集成测试 3 passed / 3 total
 ```
 
-测试失败时记录：
+测试失败时，在 Status Summary 中简要记录：
 
 ```markdown
-- YYYY-MM-DD HH:MM: 测试失败
-  - 失败用例: B2 边界条件测试
-  - 原因: 空输入未正确处理
-  - 修复: 添加空值检查
-  - 重跑结果: 5 passed, 0 failed
+- **测试状态**（可选）：单元测试 4 passed / 5 total（B2 失败，已修复）
 ```
 
 ### 3) 边做边验证（Fail Fast）
 
-- 每完成一个"最小步"，立即记录验证方式与结果（PASS/FAIL）
+- 每完成一个"最小步"，立即验证（PASS/FAIL）
 - 核心逻辑优先即时验证，避免最后才发现基础模块有问题
 - **测试任务与实现任务交替执行**：实现一个功能后立即编写/运行对应测试
 
@@ -167,9 +160,8 @@ checkpoint 建议格式（结构化，便于交接）：
 
 plan.md 中必须持续更新：
 
-- Status Summary（阶段/进度/当前任务/阻塞项/上次更新）
-- Worklog（做了什么 + 为什么 + 如何验证 + 结果 + 指针，保持高信号，避免流水账）
-- **测试结果**（命令、通过/失败数、覆盖的行为）
+- Status Summary（阶段/进度/当前任务/阻塞项/上次更新，可选的测试状态）
+- 任务勾选（标记已完成的任务）
 - Compounding Candidates（可沉淀点）
 
 ### 6) 进入 Review 前检查
@@ -180,4 +172,16 @@ plan.md 中必须持续更新：
 - [ ] 所有测试任务已完成
 - [ ] 全部测试通过（运行 `yarn test` 或等效命令）
 - [ ] 测试覆盖 plan 中定义的所有可测试行为
-- [ ] Worklog 中记录了最终测试结果
+
+### 7) 可推进判据检查（work → review）
+
+在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `work → review` 检查清单：
+
+- Deliverables 关键项完成
+- 验证记录可复现
+- 所有实现任务已完成
+- 测试任务已完成（如适用）
+
+**检查逻辑**：
+- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
+- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）

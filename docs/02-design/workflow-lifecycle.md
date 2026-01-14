@@ -39,11 +39,10 @@ cursor-workflow 通过 `/flow` 命令驱动需求的全生命周期，从需求�
 - `.workflow/requirements/in-progress/REQ-xxx.plan.md`
 
 **Plan 账本结构**：
-- Status Summary：阶段/进度/当前任务/阻塞项/上次更新
+- Status Summary：阶段/进度/当前任务/阻塞项/上次更新（可选的测试状态）
 - Files to Change：需要创建/修改的文件清单（含测试文件）
 - Tasks：可勾选、可拆分为最小步；任务需标注依赖关系
 - Test Specifications / Validation：验证方式必须可复现
-- Worklog：记录做了什么、为什么、如何验证、结果、指针
 - Compounding Candidates：持续输出"待沉淀候选"
 
 **状态更新**：

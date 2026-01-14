@@ -6,7 +6,25 @@
 
 ## 触发时机
 
-当 `experience-depositor` **实际新增**了经验文件后，必须自动触发 `experience-curator` 进行治理。
+### 合并/取代的触发条件
+
+当满足以下任一条件时，必须自动触发 `experience-curator` 进行治理：
+
+1. **经验文件新增**：`experience-depositor` 成功写入至少 1 条新经验文件到 `.workflow/context/experience/`
+2. **经验数量达到阈值**（可选，未来扩展）：当经验库中 active 经验数量达到特定阈值（如 50 条）时，触发批量治理
+3. **发现明显重复**（可选，未来扩展）：在写入新经验时，系统检测到与现有经验明显重复（Tag 相同或 Decision being made 相同）
+
+**当前实现**：仅支持条件 1（经验文件新增后自动触发）
+
+### 升级为规则的触发条件
+
+当满足以下条件时，`experience-curator` 会输出"质量准则建议"（需用户采纳）：
+
+1. **Strength 达到 enforced**：经验的 Strength 字段为 `enforced`（已转为自动拦截，通常意味着已转为规则/hook/lint/CI）
+2. **某类问题反复出现**：Trigger 相似的经验 ≥ 2 条，且都经过验证（Strength ≥ validated）
+3. **从 Judgment Capsule 可抽象**：经验的 Judgment Capsule 完整，可以抽象为可复用的判断标准
+
+**注意**：质量准则建议只是建议，必须用户明确采纳（`/flow 采纳质量准则`）才会创建规则。
 
 ## 治理流程
 

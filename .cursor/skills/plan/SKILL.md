@@ -145,6 +145,7 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 - **当前任务**：无
 - **阻塞项**：无
 - **上次更新**：{DATE}
+- **测试状态**（可选）：单元测试 X passed / Y total，集成测试 X passed / Y total
 
 ## 文件变更清单（Files to Change）
 
@@ -209,10 +210,6 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 |-----|-----|---------|
 | 1 | ... | ... |
 
-## 执行记录（Worklog）
-
-- YYYY-MM-DD: ...
-
 ## 复利候选（Compounding Candidates）
 
 - [ ] （候选）...
@@ -238,3 +235,17 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 - Status：`planned`
 - Current Phase：`plan`
 - Links：补充 plan 路径
+
+### 7) 可推进判据检查（plan → audit）
+
+在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `plan → audit` 检查清单：
+
+- plan 文件已写入
+- plan 含 Tasks 小节
+- plan 含 Validation 小节
+- plan 含复利候选小节
+- INDEX 已更新
+
+**检查逻辑**：
+- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
+- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）

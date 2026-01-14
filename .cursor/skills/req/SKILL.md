@@ -255,3 +255,16 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 - Status：`in-progress`
 - Current Phase：`req`
 - Links：至少包含 requirement 路径
+
+### 7) 可推进判据检查（req → plan）
+
+在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `req → plan` 检查清单：
+
+- Requirement 文件已写入
+- Requirement 内容完整
+- 关键缺失项=0
+- INDEX 已更新
+
+**检查逻辑**：
+- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
+- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）

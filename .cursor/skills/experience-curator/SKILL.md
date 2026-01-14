@@ -133,6 +133,18 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 - 如果某类问题反复出现（Trigger 相似的经验 ≥ 2 条），优先建议升级为自动拦截
 - 优先选择已存在的规则（插入），避免创建过多新规则
 
+**触发条件**（参考 `docs/02-design/experience-governance.md`）：
+
+- **合并/取代触发**：当 experience-depositor 成功写入至少 1 条新经验文件后，必须自动触发
+- **升级为规则触发**：当经验的 Strength = enforced，或某类问题反复出现（Trigger 相似的经验 ≥ 2 条），或从 Judgment Capsule 可抽象时，输出质量准则建议
+
+**执行稳定性要求**：
+
+- 必须严格按照优先级顺序执行判断（Tag 相同 → Decision 相同 → Trigger 重叠 → Title 相似）
+- 必须备份 INDEX 后再执行任何治理动作
+- 必须输出统一格式的治理报告（执行动作/影响范围/回滚方式）
+- 必须等待用户明确采纳后才写入质量准则（不得自动写入）
+
 ---
 
 ## 禁止

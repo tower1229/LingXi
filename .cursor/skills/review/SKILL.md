@@ -175,3 +175,16 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 - Blockers/High 必须同步回 plan 的 Tasks（避免 TODO 漂移）
 - **测试覆盖不足** 视为 High 级别问题
 - index：Status = `in-review` 或 `needs-fix`，Current Phase = `review`
+
+### 5) 可推进判据检查（review → archive）
+
+在阶段切换前，必须检查可推进判据。参考 `docs/02-design/gate-protocol.md` 中的 `review → archive` 检查清单：
+
+- review 文件已写入
+- Blockers/High 已处理
+- 审查结论明确
+- 用户明确确认任务完成
+
+**检查逻辑**：
+- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
+- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）

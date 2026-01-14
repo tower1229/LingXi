@@ -135,9 +135,9 @@
 **阶段行为**（简述）：
 
 - **req**：生成/更新 Requirement + 更新索引（Status = in-progress, Current Phase = req）
-- **plan**：生成/更新 plan.md（含 Status Summary/Tasks/Validation/Worklog/复利候选）；更新索引 Status = planned, Current Phase = plan
+- **plan**：生成/更新 plan.md（含 Status Summary/Tasks/Validation/复利候选）；更新索引 Status = planned, Current Phase = plan
 - **audit**：审查 plan 的技术细节与风险，输出审查报告到对话（不写入），并给出"可推进判据 + 未决点"；更新索引 Current Phase = audit（Status 可保持 planned）
-- **work**：按 plan 执行实现、边做边验证、持续回写 plan 的任务勾选与 Worklog，并按需写 checkpoint；更新索引 Current Phase = work
+- **work**：按 plan 执行实现、边做边验证、持续回写 plan 的任务勾选与 Status Summary，并按需写 checkpoint；更新索引 Current Phase = work
 - **review**：生成/更新 review.md（分维度分级 TODO），并把 Blockers/High 回写 plan；更新索引 Status = in-review 或 needs-fix, Current Phase = review
 - **archive**：当用户明确确认任务完成（Status = completed）时激活，负责归档 REQ 三件套和更新索引
 
@@ -160,7 +160,7 @@ D) 退出
 每次阶段输出完成后，必须先给出"是否允许推进"的**显式判据**，并把选择权交还给用户（人工闸门）：
 
 - **req → plan**：Requirement 已写入，且关键缺失项=0；用户确认"可以进入 plan"
-- **plan → audit**：plan 含 Tasks/Validation/Worklog/复利候选小节；用户确认"可以进入 audit"
+- **plan → audit**：plan 含 Tasks/Validation/复利候选小节；用户确认"可以进入 audit"
 - **audit → work**：Blockers=0；技术风险已评估；未决问题有明确处理方式；用户确认"可以开始 work"
 - **work → review**：Deliverables 关键项完成；验证记录可复现；用户确认"进入 review"
 - **review → archive**：Blockers/High 已处理或明确拒绝并记录原因；用户确认"任务完成"后进入 archive
