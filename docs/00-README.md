@@ -63,7 +63,7 @@
 
 - **[开发管理说明](05-development/README.md)**：目录结构和使用指南
 - **[调查备忘](05-development/research/)**：技术调研、架构评估、问题分析文档
-  - [远景目标分析与当前阶段评估](05-development/research/vision-analysis.md)
+  - [远景纲领：保护创造者的判断力、品味与责任感](05-development/research/vision-analysis.md)（项目长期纲领）
   - [Cursor 底层能力分析与架构评估](05-development/research/cursor-capabilities-analysis.md)
 - **[开发任务](05-development/tasks/)**：具体的开发任务和 issue（待补充）
 

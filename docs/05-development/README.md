@@ -8,7 +8,7 @@
 05-development/
 ├── README.md           # 本文件
 ├── research/          # 调查备忘文档
-│   ├── vision-analysis.md              # 远景目标分析与当前阶段评估
+│   ├── vision-analysis.md              # 远景纲领：保护创造者的判断力、品味与责任感
 │   └── cursor-capabilities-analysis.md  # Cursor 底层能力分析与架构评估
 └── tasks/              # 开发任务（待补充）
 ```
@@ -19,7 +19,7 @@
 
 用于记录项目开发过程中的调查、分析和评估文档：
 
-- **vision-analysis.md**：远景目标分析与当前阶段评估，分析项目的"灵犀法宝"愿景，评估当前实现阶段，规划未来工作
+- **vision-analysis.md**：远景纲领：保护创造者的判断力、品味与责任感——北极星/三位一体/工程纪律/战略支柱/路线图/度量
 - **cursor-capabilities-analysis.md**：Cursor 底层能力分析与架构评估，分析 Rules/Commands/Skills/Subagents/Hooks 的原理、设计目标、能力边界，评估 workflow 架构的合理性
 
 ### Tasks（开发任务）
