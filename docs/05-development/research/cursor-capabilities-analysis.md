@@ -132,26 +132,62 @@
 - 可以**并行执行**工作
 
 #### 能力边界
+- **目录结构**：
+  - 子代理定义存储在 `.cursor/agents/` 或 `.cursor/subagents/` 目录中
+  - 每个子代理是一个 Markdown 文件，包含 YAML frontmatter 配置
+- **配置文件格式**：
+  ```markdown
+  ---
+  name: subagent-name
+  description: 子代理的用途描述，用于 Agent 自动匹配
+  model: fast | inherit | <model-id>
+  is_background: true | false
+  ---
+  
+  # 子代理的详细指令和职责说明
+  ```
+- **配置字段**：
+  - `name`：子代理的唯一标识符
+  - `description`：子代理的用途描述，Agent 会根据此描述判断何时调用
+  - `model`：
+    - `fast`：使用快速模型，适合简单任务
+    - `inherit`：继承主 Agent 的模型
+    - 或指定具体的模型 ID
+  - `is_background`：
+    - `true`：后台模式，立即返回，不阻塞主对话
+    - `false`：前台模式，阻塞直到完成，立即返回结果
 - **前台模式**（`is_background: false`）：阻塞直到完成，立即返回结果
 - **后台模式**（`is_background: true`）：立即返回，在后台独立工作
-- **模型选择**：`fast`、`inherit`、或指定的模型 ID
 - **适合**：
   - 长时间的研究类任务（隔离上下文）
   - 需要并行运行多个工作流
   - 任务在多个步骤中需要专业领域知识
   - 对工作结果进行独立验证
+  - 需要静默处理，不干扰主对话的任务
 - **不适合**：
   - 单一用途的简单任务（应用 Commands 或 Skills）
   - 可以一次性完成的任务
 
+#### 调用机制
+- **自动匹配**：Agent 根据子代理的 `description` 字段自动判断何时调用
+- **触发方式**：
+  - **自动触发**：当检测到特定模式或条件时（如 EXP-CANDIDATE 注释），Agent 自动调用匹配的子代理
+  - **用户命令触发**：通过用户命令（如 `/flow 沉淀`）触发特定的子代理
+  - **Skill 调用**：Skills 可以在执行过程中调用子代理处理特定任务
+- **匹配逻辑**：Agent 会分析当前上下文和任务需求，匹配 `description` 最相关的子代理
+
 #### 状态说明
 - **开发状态**：截至 2025 年 12 月，Subagents 功能仍在开发中，团队正在完善集成和文档
 - **可用性**：功能可能已在部分版本中可用，但完整功能和官方文档仍在完善中
+- **版本变化**：Subagents 面板在某些版本中可能被临时移除，直到功能完全就绪
+- **注意事项**：某些版本的 Cursor IDE 可能会自动移除 YAML frontmatter，可能影响自定义子代理的功能
 
 #### 适用场景
 - 验证代理（verifier）：独立核实已完成的工作
 - 调试器（debugger）：根因分析
 - 测试运行器（test-runner）：测试自动化
+- 后台收集器（collector）：静默处理，不干扰主对话
+- 前台处理器（processor）：需要用户交互确认的任务
 - **当前 workflow**：experience-collector（后台）、experience-depositor（前台）
 
 #### 限制
@@ -160,15 +196,20 @@
 - **延迟**：对于简单任务可能比主代理更慢
 - **并行运行 5 个子代理 ≈ 单个 agent 约 5 倍的 tokens**
 - **功能完整性**：功能可能仍在完善中，某些特性可能不稳定
+- **配置稳定性**：YAML frontmatter 可能在某些版本中被自动移除
 
 #### 当前 workflow 使用情况
 - ✅ `experience-collector`：
+  - 位置：`.cursor/agents/experience-collector.md`
   - `is_background: true`（合理：静默处理，不干扰主对话）
   - `model: fast`（合理：简单解析任务，不需要强模型）
+  - 职责：检测 EXP-CANDIDATE 注释，静默收集并暂存经验候选
 - ✅ `experience-depositor`：
+  - 位置：`.cursor/agents/experience-depositor.md`
   - `is_background: false`（合理：需要用户交互，等待确认）
   - `model: inherit`（合理：需要完整能力处理沉淀逻辑）
-- **评估**：使用合理，符合 Subagents 的设计目标
+  - 职责：将暂存的经验候选正式写入经验库，需要用户确认
+- **评估**：使用合理，符合 Subagents 的设计目标。配置格式正确，职责分离清晰
 
 ---
 
@@ -503,10 +544,28 @@ graph TB
 - 在后台独立运行，不阻塞用户操作
 - 可以执行长时间任务
 - 适合：需要持续监控或定期执行的任务
+- **运行环境**：在隔离的远程 Ubuntu 环境中运行，可访问互联网，可安装必要的包
+- **GitHub 集成**：从 GitHub 克隆仓库，在独立分支上工作，推送更改以便交接
+- **配置**：支持安装命令、终端进程、Dockerfile 等高级配置
+
+#### 与 Subagents 的区别
+- **Background Agents**：
+  - 在**远程隔离环境**中运行（Ubuntu 机器）
+  - 需要 GitHub 集成和仓库访问权限
+  - 适合长时间、需要完整开发环境的任务
+  - 通过侧边栏的 Background Agent 标签页管理
+  - 使用 `Ctrl+E` 快捷键触发
+- **Subagents**：
+  - 在**本地 Cursor 环境**中运行
+  - 通过 `.cursor/agents/` 目录定义
+  - 适合需要独立上下文窗口但不需要完整开发环境的任务
+  - 由 Agent 根据 description 自动匹配调用
+  - 更轻量，启动更快
 
 #### 状态说明
 - **发布时间**：2025 年 5 月（Cursor 0.50）
 - **功能**：允许 Agent 在后台自主执行任务
+- **隐私模式**：支持 Privacy Mode，确保代码不用于训练
 
 ### 7. Agent Autocomplete（Agent 自动补全）
 
