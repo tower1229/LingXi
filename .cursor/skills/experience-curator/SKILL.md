@@ -41,23 +41,26 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
   - `Judgment Capsule`（I used to think / Now I believe / decisive variable）
   - `Surface signal` / `Hidden risk`（来自 INDEX；若缺失则提示在后续补齐）
 
-### 2) 合并/取代判断
+### 2) 合并/取代判断（AI Native）
 
-对每条新经验，遍历现有 `active` 经验，按以下优先级判断：
+对每条新经验，评估与现有 `active` 经验的关系，综合考虑以下信号：
 
-**判断规则**（从高到低）：
+**强相似信号**（通常需要合并/取代）：
+- Tag 完全相同 → 明确表示同一主题的升级版本
+- Decision being made 高度相似 → 可能是同一判断单元的完善或补充
+- Trigger 关键词大量重叠 → 可能是重复内容或同主题的不同视角
+- Title 语义高度相似 → 可能是新版本覆盖旧版本
 
-| 优先级 | 条件 | 动作 |
-|---|---|---|
-| 1 | **Tag 相同** | 必定合并/取代（新覆盖旧） |
-| 2 | **Decision being made 相同/高度相似** | 候选合并/取代（同一判断单元的升级/补全） |
-| 3 | **Trigger 关键词重叠 ≥ 60%** | 候选合并（同主题重复） |
-| 4 | **Title 语义高度相似** | 候选取代（新经验是旧经验升级版） |
+**判断策略**：
+根据相似程度、信息完整度、判断结构质量，智能决定：
+- **合并**：多条经验讲同一件事，保留信息量最大的版本
+- **取代**：新经验是旧经验的明确升级，旧版本已过时
+- **保持独立**：虽有相似但视角不同，各有价值
 
-**关键词重叠计算**：
-```
-overlap = |keywords(new) ∩ keywords(old)| / |keywords(old)|
-```
+**决策依据**：
+- 优先保留 Decision Shape 和 Judgment Capsule 更完整的版本
+- 优先保留 Scope 更广、Strength 更高的版本
+- 当不确定时，倾向于保持独立而非强制合并
 
 ### 3) 自动执行治理动作
 
@@ -134,7 +137,7 @@ overlap = |keywords(new) ∩ keywords(old)| / |keywords(old)|
 
 **执行稳定性要求**：
 
-- 必须严格按照优先级顺序执行判断（Tag 相同 → Decision 相同 → Trigger 重叠 → Title 相似）
+- 必须综合考虑多个信号，做出合理的合并/取代/保持独立判断
 - 必须备份 INDEX 后再执行任何治理动作
 - 必须输出统一格式的治理报告（执行动作/影响范围/回滚方式）
 - 必须等待用户明确采纳后才写入质量准则（不得自动写入）

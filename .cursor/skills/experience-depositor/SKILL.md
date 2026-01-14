@@ -43,9 +43,9 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 1. **经验治理（自动执行，无需人工审核）**
    - 备份 INDEX → `INDEX.md.bak`
-   - 识别候选合并组：Tag 相同 / Trigger 关键词重叠 ≥ 60% → 合并
-   - 识别候选取代链：新经验是旧经验升级版 → 旧经验 `deprecated`，建立 `Replaces/ReplacedBy` 追溯
-   - 更新 INDEX（Scope/Strength 取更优值）
+   - 评估新经验与现有经验的关系，智能判断合并/取代/保持独立
+   - 当识别到强相似信号（Tag相同、Decision相似、Trigger大量重叠、Title语义相似）时，执行合并或取代
+   - 建立 `Replaces/ReplacedBy` 追溯关系，更新 INDEX（Scope/Strength 取更优值）
    - 输出变更报告（动作/理由/影响/回滚命令）
 
 2. **质量准则建议（仅建议，需人工审核）**
