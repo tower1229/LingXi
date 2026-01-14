@@ -11,6 +11,11 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 - 回写：`.workflow/requirements/in-progress/REQ-xxx.plan.md`（Blockers/High）
 - 更新：`.workflow/requirements/INDEX.md`
 
+**输出规则（静默成功原则）**：
+- 文件写入成功：静默，不输出确认信息（如"已写入 REQ-xxx.review.md"）
+- 文件写入失败：输出错误信息
+- 索引更新成功：静默，不输出确认信息
+
 ## Instructions
 
 ### 0) Experience Index（强制）

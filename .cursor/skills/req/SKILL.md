@@ -10,6 +10,11 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 - `.workflow/requirements/in-progress/REQ-xxx.md`
 - `.workflow/requirements/INDEX.md`
 
+**输出规则（静默成功原则）**：
+- 文件写入成功：静默，不输出确认信息（如"已写入 REQ-xxx.md"）
+- 文件写入失败：输出错误信息
+- 索引更新成功：静默，不输出确认信息
+
 ## Instructions
 
 ### 1) 项目上下文分析

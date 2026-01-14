@@ -12,13 +12,15 @@ description: 此 Skill 在 /flow 进入 req/audit/plan/work/review/archive 任�
 3. 基于当前场景（需求描述/阶段/涉及模块）做关键词 + 语义匹配 Trigger（when to load）
 4. **优先返回高 Strength 经验**：`enforced` > `validated` > `hypothesis`
 5. **优先返回 broad Scope 经验**：`broad` > `medium` > `narrow`
-6. 结构化输出提醒（尽量精简）：
-   - 高风险提醒（Level: high/medium/low）
-   - 认知触发器（Surface signal / Hidden risk）
-   - 背景文档指针（文件路径）
-   - 相关服务建议
-   - 代码模式指针
-   - **谱系提示**：若经验有 `Replaces`，可提示"该经验整合/取代了旧经验 X"
+6. **输出规则（静默成功原则）**：
+   - **无匹配时**：完全静默，不输出任何内容
+   - **有匹配时**：仅输出关键信息（风险级别 + 指针），省略冗长的结构化格式
+   - 输出格式示例：
+     ```
+     ⚠️ 高风险：XXX（参考 EXP-001.md）
+     ```
+   - 仅包含：风险级别（high/medium/low）、经验标题或关键提示、文件指针
+   - 省略：完整的结构化表格、详细的认知触发器说明（除非风险极高）
 
 ## INDEX 字段说明
 
@@ -38,7 +40,8 @@ description: 此 Skill 在 /flow 进入 req/audit/plan/work/review/archive 任�
 
 ## 禁止
 
-- 没匹配就硬输出"无相关经验"
+- 没匹配就硬输出"无相关经验"（应完全静默）
 - 一次任务重复提醒同一条经验
 - 返回 `deprecated` 状态的经验（除非用户显式要求查看历史）
+- 输出冗长的结构化格式（有匹配时仅输出关键信息）
 

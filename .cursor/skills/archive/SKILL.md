@@ -10,6 +10,11 @@ description: 归档阶段。当用户明确确认任务完成（Status = complet
 - 更新：`.workflow/requirements/INDEX.md`（Status = completed, Current Phase = archive）
 - 归档：将 REQ 三件套从 `in-progress/` 移动到 `completed/`
 
+**输出规则（静默成功原则）**：
+- 文件归档成功：静默，不输出确认信息（如"已归档 REQ-xxx"）
+- 文件归档失败：输出错误信息
+- 索引更新成功：静默，不输出确认信息
+
 ## Instructions
 
 ### 0) 触发条件（强制）

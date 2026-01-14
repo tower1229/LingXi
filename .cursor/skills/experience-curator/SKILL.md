@@ -73,39 +73,30 @@ overlap = |keywords(new) ∩ keywords(old)| / |keywords(old)|
 2. 旧经验 `ReplacedBy` 填入新经验 Tag
 3. 新经验 `Replaces` 追加旧经验 Tag
 
-### 4) 输出变更报告
+### 4) 输出变更报告（静默成功原则）
 
-执行完成后，必须输出结构化变更报告：
+**无变更时**：
+- 完全静默，不输出任何内容
 
-```markdown
-## 成长循环：治理报告
+**有变更时**：
+- 仅输出变更摘要，格式：
+  ```
+  治理：合并 EXP-001→EXP-003，deprecated 1 条（回滚：cp INDEX.md.bak INDEX.md）
+  ```
+- 详细信息已在文件中，无需重复输出完整报告
 
-### 执行动作
-| 类型 | 新经验 | 旧经验 | 理由 |
-|---|---|---|---|
-| 合并 | EXP-003 | EXP-001 | Trigger 关键词重叠 75%，主题高度相似 |
-| 取代 | EXP-004 | EXP-002 | 新经验是旧经验的升级版（更完整/更准确） |
-
-### 影响范围
-- INDEX 变更行数：2
-- deprecated 经验数：2
-- 涉及文件：EXP-001.md, EXP-002.md（状态变更，内容未删除）
-
-### 回滚方式
-如需撤销本次治理，执行：
-\`\`\`bash
-cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.md
-\`\`\`
-```
-
-### 5) 输出质量准则建议（人工闸门）
+### 5) 输出质量准则建议（静默成功原则，人工闸门）
 
 基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）。
 
 > 类型选择、Scope 选择、模板等操作指南详见 Skill `rules-creator`。
 > 规则目录详见 `.cursor/rules/quality-standards-schema.md`。
 
-**输出格式**：
+**输出规则（静默成功原则）**：
+- **无建议时**：完全静默，不输出任何内容
+- **有建议时**：输出完整建议表格（保留完整信息，用户需要基于完整信息判断）
+
+**输出格式**（仅在有建议时输出）：
 
 ```markdown
 ## 成长循环：质量准则建议（需人工采纳）
