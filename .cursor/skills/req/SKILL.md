@@ -287,4 +287,39 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 | 关键缺失项=0 | 无"待澄清项"标注 |
 | INDEX 已更新 | Status = in-progress |
 
-**检查逻辑**：满足 → 静默推进；不满足 → 输出检查清单，提供选项（强制推进 / 回退 / 补充修改）
+**检查逻辑**：满足 → 执行候选提取后静默推进；不满足 → 输出检查清单
+
+### 9) REQ 文档候选提取（判据满足后、进入 plan 前执行）
+
+在进入 plan 前，从 REQ 文档提取高信号片段并输出候选注释：
+
+**提取来源**：
+- 非目标（2.2 非目标）
+- 关键决策记录（6.2 关键决策记录）
+- 风险与对策、验收口径背后的判断
+- 业务边界/规则/术语
+
+**输出候选注释**（experience-collector subagent 会自动检测并静默暂存）：
+
+```html
+<!-- EXP-CANDIDATE {
+  "stage": "req",
+  "sourceStage": "req",
+  "trigger": "当遇到类似需求范围界定时",
+  "decision": "从 REQ 文档提取的取舍决策",
+  "alternatives": ["被拒绝的选项"],
+  "signal": "判断依据",
+  "solution": "最终方案",
+  "pointers": ["REQ-xxx.md"]
+} -->
+
+<!-- SEM-CANDIDATE {
+  "type": "业务术语|边界规则",
+  "content": "术语或规则定义",
+  "pointers": ["REQ-xxx.md"]
+} -->
+```
+
+**静默处理**：候选注释输出后，experience-collector subagent 会在后台自动处理，暂存到 `session/pending-compounding-candidates.json`，不打断推进。
+
+**呈现时机**：暂存的候选会在下一次阶段切换时回放呈现，或在 archive 阶段兜底呈现。
