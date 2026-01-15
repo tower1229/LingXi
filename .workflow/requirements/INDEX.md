@@ -10,3 +10,4 @@
 | REQ-004 | 计划实施 Phase A（P0）：纪律底盘                          | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-004.md` / `.plan.md` / `.review.md` |
 | REQ-005 | Phase B（P0）：价值取向捕获（可行性与实施方案）           | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-005.md` / `.plan.md` / `.review.md` |
 | REQ-006 | 优化 skills-creator 和 rules-creator，添加创建日期元数据  | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-006.md` / `.plan.md` / `.review.md` |
+| REQ-007 | 增强 /flow 命令的稳定性和可用性                           | in-progress | req           | 进入 plan   |          | `.workflow/requirements/in-progress/REQ-007.md`                           |
