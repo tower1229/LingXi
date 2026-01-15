@@ -10,9 +10,11 @@
 
 理解项目的设计理念、架构设计和核心原则：
 
+- **[灵犀宪章（价值观 / SSoT）](01-concepts/lingxi-charter.md)**：我们相信什么、为谁服务、不能牺牲什么（最高优先级）
+- **[原则阶梯（价值观→设计原则→工程手段）](01-concepts/principle-ladder.md)**：避免混层与走偏，用于后续迭代优化的对齐基准
 - **[设计理念与核心价值](01-concepts/philosophy.md)**：为什么需要项目级成长能力、Context Engineering、Compounding Engineering 等核心理念
 - **[架构概览](01-concepts/architecture-overview.md)**：分层架构、组件职责、数据流、控制流
-- **[核心原则与约束](01-concepts/key-principles.md)**：Single Entrypoint、Human Gates、Confirm-only Knowledge Capture 等核心约束
+- **[设计原则与硬约束](01-concepts/key-principles.md)**：Single Entrypoint、Human Gates、Confirm-only Knowledge Capture 等系统不变量（由价值观推导）
 
 ### 🎨 设计层（02-design/）
 

@@ -1,216 +1,49 @@
-# /flow - 单入口工作流：状态机 + 循环选项 + 人工闸门
+# /flow - 单入口工作流
+
+## 执行方式（强制）
+
+**必须首先读取并遵循 `.cursor/skills/flow-router/SKILL.md`**。
+
+本文档仅提供命令概述，执行逻辑在 Skill 中定义。
+
+---
 
 ## 命令用途
 
-用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive），并且：
+用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive）。
 
-- **保留循环**：允许你在任意阶段反复执行（例如 audit 多次直到满意）
-- **人工闸门**：阶段推进必须明确询问用户确认（不能“自动推进”）
-- **产物写入**：遵循既有 `.workflow/requirements/` 与 `.workflow/context/` 约定
+核心特性：
+- **保留循环**：允许在任意阶段反复执行
+- **人工闸门**：阶段推进必须用户确认
+- **产物写入**：遵循 `.workflow/requirements/` 约定
 
-## 前置要求（必须）
+## 前置要求
 
-- **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用），详见 [Cursor Agent Skills](https://cursor.com/cn/docs/context/skills)。
-
-## 依赖的 Agent Skills（质量来源）
-
-> 说明：`/flow` 的“高质量提示词/模板/检查清单”不在本文件里重复维护，而是下沉到 `.cursor/skills/`，由 Agent 按需自动激活。
-> `/flow` 在进入对应阶段时，**会根据阶段和上下文自动匹配相关 Skill（基于 description）**，以保证输出质量稳定。
->
-> **魂的放大**：req/plan 阶段会按需调用 WebSearch 和 MCP 工具获取外部知识，让用户的简短意图获得行业最佳实践的加持。
-
-- 路由：`flow-router`
-- 阶段：
-  - `req`
-  - `audit`
-  - `plan`
-  - `work`
-  - `review`
-  - `archive`
-- 底座：
-  - `index-manager`
-  - `experience-index`
-  - `experience-collector`（背景收集）
-  - `experience-depositor`（前台写入）
-
----
+- **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
 
 ## 使用方式
 
 ```
-/flow <需求描述>
-/flow REQ-001
-/flow 沉淀 1,3
-/flow 忽略沉淀
-/flow 采纳质量准则 1,3
-/flow 忽略质量准则
+/flow <需求描述>        # 创建新需求
+/flow REQ-001           # 继续已有需求
+/flow 沉淀 1,3          # 确认沉淀候选
+/flow 忽略沉淀          # 忽略沉淀候选
+/flow 采纳质量准则 1,3  # 采纳质量准则建议
+/flow 忽略质量准则      # 忽略质量准则建议
 ```
 
----
+## 依赖的 Agent Skills
 
-## 产物（必须写入）
+| 类别 | Skills |
+|------|--------|
+| 路由 | `flow-router` |
+| 阶段 | `req` `plan` `audit` `work` `review` `archive` |
+| 底座 | `index-manager` `experience-index` `experience-collector` `experience-depositor` |
 
-- `.workflow/requirements/in-progress/<REQ-xxx>.md`（Requirement，进行中）
-- `.workflow/requirements/in-progress/<REQ-xxx>.plan.md`（Plan / 执行账本，进行中）
-- `.workflow/requirements/in-progress/<REQ-xxx>.review.md`（Review，进行中）
-- `.workflow/requirements/completed/<REQ-xxx>.md`（Requirement，已完成归档）
-- `.workflow/requirements/completed/<REQ-xxx>.plan.md`（Plan，已完成归档）
-- `.workflow/requirements/completed/<REQ-xxx>.review.md`（Review，已完成归档）
+## 产物
+
+- `.workflow/requirements/in-progress/<REQ-xxx>.md` / `.plan.md` / `.review.md`
+- `.workflow/requirements/completed/<REQ-xxx>.md` / `.plan.md` / `.review.md`
 - `.workflow/requirements/INDEX.md`（SSoT）
-- `.workflow/context/experience/*`（经验沉淀，需用户确认）
-- `.workflow/context/session/*`（checkpoint / 会话临时）
-
----
-
-## 执行要点（入口 + 路由）
-
-### 0) 解析用户意图（必须）
-
-根据参数判断本次 `/flow` 进入哪条路径：
-
-1. **确认沉淀路径**：`/flow 沉淀 ...` 或 `/flow 忽略沉淀`
-2. **质量准则采纳路径**：`/flow 采纳质量准则 ...` 或 `/flow 忽略质量准则`
-3. **继续某个需求**：`/flow REQ-xxx`
-4. **创建新需求**：`/flow <需求描述>`（无 REQ）
-
-> **禁止**：在用户没有明确确认"沉淀"的情况下写入 `.workflow/context/experience/`。
-> **禁止**：在用户没有明确确认"采纳质量准则"的情况下写入 `.cursor/rules/qs-*`。
-
-### 1) 沉淀确认路径（/flow 沉淀 / 忽略沉淀）
-
-**输入**：读取候选暂存（由 EXP-CANDIDATE + experience-collector 生成）：
-
-- `.workflow/context/session/pending-compounding-candidates.json`
-
-**行为**：
-
-- 如果用户选择 **忽略沉淀**：删除该暂存文件并输出“已忽略”
-- 如果用户选择 **沉淀**：
-  - 由 `experience-depositor` 展示候选摘要，支持全选/部分选择
-  - `experience-depositor` 执行沉淀分流（经验文档 / hook|lint|CI / skill 升级 / 服务上下文），并写入 experience/INDEX（需用户确认）
-  - 若新增经验，自动触发 `experience-curator`（合并/取代 + 治理报告 + 质量准则建议）
-  - 处理完所选候选后，从暂存中移除；未选项保留
-
-**输出**：只需简短说明"沉淀了几条，文件路径在哪，下次触发条件是什么"。
-
-### 1.1) 质量准则采纳路径（/flow 采纳质量准则 / 忽略质量准则）
-
-**触发条件**：成长循环输出"质量准则建议"后，用户选择采纳或忽略。
-
-**输入**：成长循环输出的质量准则建议列表（在对话上下文中），格式包含 Type、Scope、目标规则。
-
-**行为**：
-
-- 如果用户选择 **忽略质量准则**：输出"已忽略质量准则建议"，不做任何写入
-- 如果用户选择 **采纳质量准则**：
-  1. 按序号解析用户选择的建议（1-based index，如 `1,3` 表示采纳第 1 和第 3 条）
-  2. 对每条选中的建议，遵循 `rules-creator` 的指引执行规则创建：
-     - 从对话上下文获取：准则内容、Type、Scope、来源经验
-     - 类型确认与模板选择
-     - 创建/更新规则文件
-     - 配置正确的 frontmatter
-     - 更新索引文件
-
-**输出**：简短说明"采纳了几条质量准则建议，写入到哪些文件"。
-
-### 2) 继续/创建需求路径（/flow REQ-xxx 或 /flow <描述>）
-
-#### 2.1 Fail Fast：确保索引与目录结构存在
-
-- 确保 `.workflow/requirements/INDEX.md` 表头符合 `index-manager` 的要求
-- 确保 `.workflow/context/session/` 与 `.workflow/workspace/` 目录存在（若不存在则创建）
-
-#### 2.2 经验检索（强制执行：每次进入一个阶段前）
-
-进入任一阶段前，`experience-index` 会自动匹配历史经验，并用"最小高信号"方式提醒风险/背景指针。
-
-#### 2.2.1 候选回放（阶段开始前）
-
-进入任一阶段前，若上一阶段产生了通过低质量校验（噪音过滤 + 成长过滤器）的候选，则**全量展示**给用户，辅助即时价值判断。
-
-**回放流程**：
-1. 检查 `session/pending-compounding-candidates.json`
-2. 筛选 `sourceStage`=上一阶段的候选（已通过过滤）
-3. 去重：相似候选仅展示最新一条
-4. 全量展示：使用 `flow-router` Skill 的 `references/trade-off-record.md` 定义的展示格式模板，按时间倒序（最新优先）
-5. 提供选项：A) 现在沉淀 / B) 稍后再说 / C) 忽略这批
-6. 展示不等于写入，写入仍必须走 `/flow 沉淀` 确认式闸门
-
-#### 2.3 阶段路由（状态机）
-
-**状态来源**（优先级从高到低）：
-
-1. `.workflow/requirements/INDEX.md` 中该 REQ 的 `Current Phase` / `Status` / `Next Action`
-2. `.workflow/requirements/(in-progress|completed)/<REQ-xxx>.plan.md` 的 `状态摘要（Status Summary）`
-3. 文件存在性推断（是否有 requirement/plan/review）
-
-**阶段行为**（简述）：
-
-- **req**：生成/更新 Requirement + 更新索引（Status = in-progress, Current Phase = req）
-- **plan**：生成/更新 plan.md（含 Status Summary/Tasks/Validation/复利候选）；更新索引 Status = planned, Current Phase = plan
-- **audit**：审查 plan 的技术细节与风险，输出审查报告到对话（不写入），并给出"可推进判据 + 未决点"；更新索引 Current Phase = audit（Status 可保持 planned）
-- **work**：按 plan 执行实现、边做边验证、持续回写 plan 的任务勾选与 Status Summary，并按需写 checkpoint；更新索引 Current Phase = work
-- **review**：生成/更新 review.md（分维度分级 TODO），并把 Blockers/High 回写 plan；更新索引 Status = in-review 或 needs-fix, Current Phase = review
-- **archive**：当用户明确确认任务完成（Status = completed）时激活，负责归档 REQ 三件套和更新索引
-
-#### 2.4 循环选项菜单（每轮结束必须输出）
-
-每完成一个阶段（或阶段内一个“最小步”）后，必须输出一个简短菜单，让用户选择下一步（人工闸门）：
-
-```text
-你要怎么做？
-A) 继续本阶段（例如再 audit 一次 / 继续 work 下一个 task）
-B) 进入下一阶段（我会先复述推进判据，等待你确认）
-C) 回退到上一阶段（说明原因与影响）
-D) 退出
-```
-
-> **强约束**：未获得用户选择前，不得自动进入下一阶段。
-
-#### 2.4.1 质量闸门（必须，避免过程偏差）
-
-每次阶段输出完成后，必须先给出"是否允许推进"的**显式判据**，并把选择权交还给用户（人工闸门）：
-
-- **req → plan**：Requirement 已写入，且关键缺失项=0；用户确认"可以进入 plan"
-- **plan → audit**：plan 含 Tasks/Validation/复利候选小节；用户确认"可以进入 audit"
-- **audit → work**：Blockers=0；技术风险已评估；未决问题有明确处理方式；用户确认"可以开始 work"
-- **work → review**：Deliverables 关键项完成；验证记录可复现；用户确认"进入 review"
-- **review → archive**：Blockers/High 已处理或明确拒绝并记录原因；用户确认"任务完成"后进入 archive
-
-> 目的：即使入口极简，阶段切换依然“可观测、可纠偏、可回退”，不会全靠模型自行推进。
-
-#### 2.5 经验候选输出约定（即时捕获）
-
-当出现纠正/取舍/根因/覆盖缺口等判断时，直接输出结构化候选（HTML 注释），由 subagent 处理：
-
-```text
-<!-- EXP-CANDIDATE
-{
-  "stage": "work",
-  "trigger": "当发现 root cause 并更换方案",
-  "decision": "实现/修复/接口/边界的取舍",
-  "alternatives": ["原方案A（放弃，因为...）"],
-  "signal": "判断依据/风险信号/失败证据",
-  "solution": "新的实现/修复方案",
-  "verify": "测试/验证步骤与结果期望",
-  "pointers": ["path/to/file"],
-  "notes": "可选补充"
-}
--->
-```
-
-- `experience-collector` 背景收集并暂存；`experience-depositor` 在确认后写入。
-
----
-
-## 输出要求
-
-- 必须写入该轮产生的文件（如 req/plan/review/experience）
-- 必须更新 `.workflow/requirements/INDEX.md`
-- **阶段完成输出（静默成功原则）**：
-  - **正常完成（无阻塞项）**：仅输出一行状态 + 菜单
-    ```
-    ✅ req 完成 → plan | A)继续 B)下一阶段 C)回退 D)退出
-    ```
-  - **有阻塞项**：输出详细说明（保留完整信息）
-- **文件写入**：写入成功时静默，不输出确认信息；写入失败时输出错误信息
+- `.workflow/context/experience/*`（需用户确认）
+- `.workflow/context/session/*`（checkpoint）

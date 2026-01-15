@@ -263,7 +263,7 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ### 6.5) Trade-off Record 输出（可选）
 
-在需求澄清过程中，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+在需求澄清过程中，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `flow-router/references/trade-off-record.md`。
 
 **输出时机**：
 - 明确了不做的范围（非目标）且有明确理由
@@ -280,15 +280,19 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 **精简原则**：指针优先，详细内容以指针承载。Trade-off Record 可作为 EXP-CANDIDATE 的高质量输入。
 
-### 7) 可推进判据检查（req → plan）
+### 7) 阶段完成：输出菜单（人工闸门）
 
-在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `req → plan` 检查清单：
+阶段完成后，遵循 `flow-router` 的人工闸门要求输出菜单。
 
-- Requirement 文件已写入
-- Requirement 内容完整
-- 关键缺失项=0
-- INDEX 已更新
+### 8) 可推进判据检查（req → plan，仅用户选择 B 后执行）
 
-**检查逻辑**：
-- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
-- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）
+用户选择 B 后，检查以下判据：
+
+| 判据 | 验证方式 |
+|------|---------|
+| Requirement 文件已写入 | `REQ-xxx.md` 存在且非空 |
+| Requirement 内容完整 | 至少包含概述和目标 |
+| 关键缺失项=0 | 无"待澄清项"标注 |
+| INDEX 已更新 | Status = in-progress |
+
+**检查逻辑**：满足 → 静默推进；不满足 → 输出检查清单，提供选项（强制推进 / 回退 / 补充修改）

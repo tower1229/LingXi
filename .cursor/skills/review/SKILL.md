@@ -177,7 +177,7 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 
 ### 3.5) Trade-off Record 输出（可选）
 
-在审查结论或取舍判断处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+在审查结论或取舍判断处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `flow-router/references/trade-off-record.md`。
 
 **输出时机**：
 - 在审查过程中发现需要取舍的问题（如质量 vs 速度、功能 vs 复杂度）
@@ -200,15 +200,19 @@ description: 此 Skill 多维度审查实现并写入 review.md。当 work 阶�
 - **测试覆盖不足** 视为 High 级别问题
 - index：Status = `in-review` 或 `needs-fix`，Current Phase = `review`
 
-### 5) 可推进判据检查（review → archive）
+### 5) 阶段完成：输出菜单（人工闸门）
 
-在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `review → archive` 检查清单：
+阶段完成后，遵循 `flow-router` 的人工闸门要求输出菜单。
 
-- review 文件已写入
-- Blockers/High 已处理
-- 审查结论明确
-- 用户明确确认任务完成
+### 6) 可推进判据检查（review → archive，仅用户选择 B 后执行）
 
-**检查逻辑**：
-- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
-- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）
+用户选择 B 后，检查以下判据：
+
+| 判据 | 验证方式 |
+|------|---------|
+| review 文件已写入 | `REQ-xxx.review.md` 存在且非空 |
+| Blockers/High 已处理 | Blockers 必须处理，High 可处理或明确拒绝 |
+| 审查结论明确 | 包含明确结论（通过/需修复/拒绝） |
+| 用户明确确认任务完成 | 用户已确认 |
+
+**检查逻辑**：满足 → 静默推进；不满足 → 输出检查清单，提供选项（强制推进 / 回退 / 补充修改）

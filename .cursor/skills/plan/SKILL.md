@@ -235,7 +235,7 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 
 ### 6) Trade-off Record 输出（可选）
 
-在任务拆解或关键决策点处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `references/trade-off-record.md`。
+在任务拆解或关键决策点处，若出现关键取舍、风险接受、拒绝方案等价值取向判断，应输出 Trade-off Record。参考 `flow-router/references/trade-off-record.md`。
 
 **输出时机**：
 - 在多个技术方案中选择其一（如选择数据库、框架、架构模式）
@@ -260,16 +260,20 @@ description: 此 Skill 基于 Requirement 生成可执行计划（任务拆解+�
 - Current Phase：`plan`
 - Links：补充 plan 路径
 
-### 8) 可推进判据检查（plan → audit）
+### 8) 阶段完成：输出菜单（人工闸门）
 
-在阶段切换前，必须检查可推进判据。参考 `references/gate-protocol.md` 中的 `plan → audit` 检查清单：
+阶段完成后，遵循 `flow-router` 的人工闸门要求输出菜单。
 
-- plan 文件已写入
-- plan 含 Tasks 小节
-- plan 含 Validation 小节
-- plan 含复利候选小节
-- INDEX 已更新
+### 9) 可推进判据检查（plan → audit，仅用户选择 B 后执行）
 
-**检查逻辑**：
-- 判据满足时：内部检查，不输出检查清单，直接进入下一阶段
-- 判据不满足时：输出完整检查清单，展示未满足项，提供选项（强制推进 / 回退 / 继续本阶段）
+用户选择 B 后，检查以下判据：
+
+| 判据 | 验证方式 |
+|------|---------|
+| plan 文件已写入 | `REQ-xxx.plan.md` 存在且非空 |
+| plan 含 Tasks 小节 | 包含 `## 任务清单` 或 `## Tasks` |
+| plan 含 Validation 小节 | 包含 `## 测试规格` 或 `## Validation` |
+| plan 含复利候选小节 | 包含 `## 复利候选`（可为空） |
+| INDEX 已更新 | Status = planned |
+
+**检查逻辑**：满足 → 静默推进；不满足 → 输出检查清单，提供选项（强制推进 / 回退 / 补充修改）
