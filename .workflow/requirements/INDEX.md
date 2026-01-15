@@ -11,3 +11,4 @@
 | REQ-005 | Phase B（P0）：价值取向捕获（可行性与实施方案）           | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-005.md` / `.plan.md` / `.review.md` |
 | REQ-006 | 优化 skills-creator 和 rules-creator，添加创建日期元数据  | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-006.md` / `.plan.md` / `.review.md` |
 | REQ-007 | 增强 /flow 命令的稳定性和可用性                           | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-007.md` / `.plan.md` / `.review.md` |
+| REQ-008 | 优化 workflow 阶段菜单和推进判据检查体验                   | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-008.md` / `.plan.md` / `.review.md` |
