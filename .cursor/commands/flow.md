@@ -10,7 +10,7 @@
 
 ## 命令用途
 
-用一个入口 `/flow <REQ|描述>` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive）。
+用一个入口 `/flow` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive）。
 
 核心特性：
 - **保留循环**：允许在任意阶段反复执行
@@ -25,12 +25,22 @@
 
 ```
 /flow <需求描述>        # 创建新需求
-/flow REQ-001           # 继续已有需求
-/flow 沉淀 1,3          # 确认沉淀候选
-/flow 忽略沉淀          # 忽略沉淀候选
-/flow 采纳质量准则 1,3  # 采纳质量准则建议
-/flow 忽略质量准则      # 忽略质量准则建议
+/flow REQ-xxx           # 继续已有需求
+/flow                   # 自动查找进行中任务
 ```
+
+**注意**：`/flow` 命令只支持以上三种用法。
+
+## 不再支持的用法
+
+以下用法已迁移到其他命令：
+
+| 旧用法 | 替代方案 |
+|-------|---------|
+| `/flow 沉淀 1,3` | 使用 `/remember <描述>` 进行经验沉淀 |
+| `/flow 忽略沉淀` | 不再需要，模型会在适当时机自动展示候选 |
+| `/flow 采纳质量准则 1,3` | 质量准则通过其他机制采纳 |
+| `/flow 忽略质量准则` | 不再需要 |
 
 ## 依赖的 Agent Skills
 
@@ -38,12 +48,34 @@
 |------|--------|
 | 路由 | `flow-router` |
 | 阶段 | `req` `plan` `audit` `work` `review` `archive` |
-| 底座 | `index-manager` `experience-index` `experience-collector` `experience-depositor` |
+| 底座 | `index-manager` `experience-index` |
 
 ## 产物
 
 - `.workflow/requirements/in-progress/<REQ-xxx>.md` / `.plan.md` / `.review.md`
 - `.workflow/requirements/completed/<REQ-xxx>.md` / `.plan.md` / `.review.md`
 - `.workflow/requirements/INDEX.md`（SSoT）
-- `.workflow/context/experience/*`（需用户确认）
 - `.workflow/context/session/*`（checkpoint）
+
+## 故障排查
+
+### 问题：`/flow <描述>` 没有进入 req 阶段
+
+**可能原因**：
+- AI 未正确激活 flow-router skill
+- 描述被误解为其他类型的任务
+
+**解决方案**：
+1. 确认 `.cursor/skills/flow-router/SKILL.md` 文件存在
+2. 重新输入 `/flow <描述>`，确保描述清晰
+3. 如果问题持续，尝试使用更明确的描述前缀，如 `/flow 需求：实现用户登录`
+
+### 问题：`/flow` 空参数没有返回进行中任务
+
+**可能原因**：
+- INDEX.md 中没有 Status != completed 的任务
+- AI 未正确读取 INDEX.md
+
+**解决方案**：
+1. 检查 `.workflow/requirements/INDEX.md` 是否有进行中的任务
+2. 如果有任务但未显示，尝试使用 `/flow REQ-xxx` 直接指定任务

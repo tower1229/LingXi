@@ -22,17 +22,11 @@ async function main() {
     return;
   }
 
-  // /flow 支持两种参数形态：
+  // /flow 支持三种参数形态：
   // - /flow REQ-xxx（继续某个需求）
   // - /flow <描述>（创建新需求）
-  // 但不允许空参数：/flow
-  if (trimmed === "/flow") {
-    writeStdoutJson({
-      continue: false,
-      user_message: "用法：/flow <REQ-xxx|需求描述>（例如：/flow REQ-001 或 /flow 实现用户登录）",
-    });
-    return;
-  }
+  // - /flow（空参数，自动查找进行中任务）
+  // 空参数时让 Agent 处理（由 flow-router skill 实现自动查找逻辑）
 
   const projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
   const reqId = extractReqId(trimmed);

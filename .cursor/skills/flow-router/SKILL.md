@@ -1,9 +1,24 @@
 ---
 name: flow-router
-description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req→plan→audit→work→review→archive）。当用户输入 /flow <REQ-xxx|描述> 命令时激活，负责判断当前阶段、支持重复执行（如 audit 多次）、并在推进前请求用户确认（人工闸门）。
+description: 当用户输入 /flow 命令时必须激活此 Skill。负责路由 /flow 命令，驱动工作流阶段流转（req→plan→audit→work→review→archive）。支持三种用法：/flow <描述>（新需求）、/flow REQ-xxx（继续需求）、/flow（空参数自动查找）。
 ---
 
 # Flow Router
+
+## 激活验证（Fail Fast）
+
+**首先确认**：你是否正在处理 `/flow` 命令？
+
+如果是，你必须：
+1. 已读取本 skill（flow-router）
+2. 按下面的"输入解析"路由到正确路径
+3. 不得直接执行用户描述的内容（如"我想改造 flow command"不是让你直接改，而是创建新需求）
+
+**如果你没有按上述流程执行**，请立即停止并输出：
+```
+⚠️ /flow 命令路由异常：未正确激活 flow-router skill。
+请重新输入 /flow 命令，或检查 .cursor/skills/flow-router/SKILL.md 是否存在。
+```
 
 ## Instructions
 
@@ -11,35 +26,45 @@ description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req�
 
 根据 `/flow` 命令的参数，确定进入哪条路径：
 
-1. **创建新需求路径**：`/flow <描述>`（参数不是 REQ-xxx 格式，且不是"沉淀"或"采纳质量准则"）
+1. **空参数路径**：`/flow`（无参数）
+   - **行为**：查询 INDEX.md，找出所有 Status != completed 的任务
+   - **0 个任务**：输出"没有进行中的任务。使用 `/flow <描述>` 创建新需求。"
+   - **1 个任务**：自动继续该任务（进入继续需求路径）
+   - **多个任务**：按最后修改时间排序，展示列表让用户选择
+
+2. **创建新需求路径**：`/flow <描述>`（参数不是 REQ-xxx 格式）
    - **行为**：直接进入 req 阶段，**禁止执行状态判断**
    - **原因**：用户明确表达了创建新需求的意图，必须尊重用户意图
    - **禁止**：在此路径下检查 INDEX.md 或文件存在性来判断阶段
+   - **重要**：无论描述内容是什么（如"我想改造 flow command"），都是创建新需求，不是直接执行
 
-2. **继续需求路径**：`/flow REQ-xxx`（参数匹配 REQ-xxx 格式）
+3. **继续需求路径**：`/flow REQ-xxx`（参数匹配 REQ-xxx 格式）
    - **行为**：执行阶段状态判断，根据状态进入相应阶段
    - **原因**：用户明确指定了已有需求，需要读取状态确定当前阶段
 
-3. **沉淀确认路径**：`/flow 沉淀 ...` 或 `/flow 忽略沉淀`
-   - **输入**：`.workflow/context/session/pending-compounding-candidates.json`
-   - **忽略沉淀**：删除暂存文件，输出"已忽略"
-   - **沉淀 N,M**：
-     - 读取 `experience-depositor` Skill，展示候选摘要
-     - 按序号解析用户选择（1-based index）
-     - 执行沉淀分流，写入 experience/INDEX
-     - 若新增经验，触发 `experience-curator`
-   - **输出**：简短说明沉淀结果
+### 不支持的用法（必须拒绝）
 
-4. **质量准则采纳路径**：`/flow 采纳质量准则 ...` 或 `/flow 忽略质量准则`
-   - **输入**：对话上下文中的质量准则建议列表
-   - **忽略质量准则**：输出"已忽略质量准则建议"
-   - **采纳质量准则 N,M**：
-     - 按序号解析用户选择（1-based index）
-     - 读取 `rules-creator` Skill，执行规则创建
-     - 配置 frontmatter，更新索引
-   - **输出**：简短说明采纳结果
+以下用法已不再支持，必须拒绝并引导：
 
-**关键原则**：
+- `/flow 沉淀 ...` 或 `/flow 忽略沉淀`
+- `/flow 采纳质量准则 ...` 或 `/flow 忽略质量准则`
+
+**拒绝时输出**：
+```
+⚠️ 此用法已不再支持。
+
+- 经验沉淀请使用：/remember <描述>
+- 质量准则采纳通过其他机制实现
+
+/flow 命令只支持三种用法：
+- /flow <描述>    创建新需求
+- /flow REQ-xxx   继续已有需求
+- /flow           自动查找进行中任务
+```
+
+### 关键原则
+
+- **`/flow` 命令专注于需求工作流**（req → plan → audit → work → review → archive）
 - **创建新需求路径必须直接进入 req 阶段**，不允许执行状态判断或检查文件存在性
 - 只有"继续需求路径"才执行阶段状态判断
 - 用户明确表达的意图具有最高优先级，不得被文件存在性或状态信息覆盖
@@ -85,11 +110,6 @@ description: 此 Skill 路由 /flow 命令，驱动工作流阶段流转（req�
 Agent 会根据阶段自动激活相关 skill（基于 skill 的 description 匹配）。
 
 **每个阶段执行前**，`experience-index` 会自动匹配历史经验提醒。
-
-**每个阶段开始前**，若上一阶段产生了候选，则展示给用户（参考 `references/trade-off-record.md`）：
-1. 检查 `session/pending-compounding-candidates.json`
-2. 筛选上一阶段的候选，去重后按时间倒序展示
-3. 提供选项：A) 现在沉淀 / B) 稍后再说 / C) 忽略这批
 
 **按需**（存量/多服务项目），`service-loader` 可生成服务上下文降低"考古成本"。
 
@@ -138,4 +158,4 @@ A) 补充/修改  B) 下一阶段  C) 回退  D) 退出
 } -->
 ```
 
-> experience-collector 会在后台自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`；用户必须用 `/flow 沉淀 ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
+> experience-collector 会在后台自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`；用户必须用 `/remember ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
