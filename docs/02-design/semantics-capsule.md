@@ -104,16 +104,6 @@ Semantics Capsule（语义胶囊）用于从需求中抽取并固化"业务语�
 }
 ```
 
-## 与 Trade-off Record 的关系
-
-- **Trade-off Record**：捕获"为什么这样取舍"（判断资产）
-- **Semantics Capsule**：捕获"业务边界/规则/术语是什么"（语义资产）
-
-两者可以同时出现在同一需求中，但应分别处理：
-- Trade-off Record → 转写为 EXP-CANDIDATE → 写入 experience（需确认）
-- Semantics Capsule → 写入 business（可直接写入，或作为候选等待确认）
-
 ## 参考
 
 - [知识沉淀机制设计](./knowledge-compounding.md) - 判断资产（Experience）的定义
-- [Trade-off Record 结构定义](./trade-off-record.md) - 判断资产的捕获方式

@@ -191,10 +191,6 @@ if (-not (Download-File ".cursor/skills/flow-router/references/semantics-capsule
     Write-Error "安装失败"
     exit 1
 }
-if (-not (Download-File ".cursor/skills/flow-router/references/trade-off-record.md" ".cursor\skills\flow-router\references\trade-off-record.md")) {
-    Write-Error "安装失败"
-    exit 1
-}
 
 Write-Success "已下载 skills (15 个核心 skills + 引用文件)"
 

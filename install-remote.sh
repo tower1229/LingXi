@@ -202,10 +202,6 @@ if ! download_file ".cursor/skills/flow-router/references/semantics-capsule.md" 
     error "安装失败"
     exit 1
 fi
-if ! download_file ".cursor/skills/flow-router/references/trade-off-record.md" ".cursor/skills/flow-router/references/trade-off-record.md"; then
-    error "安装失败"
-    exit 1
-fi
 
 success "已下载 skills (15 个核心 skills + 引用文件)"
 
