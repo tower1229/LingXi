@@ -64,6 +64,13 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 - **规则已存在** → 在现有 RULE.md 中追加新准则内容
 - **规则不存在** → 按模板创建新规则
 
+### 3.5) 获取创建日期
+
+在创建新规则时，获取当前日期用于元数据：
+
+- **方式**：使用系统命令 `date +%Y-%m-%d` 获取当前日期（格式：`YYYY-MM-DD`）
+- **存储**：优先在 frontmatter 中添加 `created` 字段（方案A），如果 Cursor 不支持则使用方案B（文件末尾）
+
 ### 4) 配置 Frontmatter
 
 根据类型配置正确的 frontmatter：
@@ -72,6 +79,7 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 ```yaml
 ---
 alwaysApply: true
+created: "{created_date}"
 ---
 ```
 
@@ -81,6 +89,7 @@ alwaysApply: true
 globs:
   - "{根据项目实际目录结构配置}"
 alwaysApply: false
+created: "{created_date}"
 ---
 ```
 
@@ -92,6 +101,7 @@ alwaysApply: false
 ---
 description: "This rule provides {domain} standards for {specific areas}"
 alwaysApply: false
+created: "{created_date}"
 ---
 ```
 
@@ -103,8 +113,11 @@ alwaysApply: false
 ```yaml
 ---
 alwaysApply: false
+created: "{created_date}"
 ---
 ```
+
+> **注意**：如果 Cursor 不支持 frontmatter 中的 `created` 字段（解析错误），则使用方案B：在文件末尾添加 `Created: {created_date}` 字段（与现有的 `Source:` 和 `Adopted:` 保持一致）。
 
 ### 5) 应用规则模板
 
@@ -113,6 +126,7 @@ alwaysApply: false
 ```markdown
 ---
 alwaysApply: true
+created: "{created_date}"
 ---
 
 # {Scope} Redlines
@@ -125,6 +139,7 @@ alwaysApply: true
 
 ---
 Source: {来源经验或"手动创建"}
+Created: {created_date}
 ```
 
 #### File-scoped 模板
@@ -135,6 +150,7 @@ globs:
   - "{glob1}"
   - "{glob2}"
 alwaysApply: false
+created: "{created_date}"
 ---
 
 # {Scope} Standards
@@ -144,6 +160,7 @@ alwaysApply: false
 
 ---
 Source: {来源经验}
+Created: {created_date}
 ```
 
 #### Intelligent 模板
@@ -152,6 +169,7 @@ Source: {来源经验}
 ---
 description: "This rule provides {domain} standards for {specific areas}"
 alwaysApply: false
+created: "{created_date}"
 ---
 
 # {Scope} Guidelines
@@ -161,6 +179,7 @@ alwaysApply: false
 
 ---
 Source: {来源经验}
+Created: {created_date}
 ```
 
 #### Manual 模板
@@ -168,6 +187,7 @@ Source: {来源经验}
 ```markdown
 ---
 alwaysApply: false
+created: "{created_date}"
 ---
 
 # {Checklist Name}
@@ -179,6 +199,7 @@ alwaysApply: false
 
 ---
 Source: {来源经验}
+Created: {created_date}
 ```
 
 ### 6) 更新索引

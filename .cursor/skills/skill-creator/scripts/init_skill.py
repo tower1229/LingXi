@@ -12,12 +12,15 @@ Examples:
 """
 
 import sys
+from datetime import date
 from pathlib import Path
 
 
 SKILL_TEMPLATE = """---
 name: {skill_name}
 description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+metadata:
+  created: "{created_date}"
 ---
 
 # {skill_title}
@@ -220,9 +223,11 @@ def init_skill(skill_name, path):
 
     # Create SKILL.md from template
     skill_title = title_case_skill_name(skill_name)
+    created_date = date.today().strftime('%Y-%m-%d')
     skill_content = SKILL_TEMPLATE.format(
         skill_name=skill_name,
-        skill_title=skill_title
+        skill_title=skill_title,
+        created_date=created_date
     )
 
     skill_md_path = skill_dir / 'SKILL.md'

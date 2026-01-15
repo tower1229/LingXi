@@ -1,6 +1,6 @@
 ---
 name: archive
-description: 归档阶段。当用户明确确认任务完成（Status = completed）时激活，负责归档 REQ 三件套和更新索引。
+description: 此 Skill 执行需求归档。当用户明确确认任务完成（Status = completed）时激活，负责归档 REQ 三件套（.md/.plan.md/.review.md）和更新索引。
 ---
 
 # Archive
