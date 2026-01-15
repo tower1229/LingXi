@@ -13,7 +13,7 @@
 ```yaml
 ---
 name: experience-depositor
-description: 将已暂存的经验候选正式写入经验库。当用户通过 /flow 沉淀 ... 或 /remember ... 命令确认复利沉淀时激活。
+description: 将已暂存的经验候选正式写入经验库。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选经验（如 1,3）时激活。
 model: inherit
 is_background: false
 ---
@@ -26,8 +26,8 @@ is_background: false
 
 ## 触发时机
 
-- 用户执行 `/flow 沉淀 ...` 或 `/flow 沉淀 全部`
-- 用户执行 `/remember ...`
+- 用户通过 `/remember ...` 命令提取新经验
+- 用户直接输入编号选择候选经验（如 `1,3` 或 `1 3`）
 
 ## 流程
 

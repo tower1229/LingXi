@@ -13,6 +13,7 @@
 用一个入口 `/flow` 完成需求的全生命周期推进（Req → Plan → Audit → Work → Review → Archive）。
 
 核心特性：
+
 - **保留循环**：允许在任意阶段反复执行
 - **人工闸门**：阶段推进必须用户确认
 - **产物写入**：遵循 `.workflow/requirements/` 约定
@@ -31,24 +32,13 @@
 
 **注意**：`/flow` 命令只支持以上三种用法。
 
-## 不再支持的用法
-
-以下用法已迁移到其他命令：
-
-| 旧用法 | 替代方案 |
-|-------|---------|
-| `/flow 沉淀 1,3` | 使用 `/remember <描述>` 进行经验沉淀 |
-| `/flow 忽略沉淀` | 不再需要，模型会在适当时机自动展示候选 |
-| `/flow 采纳质量准则 1,3` | 质量准则通过其他机制采纳 |
-| `/flow 忽略质量准则` | 不再需要 |
-
 ## 依赖的 Agent Skills
 
-| 类别 | Skills |
-|------|--------|
-| 路由 | `flow-router` |
+| 类别 | Skills                                         |
+| ---- | ---------------------------------------------- |
+| 路由 | `flow-router`                                  |
 | 阶段 | `req` `plan` `audit` `work` `review` `archive` |
-| 底座 | `index-manager` `experience-index` |
+| 底座 | `index-manager` `experience-index`             |
 
 ## 产物
 
@@ -62,10 +52,12 @@
 ### 问题：`/flow <描述>` 没有进入 req 阶段
 
 **可能原因**：
+
 - AI 未正确激活 flow-router skill
 - 描述被误解为其他类型的任务
 
 **解决方案**：
+
 1. 确认 `.cursor/skills/flow-router/SKILL.md` 文件存在
 2. 重新输入 `/flow <描述>`，确保描述清晰
 3. 如果问题持续，尝试使用更明确的描述前缀，如 `/flow 需求：实现用户登录`
@@ -73,9 +65,11 @@
 ### 问题：`/flow` 空参数没有返回进行中任务
 
 **可能原因**：
+
 - INDEX.md 中没有 Status != completed 的任务
 - AI 未正确读取 INDEX.md
 
 **解决方案**：
+
 1. 检查 `.workflow/requirements/INDEX.md` 是否有进行中的任务
 2. 如果有任务但未显示，尝试使用 `/flow REQ-xxx` 直接指定任务

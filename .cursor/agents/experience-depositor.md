@@ -1,6 +1,6 @@
 ---
 name: experience-depositor
-description: 将已暂存的经验候选正式写入经验库。当用户通过 /flow 沉淀 ... 或 /remember ... 命令确认复利沉淀时激活。
+description: 将已暂存的经验候选正式写入经验库。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选（如 1,3）时激活。
 model: inherit
 is_background: false
 ---

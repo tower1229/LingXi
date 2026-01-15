@@ -97,10 +97,9 @@ function buildFollowupMessage(candidates) {
     "候选列表：",
     ...lines,
     "",
-    "请用以下格式回复（继续使用单入口 /flow）：",
-    "- `/flow 沉淀 1,3`：沉淀第 1 和第 3 条",
-    "- `/flow 沉淀 全部`：沉淀全部",
-    "- `/flow 忽略沉淀`：忽略并清空候选",
+    "请直接输入编号选择要沉淀的候选：",
+    "- `1,3` 或 `1 3`：选择第 1 和第 3 个候选",
+    "- `全部` 或 `all`：选择所有候选",
     "",
     "约束：在你确认前，不得写入 .workflow/context/experience/。",
   ].join("\n");

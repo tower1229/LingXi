@@ -42,26 +42,6 @@ description: 当用户输入 /flow 命令时必须激活此 Skill。负责路由
    - **行为**：执行阶段状态判断，根据状态进入相应阶段
    - **原因**：用户明确指定了已有需求，需要读取状态确定当前阶段
 
-### 不支持的用法（必须拒绝）
-
-以下用法已不再支持，必须拒绝并引导：
-
-- `/flow 沉淀 ...` 或 `/flow 忽略沉淀`
-- `/flow 采纳质量准则 ...` 或 `/flow 忽略质量准则`
-
-**拒绝时输出**：
-```
-⚠️ 此用法已不再支持。
-
-- 经验沉淀请使用：/remember <描述>
-- 质量准则采纳通过其他机制实现
-
-/flow 命令只支持三种用法：
-- /flow <描述>    创建新需求
-- /flow REQ-xxx   继续已有需求
-- /flow           自动查找进行中任务
-```
-
 ### 关键原则
 
 - **`/flow` 命令专注于需求工作流**（req → plan → audit → work → review → archive）
@@ -169,4 +149,4 @@ D) 退出
 } -->
 ```
 
-> experience-collector 会在后台自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`；用户必须用 `/remember ...` 明确确认后，才允许写入 `.workflow/context/experience/`。
+> experience-collector 会在后台自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`；用户必须主动选择确认（如直接输入编号 `1,3` 选择候选）后，才允许写入 `.workflow/context/experience/`。

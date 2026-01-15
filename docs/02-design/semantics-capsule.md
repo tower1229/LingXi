@@ -58,7 +58,7 @@ Semantics Capsule（语义胶囊）用于从需求中抽取并固化"业务语�
 ### 写入规则
 
 - **语义资产**：写入 `.workflow/context/business/` 下的对应文件（boundaries.md / rules.md / terms.md）
-- **判断资产**：写入 `.workflow/context/experience/`（需通过 `/flow 沉淀` 确认）
+- **判断资产**：写入 `.workflow/context/experience/`（需通过用户主动选择确认，如直接输入编号 `1,3` 选择候选）
 - **混合内容**：若同时包含语义和判断，应拆分为两个条目分别写入
 
 ## 抽取时机
