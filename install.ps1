@@ -146,7 +146,7 @@ foreach ($f in $HookFiles) {
         exit 1
     }
 }
-Write-Success "已下载 hooks (hooks.json + 6 个脚本)"
+Write-Success "已下载 hooks (hooks.json + 5 个脚本)"
 
 # 下载 skills
 Write-Info "下载 skills..."
@@ -154,6 +154,7 @@ $Skills = @(
     "skills/audit/SKILL.md",
     "skills/archive/SKILL.md",
     "skills/context-engineering/SKILL.md",
+    "skills/experience-curator/SKILL.md",
     "skills/experience-depositor/SKILL.md",
     "skills/experience-index/SKILL.md",
     "skills/flow-router/SKILL.md",
@@ -162,6 +163,8 @@ $Skills = @(
     "skills/plan-manager/SKILL.md",
     "skills/req/SKILL.md",
     "skills/review/SKILL.md",
+    "skills/rules-creator/SKILL.md",
+    "skills/service-loader/SKILL.md",
     "skills/work/SKILL.md"
 )
 
@@ -172,7 +175,28 @@ foreach ($s in $Skills) {
         exit 1
     }
 }
-Write-Success "已下载 skills (12 个)"
+
+# 下载 experience-curator 的引用文件
+Write-Info "下载 experience-curator 引用文件..."
+New-Item -ItemType Directory -Force -Path ".cursor\skills\experience-curator\references" | Out-Null
+if (-not (Download-File ".cursor/skills/experience-curator/references/experience-governance.md" ".cursor\skills\experience-curator\references\experience-governance.md")) {
+    Write-Error "安装失败"
+    exit 1
+}
+
+# 下载 flow-router 的引用文件
+Write-Info "下载 flow-router 引用文件..."
+New-Item -ItemType Directory -Force -Path ".cursor\skills\flow-router\references" | Out-Null
+if (-not (Download-File ".cursor/skills/flow-router/references/semantics-capsule.md" ".cursor\skills\flow-router\references\semantics-capsule.md")) {
+    Write-Error "安装失败"
+    exit 1
+}
+if (-not (Download-File ".cursor/skills/flow-router/references/trade-off-record.md" ".cursor\skills\flow-router\references\trade-off-record.md")) {
+    Write-Error "安装失败"
+    exit 1
+}
+
+Write-Success "已下载 skills (15 个核心 skills + 引用文件)"
 
 # 创建 .workflow 目录结构
 Write-Info "创建 .workflow 目录结构..."
@@ -253,7 +277,7 @@ Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ (2 个命令)"
 Write-Host "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
-Write-Host "  - .cursor/skills/ (Agent Skills)"
+Write-Host "  - .cursor/skills/ (15 个核心 Agent Skills)"
 Write-Host "  - .workflow/ 目录结构"
 Write-Host ""
 Write-Info "下一步："

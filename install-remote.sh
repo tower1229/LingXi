@@ -113,21 +113,29 @@ done
 success "已下载 commands (2 个文件)"
 
 # 下载 rules 文件（项目级质量准则）
+# 使用硬编码列表，明确控制哪些文件被安装
+# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 info "下载 rules..."
-RULES=(
-    "rules/ai-artifacts/RULE.md"
-    "rules/development-specifications/RULE.md"
-    "rules/safety-guardrails/RULE.md"
-)
 
-for rule in "${RULES[@]}"; do
-    local_file=".cursor/${rule}"
-    if ! download_file ".cursor/${rule}" "$local_file"; then
-        error "安装失败"
-        exit 1
-    fi
-done
-success "已下载 rules (3 个文件)"
+# 规则目录
+mkdir -p .cursor/rules/qs-always-general
+if ! download_file ".cursor/rules/qs-always-general/RULE.md" ".cursor/rules/qs-always-general/RULE.md"; then
+    error "安装失败"
+    exit 1
+fi
+
+# 索引文件
+if ! download_file ".cursor/rules/quality-standards-index.md" ".cursor/rules/quality-standards-index.md"; then
+    error "安装失败"
+    exit 1
+fi
+
+if ! download_file ".cursor/rules/quality-standards-schema.md" ".cursor/rules/quality-standards-schema.md"; then
+    error "安装失败"
+    exit 1
+fi
+
+success "已下载 rules (1 个规则 + 2 个索引文件)"
 
 # 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此下载
 
@@ -149,7 +157,7 @@ for f in "${HOOK_FILES[@]}"; do
         exit 1
     fi
 done
-success "已下载 hooks (hooks.json + 6 个脚本)"
+success "已下载 hooks (hooks.json + 5 个脚本)"
 
 # 下载 skills
 info "下载 skills..."
@@ -157,6 +165,7 @@ SKILLS=(
     "skills/audit/SKILL.md"
     "skills/archive/SKILL.md"
     "skills/context-engineering/SKILL.md"
+    "skills/experience-curator/SKILL.md"
     "skills/experience-depositor/SKILL.md"
     "skills/experience-index/SKILL.md"
     "skills/flow-router/SKILL.md"
@@ -165,6 +174,8 @@ SKILLS=(
     "skills/plan-manager/SKILL.md"
     "skills/req/SKILL.md"
     "skills/review/SKILL.md"
+    "skills/rules-creator/SKILL.md"
+    "skills/service-loader/SKILL.md"
     "skills/work/SKILL.md"
 )
 
@@ -175,7 +186,28 @@ for s in "${SKILLS[@]}"; do
         exit 1
     fi
 done
-success "已下载 skills (12 个)"
+
+# 下载 experience-curator 的引用文件
+info "下载 experience-curator 引用文件..."
+mkdir -p .cursor/skills/experience-curator/references
+if ! download_file ".cursor/skills/experience-curator/references/experience-governance.md" ".cursor/skills/experience-curator/references/experience-governance.md"; then
+    error "安装失败"
+    exit 1
+fi
+
+# 下载 flow-router 的引用文件
+info "下载 flow-router 引用文件..."
+mkdir -p .cursor/skills/flow-router/references
+if ! download_file ".cursor/skills/flow-router/references/semantics-capsule.md" ".cursor/skills/flow-router/references/semantics-capsule.md"; then
+    error "安装失败"
+    exit 1
+fi
+if ! download_file ".cursor/skills/flow-router/references/trade-off-record.md" ".cursor/skills/flow-router/references/trade-off-record.md"; then
+    error "安装失败"
+    exit 1
+fi
+
+success "已下载 skills (15 个核心 skills + 引用文件)"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."
@@ -249,9 +281,9 @@ echo ""
 success "安装完成！"
 echo ""
 info "已安装的文件："
-echo "  - .cursor/commands/ (2 个命令文件)"
-echo "  - .cursor/rules/ (4 个规则文件)"
-echo "  - .cursor/skills/ (Agent Skills)"
+echo "  - .cursor/commands/ (2 个命令)"
+echo "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
+echo "  - .cursor/skills/ (15 个核心 Agent Skills)"
 echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："
