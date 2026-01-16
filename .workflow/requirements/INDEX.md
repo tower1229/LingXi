@@ -13,3 +13,4 @@
 | REQ-007 | 增强 /flow 命令的稳定性和可用性                           | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-007.md` / `.plan.md` / `.review.md` |
 | REQ-008 | 优化 workflow 阶段菜单和推进判据检查体验                   | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-008.md` / `.plan.md` / `.review.md` |
 | REQ-009 | 强化 req skill 中候选提取步骤的执行要求                     | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-009.md` / `.plan.md` / `.review.md` |
+| REQ-010 | 统一安装清单配置化                                         | completed   | archive       | 已完成      |          | `.workflow/requirements/completed/REQ-010.md` / `.plan.md` / `.review.md` |

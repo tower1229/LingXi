@@ -44,6 +44,61 @@ check_command() {
 
 check_command curl
 
+# 读取安装清单（从 GitHub 下载）
+load_manifest() {
+    local manifest_url="${BASE_URL}/install-manifest.json"
+    local manifest_path=$(mktemp)
+    
+    info "下载安装清单..."
+    if ! curl -f -sSL "$manifest_url" -o "$manifest_path"; then
+        error "下载安装清单失败: $manifest_url"
+        exit 1
+    fi
+
+    # 尝试使用 jq 解析
+    if command -v jq &> /dev/null; then
+        MANIFEST_JSON=$(cat "$manifest_path")
+        rm -f "$manifest_path"
+        return 0
+    fi
+
+    # 尝试使用 python3 解析
+    if command -v python3 &> /dev/null; then
+        MANIFEST_JSON=$(cat "$manifest_path")
+        rm -f "$manifest_path"
+        return 0
+    fi
+
+    error "需要 jq 或 python3 来解析 JSON 清单文件"
+    error "请安装 jq: https://stedolan.github.io/jq/download/"
+    rm -f "$manifest_path"
+    exit 1
+}
+
+# 使用 jq 或 python3 获取 JSON 数组值
+get_json_array() {
+    local key=$1
+    if command -v jq &> /dev/null; then
+        echo "$MANIFEST_JSON" | jq -r ".$key[]" 2>/dev/null
+    elif command -v python3 &> /dev/null; then
+        echo "$MANIFEST_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); [print(item) for item in data.get('$key', [])]" 2>/dev/null
+    fi
+}
+
+# 使用 jq 或 python3 获取 JSON 对象数组值
+get_json_object_array() {
+    local key=$1
+    local subkey=$2
+    if command -v jq &> /dev/null; then
+        echo "$MANIFEST_JSON" | jq -r ".$key.$subkey[]" 2>/dev/null
+    elif command -v python3 &> /dev/null; then
+        echo "$MANIFEST_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); [print(item) for item in data.get('$key', {}).get('$subkey', [])]" 2>/dev/null
+    fi
+}
+
+# 加载清单
+load_manifest
+
 info "开始安装 Cursor Workflow..."
 info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
 
@@ -98,145 +153,128 @@ mkdir -p .cursor/hooks
 
 # 下载 commands 文件
 info "下载 commands..."
-COMMANDS=(
-    "commands/flow.md"
-    "commands/remember.md"
-)
-
-for cmd in "${COMMANDS[@]}"; do
+command_count=0
+while IFS= read -r cmd; do
+    [ -z "$cmd" ] && continue
     local_file=".cursor/${cmd}"
     if ! download_file ".cursor/${cmd}" "$local_file"; then
         error "安装失败"
         exit 1
     fi
-done
-success "已下载 commands (2 个文件)"
+    ((command_count++))
+done < <(get_json_array "commands")
+success "已下载 commands ($command_count 个文件)"
 
 # 下载 rules 文件（项目级质量准则）
-# 使用硬编码列表，明确控制哪些文件被安装
 # 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 info "下载 rules..."
 
-# 规则目录
-mkdir -p .cursor/rules/qs-always-general
-if ! download_file ".cursor/rules/qs-always-general/RULE.md" ".cursor/rules/qs-always-general/RULE.md"; then
-    error "安装失败"
-    exit 1
-fi
+# 创建规则目录
+while IFS= read -r rule_dir; do
+    [ -z "$rule_dir" ] && continue
+    mkdir -p ".cursor/${rule_dir}"
+done < <(get_json_object_array "rules" "directories")
 
-# 索引文件
-if ! download_file ".cursor/rules/quality-standards-index.md" ".cursor/rules/quality-standards-index.md"; then
-    error "安装失败"
-    exit 1
-fi
+# 下载规则文件
+rule_dir_count=0
+while IFS= read -r rule_dir; do
+    [ -z "$rule_dir" ] && continue
+    ((rule_dir_count++))
+done < <(get_json_object_array "rules" "directories")
 
-if ! download_file ".cursor/rules/quality-standards-schema.md" ".cursor/rules/quality-standards-schema.md"; then
-    error "安装失败"
-    exit 1
-fi
+rule_file_count=0
+while IFS= read -r rule_file; do
+    [ -z "$rule_file" ] && continue
+    local_file=".cursor/${rule_file}"
+    if ! download_file ".cursor/${rule_file}" "$local_file"; then
+        error "安装失败"
+        exit 1
+    fi
+    ((rule_file_count++))
+done < <(get_json_object_array "rules" "files")
 
-success "已下载 rules (1 个规则 + 2 个索引文件)"
+success "已下载 rules ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
 
-# 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此下载
 
 # 下载 hooks 配置与脚本
 info "下载 hooks..."
-HOOK_FILES=(
-    "hooks.json"
-    "hooks/_hook-utils.mjs"
-    "hooks/audit-after-shell-execution.mjs"
-    "hooks/before-shell-execution.mjs"
-    "hooks/before-submit-prompt.mjs"
-    "hooks/stop.mjs"
-)
-
-for f in "${HOOK_FILES[@]}"; do
-    local_file=".cursor/${f}"
-    if ! download_file ".cursor/${f}" "$local_file"; then
+hook_count=0
+while IFS= read -r hook_file; do
+    [ -z "$hook_file" ] && continue
+    local_file=".cursor/${hook_file}"
+    if ! download_file ".cursor/${hook_file}" "$local_file"; then
         error "安装失败"
         exit 1
     fi
-done
-success "已下载 hooks (hooks.json + 5 个脚本)"
+    ((hook_count++))
+done < <(get_json_object_array "hooks" "files")
+success "已下载 hooks ($hook_count 个文件)"
 
 # 下载 skills
 info "下载 skills..."
-SKILLS=(
-    "skills/audit/SKILL.md"
-    "skills/archive/SKILL.md"
-    "skills/context-engineering/SKILL.md"
-    "skills/experience-curator/SKILL.md"
-    "skills/experience-depositor/SKILL.md"
-    "skills/experience-index/SKILL.md"
-    "skills/flow-router/SKILL.md"
-    "skills/index-manager/SKILL.md"
-    "skills/plan/SKILL.md"
-    "skills/plan-manager/SKILL.md"
-    "skills/req/SKILL.md"
-    "skills/review/SKILL.md"
-    "skills/rules-creator/SKILL.md"
-    "skills/service-loader/SKILL.md"
-    "skills/work/SKILL.md"
-)
-
-for s in "${SKILLS[@]}"; do
-    local_file=".cursor/${s}"
-    if ! download_file ".cursor/${s}" "$local_file"; then
+skill_count=0
+while IFS= read -r skill; do
+    [ -z "$skill" ] && continue
+    local_file=".cursor/${skill}"
+    if ! download_file ".cursor/${skill}" "$local_file"; then
         error "安装失败"
         exit 1
     fi
+    ((skill_count++))
+done < <(get_json_array "skills")
+
+# 下载引用文件
+ref_count=0
+for ref_key in experience-curator flow-router; do
+    while IFS= read -r ref_file; do
+        [ -z "$ref_file" ] && continue
+        mkdir -p ".cursor/$(dirname "$ref_file")"
+        local_file=".cursor/${ref_file}"
+        if ! download_file ".cursor/${ref_file}" "$local_file"; then
+            error "安装失败"
+            exit 1
+        fi
+        ((ref_count++))
+    done < <(get_json_object_array "references" "$ref_key")
 done
 
-# 下载 experience-curator 的引用文件
-info "下载 experience-curator 引用文件..."
-mkdir -p .cursor/skills/experience-curator/references
-if ! download_file ".cursor/skills/experience-curator/references/experience-governance.md" ".cursor/skills/experience-curator/references/experience-governance.md"; then
-    error "安装失败"
-    exit 1
-fi
-
-# 下载 flow-router 的引用文件
-info "下载 flow-router 引用文件..."
-mkdir -p .cursor/skills/flow-router/references
-if ! download_file ".cursor/skills/flow-router/references/semantics-capsule.md" ".cursor/skills/flow-router/references/semantics-capsule.md"; then
-    error "安装失败"
-    exit 1
-fi
-
-success "已下载 skills (15 个核心 skills + 引用文件)"
+success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
 
 # 创建 .workflow 目录结构
 info "创建 .workflow 目录结构..."
-mkdir -p .workflow/requirements/in-progress
-mkdir -p .workflow/requirements/completed
-mkdir -p .workflow/context/business
-mkdir -p .workflow/context/tech/services
-mkdir -p .workflow/context/experience
-mkdir -p .workflow/context/session
-mkdir -p .workflow/workspace
+while IFS= read -r dir; do
+    [ -z "$dir" ] && continue
+    mkdir -p "$dir"
+done < <(get_json_array "workflowDirectories")
 
 # 下载 INDEX.md 文件
 info "下载索引文件..."
-if ! download_file ".workflow/requirements/INDEX.md" ".workflow/requirements/INDEX.md"; then
-    error "安装失败"
-    exit 1
-fi
-
-if ! download_file ".workflow/context/experience/INDEX.md" ".workflow/context/experience/INDEX.md"; then
-    error "安装失败"
-    exit 1
-fi
+while IFS= read -r index_file; do
+    [ -z "$index_file" ] && continue
+    if ! download_file "$index_file" "$index_file"; then
+        error "安装失败"
+        exit 1
+    fi
+done < <(get_json_array "workflowIndexFiles")
 success "已下载索引文件"
+
+# 下载 AGENTS.md 文件
+info "下载 AGENTS.md 文件..."
+while IFS= read -r agents_file; do
+    [ -z "$agents_file" ] && continue
+    if ! download_file "$agents_file" "$agents_file"; then
+        error "安装失败"
+        exit 1
+    fi
+done < <(get_json_array "agentsFiles")
+success "已下载 AGENTS.md 文件"
 
 # 更新 .gitignore
 info "更新 .gitignore..."
-GITIGNORE_ENTRIES=(
-    "# Local workspace for temp code clones, generated artifacts, etc."
-    ".workflow/workspace/"
-    ""
-    "# Session-level context (ephemeral, not a knowledge base)"
-    ".workflow/context/session/"
-)
+GITIGNORE_ENTRIES=()
+while IFS= read -r entry; do
+    GITIGNORE_ENTRIES+=("$entry")
+done < <(get_json_array "gitignoreEntries")
 
 if [ -f ".gitignore" ]; then
     NEED_UPDATE=false
@@ -277,9 +315,9 @@ echo ""
 success "安装完成！"
 echo ""
 info "已安装的文件："
-echo "  - .cursor/commands/ (2 个命令)"
-echo "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
-echo "  - .cursor/skills/ (15 个核心 Agent Skills)"
+echo "  - .cursor/commands/ ($command_count 个命令)"
+echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
+echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo "  - .workflow/ 目录结构"
 echo ""
 info "下一步："

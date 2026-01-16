@@ -60,6 +60,24 @@ function Download-File {
     }
 }
 
+# 读取安装清单（从 GitHub 下载）
+function Load-Manifest {
+    $manifestUrl = "${BaseUrl}/install-manifest.json"
+    Write-Info "下载安装清单..."
+    
+    try {
+        $manifestContent = Invoke-WebRequest -Uri $manifestUrl -UseBasicParsing -ErrorAction Stop | Select-Object -ExpandProperty Content
+        return $manifestContent | ConvertFrom-Json
+    } catch {
+        Write-Error "下载安装清单失败: $manifestUrl"
+        Write-Error $_.Exception.Message
+        exit 1
+    }
+}
+
+# 加载清单
+$Manifest = Load-Manifest
+
 Write-Info "开始安装 Cursor Workflow..."
 Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
@@ -93,143 +111,120 @@ New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
 # 下载 commands
 Write-Info "下载 commands..."
-$Commands = @(
-    "commands/flow.md",
-    "commands/remember.md"
-)
-
-foreach ($cmd in $Commands) {
+$commandCount = 0
+foreach ($cmd in $Manifest.commands) {
     $localFile = ".cursor\$cmd"
     if (-not (Download-File ".cursor\$cmd" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $commandCount++
 }
-Write-Success "已下载 commands (2 个文件)"
+Write-Success "已下载 commands ($commandCount 个文件)"
 
 # 下载 rules（项目级质量准则）
-# 使用硬编码列表，明确控制哪些文件被安装
 # 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 Write-Info "下载 rules..."
-$Rules = @(
-    "rules/qs-always-general/RULE.md",
-    "rules/quality-standards-index.md",
-    "rules/quality-standards-schema.md"
-)
 
-foreach ($rule in $Rules) {
-    $localFile = ".cursor\$rule"
-    if (-not (Download-File ".cursor\$rule" $localFile)) {
+# 创建规则目录
+$ruleDirCount = 0
+foreach ($ruleDir in $Manifest.rules.directories) {
+    $destDir = ".cursor\$ruleDir"
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    }
+    $ruleDirCount++
+}
+
+# 下载规则文件
+$ruleFileCount = 0
+foreach ($ruleFile in $Manifest.rules.files) {
+    $localFile = ".cursor\$ruleFile"
+    if (-not (Download-File ".cursor\$ruleFile" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $ruleFileCount++
 }
-Write-Success "已下载 rules (1 个规则 + 2 个索引文件)"
+Write-Success "已下载 rules ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
 
-# 注意：workflow 工具规则使用 AGENTS.md（根目录或嵌套）实现，不在此下载
 
 # 下载 hooks（hooks.json + scripts）
 Write-Info "下载 hooks..."
-$HookFiles = @(
-    "hooks.json",
-    "hooks/_hook-utils.mjs",
-    "hooks/audit-after-shell-execution.mjs",
-    "hooks/before-shell-execution.mjs",
-    "hooks/before-submit-prompt.mjs",
-    "hooks/stop.mjs"
-)
-
-foreach ($f in $HookFiles) {
-    $localFile = ".cursor\$f"
-    if (-not (Download-File ".cursor\$f" $localFile)) {
+$hookCount = 0
+foreach ($hookFile in $Manifest.hooks.files) {
+    $localFile = ".cursor\$hookFile"
+    if (-not (Download-File ".cursor\$hookFile" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $hookCount++
 }
-Write-Success "已下载 hooks (hooks.json + 5 个脚本)"
+Write-Success "已下载 hooks ($hookCount 个文件)"
 
 # 下载 skills
 Write-Info "下载 skills..."
-$Skills = @(
-    "skills/audit/SKILL.md",
-    "skills/archive/SKILL.md",
-    "skills/context-engineering/SKILL.md",
-    "skills/experience-curator/SKILL.md",
-    "skills/experience-depositor/SKILL.md",
-    "skills/experience-index/SKILL.md",
-    "skills/flow-router/SKILL.md",
-    "skills/index-manager/SKILL.md",
-    "skills/plan/SKILL.md",
-    "skills/plan-manager/SKILL.md",
-    "skills/req/SKILL.md",
-    "skills/review/SKILL.md",
-    "skills/rules-creator/SKILL.md",
-    "skills/service-loader/SKILL.md",
-    "skills/work/SKILL.md"
-)
-
-foreach ($s in $Skills) {
-    $localFile = ".cursor\$s"
-    if (-not (Download-File ".cursor\$s" $localFile)) {
+$skillCount = 0
+foreach ($skill in $Manifest.skills) {
+    $localFile = ".cursor\$skill"
+    if (-not (Download-File ".cursor\$skill" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $skillCount++
 }
 
-# 下载 experience-curator 的引用文件
-Write-Info "下载 experience-curator 引用文件..."
-New-Item -ItemType Directory -Force -Path ".cursor\skills\experience-curator\references" | Out-Null
-if (-not (Download-File ".cursor/skills/experience-curator/references/experience-governance.md" ".cursor\skills\experience-curator\references\experience-governance.md")) {
-    Write-Error "安装失败"
-    exit 1
+# 下载引用文件
+$refCount = 0
+foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
+    foreach ($refFile in $Manifest.references.$refKey) {
+        $destDir = ".cursor\$(Split-Path -Parent $refFile)"
+        if (-not (Test-Path $destDir)) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        }
+        $localFile = ".cursor\$refFile"
+        if (-not (Download-File ".cursor\$refFile" $localFile)) {
+            Write-Error "安装失败"
+            exit 1
+        }
+        $refCount++
+    }
 }
 
-# 下载 flow-router 的引用文件
-Write-Info "下载 flow-router 引用文件..."
-New-Item -ItemType Directory -Force -Path ".cursor\skills\flow-router\references" | Out-Null
-if (-not (Download-File ".cursor/skills/flow-router/references/semantics-capsule.md" ".cursor\skills\flow-router\references\semantics-capsule.md")) {
-    Write-Error "安装失败"
-    exit 1
-}
-
-Write-Success "已下载 skills (15 个核心 skills + 引用文件)"
+Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
 
 # 创建 .workflow 目录结构
 Write-Info "创建 .workflow 目录结构..."
-@(
-    ".workflow\requirements\in-progress",
-    ".workflow\requirements\completed",
-    ".workflow\context\business",
-    ".workflow\context\tech\services",
-    ".workflow\context\experience",
-    ".workflow\context\session",
-    ".workflow\workspace"
-) | ForEach-Object {
-    New-Item -ItemType Directory -Force -Path $_ | Out-Null
+foreach ($dir in $Manifest.workflowDirectories) {
+    $winPath = $dir -replace '/', '\'
+    New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
-if (-not (Download-File ".workflow/requirements/INDEX.md" ".workflow\requirements\INDEX.md")) {
-    Write-Error "安装失败"
-    exit 1
-}
-
-if (-not (Download-File ".workflow/context/experience/INDEX.md" ".workflow\context\experience\INDEX.md")) {
-    Write-Error "安装失败"
-    exit 1
+foreach ($indexFile in $Manifest.workflowIndexFiles) {
+    $winPath = $indexFile -replace '/', '\'
+    if (-not (Download-File $indexFile $winPath)) {
+        Write-Error "安装失败"
+        exit 1
+    }
 }
 Write-Success "已下载索引文件"
 
+# 下载 AGENTS.md 文件
+Write-Info "下载 AGENTS.md 文件..."
+foreach ($agentsFile in $Manifest.agentsFiles) {
+    $winPath = $agentsFile -replace '/', '\'
+    if (-not (Download-File $agentsFile $winPath)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+}
+Write-Success "已下载 AGENTS.md 文件"
+
 # 更新 .gitignore
 Write-Info "更新 .gitignore..."
-$GitignoreEntries = @(
-    "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".workflow/workspace/",
-    "",
-    "# Session-level context (ephemeral, not a knowledge base)",
-    ".workflow/context/session/"
-)
+$GitignoreEntries = $Manifest.gitignoreEntries
 
 if (Test-Path ".gitignore") {
     $content = Get-Content ".gitignore" -Raw
@@ -271,9 +266,9 @@ Write-Host ""
 Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
-Write-Host "  - .cursor/commands/ (2 个命令)"
-Write-Host "  - .cursor/rules/ (1 个规则 + 2 个索引文件)"
-Write-Host "  - .cursor/skills/ (15 个核心 Agent Skills)"
+Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
+Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
+Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .workflow/ 目录结构"
 Write-Host ""
 Write-Info "下一步："
