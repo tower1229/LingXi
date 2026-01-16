@@ -77,8 +77,9 @@ graph TB
 - **触发**：检测到 EXP-CANDIDATE 注释时自动调用
 - **职责**：
   - 解析 EXP-CANDIDATE JSON
-  - 应用成长过滤器
-  - 暂存到 `.workflow/context/session/pending-compounding-candidates.json`
+  - 调用 `candidate-evaluator` 执行阶段 1 评估（自动评估）
+  - 根据评估结果决定是否暂存
+  - 暂存到 `.workflow/context/session/pending-compounding-candidates.json`（包含评估结果）
 - **特点**：静默处理，不干扰主对话
 
 #### experience-depositor
@@ -86,10 +87,12 @@ graph TB
 - **触发**：用户执行 `/flow 沉淀 ...` 或 `/remember ...`
 - **职责**：
   - 读取暂存候选
-  - 展示候选，请求用户选择
+  - 调用 `candidate-evaluator` 执行阶段 2 评估（详细评估）
+  - 展示候选及评估结果，请求用户选择
   - 冲突检测
+  - 调用 curator 方案模式生成治理方案
+  - 用户确认治理方案后，调用 curator 执行模式执行治理
   - 写入经验库
-  - 触发 curator 进行治理
 
 ### 4. Execution Layer（执行层）
 
@@ -115,7 +118,8 @@ graph TB
 - `index-manager`：维护 INDEX 一致性
 - `plan-manager`：管理 plan 作为执行账本
 - `experience-index`：匹配历史经验
-- `experience-curator`：经验治理（合并/取代）
+- `candidate-evaluator`：统一候选评估机制（结构完整性、判断结构质量、可复用性、沉淀载体适配性）
+- `experience-curator`：经验治理（合并/取代），支持方案模式和执行模式
 - `experience-depositor`：经验写入
 
 #### 工具 Skills
@@ -215,24 +219,31 @@ sequenceDiagram
     participant User
     participant WorkSkill as work Skill
     participant Collector as experience-collector
+    participant Evaluator as candidate-evaluator
     participant Depositor as experience-depositor
     participant Curator as experience-curator
     participant Artifacts as Artifacts Layer
     
     WorkSkill->>WorkSkill: 输出 EXP-CANDIDATE
     WorkSkill->>Collector: 自动调用（后台）
-    Collector->>Collector: 成长过滤器
-    Collector->>Artifacts: 暂存到 pending-compounding-candidates.json
+    Collector->>Evaluator: 阶段 1 评估（自动评估）
+    Evaluator-->>Collector: 评估结果
+    Collector->>Artifacts: 暂存到 pending-compounding-candidates.json（含评估结果）
     User->>Depositor: /flow 沉淀 1,3
     Depositor->>Artifacts: 读取暂存
-    Depositor->>User: 展示候选，请求选择
+    Depositor->>Evaluator: 阶段 2 评估（详细评估）
+    Evaluator-->>Depositor: 详细评估结果
+    Depositor->>User: 展示候选及评估结果，请求选择
     User->>Depositor: 确认选择
     Depositor->>Depositor: 冲突检测
-    Depositor->>Artifacts: 写入 experience/
-    Depositor->>Curator: 触发治理
-    Curator->>Curator: 合并/取代
+    Depositor->>Curator: 调用方案模式（生成治理方案）
+    Curator-->>Depositor: 治理方案
+    Depositor->>User: 展示治理方案，请求确认
+    User->>Depositor: 确认治理方案
+    Depositor->>Curator: 调用执行模式（执行治理）
     Curator->>Artifacts: 更新 INDEX
-    Curator-->>User: 输出治理报告和质量准则建议
+    Curator-->>Depositor: 变更报告
+    Depositor->>Artifacts: 写入 experience/
 ```
 
 ## 控制流

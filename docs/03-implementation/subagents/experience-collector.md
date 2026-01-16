@@ -27,10 +27,11 @@ is_background: true
 ## 职责
 
 1. **解析候选**：从最新消息中读取 `<!-- EXP-CANDIDATE {...} -->` JSON，保留原字段（stage/trigger/decision/...）
-2. **成长过滤器**：回答"若一年后在不同项目遇到类似情境，这条信息仍能提前帮我做正确判断吗？"若否，丢弃并记录理由；若是，继续
-3. **最小上下文包**：合并调用方提供的高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表），与候选 JSON 一起存入暂存区
-4. **暂存**：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`，避免重复，保留时间戳与来源 stage
-5. **不写入经验，不触发 curator，不向用户提问**；仅在必要时简短确认已接收
+2. **统一评估**：调用 `candidate-evaluator` Skill 执行阶段 1 评估（自动评估），包括结构完整性、判断结构质量、可复用性和沉淀载体适配性评估
+3. **根据评估结果决定是否暂存**：不通过的候选过滤，通过的候选暂存并记录评估结果
+4. **最小上下文包**：合并调用方提供的高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表），与候选 JSON 和评估结果一起存入暂存区
+5. **暂存**：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`，避免重复，保留时间戳、来源 stage 和评估结果
+6. **不写入经验，不触发 curator，不向用户提问**；仅在必要时简短确认已接收
 
 ## 处理流程
 
@@ -51,14 +52,23 @@ is_background: true
 
 解析 JSON，保留所有原字段。
 
-### 2. 成长过滤器
+### 2. 统一评估（阶段 1）
 
-对每条候选回答：
+调用 `candidate-evaluator` Skill 执行自动评估：
 
-> **如果我一年后在完全不同的项目里再遇到类似局面，这条信息还能帮我提前做出正确判断吗？**
+1. **结构完整性评估**：检查必要字段（decision/alternatives/signal/solution/verify）
+2. **判断结构质量评估**：评估是否包含"如何判断"的结构，而非"做了什么"的步骤
+3. **可复用性评估**（初步）：评估时间维度、空间维度、抽象层次
+4. **沉淀载体适配性评估**（初步）：推荐最适合的载体
 
-- **否**：丢弃并记录理由
-- **是**：继续处理
+**评估结果处理**：
+- 如果结构完整性或判断结构质量不通过 → 过滤，记录 `filterReason`，不暂存
+- 如果通过但边界模糊（`requiresHumanJudgment: true`）→ 暂存，标记需要人工判断
+- 如果通过 → 暂存，记录评估结果（`evaluation` 字段）
+
+**特点**：
+- 静默处理，只过滤明显不通过的候选
+- 边界模糊的候选仍暂存，由用户最终判断（保护品味）
 
 ### 3. 最小上下文包
 
@@ -78,7 +88,8 @@ is_background: true
 
 - **避免重复**：检查是否已存在相同候选
 - **保留时间戳**：记录捕获时间
-- **保留来源 stage**：记录来源阶段
+- **保留来源 stage**：记录来源阶段（使用 `sourceStage` 字段）
+- **保留评估结果**：记录阶段 1 的评估结果（`evaluation` 字段）
 
 ### 5. 输出
 
@@ -106,14 +117,38 @@ is_background: true
       "pointers": ["path/to/file"],
       "notes": "可选补充",
       "timestamp": "2026-01-12T10:00:00Z",
+      "sourceStage": "work",
       "source": {
         "req": "REQ-001",
         "stage": "work"
+      },
+      "evaluation": {
+        "structuralIntegrity": { "passed": true, "missingFields": [], "reason": "" },
+        "decisionShapeQuality": { "passed": true, "reason": "" },
+        "reusability": {
+          "temporalDimension": { "passed": true, "score": 0.9, "reason": "" },
+          "spatialDimension": { "passed": true, "score": 0.8, "reason": "" },
+          "abstractionLevel": { "passed": true, "score": 0.85, "reason": "" },
+          "overall": "high",
+          "confidence": 0.85
+        },
+        "depositionTarget": {
+          "recommended": ["experience"],
+          "alternatives": ["session"],
+          "reason": "",
+          "expectedBenefit": ""
+        },
+        "requiresHumanJudgment": false,
+        "filterReason": ""
       }
     }
   ]
 }
 ```
+
+**字段说明**：
+- `sourceStage`：候选来源阶段（统一使用此字段标识来源，而非 `source.stage`）
+- `evaluation`：阶段 1 的评估结果，包含各维度评估结果、推荐载体、理由等
 
 ## 触发机制
 
@@ -124,4 +159,6 @@ is_background: true
 ## 参考
 
 - [知识沉淀机制：即时捕获](../02-design/knowledge-compounding.md#即时捕获机制)
+- [候选评估机制设计](../02-design/candidate-evaluation.md)
+- [candidate-evaluator Skill](../../.cursor/skills/candidate-evaluator/SKILL.md)
 - [experience-depositor 实现](./experience-depositor.md)

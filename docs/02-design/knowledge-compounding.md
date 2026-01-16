@@ -10,6 +10,7 @@
 sequenceDiagram
     participant Skill as Stage Skill
     participant Collector as experience-collector
+    participant Evaluator as candidate-evaluator
     participant Session as session/pending-compounding-candidates.json
     participant User
     participant Depositor as experience-depositor
@@ -18,20 +19,24 @@ sequenceDiagram
     
     Skill->>Skill: 输出 EXP-CANDIDATE
     Skill->>Collector: 自动调用（后台）
-    Collector->>Collector: 成长过滤器
-    Collector->>Session: 暂存候选
+    Collector->>Evaluator: 阶段 1 评估（自动评估）
+    Evaluator-->>Collector: 评估结果
+    Collector->>Session: 暂存候选（含评估结果）
     User->>Depositor: /flow 沉淀 1,3
     Depositor->>Session: 读取暂存
-    Depositor->>User: 展示候选，请求选择
+    Depositor->>Evaluator: 阶段 2 评估（详细评估）
+    Evaluator-->>Depositor: 详细评估结果
+    Depositor->>User: 展示候选及评估结果，请求选择
     User->>Depositor: 确认选择
-    Depositor->>Depositor: 沉淀分流
-    Depositor->>Depositor: 成长过滤器（再次确认）
     Depositor->>Depositor: 冲突检测
-    Depositor->>Experience: 写入经验
-    Depositor->>Curator: 触发治理
-    Curator->>Curator: 合并/取代
+    Depositor->>Curator: 调用方案模式（生成治理方案）
+    Curator-->>Depositor: 治理方案
+    Depositor->>User: 展示治理方案，请求确认
+    User->>Depositor: 确认治理方案
+    Depositor->>Curator: 调用执行模式（执行治理）
     Curator->>Experience: 更新 INDEX
-    Curator-->>User: 输出治理报告和质量准则建议
+    Curator-->>Depositor: 变更报告
+    Depositor->>Experience: 写入经验文件
 ```
 
 ## 即时捕获机制
@@ -77,57 +82,43 @@ EXP-CANDIDATE 应在以下阶段输出：
 `experience-collector` 子代理（后台）会自动：
 
 1. **解析注释**：从最新消息中读取 EXP-CANDIDATE JSON
-2. **成长过滤器**：判断是否进入长期知识库
-3. **最小上下文包**：合并高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表）
-4. **暂存**：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`
+2. **统一评估**：调用 `candidate-evaluator` Skill 执行阶段 1 评估（自动评估），包括结构完整性、判断结构质量、可复用性和沉淀载体适配性评估
+3. **根据评估结果决定是否暂存**：不通过的候选过滤，通过的候选暂存并记录评估结果
+4. **最小上下文包**：合并高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表），与候选 JSON 和评估结果一起存入暂存区
+5. **暂存**：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`，包含评估结果
 
 **特点**：
 - 静默处理，不干扰主对话
 - 不写入经验，不触发 curator
+- 只过滤明显不通过的候选，边界模糊的候选仍暂存，由用户最终判断（保护品味）
 - 仅在必要时简短确认已接收
 
-## 成长过滤器
+**参考**：[候选评估机制设计](./candidate-evaluation.md)
 
-### 核心问题
+## 候选评估机制
 
-在决定"写入经验文档（长期）"之前，对每条候选先回答一个问题：
+候选评估机制统一处理所有 EXP-CANDIDATE 的质量评估和分类决策，替代了原来分散的"噪音过滤器"、"成长过滤器"和"沉淀分流"。
 
-> **如果我一年后在完全不同的项目里再遇到类似局面，这条信息还能帮我提前做出正确判断吗？**
+### 评估维度
 
-### 判断标准
+1. **结构完整性**：检查必要字段（decision/alternatives/signal/solution/verify）
+2. **判断结构质量**：评估是否包含"如何判断"的结构，而非"做了什么"的步骤
+3. **可复用性**：评估时间维度（长期价值）、空间维度（跨项目价值）、抽象层次
+4. **沉淀载体适配性**：推荐最适合的载体（experience/rules/skills/services/session）
 
-- **否**：不写入 experience，改为沉淀到 session/worklog（项目记录）
-- **是**：允许写入 experience（长期判断资产）
+### 评估阶段
 
-### 应用时机
-
-成长过滤器在两个时机应用：
-
-1. **experience-collector**：初步过滤，避免暂存无价值的候选
-2. **experience-depositor**：再次确认，确保只有长期资产进入 experience
+- **阶段 1（自动评估）**：在 experience-collector 中执行，初步过滤明显不通过的候选
+- **阶段 2（详细评估）**：在 experience-depositor 中执行，对用户选择的候选进行详细评估
 
 ### 目的
 
-避免 experience 退化为"事实堆叠/案例百科"，把长期资产留给"可迁移的判断结构"。
+- 避免 experience 退化为"事实堆叠/案例百科"，把长期资产留给"可迁移的判断结构"
+- 统一评估逻辑，消除重复实现，提升设计严谨性
 
-## 沉淀分流
+**详细设计**：参见 [候选评估机制设计](./candidate-evaluation.md)
 
-`experience-depositor` 的核心不是"只写经验文档"，而是先做**沉淀分流**，将知识与改进点放到最合适的载体。
-
-### 分流目标
-
-| 目标 | 适用场景 | 位置 |
-|------|---------|------|
-| **经验文档**（默认） | 容易忘、下次会遇到、需要提醒/指针 | `.workflow/context/experience/` |
-| **规则/自动拦截** | 高频且可自动判定 | hook/lint/CI |
-| **Skill/流程升级** | 可复用流程或重复步骤 | `.cursor/skills/` |
-| **长期上下文补齐** | 考古/服务边界/配置规范 | `.workflow/context/tech/services/` 或 `.workflow/context/business/` |
-
-### 分流原则
-
-- **ROI 优先**：默认只选 ROI 最高的一个
-- **可多选**：如果候选适合多个目标，可以多选
-- **输出要求**：对每条候选给出"落点选择 + 理由 + 预期收益（下次如何变快/变稳）"
+**注意**：沉淀分流逻辑已整合到候选评估机制的"沉淀载体适配性评估"维度中，不再作为独立流程。详情参见 [候选评估机制设计](./candidate-evaluation.md#4-沉淀载体适配性评估deposition-target-fitness)。
 
 ## Decision Shape 与 Judgment Capsule
 
@@ -223,14 +214,20 @@ EXP-CANDIDATE 应在以下阶段输出：
 ### experience-depositor 处理
 
 1. **读取暂存**：加载 `.workflow/context/session/pending-compounding-candidates.json`
-2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers
-3. **请求选择**：支持全选/部分/放弃
-4. **沉淀分流**：判断应沉淀到哪里
-5. **成长过滤器**：再次确认是否进入长期知识库
-6. **冲突检测**：检查与现有经验的冲突
-7. **写入**：按模板写入 `.workflow/context/experience/<tag>-<title>.md`，更新 INDEX
-8. **触发 curator**：在实际新增经验后调用 `experience-curator` 进行治理
-9. **清理**：从暂存中移除已处理项；未写入项保留
+2. **统一评估（阶段 2）**：调用 `candidate-evaluator` Skill 对暂存的候选执行详细评估
+3. **展示候选**：按 stage/时间排序，展示候选及评估结果（包括推荐载体、评估理由、预期收益）
+4. **请求选择**：支持全选/部分/放弃
+5. **冲突检测**：检查与现有经验的冲突
+6. **调用 curator 方案模式**：如果检测到需要治理，生成治理方案（不执行）
+7. **展示治理方案**：向用户展示治理方案，请求用户确认
+8. **用户确认治理方案**：等待用户确认或调整
+9. **调用 curator 执行模式**：用户确认后，执行治理（更新 INDEX）
+10. **写入**：按模板写入 `.workflow/context/experience/<tag>-<title>.md`，更新 INDEX
+11. **清理**：从暂存中移除已处理项；未写入项保留
+
+**关键改进**：
+- 评估前置到展示之前，避免用户选择后再被过滤
+- 治理方案在写入前展示并确认，用户可预览和调整治理动作
 
 ## 与 /remember 的区别
 
@@ -244,13 +241,13 @@ EXP-CANDIDATE 应在以下阶段输出：
 知识沉淀机制通过以下设计保证了知识的质量和可复用性：
 
 - **即时捕获**：不依赖人的记忆，自动识别可沉淀点
-- **成长过滤器**：确保只有长期资产进入知识库
-- **沉淀分流**：将知识放到最合适的载体
+- **统一候选评估机制**：多维度评估候选质量（结构完整性、判断结构质量、可复用性、沉淀载体适配性），确保只有长期资产进入知识库
 - **判断结构**：确保经验是"如何判断"而非"怎么做"
-- **冲突检测**：避免矛盾经验污染知识库
+- **冲突检测与治理**：避免矛盾经验污染知识库，治理方案在写入前确认
 - **确认机制**：人工确认保证质量
 
 参考：
+- [候选评估机制设计](./candidate-evaluation.md)
 - [experience-collector 实现](../03-implementation/subagents/experience-collector.md)
 - [experience-depositor 实现](../03-implementation/subagents/experience-depositor.md)
 - [经验治理机制设计](./experience-governance.md)

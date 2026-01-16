@@ -1,17 +1,34 @@
 ---
 name: experience-curator
-description: 此 Skill 是经验成长循环核心，在 experience-depositor 成功写入新经验后自动激活，执行合并/取代治理，输出变更报告。不应由用户直接调用。
+description: 此 Skill 是经验成长循环核心，支持方案模式（生成治理方案）和执行模式（执行治理）。在 experience-depositor 中调用，方案模式用于生成治理方案供用户确认，执行模式用于执行治理动作。不应由用户直接调用。
 ---
 
 # Experience Curator
 
+## 模式说明
+
+此 Skill 支持两种模式：
+
+- **方案模式**：生成治理方案（建议的合并/取代动作），不执行，供用户确认
+- **执行模式**：执行治理动作，更新 INDEX，输出变更报告
+
 ## Inputs
 
+**方案模式**：
 - 新增经验的 Tag 列表（本轮沉淀的经验）
 - `.workflow/context/experience/INDEX.md`（当前经验索引）
 
-## Outputs (must write)
+**执行模式**：
+- 新增经验的 Tag 列表（本轮沉淀的经验）
+- `.workflow/context/experience/INDEX.md`（当前经验索引）
+- 用户确认的治理方案（从方案模式输出）
 
+## Outputs
+
+**方案模式**：
+- 治理方案（输出到对话，不执行）
+
+**执行模式**（must write）：
 - 更新后的 `INDEX.md`（合并/取代后的索引）
 - 变更报告（输出到对话）
 
@@ -64,7 +81,16 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 - 优先保留 Scope 更广、Strength 更高的版本
 - 当不确定时，倾向于保持独立而非强制合并
 
-### 3) 自动执行治理动作
+### 3) 模式分支
+
+**如果是方案模式**：
+- 输出治理方案（建议的合并/取代动作、理由、影响），不执行
+- 返回，等待用户确认
+
+**如果是执行模式**：
+- 继续执行步骤 4（自动执行治理动作）
+
+### 4) 自动执行治理动作（仅执行模式）
 
 **合并**（多条 → 1 条）：
 
@@ -81,7 +107,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 2. 旧经验 `ReplacedBy` 填入新经验 Tag
 3. 新经验 `Replaces` 追加旧经验 Tag
 
-### 4) 输出变更报告（静默成功原则）
+### 5) 输出变更报告（静默成功原则，仅执行模式）
 
 **无变更时**：
 
@@ -95,7 +121,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
   ```
 - 详细信息已在文件中，无需重复输出完整报告
 
-### 5) 清理备份文件（必须执行）
+### 6) 清理备份文件（必须执行，仅执行模式）
 
 治理流程结束后，必须删除备份文件：
 
