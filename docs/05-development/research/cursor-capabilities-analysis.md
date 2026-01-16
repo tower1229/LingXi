@@ -38,10 +38,10 @@
 - Project Rules 可以分层组织，支持嵌套规则
 
 #### 当前 workflow 使用情况
-- **Workflow 工具规则**：使用 `AGENTS.md`（根目录 `AGENTS.md` 全局约束）
+- **Workflow 工具约束**：已在 Skills/Commands 中实现（不再使用 AGENTS.md）
 - **项目级规则**（`.cursor/rules/qs-*`）：
   - ✅ `qs-always-general`：通用规范（Always Apply，workflow 默认提供的初始规则）
-- **评估**：使用合理，符合各类型的设计目标，规则分离清晰。workflow 只默认提供 `qs-always-general` 作为最基本的初始规则，其他规则由项目通过 `/flow 沉淀` 和 `rules-creator` Skill 按需创建
+- **评估**：使用合理，符合各类型的设计目标，规则分离清晰。workflow 工具约束在 Skills/Commands 中实现，项目级规则通过 `/flow 沉淀` 和 `rules-creator` Skill 按需创建
 
 ---
 
@@ -291,7 +291,7 @@
 graph TB
     User[User]
     Command[Command: /flow]
-    Rule[Rules: AGENTS.md + qs-*]
+    Rule[Rules: qs-*]
     Skill[Skills: flow-router + stage-skills]
     Subagent[Subagents: experience-collector/depositor]
     Hook[Hooks: before-submit-prompt/stop]
@@ -318,14 +318,14 @@ graph TB
 - ✅ **符合设计**：Commands 用于规范流程，提升效率
 - ⚠️ **可优化**：可以考虑将 `/flow` 的部分逻辑下沉到 Rule（如 Always Apply 的核心约束）
 
-#### 2. 约束层：AGENTS.md vs Rule vs Skill
+#### 2. 约束层：Rule vs Skill
 
-**当前选择**：AGENTS.md（根目录和嵌套）
+**当前选择**：Skills/Commands（workflow 工具约束在 Skills/Commands 中实现）
 
 **评估**：
-- ✅ **合理**：AGENTS.md 适合 workflow 工具的全局约束和目录作用域约束
-- ✅ **符合设计**：workflow 工具规则与项目级规则分离，架构清晰
-- ✅ **精炼**：规则内容简洁，符合设计原则
+- ✅ **合理**：Skills/Commands 适合 workflow 工具的工作流约束和阶段逻辑
+- ✅ **符合设计**：workflow 工具约束与项目级规则分离，架构清晰
+- ✅ **精炼**：约束在对应 Skills/Commands 中实现，避免冗余
 
 #### 3. 路由层：Skill vs Subagent
 
@@ -441,7 +441,7 @@ graph TB
 ### 优化 5：Rules 是否可以更好地利用？
 
 **当前**：
-- Workflow 工具规则：AGENTS.md（根目录）
+- Workflow 工具约束：在 Skills/Commands 中实现
 - 项目级规则：1 条（`qs-always-general`，workflow 默认提供的初始规则）
 
 **分析**：
@@ -509,7 +509,7 @@ graph TB
    - **建议**：保持现状（符合设计理念）
 
 4. **Rules 扩展**：
-   - **当前**：AGENTS.md（工作流工具规则）+ 1 条项目级规则（`qs-always-general`，workflow 默认提供）
+   - **当前**：workflow 工具约束在 Skills/Commands 中实现 + 1 条项目级规则（`qs-always-general`，workflow 默认提供）
    - **考虑**：可以添加 File-scoped 和 Manual Rules
    - **建议**：按需扩展
 

@@ -204,18 +204,6 @@ while IFS= read -r index_file; do
 done < <(get_json_array "workflowIndexFiles")
 success "已复制索引文件"
 
-# 复制 AGENTS.md 文件
-info "复制 AGENTS.md 文件..."
-while IFS= read -r agents_file; do
-    [ -z "$agents_file" ] && continue
-    src_path="$SCRIPT_DIR/$agents_file"
-    dest_path="$agents_file"
-    dest_dir=$(dirname "$dest_path")
-    mkdir -p "$dest_dir"
-    cp "$src_path" "$dest_path"
-done < <(get_json_array "agentsFiles")
-success "已复制 AGENTS.md 文件"
-
 # 更新 .gitignore
 info "更新 .gitignore..."
 GITIGNORE_ENTRIES=()

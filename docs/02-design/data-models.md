@@ -201,7 +201,7 @@ Plan 不只是计划，也是"执行 ledger"，记录执行过程中的所有信
 
 `.cursor/rules/qs-{type}-{scope}/RULE.md`
 
-**注意**：workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此目录管理。本目录仅用于项目级质量准则。
+**注意**：workflow 工具约束已在 Skills/Commands 中实现，不在此目录管理。本目录仅用于项目级质量准则。
 
 ### 命名规则
 

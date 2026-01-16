@@ -61,10 +61,6 @@
     ".workflow/requirements/INDEX.md",
     ".workflow/context/experience/INDEX.md"
   ],
-  "agentsFiles": [
-    "AGENTS.md",
-    ".workflow/AGENTS.md"
-  ],
   "gitignoreEntries": [
     "# Local workspace for temp code clones, generated artifacts, etc.",
     ".workflow/workspace/",

@@ -258,17 +258,6 @@ while IFS= read -r index_file; do
 done < <(get_json_array "workflowIndexFiles")
 success "已下载索引文件"
 
-# 下载 AGENTS.md 文件
-info "下载 AGENTS.md 文件..."
-while IFS= read -r agents_file; do
-    [ -z "$agents_file" ] && continue
-    if ! download_file "$agents_file" "$agents_file"; then
-        error "安装失败"
-        exit 1
-    fi
-done < <(get_json_array "agentsFiles")
-success "已下载 AGENTS.md 文件"
-
 # 更新 .gitignore
 info "更新 .gitignore..."
 GITIGNORE_ENTRIES=()

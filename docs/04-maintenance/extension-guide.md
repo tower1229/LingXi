@@ -91,7 +91,7 @@
    - 更新 `.cursor/rules/quality-standards-schema.md`
    - 标记规则状态
 
-**注意**：workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此流程中创建。
+**注意**：workflow 工具约束已在 Skills/Commands 中实现，不在此流程中创建。
 
 ### Rule 类型
 

@@ -211,17 +211,6 @@ foreach ($indexFile in $Manifest.workflowIndexFiles) {
 }
 Write-Success "已下载索引文件"
 
-# 下载 AGENTS.md 文件
-Write-Info "下载 AGENTS.md 文件..."
-foreach ($agentsFile in $Manifest.agentsFiles) {
-    $winPath = $agentsFile -replace '/', '\'
-    if (-not (Download-File $agentsFile $winPath)) {
-        Write-Error "安装失败"
-        exit 1
-    }
-}
-Write-Success "已下载 AGENTS.md 文件"
-
 # 更新 .gitignore
 Write-Info "更新 .gitignore..."
 $GitignoreEntries = $Manifest.gitignoreEntries

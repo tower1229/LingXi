@@ -206,19 +206,6 @@ async function main() {
         }
         success('已复制索引文件');
 
-        // 复制 AGENTS.md 文件
-        info('复制 AGENTS.md 文件...');
-        for (const agentsFile of manifest.agentsFiles) {
-            const srcPath = path.join(scriptDir, agentsFile);
-            const destPath = agentsFile;
-            const destDir = path.dirname(destPath);
-            if (!fs.existsSync(destDir)) {
-                fs.mkdirSync(destDir, { recursive: true });
-            }
-            fs.copyFileSync(srcPath, destPath);
-        }
-        success('已复制 AGENTS.md 文件');
-
         // 更新 .gitignore
         info('更新 .gitignore...');
         const gitignoreEntries = manifest.gitignoreEntries;

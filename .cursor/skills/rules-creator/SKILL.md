@@ -18,7 +18,7 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 - 更新 `.cursor/rules/quality-standards-index.md`
 - 更新 `.cursor/rules/quality-standards-schema.md`（状态变更）
 
-**注意**：本 Skill 只创建项目级质量准则。workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此 Skill 管理。
+**注意**：本 Skill 只创建项目级质量准则。workflow 工具约束已在 Skills/Commands 中实现，不在此 Skill 管理。
 
 ---
 

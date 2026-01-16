@@ -14,7 +14,7 @@
 >
 > **注意**：
 >
-> - workflow 工具规则使用 `AGENTS.md`（根目录或嵌套）实现，不在此目录管理。
+> - workflow 工具约束已在 Skills/Commands 中实现，不在此目录管理。
 > - workflow 只默认提供 `qs-always-general` 作为最基本的初始规则，其他规则由项目通过 `/remember` 和 `rules-creator` Skill 按需创建。
 > - 本目录仅用于项目级质量准则（`.cursor/rules/qs-*`）。
 
