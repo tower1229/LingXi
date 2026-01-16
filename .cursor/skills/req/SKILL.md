@@ -246,6 +246,9 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ### 1.3 解决方案概述（不含技术实现细节）
 
+<!-- PLAN-EXTRACT:GOAL-START -->
+<!-- PLAN-EXTRACT:GOAL-END -->
+
 ---
 
 ## 2. 目标与指标
@@ -284,9 +287,13 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ## 4. 功能需求
 
+<!-- PLAN-EXTRACT:TASKS-START -->
+
 | 编号 | 需求描述 | 实现方案 | 验收标准 | 优先级   |
 | ---- | -------- | -------- | -------- | -------- |
 | F1   | ...      | 关键文件 + 实现模式 | 可验证的标准 | 必须实现 |
+
+<!-- PLAN-EXTRACT:TASKS-END -->
 
 **实现方案列内容要求**：
 - **关键文件**：需要修改/创建的文件路径（指针优先，如 `src/components/Button.tsx`）
@@ -372,7 +379,11 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ## 10. 验收检查清单
 
+<!-- PLAN-EXTRACT:VALIDATION-START -->
+
 - [ ] ...
+
+<!-- PLAN-EXTRACT:VALIDATION-END -->
 
 ---
 
@@ -412,6 +423,9 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ### 1.3 解决方案概述
 
+<!-- PLAN-EXTRACT:GOAL-START -->
+<!-- PLAN-EXTRACT:GOAL-END -->
+
 ---
 
 ## 2. 目标
@@ -424,15 +438,23 @@ description: 此 Skill 将模糊需求产出为可执行、可验收的 Requirem
 
 ## 3. 功能需求
 
+<!-- PLAN-EXTRACT:TASKS-START -->
+
 | 编号 | 需求描述 | 实现方案 | 验收标准 | 优先级   |
 | ---- | -------- | -------- | -------- | -------- |
 | F1   | ...      | 关键文件 + 实现模式 | 可验证的标准 | 必须实现 |
+
+<!-- PLAN-EXTRACT:TASKS-END -->
 
 ---
 
 ## 4. 验收检查清单
 
+<!-- PLAN-EXTRACT:VALIDATION-START -->
+
 - [ ] ...
+
+<!-- PLAN-EXTRACT:VALIDATION-END -->
 ```
 
 ### 6) 更新索引
