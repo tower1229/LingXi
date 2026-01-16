@@ -4,11 +4,6 @@
 
 引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.workflow/context/experience/`）、规则（`.cursor/rules/qs-*`）、业务上下文（`.workflow/context/business/`）和服务上下文（`.workflow/context/tech/services/`）中。
 
-**设计原则**：
-- **低频命令独立化**：init 作为低频命令（仅在项目初始化时使用），与高频的 `/flow` 命令分离，降低用户心智负担
-- **引导式收集**：通过对话式引导收集项目信息，而非自动分析
-- **人工确认**：所有沉淀操作需要用户确认，遵循 workflow 的"确认机制"
-
 ---
 
 ## 前置要求（必须）
@@ -218,10 +213,3 @@ AI：（收集信息后）
 ```
 
 ---
-
-## 参考
-
-- [Business Context 模板](../../.workflow/context/business/references/business-context-template.md) - 业务上下文模板规范
-- [Service Loader SKILL.md](../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制
-- [Experience Depositor SKILL.md](../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制
-- [Flow 命令](./flow.md) - 主工作流命令

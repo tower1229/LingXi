@@ -277,9 +277,3 @@ description: 统一候选评估机制，评估 EXP-CANDIDATE 的质量和分类�
 2. **可解释性**：每个评估结果都必须提供明确理由，支持人工复核
 3. **评估一致性**：同一候选在不同阶段的评估结果应保持一致（阶段 2 是阶段 1 的细化）
 4. **载体推荐**：推荐载体应基于评估结果，但最终决定权在用户
-
-## 参考
-
-- [候选评估机制设计](../../docs/02-design/candidate-evaluation.md)
-- [知识沉淀机制设计](../../docs/02-design/knowledge-compounding.md)
-- [噪音过滤器设计](../../docs/02-design/noise-filter.md)（已整合到本 Skill）
