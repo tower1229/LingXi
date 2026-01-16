@@ -10,6 +10,7 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 - 准则内容（建议描述）
 - 推荐的 Type 和 Scope（若无则需推导）
 - 来源经验（如有）
+- **预处理配置**（从 experience-depositor 调用时）：type/scope/globs/description（已在上一步确认）
 
 ## Outputs
 
@@ -22,6 +23,17 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 ---
 
 ## Instructions
+
+### 0) 检查调用来源（新增）
+
+**如果从 experience-depositor 调用**（已提供预处理配置）：
+- 跳过步骤 1-2（类型和范围已确定）
+- 直接使用预处理配置（type/scope/globs/description）
+- 简化交互确认（配置已在上一步确认）
+- 从步骤 3 开始执行
+
+**如果是独立调用**（用户直接创建规则）：
+- 正常执行所有步骤
 
 ### 1) 确定规则类型（Type）[核心]
 
@@ -288,6 +300,11 @@ globs 必须根据项目实际目录结构配置：
 
 ## 交互确认
 
+**如果从 experience-depositor 调用**（预处理配置已确认）：
+- 跳过交互确认，直接执行创建流程
+- 输出创建结果摘要
+
+**如果是独立调用**（用户直接创建规则）：
 创建新规则前，必须向用户确认：
 
 ```

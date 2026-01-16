@@ -1,6 +1,6 @@
 ---
 name: experience-curator
-description: 此 Skill 是经验成长循环核心，在 experience-depositor 成功写入新经验后自动激活，执行合并/取代治理，输出变更报告与质量准则建议。不应由用户直接调用。
+description: 此 Skill 是经验成长循环核心，在 experience-depositor 成功写入新经验后自动激活，执行合并/取代治理，输出变更报告。不应由用户直接调用。
 ---
 
 # Experience Curator
@@ -14,7 +14,6 @@ description: 此 Skill 是经验成长循环核心，在 experience-depositor �
 
 - 更新后的 `INDEX.md`（合并/取代后的索引）
 - 变更报告（输出到对话）
-- 质量准则建议（输出到对话，等待用户采纳）
 
 注：`INDEX.md.bak`（执行前备份）会在治理完成后自动删除
 
@@ -46,6 +45,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 对每条新经验，评估与现有 `active` 经验的关系，综合考虑以下信号：
 
 **强相似信号**（通常需要合并/取代）：
+
 - Tag 完全相同 → 明确表示同一主题的升级版本
 - Decision being made 高度相似 → 可能是同一判断单元的完善或补充
 - Trigger 关键词大量重叠 → 可能是重复内容或同主题的不同视角
@@ -53,11 +53,13 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 
 **判断策略**：
 根据相似程度、信息完整度、判断结构质量，智能决定：
+
 - **合并**：多条经验讲同一件事，保留信息量最大的版本
 - **取代**：新经验是旧经验的明确升级，旧版本已过时
 - **保持独立**：虽有相似但视角不同，各有价值
 
 **决策依据**：
+
 - 优先保留 Decision Shape 和 Judgment Capsule 更完整的版本
 - 优先保留 Scope 更广、Strength 更高的版本
 - 当不确定时，倾向于保持独立而非强制合并
@@ -82,67 +84,18 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 ### 4) 输出变更报告（静默成功原则）
 
 **无变更时**：
+
 - 完全静默，不输出任何内容
 
 **有变更时**：
+
 - 仅输出变更摘要，格式：
   ```
   治理：合并 EXP-001→EXP-003，deprecated 1 条（回滚：cp INDEX.md.bak INDEX.md）
   ```
 - 详细信息已在文件中，无需重复输出完整报告
 
-### 5) 输出质量准则建议（静默成功原则，人工闸门）
-
-基于本轮沉淀的经验，提炼 1-3 条"质量准则建议"（优先从 Judgment Capsule 抽象，而不是复述案例）。
-
-> 类型选择、Scope 选择、模板等操作指南详见 Skill `rules-creator`。
-> 规则目录详见 `.cursor/rules/quality-standards-schema.md`。
-
-**输出规则（静默成功原则）**：
-- **无建议时**：完全静默，不输出任何内容
-- **有建议时**：输出完整建议表格（保留完整信息，用户需要基于完整信息判断）
-
-**输出格式**（仅在有建议时输出）：
-
-```markdown
-## 成长循环：质量准则建议（需人工采纳）
-
-以下建议从近期沉淀中提炼，采纳后将由 `rules-creator` Skill 创建规则。
-请使用 `/flow 采纳质量准则 <序号>` 采纳，或 `/flow 忽略质量准则` 跳过。
-
-| # | 建议 | Type | Scope | 目标规则 |
-|---|------|------|-------|----------|
-| 1 | 涉及用户数据的变更必须有审计日志 | always | security | qs-always-security |
-| 2 | 跨服务调用应先检查超时配置 | i | backend | qs-i-backend |
-| 3 | 组件必须定义 Props 类型 | fs | frontend | qs-fs-frontend |
-
-建议写法（建议本身应当是"判断结构"）：
-- Surface signal：...
-- Hidden risk：...
-- Decisive variable：...
-- Boundary（不适用条件）：...
-```
-
-**建议提炼规则**：
-
-- 从新增经验的 `Judgment Capsule` 中抽象可复用的判断标准（I used to think → Now I believe → decisive variable）
-- 若 Capsule 缺失/质量差，优先提示"需要补齐 Decision Shape/Capsule"，不要强行输出泛化口号
-- 如果某类问题反复出现（Trigger 相似的经验 ≥ 2 条），优先建议升级为自动拦截
-- 优先选择已存在的规则（插入），避免创建过多新规则
-
-**触发条件**（参考 `references/experience-governance.md`）：
-
-- **合并/取代触发**：当 experience-depositor 成功写入至少 1 条新经验文件后，必须自动触发
-- **升级为规则触发**：当经验的 Strength = enforced，或某类问题反复出现（Trigger 相似的经验 ≥ 2 条），或从 Judgment Capsule 可抽象时，输出质量准则建议
-
-**执行稳定性要求**：
-
-- 必须综合考虑多个信号，做出合理的合并/取代/保持独立判断
-- 必须备份 INDEX 后再执行任何治理动作
-- 必须输出统一格式的治理报告（执行动作/影响范围/回滚方式）
-- 必须等待用户明确采纳后才写入质量准则（不得自动写入）
-
-### 6) 清理备份文件（必须执行）
+### 5) 清理备份文件（必须执行）
 
 治理流程结束后，必须删除备份文件：
 
@@ -151,11 +104,13 @@ rm .workflow/context/experience/INDEX.md.bak
 ```
 
 **执行时机**：
-- 在步骤 4（变更报告）和步骤 5（质量准则建议）都完成后
+
+- 在步骤 4（变更报告）完成后
 - 无论有无变更，都必须删除备份
 - 删除操作静默执行，不输出任何信息
 
 **原因**：
+
 - 备份仅用于治理过程中的回滚保护
 - 治理成功后备份无用，避免留下垃圾文件
 - 下次执行时会重新创建新的备份
@@ -165,5 +120,4 @@ rm .workflow/context/experience/INDEX.md.bak
 ## 禁止
 
 - 删除任何经验文件（只做 `deprecated` 标记）
-- 自动写入质量准则建议（必须等用户 `/flow 采纳质量准则`）
 - 在没有备份的情况下修改 INDEX
