@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.1
+# Version: 1.0.2
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -11,7 +11,8 @@ set -euo pipefail
 REPO_OWNER="tower1229"
 REPO_NAME="LingXi"
 BRANCH="main"
-BASE_URL="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}"
+# 支持通过环境变量覆盖 BASE_URL（用于本地测试）
+BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}}"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -71,7 +72,7 @@ check_command curl
 
 # 读取安装清单（从 GitHub 下载）
 load_manifest() {
-    local manifest_url="${BASE_URL}/install-manifest.json"
+    local manifest_url="${BASE_URL}/install/install-manifest.json"
     local manifest_path=$(mktemp)
 
     info "下载安装清单..."
@@ -103,10 +104,29 @@ load_manifest() {
 # 使用 jq 或 python3 获取 JSON 数组值
 get_json_array() {
     local key=$1
+    if [ -z "$MANIFEST_JSON" ]; then
+        error "MANIFEST_JSON 为空，无法解析"
+        return 1
+    fi
     if command -v jq &> /dev/null; then
-        echo "$MANIFEST_JSON" | jq -r ".$key[]" 2>/dev/null
+        echo "$MANIFEST_JSON" | jq -r ".$key[]" 2>/dev/null || return 1
     elif command -v python3 &> /dev/null; then
-        echo "$MANIFEST_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); [print(item) for item in data.get('$key', [])]" 2>/dev/null
+        # 使用 Python 解析 JSON，输出每个项目（每行一个）
+        echo "$MANIFEST_JSON" | python3 -c "
+import sys
+import json
+try:
+    data = json.load(sys.stdin)
+    items = data.get('$key', [])
+    for item in items:
+        print(item)
+except Exception as e:
+    sys.stderr.write(f'JSON 解析错误: {e}\n')
+    sys.exit(1)
+" 2>/dev/null || return 1
+    else
+        error "需要 jq 或 python3 来解析 JSON"
+        return 1
     fi
 }
 
@@ -114,10 +134,29 @@ get_json_array() {
 get_json_object_array() {
     local key=$1
     local subkey=$2
+    if [ -z "$MANIFEST_JSON" ]; then
+        error "MANIFEST_JSON 为空，无法解析"
+        return 1
+    fi
     if command -v jq &> /dev/null; then
-        echo "$MANIFEST_JSON" | jq -r ".$key.$subkey[]" 2>/dev/null
+        echo "$MANIFEST_JSON" | jq -r ".$key.$subkey[]" 2>/dev/null || return 1
     elif command -v python3 &> /dev/null; then
-        echo "$MANIFEST_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); [print(item) for item in data.get('$key', {}).get('$subkey', [])]" 2>/dev/null
+        # 使用 Python 解析 JSON，输出每个项目（每行一个）
+        echo "$MANIFEST_JSON" | python3 -c "
+import sys
+import json
+try:
+    data = json.load(sys.stdin)
+    items = data.get('$key', {}).get('$subkey', [])
+    for item in items:
+        print(item)
+except Exception as e:
+    sys.stderr.write(f'JSON 解析错误: {e}\n')
+    sys.exit(1)
+" 2>/dev/null || return 1
+    else
+        error "需要 jq 或 python3 来解析 JSON"
+        return 1
     fi
 }
 

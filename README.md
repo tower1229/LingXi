@@ -54,20 +54,20 @@
 **Linux/macOS/Git Bash**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
 ```
 
 **Windows PowerShell**
 
 ```powershell
-irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
 如果 PowerShell 执行失败（执行策略限制），请先运行：
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
 ---
