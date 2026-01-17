@@ -2,6 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
+# Version: 1.0.0
 
 set -e
 
