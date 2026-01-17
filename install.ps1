@@ -1,9 +1,9 @@
-# Cursor Workflow 远程安装脚本 (Windows PowerShell)
+# LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
 
 # 配置
 $RepoOwner = "tower1229"
-$RepoName = "cursor-workflow"
+$RepoName = "LingXi"
 $Branch = "main"
 $BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
 
@@ -60,7 +60,25 @@ function Download-File {
     }
 }
 
-Write-Info "开始安装 Cursor Workflow..."
+# 读取安装清单（从 GitHub 下载）
+function Load-Manifest {
+    $manifestUrl = "${BaseUrl}/install-manifest.json"
+    Write-Info "下载安装清单..."
+
+    try {
+        $manifestContent = Invoke-WebRequest -Uri $manifestUrl -UseBasicParsing -ErrorAction Stop | Select-Object -ExpandProperty Content
+        return $manifestContent | ConvertFrom-Json
+    } catch {
+        Write-Error "下载安装清单失败: $manifestUrl"
+        Write-Error $_.Exception.Message
+        exit 1
+    }
+}
+
+# 加载清单
+$Manifest = Load-Manifest
+
+Write-Info "开始安装 LíngXī..."
 Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
@@ -88,82 +106,114 @@ if ($CursorExists -or $WorkflowExists) {
 Write-Info "创建 .cursor 目录结构..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
 # 下载 commands
 Write-Info "下载 commands..."
-$Commands = @(
-    "commands/req.md",
-    "commands/audit.md",
-    "commands/plan.md",
-    "commands/work.md",
-    "commands/review.md",
-    "commands/compound.md",
-    "commands/remember.md"
-)
-
-foreach ($cmd in $Commands) {
+$commandCount = 0
+foreach ($cmd in $Manifest.commands) {
     $localFile = ".cursor\$cmd"
     if (-not (Download-File ".cursor\$cmd" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $commandCount++
 }
-Write-Success "已下载 commands (7 个文件)"
+Write-Success "已下载 commands ($commandCount 个文件)"
 
-# 下载 rules
+# 下载 rules（项目级质量准则）
+# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 Write-Info "下载 rules..."
-$Rules = @(
-    "rules/workflow-core/RULE.md",
-    "rules/ai-artifacts/RULE.md",
-    "rules/development-specifications/RULE.md",
-    "rules/safety-guardrails/RULE.md"
-)
 
-foreach ($rule in $Rules) {
-    $localFile = ".cursor\$rule"
-    if (-not (Download-File ".cursor\$rule" $localFile)) {
+# 创建规则目录
+$ruleDirCount = 0
+foreach ($ruleDir in $Manifest.rules.directories) {
+    $destDir = ".cursor\$ruleDir"
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    }
+    $ruleDirCount++
+}
+
+# 下载规则文件
+$ruleFileCount = 0
+foreach ($ruleFile in $Manifest.rules.files) {
+    $localFile = ".cursor\$ruleFile"
+    if (-not (Download-File ".cursor\$ruleFile" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
+    $ruleFileCount++
 }
-Write-Success "已下载 rules (4 个文件)"
+Write-Success "已下载 rules ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
+
+
+# 下载 hooks（hooks.json + scripts）
+Write-Info "下载 hooks..."
+$hookCount = 0
+foreach ($hookFile in $Manifest.hooks.files) {
+    $localFile = ".cursor\$hookFile"
+    if (-not (Download-File ".cursor\$hookFile" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $hookCount++
+}
+Write-Success "已下载 hooks ($hookCount 个文件)"
+
+# 下载 skills
+Write-Info "下载 skills..."
+$skillCount = 0
+foreach ($skill in $Manifest.skills) {
+    $localFile = ".cursor\$skill"
+    if (-not (Download-File ".cursor\$skill" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $skillCount++
+}
+
+# 下载引用文件
+$refCount = 0
+foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
+    foreach ($refFile in $Manifest.references.$refKey) {
+        $destDir = ".cursor\$(Split-Path -Parent $refFile)"
+        if (-not (Test-Path $destDir)) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        }
+        $localFile = ".cursor\$refFile"
+        if (-not (Download-File ".cursor\$refFile" $localFile)) {
+            Write-Error "安装失败"
+            exit 1
+        }
+        $refCount++
+    }
+}
+
+Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
 
 # 创建 .workflow 目录结构
 Write-Info "创建 .workflow 目录结构..."
-@(
-    ".workflow\requirements\in-progress",
-    ".workflow\requirements\completed",
-    ".workflow\context\business",
-    ".workflow\context\tech\services",
-    ".workflow\context\experience",
-    ".workflow\context\session",
-    ".workflow\workspace"
-) | ForEach-Object {
-    New-Item -ItemType Directory -Force -Path $_ | Out-Null
+foreach ($dir in $Manifest.workflowDirectories) {
+    $winPath = $dir -replace '/', '\'
+    New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
-if (-not (Download-File ".workflow/requirements/INDEX.md" ".workflow\requirements\INDEX.md")) {
-    Write-Error "安装失败"
-    exit 1
-}
-
-if (-not (Download-File ".workflow/context/experience/INDEX.md" ".workflow\context\experience\INDEX.md")) {
-    Write-Error "安装失败"
-    exit 1
+foreach ($indexFile in $Manifest.workflowIndexFiles) {
+    $winPath = $indexFile -replace '/', '\'
+    if (-not (Download-File $indexFile $winPath)) {
+        Write-Error "安装失败"
+        exit 1
+    }
 }
 Write-Success "已下载索引文件"
 
 # 更新 .gitignore
 Write-Info "更新 .gitignore..."
-$GitignoreEntries = @(
-    "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".workflow/workspace/",
-    "",
-    "# Session-level context (ephemeral, not a knowledge base)",
-    ".workflow/context/session/"
-)
+$GitignoreEntries = $Manifest.gitignoreEntries
 
 if (Test-Path ".gitignore") {
     $content = Get-Content ".gitignore" -Raw
@@ -177,7 +227,7 @@ if (Test-Path ".gitignore") {
     }
 
     if ($needUpdate) {
-        Add-Content -Path ".gitignore" -Value "`n# Cursor Workflow`n"
+        Add-Content -Path ".gitignore" -Value "`n# LíngXī`n"
         foreach ($entry in $GitignoreEntries) {
             Add-Content -Path ".gitignore" -Value $entry
         }
@@ -205,14 +255,14 @@ Write-Host ""
 Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
-Write-Host "  - .cursor/commands/ (2 个命令文件)"
-Write-Host "  - .cursor/rules/ (4 个规则文件)"
-Write-Host "  - .cursor/skills/ (Agent Skills)"
+Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
+Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
+Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .workflow/ 目录结构"
 Write-Host ""
 Write-Info "下一步："
 Write-Host "  1. 在 Cursor 中打开项目"
-Write-Host "  2. 运行 /req 命令创建第一个需求"
+Write-Host "  2. 运行 /flow <需求描述> 创建第一个需求"
 Write-Host "  3. 查看 README.md 了解完整工作流"
 Write-Host ""
 Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"
