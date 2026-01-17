@@ -39,7 +39,17 @@
 
 ### 安装
 
-从 GitHub 下载并安装到当前项目，无需克隆仓库。
+#### 新项目：使用 LingXi 模板
+
+如果您要创建一个新项目，推荐直接基于 LíngXī [创建 GitHub 仓库 ⇗](https://github.com/new?template_name=LingXi&template_owner=tower1229)。
+
+或者，直接到 [LingXi repository](https://github.com/tower1229/LingXi) 下载源码作为本地开发目录。
+
+这种方式可以确保项目从一开始就拥有完整的 LíngXī 工作流结构。
+
+#### 现有项目：一键安装
+
+如果您要在已有项目中集成 LíngXī，可以使用远程安装脚本，无需克隆仓库。
 
 **Linux/macOS/Git Bash**
 
