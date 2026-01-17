@@ -131,22 +131,13 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
         response="y"
         info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     else
-        # 询问用户确认
+        # 询问用户确认（交互式）
         echo ""
         info "检测到已有目录，将以合并模式安装："
         info "  - 保留您现有的文件（rules、plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
-        # 尝试读取用户输入，如果失败（非交互式环境）则提示
-        if ! read -p "是否继续？ (y/N): " -n 1 -r response 2>/dev/null; then
-            # read 失败，可能是非交互式环境（如管道执行）
-            error "无法读取用户输入（非交互式环境）"
-            info "请使用以下命令自动确认安装："
-            echo ""
-            echo "  AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh | bash"
-            echo ""
-            exit 1
-        fi
+        read -p "是否继续？ (y/N): " -n 1 -r response
         echo ""
         if [[ ! $response =~ ^[Yy]$ ]]; then
             info "安装已取消"
