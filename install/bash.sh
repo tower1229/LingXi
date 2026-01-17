@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.9
+# Version: 1.1.0
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -415,6 +415,8 @@ success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用�
 info "创建 .workflow 目录结构..."
 while IFS= read -r dir; do
     [ -z "$dir" ] && continue
+    # 去除可能的 Windows 回车符（\r）
+    dir="${dir//$'\r'/}"
     mkdir -p "$dir"
 done < <(get_json_array "workflowDirectories")
 
@@ -448,6 +450,8 @@ fi
 info "更新 .gitignore..."
 GITIGNORE_ENTRIES=()
 while IFS= read -r entry; do
+    # 去除可能的 Windows 回车符（\r）
+    entry="${entry//$'\r'/}"
     GITIGNORE_ENTRIES+=("$entry")
 done < <(get_json_array "gitignoreEntries")
 
