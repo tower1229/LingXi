@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.7
+# Version: 1.0.8
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -108,11 +108,13 @@ convert_path_for_python() {
 
 # 读取安装清单（从 GitHub 下载）
 load_manifest() {
-    local manifest_url="${BASE_URL}/install/install-manifest.json"
+    local base_url="${BASE_URL%/}"
+    local manifest_url="${base_url}/install/install-manifest.json"
     local manifest_path=$(mktemp)
 
     info "下载安装清单..."
-    if ! curl -f -sSL "$manifest_url" -o "$manifest_path"; then
+    # 使用 -- 明确分隔选项和 URL，避免 Git Bash curl 解析问题
+    if ! curl -f -sSL -- "$manifest_url" -o "$manifest_path"; then
         error "下载安装清单失败: $manifest_url"
         exit 1
     fi
@@ -274,7 +276,10 @@ fi
 download_file() {
     local remote_path=$1
     local local_path=$2
-    local url="${BASE_URL}/${remote_path}"
+    # 确保 BASE_URL 不以斜杠结尾，remote_path 不以斜杠开头
+    local base_url="${BASE_URL%/}"
+    local clean_remote_path="${remote_path#/}"
+    local url="${base_url}/${clean_remote_path}"
     local max_retries=3
     local retry_count=0
 
@@ -282,7 +287,8 @@ download_file() {
     mkdir -p "$(dirname "$local_path")"
 
     while [ $retry_count -lt $max_retries ]; do
-        if curl -f -sSL "$url" -o "$local_path"; then
+        # 使用 -- 明确分隔选项和 URL，避免 Git Bash curl 解析问题
+        if curl -f -sSL -- "$url" -o "$local_path"; then
             return 0
         fi
         retry_count=$((retry_count + 1))
