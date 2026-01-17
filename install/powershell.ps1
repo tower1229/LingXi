@@ -1,6 +1,6 @@
 # LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.0
+# Version: 1.0.1
 
 # 配置
 $RepoOwner = "tower1229"
@@ -77,7 +77,7 @@ function Download-File {
 
 # 读取安装清单（从 GitHub 下载）
 function Load-Manifest {
-    $manifestUrl = "${BaseUrl}/install-manifest.json"
+    $manifestUrl = "${BaseUrl}/install/install-manifest.json"
     Write-Info "下载安装清单..."
 
     try {
