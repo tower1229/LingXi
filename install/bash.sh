@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.5
+# Version: 1.0.6
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -71,15 +71,21 @@ check_command() {
 check_command curl
 
 # 检测可用的 Python 命令（支持 python3 和 python）
+# 注意：Windows 上可能存在 Store 占位符，需要验证能否真正执行
 PYTHON_CMD=""
 PYTHON_IS_WINDOWS=false
-if command -v python3 &> /dev/null; then
+
+# 验证 Python 命令是否真正可用（不仅仅是存在）
+check_python_works() {
+    local cmd=$1
+    # 尝试执行简单命令，验证 Python 是否真正安装（而不是 Windows Store 占位符）
+    $cmd -c "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)" 2>/dev/null
+}
+
+if command -v python3 &> /dev/null && check_python_works python3; then
     PYTHON_CMD="python3"
-elif command -v python &> /dev/null; then
-    # 验证 python 是 Python 3.x（Windows 上可能是 Python 2 或 3）
-    if python -c "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)" 2>/dev/null; then
-        PYTHON_CMD="python"
-    fi
+elif command -v python &> /dev/null && check_python_works python; then
+    PYTHON_CMD="python"
 fi
 
 # 检测 Python 是否为 Windows 原生版本（需要路径转换）
