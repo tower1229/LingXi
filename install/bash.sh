@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.8
+# Version: 1.0.9
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -114,7 +114,8 @@ load_manifest() {
 
     info "下载安装清单..."
     # 使用 -- 明确分隔选项和 URL，避免 Git Bash curl 解析问题
-    if ! curl -f -sSL -- "$manifest_url" -o "$manifest_path"; then
+    # 注意：-o 选项必须在 -- 之前，否则会被当作 URL 处理
+    if ! curl -fsSL -o "$manifest_path" -- "$manifest_url"; then
         error "下载安装清单失败: $manifest_url"
         exit 1
     fi
@@ -123,7 +124,7 @@ load_manifest() {
     # 对于 bash/curl 使用原始路径，对于 Python 使用转换后的路径
     MANIFEST_PATH="$manifest_path"
     MANIFEST_PATH_FOR_PYTHON=$(convert_path_for_python "$manifest_path")
-    
+
     # 验证 JSON 格式是否正确，并检查是否有解析工具
     if command -v jq &> /dev/null; then
         if ! jq empty "$manifest_path" 2>/dev/null; then
@@ -159,9 +160,13 @@ get_json_array() {
         jq -r ".$key[]" "$MANIFEST_PATH" 2>/dev/null || return 1
     elif [ -n "$PYTHON_CMD" ]; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
+        # 注意：Windows Python 默认输出 CRLF，需要强制使用 LF
         $PYTHON_CMD -c "
 import sys
 import json
+# Windows Python 默认使用 CRLF，强制使用 Unix 换行符
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(newline='\n')
 try:
     with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -190,9 +195,13 @@ get_json_object_array() {
         jq -r ".$key.$subkey[]" "$MANIFEST_PATH" 2>/dev/null || return 1
     elif [ -n "$PYTHON_CMD" ]; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
+        # 注意：Windows Python 默认输出 CRLF，需要强制使用 LF
         $PYTHON_CMD -c "
 import sys
 import json
+# Windows Python 默认使用 CRLF，强制使用 Unix 换行符
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(newline='\n')
 try:
     with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -242,7 +251,7 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
         info "  - 保留您现有的文件（rules、plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
-        
+
         # 检测是否在交互式终端中，支持管道执行
         # 最佳实践：先检查 stdin 是否为终端，再尝试 /dev/tty
         if [ "$IS_INTERACTIVE_TERMINAL" = true ]; then
@@ -264,7 +273,7 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
             warning "  - 或先下载脚本再执行：bash <(curl -fsSL URL)"
             exit 0
         fi
-        
+
         if [[ ! $response =~ ^[Yy]$ ]]; then
             info "安装已取消"
             exit 0
@@ -276,6 +285,9 @@ fi
 download_file() {
     local remote_path=$1
     local local_path=$2
+    # 去除可能的 Windows 回车符（\r），避免 Git Bash 环境下 URL 格式错误
+    remote_path="${remote_path//$'\r'/}"
+    local_path="${local_path//$'\r'/}"
     # 确保 BASE_URL 不以斜杠结尾，remote_path 不以斜杠开头
     local base_url="${BASE_URL%/}"
     local clean_remote_path="${remote_path#/}"
@@ -288,7 +300,8 @@ download_file() {
 
     while [ $retry_count -lt $max_retries ]; do
         # 使用 -- 明确分隔选项和 URL，避免 Git Bash curl 解析问题
-        if curl -f -sSL -- "$url" -o "$local_path"; then
+        # 注意：-o 选项必须在 -- 之前，否则会被当作 URL 处理
+        if curl -fsSL -o "$local_path" -- "$url"; then
             return 0
         fi
         retry_count=$((retry_count + 1))
