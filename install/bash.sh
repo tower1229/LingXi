@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.4
+# Version: 1.0.5
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -72,6 +72,7 @@ check_command curl
 
 # 检测可用的 Python 命令（支持 python3 和 python）
 PYTHON_CMD=""
+PYTHON_IS_WINDOWS=false
 if command -v python3 &> /dev/null; then
     PYTHON_CMD="python3"
 elif command -v python &> /dev/null; then
@@ -80,6 +81,24 @@ elif command -v python &> /dev/null; then
         PYTHON_CMD="python"
     fi
 fi
+
+# 检测 Python 是否为 Windows 原生版本（需要路径转换）
+if [ -n "$PYTHON_CMD" ]; then
+    if $PYTHON_CMD -c "import sys; sys.exit(0 if sys.platform == 'win32' else 1)" 2>/dev/null; then
+        PYTHON_IS_WINDOWS=true
+    fi
+fi
+
+# 将路径转换为 Python 可识别的格式（处理 Git Bash/MSYS2 环境）
+convert_path_for_python() {
+    local path=$1
+    if [ "$PYTHON_IS_WINDOWS" = true ] && command -v cygpath &> /dev/null; then
+        # Git Bash/MSYS2 环境：将 Unix 路径转换为 Windows 路径
+        cygpath -w "$path"
+    else
+        echo "$path"
+    fi
+}
 
 # 读取安装清单（从 GitHub 下载）
 load_manifest() {
@@ -92,8 +111,10 @@ load_manifest() {
         exit 1
     fi
 
-    # 保存清单文件路径供后续使用（避免将 JSON 存到变量中导致 bash 解析问题）
+    # 保存清单文件路径供后续使用
+    # 对于 bash/curl 使用原始路径，对于 Python 使用转换后的路径
     MANIFEST_PATH="$manifest_path"
+    MANIFEST_PATH_FOR_PYTHON=$(convert_path_for_python "$manifest_path")
     
     # 验证 JSON 格式是否正确，并检查是否有解析工具
     if command -v jq &> /dev/null; then
@@ -104,7 +125,7 @@ load_manifest() {
         fi
         return 0
     elif [ -n "$PYTHON_CMD" ]; then
-        if ! $PYTHON_CMD -c "import json; json.load(open('$manifest_path'))" 2>/dev/null; then
+        if ! $PYTHON_CMD -c "import json; json.load(open(r'$MANIFEST_PATH_FOR_PYTHON'))" 2>/dev/null; then
             error "下载的 JSON 清单格式无效"
             rm -f "$manifest_path"
             exit 1
@@ -134,7 +155,7 @@ get_json_array() {
 import sys
 import json
 try:
-    with open('$MANIFEST_PATH', 'r', encoding='utf-8') as f:
+    with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
         data = json.load(f)
     items = data.get('$key', [])
     for item in items:
@@ -165,7 +186,7 @@ get_json_object_array() {
 import sys
 import json
 try:
-    with open('$MANIFEST_PATH', 'r', encoding='utf-8') as f:
+    with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
         data = json.load(f)
     items = data.get('$key', {}).get('$subkey', [])
     for item in items:
