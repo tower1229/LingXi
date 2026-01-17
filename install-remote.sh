@@ -124,14 +124,18 @@ if [ -d ".workflow" ]; then
     warning ".workflow 目录已存在"
 fi
 
-# 询问是否继续
+# 询问是否继续（合并安装模式）
 if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
     if [ "$AUTO_CONFIRM" = true ]; then
         response="y"
-        info "自动确认：将覆盖现有文件"
+        info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     else
         echo ""
-        read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
+        info "检测到已有目录，将以合并模式安装："
+        info "  - 保留您现有的文件（rules、plans 等）"
+        info "  - 仅添加/更新灵犀需要的文件"
+        echo ""
+        read -p "是否继续？ (y/N): " -n 1 -r
         echo ""
         response="$REPLY"
     fi
@@ -331,6 +335,10 @@ echo "  - .cursor/commands/ ($command_count 个命令)"
 echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo "  - .workflow/ 目录结构"
+if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
+    echo ""
+    info "✓ 已保留您现有的文件（合并安装模式）"
+fi
 echo ""
 info "下一步："
 echo "  1. 在 Cursor 中打开项目"

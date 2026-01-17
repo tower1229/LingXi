@@ -107,13 +107,18 @@ if ($WorkflowExists) {
     Write-Warning ".workflow 目录已存在"
 }
 
-# 询问是否继续
+# 询问是否继续（合并安装模式）
 if ($CursorExists -or $WorkflowExists) {
     if ($AutoConfirm) {
         $response = "y"
-        Write-Info "自动确认：将覆盖现有文件"
+        Write-Info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     } else {
-        $response = Read-Host "是否继续？这将覆盖现有文件 (y/N)"
+        Write-Host ""
+        Write-Info "检测到已有目录，将以合并模式安装："
+        Write-Info "  - 保留您现有的文件（rules、plans 等）"
+        Write-Info "  - 仅添加/更新灵犀需要的文件"
+        Write-Host ""
+        $response = Read-Host "是否继续？ (y/N)"
     }
     if ($response -ne "y" -and $response -ne "Y") {
         Write-Info "安装已取消"
@@ -278,6 +283,10 @@ Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
 Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .workflow/ 目录结构"
+if ($CursorExists -or $WorkflowExists) {
+    Write-Host ""
+    Write-Info "✓ 已保留您现有的文件（合并安装模式）"
+}
 Write-Host ""
 Write-Info "下一步："
 Write-Host "  1. 在 Cursor 中打开项目"
