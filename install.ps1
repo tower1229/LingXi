@@ -110,27 +110,21 @@ if ($WorkflowExists) {
 # 询问是否继续（合并安装模式）
 if ($CursorExists -or $WorkflowExists) {
     if ($AutoConfirm) {
+        # 设置了 AUTO_CONFIRM，自动确认
         $response = "y"
         Write-Info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     } else {
-        # 检测是否在交互式终端
-        if ([Environment]::UserInteractive -and $Host.UI.RawUI) {
-            # 交互式环境，询问用户
-            Write-Host ""
-            Write-Info "检测到已有目录，将以合并模式安装："
-            Write-Info "  - 保留您现有的文件（rules、plans 等）"
-            Write-Info "  - 仅添加/更新灵犀需要的文件"
-            Write-Host ""
-            $response = Read-Host "是否继续？ (y/N)"
-        } else {
-            # 非交互式环境（如管道执行），自动确认
-            $response = "y"
-            Write-Info "非交互式环境，自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
+        # 询问用户确认
+        Write-Host ""
+        Write-Info "检测到已有目录，将以合并模式安装："
+        Write-Info "  - 保留您现有的文件（rules、plans 等）"
+        Write-Info "  - 仅添加/更新灵犀需要的文件"
+        Write-Host ""
+        $response = Read-Host "是否继续？ (y/N)"
+        if ($response -ne "y" -and $response -ne "Y") {
+            Write-Info "安装已取消"
+            exit 0
         }
-    }
-    if ($response -ne "y" -and $response -ne "Y") {
-        Write-Info "安装已取消"
-        exit 0
     }
 }
 
