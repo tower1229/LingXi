@@ -10,6 +10,9 @@ $BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}
 # 设置错误处理
 $ErrorActionPreference = "Stop"
 
+# 自动确认选项（通过环境变量控制）
+$AutoConfirm = $env:AUTO_CONFIRM -eq "true" -or $env:AUTO_CONFIRM -eq "1" -or $env:AUTO_CONFIRM -eq "yes"
+
 # 颜色输出函数
 function Write-Info {
     param([string]$Message)
@@ -35,11 +38,12 @@ function Write-Error {
     Write-Host $Message
 }
 
-# 下载文件函数
+# 下载文件函数（带重试机制）
 function Download-File {
     param(
         [string]$RemotePath,
-        [string]$LocalPath
+        [string]$LocalPath,
+        [int]$MaxRetries = 3
     )
 
     $url = "${BaseUrl}/${RemotePath}"
@@ -50,14 +54,24 @@ function Download-File {
         New-Item -ItemType Directory -Force -Path $dir | Out-Null
     }
 
-    try {
-        Invoke-WebRequest -Uri $url -OutFile $LocalPath -UseBasicParsing -ErrorAction Stop
-        return $true
-    } catch {
-        Write-Error "下载失败: ${url}"
-        Write-Error $_.Exception.Message
-        return $false
+    $retryCount = 0
+    while ($retryCount -lt $MaxRetries) {
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $LocalPath -UseBasicParsing -ErrorAction Stop
+            return $true
+        } catch {
+            $retryCount++
+            if ($retryCount -lt $MaxRetries) {
+                Write-Warning "下载失败，重试中 ($retryCount/$MaxRetries)..."
+                Start-Sleep -Seconds 1
+            } else {
+                Write-Error "下载失败: ${url} (已重试 $MaxRetries 次)"
+                Write-Error $_.Exception.Message
+                return $false
+            }
+        }
     }
+    return $false
 }
 
 # 读取安装清单（从 GitHub 下载）
@@ -95,7 +109,12 @@ if ($WorkflowExists) {
 
 # 询问是否继续
 if ($CursorExists -or $WorkflowExists) {
-    $response = Read-Host "是否继续？这将覆盖现有文件 (y/N)"
+    if ($AutoConfirm) {
+        $response = "y"
+        Write-Info "自动确认：将覆盖现有文件"
+    } else {
+        $response = Read-Host "是否继续？这将覆盖现有文件 (y/N)"
+    }
     if ($response -ne "y" -and $response -ne "Y") {
         Write-Info "安装已取消"
         exit 0

@@ -34,6 +34,14 @@ error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+# 自动确认选项（通过环境变量控制）
+AUTO_CONFIRM=${AUTO_CONFIRM:-false}
+if [ "$AUTO_CONFIRM" = "true" ] || [ "$AUTO_CONFIRM" = "1" ] || [ "$AUTO_CONFIRM" = "yes" ]; then
+    AUTO_CONFIRM=true
+else
+    AUTO_CONFIRM=false
+fi
+
 # 检查命令是否存在
 check_command() {
     if ! command -v "$1" &> /dev/null; then
@@ -118,30 +126,45 @@ fi
 
 # 询问是否继续
 if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
-    echo ""
-    read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if [ "$AUTO_CONFIRM" = true ]; then
+        response="y"
+        info "自动确认：将覆盖现有文件"
+    else
+        echo ""
+        read -p "是否继续？这将覆盖现有文件 (y/N): " -n 1 -r
+        echo ""
+        response="$REPLY"
+    fi
+    if [[ ! $response =~ ^[Yy]$ ]]; then
         info "安装已取消"
         exit 0
     fi
 fi
 
-# 下载函数
+# 下载函数（带重试机制）
 download_file() {
     local remote_path=$1
     local local_path=$2
     local url="${BASE_URL}/${remote_path}"
+    local max_retries=3
+    local retry_count=0
 
     info "下载: ${remote_path}"
     mkdir -p "$(dirname "$local_path")"
 
-    if curl -f -sSL "$url" -o "$local_path"; then
-        return 0
-    else
-        error "下载失败: ${url}"
-        return 1
-    fi
+    while [ $retry_count -lt $max_retries ]; do
+        if curl -f -sSL "$url" -o "$local_path"; then
+            return 0
+        fi
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $max_retries ]; then
+            warning "下载失败，重试中 ($retry_count/$max_retries)..."
+            sleep 1
+        fi
+    done
+
+    error "下载失败: ${url} (已重试 $max_retries 次)"
+    return 1
 }
 
 # 创建 .cursor 目录结构
