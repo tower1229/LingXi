@@ -62,7 +62,19 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
 ```
 
-> **注意**：安装脚本会在当前项目目录创建 `.cursor/` 和 `.workflow/` 目录结构。如果这些目录已存在，脚本会提示是否覆盖。
+**自动确认安装（一键安装）**
+
+如果目标项目已存在 `.cursor/` 或 `.workflow/` 目录，可以使用自动确认模式：
+
+```bash
+# Linux/macOS/Git Bash
+AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh | bash
+
+# Windows PowerShell
+$env:AUTO_CONFIRM="yes"; irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
+```
+
+> **注意**：安装脚本会在当前项目目录创建 `.cursor/` 和 `.workflow/` 目录结构。如果这些目录已存在，脚本会提示是否覆盖（使用 `AUTO_CONFIRM=yes` 可自动确认）。
 
 ---
 
