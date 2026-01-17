@@ -24,7 +24,7 @@
 
 ---
 
-## What（我们做了什么）
+## What（实现）
 
 - **可伸缩工作流**：可灵活组合的并行任务系统（req→plan→audit→work→review→archive），兼顾工程严谨与轻便快捷
 - **极简入口**：一个命令(`/flow`)驱动任务全生命周期，降低认知负担，统一体验
@@ -35,11 +35,21 @@
 - **开箱即用**：跨平台一键安装，使用 `/init` 迅速在当前项目落地 LinkXi Workflow
 ---
 
-## 使用（安装与快速开始）
+## 安装与快速开始
 
 ### 安装
 
-从 GitHub 下载并安装到当前项目，无需克隆仓库。
+#### 新项目：使用 LingXi 模板
+
+如果您要创建一个新项目，推荐直接基于 LíngXī [创建 GitHub 仓库 ⇗](https://github.com/new?template_name=LingXi&template_owner=tower1229)。
+
+或者，直接到 [LingXi repository](https://github.com/tower1229/LingXi) 下载源码作为本地开发目录。
+
+这种方式可以确保项目从一开始就拥有完整的 LíngXī 工作流结构。
+
+#### 现有项目：一键安装
+
+如果您要在已有项目中集成 LíngXī，可以使用远程安装脚本，无需克隆仓库。
 
 **Linux/macOS/Git Bash**
 
