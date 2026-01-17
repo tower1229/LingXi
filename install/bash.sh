@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.3
+# Version: 1.0.4
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -70,6 +70,17 @@ check_command() {
 
 check_command curl
 
+# 检测可用的 Python 命令（支持 python3 和 python）
+PYTHON_CMD=""
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python &> /dev/null; then
+    # 验证 python 是 Python 3.x（Windows 上可能是 Python 2 或 3）
+    if python -c "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)" 2>/dev/null; then
+        PYTHON_CMD="python"
+    fi
+fi
+
 # 读取安装清单（从 GitHub 下载）
 load_manifest() {
     local manifest_url="${BASE_URL}/install/install-manifest.json"
@@ -92,16 +103,17 @@ load_manifest() {
             exit 1
         fi
         return 0
-    elif command -v python3 &> /dev/null; then
-        if ! python3 -c "import json; json.load(open('$manifest_path'))" 2>/dev/null; then
+    elif [ -n "$PYTHON_CMD" ]; then
+        if ! $PYTHON_CMD -c "import json; json.load(open('$manifest_path'))" 2>/dev/null; then
             error "下载的 JSON 清单格式无效"
             rm -f "$manifest_path"
             exit 1
         fi
         return 0
     else
-        error "需要 jq 或 python3 来解析 JSON 清单文件"
+        error "需要 jq 或 Python 3 来解析 JSON 清单文件"
         error "请安装 jq: https://stedolan.github.io/jq/download/"
+        error "或安装 Python 3: https://www.python.org/downloads/"
         rm -f "$manifest_path"
         exit 1
     fi
@@ -116,9 +128,9 @@ get_json_array() {
     fi
     if command -v jq &> /dev/null; then
         jq -r ".$key[]" "$MANIFEST_PATH" 2>/dev/null || return 1
-    elif command -v python3 &> /dev/null; then
+    elif [ -n "$PYTHON_CMD" ]; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
-        python3 -c "
+        $PYTHON_CMD -c "
 import sys
 import json
 try:
@@ -132,12 +144,12 @@ except Exception as e:
     sys.exit(1)
 " 2>/dev/null || return 1
     else
-        error "需要 jq 或 python3 来解析 JSON"
+        error "需要 jq 或 Python 3 来解析 JSON"
         return 1
     fi
 }
 
-# 使用 jq 或 python3 获取 JSON 对象数组值
+# 使用 jq 或 Python 获取 JSON 对象数组值
 get_json_object_array() {
     local key=$1
     local subkey=$2
@@ -147,9 +159,9 @@ get_json_object_array() {
     fi
     if command -v jq &> /dev/null; then
         jq -r ".$key.$subkey[]" "$MANIFEST_PATH" 2>/dev/null || return 1
-    elif command -v python3 &> /dev/null; then
+    elif [ -n "$PYTHON_CMD" ]; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
-        python3 -c "
+        $PYTHON_CMD -c "
 import sys
 import json
 try:
@@ -163,7 +175,7 @@ except Exception as e:
     sys.exit(1)
 " 2>/dev/null || return 1
     else
-        error "需要 jq 或 python3 来解析 JSON"
+        error "需要 jq 或 Python 3 来解析 JSON"
         return 1
     fi
 }
