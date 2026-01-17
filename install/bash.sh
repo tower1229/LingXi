@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.2
+# Version: 1.0.3
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -274,7 +274,7 @@ while IFS= read -r cmd; do
         error "安装失败"
         exit 1
     fi
-    ((command_count++))
+    command_count=$((command_count + 1))
 done < <(get_json_array "commands")
 success "已下载 commands ($command_count 个文件)"
 
@@ -292,7 +292,7 @@ done < <(get_json_object_array "rules" "directories")
 rule_dir_count=0
 while IFS= read -r rule_dir; do
     [ -z "$rule_dir" ] && continue
-    ((rule_dir_count++))
+    rule_dir_count=$((rule_dir_count + 1))
 done < <(get_json_object_array "rules" "directories")
 
 rule_file_count=0
@@ -303,7 +303,7 @@ while IFS= read -r rule_file; do
         error "安装失败"
         exit 1
     fi
-    ((rule_file_count++))
+    rule_file_count=$((rule_file_count + 1))
 done < <(get_json_object_array "rules" "files")
 
 success "已下载 rules ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
@@ -319,7 +319,7 @@ while IFS= read -r hook_file; do
         error "安装失败"
         exit 1
     fi
-    ((hook_count++))
+    hook_count=$((hook_count + 1))
 done < <(get_json_object_array "hooks" "files")
 success "已下载 hooks ($hook_count 个文件)"
 
@@ -333,7 +333,7 @@ while IFS= read -r skill; do
         error "安装失败"
         exit 1
     fi
-    ((skill_count++))
+    skill_count=$((skill_count + 1))
 done < <(get_json_array "skills")
 
 # 下载引用文件
@@ -347,7 +347,7 @@ for ref_key in experience-curator flow-router; do
             error "安装失败"
             exit 1
         fi
-        ((ref_count++))
+        ref_count=$((ref_count + 1))
     done < <(get_json_object_array "references" "$ref_key")
 done
 
