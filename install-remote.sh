@@ -1,10 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.0
+# Version: 1.0.1
 
-set -e
+# 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
+set -euo pipefail
 
 # 配置
 REPO_OWNER="tower1229"
@@ -35,9 +36,24 @@ error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+# 检测交互式 shell（检查 $- 是否包含 'i'）
+IS_INTERACTIVE_SHELL=false
+if [[ $- == *i* ]]; then
+    IS_INTERACTIVE_SHELL=true
+fi
+
+# 检测 stdin 是否为终端
+IS_INTERACTIVE_TERMINAL=false
+if [ -t 0 ]; then
+    IS_INTERACTIVE_TERMINAL=true
+fi
+
 # 自动确认选项（通过环境变量控制）
+# 支持 AUTO_CONFIRM 和 NONINTERACTIVE（类似 Homebrew）
 AUTO_CONFIRM=${AUTO_CONFIRM:-false}
-if [ "$AUTO_CONFIRM" = "true" ] || [ "$AUTO_CONFIRM" = "1" ] || [ "$AUTO_CONFIRM" = "yes" ]; then
+NONINTERACTIVE=${NONINTERACTIVE:-0}
+
+if [ "$AUTO_CONFIRM" = "true" ] || [ "$AUTO_CONFIRM" = "1" ] || [ "$AUTO_CONFIRM" = "yes" ] || [ "$NONINTERACTIVE" = "1" ]; then
     AUTO_CONFIRM=true
 else
     AUTO_CONFIRM=false
@@ -138,8 +154,29 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
         info "  - 保留您现有的文件（rules、plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
-        read -p "是否继续？ (y/N): " -n 1 -r response
-        echo ""
+        
+        # 检测是否在交互式终端中，支持管道执行
+        # 最佳实践：先检查 stdin 是否为终端，再尝试 /dev/tty
+        if [ "$IS_INTERACTIVE_TERMINAL" = true ]; then
+            # stdin 是终端，可以直接读取
+            read -p "是否继续？ (y/N): " -n 1 -r response
+            echo ""
+        elif [ -e /dev/tty ] && [ -r /dev/tty ]; then
+            # stdin 不是终端（可能是管道），尝试从 /dev/tty 读取
+            # 这是管道执行时的标准做法（如 Homebrew、nvm）
+            read -p "是否继续？ (y/N): " -n 1 -r response </dev/tty
+            echo ""
+        else
+            # 无法读取交互式输入（可能是 cron、CI 等环境）
+            # 提供清晰的错误信息和解决方案
+            warning "无法读取交互式输入，安装已取消"
+            warning "提示："
+            warning "  - 使用 AUTO_CONFIRM=true 可自动确认"
+            warning "  - 或使用 NONINTERACTIVE=1（类似 Homebrew）"
+            warning "  - 或先下载脚本再执行：bash <(curl -fsSL URL)"
+            exit 0
+        fi
+        
         if [[ ! $response =~ ^[Yy]$ ]]; then
             info "安装已取消"
             exit 0
