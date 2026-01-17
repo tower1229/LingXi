@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.6
+# Version: 1.0.7
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -409,6 +409,21 @@ while IFS= read -r index_file; do
     fi
 done < <(get_json_array "workflowIndexFiles")
 success "已下载索引文件"
+
+# 下载模板文件
+info "下载模板文件..."
+template_count=0
+while IFS= read -r template_file; do
+    [ -z "$template_file" ] && continue
+    if ! download_file "$template_file" "$template_file"; then
+        error "安装失败"
+        exit 1
+    fi
+    template_count=$((template_count + 1))
+done < <(get_json_array "workflowTemplateFiles")
+if [ $template_count -gt 0 ]; then
+    success "已下载模板文件 ($template_count 个)"
+fi
 
 # 更新 .gitignore
 info "更新 .gitignore..."
