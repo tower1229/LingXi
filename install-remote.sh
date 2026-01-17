@@ -137,8 +137,24 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
         info "  - 保留您现有的文件（rules、plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
-        read -p "是否继续？ (y/N): " -n 1 -r response
+        # 尝试读取用户输入
+        response=""
+        if ! read -p "是否继续？ (y/N): " -n 1 -r response 2>/dev/null; then
+            # read 命令失败（非交互式环境）
+            error "无法读取用户输入（非交互式环境）"
+            error "安装脚本需要在交互式终端中运行"
+            info "解决方案："
+            echo ""
+            echo "  1. 直接在终端运行（不使用管道）："
+            echo "     bash <(curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh)"
+            echo ""
+            echo "  2. 或使用自动确认模式："
+            echo "     AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh | bash"
+            echo ""
+            exit 1
+        fi
         echo ""
+        # 检查用户输入
         if [[ ! $response =~ ^[Yy]$ ]]; then
             info "安装已取消"
             exit 0
