@@ -1,6 +1,7 @@
 {
   "commands": [
     "commands/flow.md",
+    "commands/init.md",
     "commands/remember.md"
   ],
   "rules": {
@@ -52,10 +53,14 @@
     ".workflow/requirements/in-progress",
     ".workflow/requirements/completed",
     ".workflow/context/business",
+    ".workflow/context/business/references",
     ".workflow/context/tech/services",
     ".workflow/context/experience",
     ".workflow/context/session",
     ".workflow/workspace"
+  ],
+  "workflowTemplateFiles": [
+    ".workflow/context/business/references/business-context-template.md"
   ],
   "workflowIndexFiles": [
     ".workflow/requirements/INDEX.md",
