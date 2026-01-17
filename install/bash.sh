@@ -81,42 +81,49 @@ load_manifest() {
         exit 1
     fi
 
-    # 尝试使用 jq 解析
+    # 保存清单文件路径供后续使用（避免将 JSON 存到变量中导致 bash 解析问题）
+    MANIFEST_PATH="$manifest_path"
+    
+    # 验证 JSON 格式是否正确，并检查是否有解析工具
     if command -v jq &> /dev/null; then
-        MANIFEST_JSON=$(cat "$manifest_path")
-        rm -f "$manifest_path"
+        if ! jq empty "$manifest_path" 2>/dev/null; then
+            error "下载的 JSON 清单格式无效"
+            rm -f "$manifest_path"
+            exit 1
+        fi
         return 0
-    fi
-
-    # 尝试使用 python3 解析
-    if command -v python3 &> /dev/null; then
-        MANIFEST_JSON=$(cat "$manifest_path")
-        rm -f "$manifest_path"
+    elif command -v python3 &> /dev/null; then
+        if ! python3 -c "import json; json.load(open('$manifest_path'))" 2>/dev/null; then
+            error "下载的 JSON 清单格式无效"
+            rm -f "$manifest_path"
+            exit 1
+        fi
         return 0
+    else
+        error "需要 jq 或 python3 来解析 JSON 清单文件"
+        error "请安装 jq: https://stedolan.github.io/jq/download/"
+        rm -f "$manifest_path"
+        exit 1
     fi
-
-    error "需要 jq 或 python3 来解析 JSON 清单文件"
-    error "请安装 jq: https://stedolan.github.io/jq/download/"
-    rm -f "$manifest_path"
-    exit 1
 }
 
 # 使用 jq 或 python3 获取 JSON 数组值
 get_json_array() {
     local key=$1
-    if [ -z "$MANIFEST_JSON" ]; then
-        error "MANIFEST_JSON 为空，无法解析"
+    if [ -z "$MANIFEST_PATH" ] || [ ! -f "$MANIFEST_PATH" ]; then
+        error "清单文件不存在，无法解析"
         return 1
     fi
     if command -v jq &> /dev/null; then
-        echo "$MANIFEST_JSON" | jq -r ".$key[]" 2>/dev/null || return 1
+        jq -r ".$key[]" "$MANIFEST_PATH" 2>/dev/null || return 1
     elif command -v python3 &> /dev/null; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
-        echo "$MANIFEST_JSON" | python3 -c "
+        python3 -c "
 import sys
 import json
 try:
-    data = json.load(sys.stdin)
+    with open('$MANIFEST_PATH', 'r', encoding='utf-8') as f:
+        data = json.load(f)
     items = data.get('$key', [])
     for item in items:
         print(item)
@@ -134,19 +141,20 @@ except Exception as e:
 get_json_object_array() {
     local key=$1
     local subkey=$2
-    if [ -z "$MANIFEST_JSON" ]; then
-        error "MANIFEST_JSON 为空，无法解析"
+    if [ -z "$MANIFEST_PATH" ] || [ ! -f "$MANIFEST_PATH" ]; then
+        error "清单文件不存在，无法解析"
         return 1
     fi
     if command -v jq &> /dev/null; then
-        echo "$MANIFEST_JSON" | jq -r ".$key.$subkey[]" 2>/dev/null || return 1
+        jq -r ".$key.$subkey[]" "$MANIFEST_PATH" 2>/dev/null || return 1
     elif command -v python3 &> /dev/null; then
         # 使用 Python 解析 JSON，输出每个项目（每行一个）
-        echo "$MANIFEST_JSON" | python3 -c "
+        python3 -c "
 import sys
 import json
 try:
-    data = json.load(sys.stdin)
+    with open('$MANIFEST_PATH', 'r', encoding='utf-8') as f:
+        data = json.load(f)
     items = data.get('$key', {}).get('$subkey', [])
     for item in items:
         print(item)
@@ -425,3 +433,8 @@ echo "  3. 查看 README.md 了解完整工作流"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
 info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"
+
+# 清理临时文件
+if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then
+    rm -f "$MANIFEST_PATH"
+fi
