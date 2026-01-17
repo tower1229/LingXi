@@ -127,29 +127,22 @@ fi
 # 询问是否继续（合并安装模式）
 if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
     if [ "$AUTO_CONFIRM" = true ]; then
+        # 设置了 AUTO_CONFIRM，自动确认
         response="y"
         info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     else
-        # 检测是否在交互式终端
-        if [ ! -t 0 ]; then
-            # 非交互式环境（如管道执行），自动确认
-            response="y"
-            info "非交互式环境，自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
-        else
-            # 交互式环境，询问用户
-            echo ""
-            info "检测到已有目录，将以合并模式安装："
-            info "  - 保留您现有的文件（rules、plans 等）"
-            info "  - 仅添加/更新灵犀需要的文件"
-            echo ""
-            read -p "是否继续？ (y/N): " -n 1 -r
-            echo ""
-            response="$REPLY"
+        # 询问用户确认
+        echo ""
+        info "检测到已有目录，将以合并模式安装："
+        info "  - 保留您现有的文件（rules、plans 等）"
+        info "  - 仅添加/更新灵犀需要的文件"
+        echo ""
+        read -p "是否继续？ (y/N): " -n 1 -r response
+        echo ""
+        if [[ ! $response =~ ^[Yy]$ ]]; then
+            info "安装已取消"
+            exit 0
         fi
-    fi
-    if [[ ! $response =~ ^[Yy]$ ]]; then
-        info "安装已取消"
-        exit 0
     fi
 fi
 
