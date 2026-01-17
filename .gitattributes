@@ -1,0 +1,23 @@
+# 确保脚本文件使用 LF 换行符（Unix 风格）
+*.sh text eol=lf
+*.bash text eol=lf
+
+# JSON 文件使用 LF
+*.json text eol=lf
+
+# Markdown 文件使用 LF
+*.md text eol=lf
+
+# JavaScript/TypeScript 文件
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+
+# 配置文件
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# 其他文本文件
+*.txt text eol=lf
