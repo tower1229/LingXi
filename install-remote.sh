@@ -131,7 +131,7 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
         response="y"
         info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
     else
-        # 询问用户确认
+        # 询问用户确认（交互式）
         echo ""
         info "检测到已有目录，将以合并模式安装："
         info "  - 保留您现有的文件（rules、plans 等）"
