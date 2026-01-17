@@ -1,12 +1,17 @@
 # LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.1
+# Version: 1.0.2
 
 # 配置
 $RepoOwner = "tower1229"
 $RepoName = "LingXi"
 $Branch = "main"
-$BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
+# 支持通过环境变量覆盖 BASE_URL（用于本地测试）
+if ($env:BASE_URL) {
+    $BaseUrl = $env:BASE_URL
+} else {
+    $BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
+}
 
 # 设置错误处理
 $ErrorActionPreference = "Stop"
@@ -237,6 +242,21 @@ foreach ($indexFile in $Manifest.workflowIndexFiles) {
     }
 }
 Write-Success "已下载索引文件"
+
+# 下载模板文件
+Write-Info "下载模板文件..."
+$templateCount = 0
+foreach ($templateFile in $Manifest.workflowTemplateFiles) {
+    $winPath = $templateFile -replace '/', '\'
+    if (-not (Download-File $templateFile $winPath)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $templateCount++
+}
+if ($templateCount -gt 0) {
+    Write-Success "已下载模板文件 ($templateCount 个)"
+}
 
 # 更新 .gitignore
 Write-Info "更新 .gitignore..."
