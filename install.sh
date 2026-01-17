@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Cursor Workflow 安装脚本
-# 将 cursor-workflow 模板集成到当前项目
+# LíngXī 安装脚本
+# 将 LingXi 模板集成到当前项目
 
 set -e
 
@@ -93,11 +93,11 @@ load_manifest
 # 检查是否在正确的目录
 if [ ! -d "$SCRIPT_DIR/.cursor" ] || [ ! -d "$SCRIPT_DIR/.workflow" ]; then
     error "未找到 .cursor 或 .workflow 目录"
-    error "请确保在 cursor-workflow 模板仓库的根目录运行此脚本"
+    error "请确保在 LingXi 模板仓库的根目录运行此脚本"
     exit 1
 fi
 
-info "开始安装 Cursor Workflow..."
+info "开始安装 LíngXī..."
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
@@ -223,7 +223,7 @@ if [ -f ".gitignore" ]; then
 
     if [ "$NEED_UPDATE" = true ]; then
         echo "" >> .gitignore
-        echo "# Cursor Workflow" >> .gitignore
+        echo "# LíngXī" >> .gitignore
         for entry in "${GITIGNORE_ENTRIES[@]}"; do
             echo "$entry" >> .gitignore
         done
@@ -262,4 +262,4 @@ echo "  1. 在 Cursor 中打开项目"
 echo "  2. 运行 /flow <需求描述> 创建第一个需求"
 echo "  3. 查看 README.md 了解完整工作流"
 echo ""
-info "更多信息：https://github.com/your-org/cursor-workflow"
+info "更多信息：https://github.com/tower1229/LingXi"

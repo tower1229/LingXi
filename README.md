@@ -1,4 +1,4 @@
-# cursor-workflow（灵犀）
+# LíngXī（灵犀）
 
 为创造者打造 AI 时代的专属法宝。
 
@@ -46,20 +46,20 @@
 **Linux/macOS/Git Bash**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install-remote.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install-remote.sh | bash
 ```
 
 **Windows PowerShell**
 
 ```powershell
-irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
 ```
 
 如果 PowerShell 执行失败（执行策略限制），请先运行：
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install.ps1 | iex
 ```
 
 > **注意**：安装脚本会在当前项目目录创建 `.cursor/` 和 `.workflow/` 目录结构。如果这些目录已存在，脚本会提示是否覆盖。

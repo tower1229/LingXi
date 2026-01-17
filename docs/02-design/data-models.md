@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档定义 cursor-workflow 中所有数据模型的结构、字段含义和使用规范。
+本文档定义 LingXi workflow 中所有数据模型的结构、字段含义和使用规范。
 
 ## Requirements Index（需求索引）
 

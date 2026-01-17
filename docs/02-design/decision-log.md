@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档记录 cursor-workflow 项目中的关键设计决策，包括决策背景、选择理由和影响评估。
+本文档记录 LingXi workflow 项目中的关键设计决策，包括决策背景、选择理由和影响评估。
 
 ## 决策列表
 
@@ -246,7 +246,7 @@
 
 ## 总结
 
-这些关键设计决策共同构成了 cursor-workflow 的设计基础，确保了系统的：
+这些关键设计决策共同构成了 LingXi workflow 的设计基础，确保了系统的：
 
 - **可控性**：Human Gates 和 Confirm-only Knowledge Capture
 - **可维护性**：Skills-first 设计和 Single Entrypoint

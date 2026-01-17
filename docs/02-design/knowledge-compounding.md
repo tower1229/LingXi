@@ -2,7 +2,7 @@
 
 ## 概述
 
-知识沉淀机制是 cursor-workflow 的核心能力，它通过"即时捕获 → 暂存 → 确认沉淀 → 治理"的流程，将工作过程中的判断和决策沉淀为可复用的长期资产。
+知识沉淀机制是 LingXi workflow 的核心能力，它通过"即时捕获 → 暂存 → 确认沉淀 → 治理"的流程，将工作过程中的判断和决策沉淀为可复用的长期资产。
 
 ## 流程概览
 
@@ -16,7 +16,7 @@ sequenceDiagram
     participant Depositor as experience-depositor
     participant Experience as experience/
     participant Curator as experience-curator
-    
+
     Skill->>Skill: 输出 EXP-CANDIDATE
     Skill->>Collector: 自动调用（后台）
     Collector->>Evaluator: 阶段 1 评估（自动评估）
@@ -142,7 +142,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 ## Decision Shape（判断结构）
 
 - Decision being made: 选择使用哪个状态管理方案
-- Alternatives rejected: 
+- Alternatives rejected:
   - Redux（过于复杂，项目规模不需要）
   - Context API（性能问题，频繁更新会导致全量重渲染）
 - Discriminating signal: 组件更新频率、状态共享范围、团队熟悉度

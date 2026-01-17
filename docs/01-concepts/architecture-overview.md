@@ -2,7 +2,7 @@
 
 ## 分层架构
 
-cursor-workflow 采用分层架构设计，从用户输入到底层存储，每一层都有明确的职责和边界。
+LingXi workflow 采用分层架构设计，从用户输入到底层存储，每一层都有明确的职责和边界。
 
 ```mermaid
 graph TB
@@ -13,7 +13,7 @@ graph TB
     ExecutionLayer[Execution Layer<br/>.cursor/skills]
     ArtifactsLayer[Artifacts & Context<br/>.workflow/]
     HooksLayer[Hooks<br/>.cursor/hooks]
-    
+
     User -->|"/flow <REQ|描述>"| CommandLayer
     CommandLayer -->|路由解析| DecisionLayer
     DecisionLayer -->|调用| SubagentLayer
@@ -199,7 +199,7 @@ sequenceDiagram
     participant ReqSkill as req Skill
     participant IndexManager as index-manager
     participant Artifacts as Artifacts Layer
-    
+
     User->>Command: /flow <需求描述>
     Command->>Decision: 解析意图：创建新需求
     Decision->>ExperienceIndex: 匹配历史经验
@@ -223,7 +223,7 @@ sequenceDiagram
     participant Depositor as experience-depositor
     participant Curator as experience-curator
     participant Artifacts as Artifacts Layer
-    
+
     WorkSkill->>WorkSkill: 输出 EXP-CANDIDATE
     WorkSkill->>Collector: 自动调用（后台）
     Collector->>Evaluator: 阶段 1 评估（自动评估）
@@ -259,13 +259,13 @@ stateDiagram-v2
     work --> review: 关键项完成，用户确认
     review --> archive: Blockers/High 已处理，用户确认
     archive --> [*]
-    
+
     req --> req: 继续本阶段
     plan --> plan: 继续本阶段
     audit --> audit: 继续本阶段
     work --> work: 继续本阶段
     review --> review: 继续本阶段
-    
+
     plan --> req: 回退
     audit --> plan: 回退
     work --> audit: 回退

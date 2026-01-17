@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Cursor Workflow 安装脚本 (Node.js 跨平台)
- * 将 cursor-workflow 模板集成到当前项目
+ * LíngXī 安装脚本 (Node.js 跨平台)
+ * 将 LingXi 模板集成到当前项目
  */
 
 const fs = require('fs');
@@ -107,11 +107,11 @@ async function main() {
 
         if (!fs.existsSync(cursorPath) || !fs.existsSync(workflowPath)) {
             error('未找到 .cursor 或 .workflow 目录');
-            error('请确保在 cursor-workflow 模板仓库的根目录运行此脚本');
+            error('请确保在 LingXi 模板仓库的根目录运行此脚本');
             process.exit(1);
         }
 
-        info('开始安装 Cursor Workflow...');
+        info('开始安装 LíngXī...');
 
         // 检查目标目录是否存在
         const cursorExists = fs.existsSync('.cursor');
@@ -222,7 +222,7 @@ async function main() {
             }
 
             if (needUpdate) {
-                content += '\n# Cursor Workflow\n';
+                content += '\n# LíngXī\n';
                 for (const entry of gitignoreEntries) {
                     content += entry + '\n';
                 }
@@ -264,7 +264,7 @@ async function main() {
         console.log('  2. 运行 /flow <需求描述> 创建第一个需求');
         console.log('  3. 查看 README.md 了解完整工作流');
         console.log('');
-        info('更多信息：https://github.com/your-org/cursor-workflow');
+        info('更多信息：https://github.com/tower1229/LingXi');
     } catch (err) {
         error(`安装失败: ${err.message}`);
         process.exit(1);

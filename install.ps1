@@ -1,9 +1,9 @@
-# Cursor Workflow 远程安装脚本 (Windows PowerShell)
+# LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
 
 # 配置
 $RepoOwner = "tower1229"
-$RepoName = "cursor-workflow"
+$RepoName = "LingXi"
 $Branch = "main"
 $BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
 
@@ -64,7 +64,7 @@ function Download-File {
 function Load-Manifest {
     $manifestUrl = "${BaseUrl}/install-manifest.json"
     Write-Info "下载安装清单..."
-    
+
     try {
         $manifestContent = Invoke-WebRequest -Uri $manifestUrl -UseBasicParsing -ErrorAction Stop | Select-Object -ExpandProperty Content
         return $manifestContent | ConvertFrom-Json
@@ -78,7 +78,7 @@ function Load-Manifest {
 # 加载清单
 $Manifest = Load-Manifest
 
-Write-Info "开始安装 Cursor Workflow..."
+Write-Info "开始安装 LíngXī..."
 Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
@@ -227,7 +227,7 @@ if (Test-Path ".gitignore") {
     }
 
     if ($needUpdate) {
-        Add-Content -Path ".gitignore" -Value "`n# Cursor Workflow`n"
+        Add-Content -Path ".gitignore" -Value "`n# LíngXī`n"
         foreach ($entry in $GitignoreEntries) {
             Add-Content -Path ".gitignore" -Value $entry
         }

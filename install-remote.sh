@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Cursor Workflow 远程安装脚本
+# LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
 
 set -e
 
 # 配置
 REPO_OWNER="tower1229"
-REPO_NAME="cursor-workflow"
+REPO_NAME="LingXi"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}"
 
@@ -48,7 +48,7 @@ check_command curl
 load_manifest() {
     local manifest_url="${BASE_URL}/install-manifest.json"
     local manifest_path=$(mktemp)
-    
+
     info "下载安装清单..."
     if ! curl -f -sSL "$manifest_url" -o "$manifest_path"; then
         error "下载安装清单失败: $manifest_url"
@@ -99,7 +99,7 @@ get_json_object_array() {
 # 加载清单
 load_manifest
 
-info "开始安装 Cursor Workflow..."
+info "开始安装 LíngXī..."
 info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
 
 # 检查目标目录是否存在
@@ -276,7 +276,7 @@ if [ -f ".gitignore" ]; then
 
     if [ "$NEED_UPDATE" = true ]; then
         echo "" >> .gitignore
-        echo "# Cursor Workflow" >> .gitignore
+        echo "# LíngXī" >> .gitignore
         for entry in "${GITIGNORE_ENTRIES[@]}"; do
             echo "$entry" >> .gitignore
         done

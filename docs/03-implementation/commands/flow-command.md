@@ -2,7 +2,7 @@
 
 ## 概述
 
-`/flow` 是 cursor-workflow 的单入口命令，负责驱动需求的全生命周期推进。
+`/flow` 是 LingXi workflow 的单入口命令，负责驱动需求的全生命周期推进。
 
 ## 源码位置
 

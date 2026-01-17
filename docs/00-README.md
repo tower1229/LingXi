@@ -1,4 +1,4 @@
-# cursor-workflow 文档系统
+# LíngXī 文档系统
 
 > 面向维护者的完整技术文档，从设计理念到实现细节的全面覆盖。
 
@@ -97,7 +97,7 @@
 ## 相关资源
 
 - **项目 README**：[../README.md](../README.md)
-- **设计文档**：[cursor-workflow-design.md](cursor-workflow-design.md)（原始设计文档，逐步迁移到本文档系统）
+- **设计文档**：[LingXi-design.md](LingXi-design.md)（原始设计文档，逐步迁移到本文档系统）
 - **源码位置**：
   - Commands: `.cursor/commands/`
   - Skills: `.cursor/skills/`

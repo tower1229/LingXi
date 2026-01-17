@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档说明如何扩展 cursor-workflow 系统，包括新增阶段、Skill、Rule、Hook 等。
+本文档说明如何扩展 LingXi workflow 系统，包括新增阶段、Skill、Rule、Hook 等。
 
 ## 新增阶段
 

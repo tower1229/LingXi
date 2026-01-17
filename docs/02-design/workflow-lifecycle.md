@@ -2,7 +2,7 @@
 
 ## 概述
 
-cursor-workflow 通过 `/flow` 命令驱动需求的全生命周期，从需求创建到归档，共 6 个阶段：req → plan → audit → work → review → archive。
+LingXi workflow 通过 `/flow` 命令驱动需求的全生命周期，从需求创建到归档，共 6 个阶段：req → plan → audit → work → review → archive。
 
 ## 阶段定义
 
@@ -175,13 +175,13 @@ stateDiagram-v2
     work --> review: 关键项完成，用户确认
     review --> archive: Blockers/High 已处理，用户确认
     archive --> [*]
-    
+
     req --> req: 继续本阶段
     plan --> plan: 继续本阶段
     audit --> audit: 继续本阶段
     work --> work: 继续本阶段
     review --> review: 继续本阶段
-    
+
     plan --> req: 回退
     audit --> plan: 回退
     work --> audit: 回退
