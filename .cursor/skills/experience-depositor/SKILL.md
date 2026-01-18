@@ -1,6 +1,6 @@
 ---
 name: experience-depositor
-description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .workflow/context/experience。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选经验（如 1,3）时激活。
+description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .workflow/context/experience。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选经验（如 1,3）时激活，或在 /init 命令初始化项目过程中需要沉淀经验候选时激活。
 ---
 
 # Experience Depositor
