@@ -240,5 +240,4 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 - **原 build.md 命令**：`.cursor/commands/build.md`（备份在 `.cursor/commands-backup/build.md`）
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
 - **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
-- **上下文工程**：`.cursor/skills/context-engineering/SKILL.md`
 - **服务加载**：`.cursor/skills/service-loader/SKILL.md`

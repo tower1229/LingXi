@@ -467,5 +467,4 @@ graph TD
 - **原 plan.md 命令**：`.cursor/commands/plan.md`（备份在 `.cursor/commands-backup/plan.md`）
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
 - **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
-- **上下文工程**：`.cursor/skills/context-engineering/SKILL.md`
 - **服务加载**：`.cursor/skills/service-loader/SKILL.md`

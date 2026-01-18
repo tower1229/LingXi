@@ -17,7 +17,6 @@
 ## 依赖的 Agent Skills
 
 - `experience-depositor`（位于 `.cursor/skills/experience-depositor/SKILL.md`）
-- `context-engineering`（位于 `.cursor/skills/context-engineering/SKILL.md`）
 
 ## 使用方式
 
@@ -111,8 +110,6 @@
   - 写入经验库或规则库
   - 索引更新
   - curator 治理触发
-
-- **上下文工程指导**：遵循 `context-engineering` Skill 的原则（参考 `.cursor/skills/context-engineering/SKILL.md`）
 
 ---
 

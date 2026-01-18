@@ -485,4 +485,3 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
 - **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
-- **上下文工程**：`.cursor/skills/context-engineering/SKILL.md`

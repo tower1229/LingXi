@@ -18,7 +18,6 @@
 - `service-loader`：生成服务上下文文档
 - `experience-depositor`：沉淀经验到经验库
 - `rules-creator`：创建质量规则（如需要）
-- `context-engineering`：上下文工程指导
 
 ---
 
@@ -83,7 +82,6 @@
 - **生成服务上下文文档**：调用 `service-loader` Skill（参考 `.cursor/skills/service-loader/SKILL.md`）
 - **沉淀经验到经验库**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
 - **创建质量规则**（如需要）：通过 `experience-depositor` 间接调用 `rules-creator` Skill
-- **上下文工程指导**：遵循 `context-engineering` Skill 的原则（参考 `.cursor/skills/context-engineering/SKILL.md`）
 
 ---
 

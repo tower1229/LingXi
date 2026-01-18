@@ -36,7 +36,6 @@ args:
 - `plan-executor`：执行任务规划、测试设计和文档生成
 - `experience-index`：自动匹配历史经验提醒
 - `experience-capture`：统一经验捕获（自动激活）
-- `context-engineering`：上下文工程指导
 - `service-loader`：如适用，生成服务上下文
 
 ## 产物
