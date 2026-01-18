@@ -1,8 +1,8 @@
 # Local workspace for temp code clones, generated artifacts, etc.
-.workflow/workspace/
+.cursor/.lingxi/workspace/
 
 # Session-level context (ephemeral, not a knowledge base)
-.workflow/context/session/
+.cursor/.lingxi/context/session/
 
 # OS / IDE
 .DS_Store

@@ -27,7 +27,7 @@ args:
 /plan 001
 ```
 
-命令会自动查找 `.workflow/requirements/001.req.*.md` 文件。
+命令会自动查找 `.cursor/.lingxi/requirements/001.req.*.md` 文件。
 
 ## 依赖的 Agent Skills
 
@@ -40,8 +40,8 @@ args:
 
 ## 产物
 
-- `.workflow/requirements/001.plan.<标题>.md`（任务规划文档）
-- `.workflow/requirements/001.testcase.<标题>.md`（测试用例文档）
+- `.cursor/.lingxi/requirements/001.plan.<标题>.md`（任务规划文档）
+- `.cursor/.lingxi/requirements/001.testcase.<标题>.md`（测试用例文档）
 
 **输出规则（静默成功原则）**：
 

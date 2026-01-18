@@ -38,7 +38,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 用于验证任务状态和显示任务进度，**不用于判断当前阶段**：
 
 ```
-扫描 .workflow/requirements/ 目录：
+扫描 .cursor/.lingxi/requirements/ 目录：
 - 001.req.*.md 存在 → 任务 001 已创建 req
 - 001.plan.*.md 存在 → 任务 001 已创建 plan
 - 001.testcase.*.md 存在 → 任务 001 已创建 testcase
@@ -114,7 +114,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
   "solution": "新的任务拆解/验收/测试策略",
   "verify": "后续如何验证该决策",
   "pointers": ["path/to/plan-file 或相关模块"],
-  "reqFile": ".workflow/requirements/001.req.<标题>.md",
+  "reqFile": ".cursor/.lingxi/requirements/001.req.<标题>.md",
   "notes": "可选补充"
 }
 -->

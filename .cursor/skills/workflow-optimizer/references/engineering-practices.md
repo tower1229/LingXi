@@ -256,8 +256,8 @@
 
 **在 workflow 中的应用**：
 - 文件命名约定（001.req.<标题>.md、001.plan.<标题>.md）
-- 目录结构约定（.workflow/requirements/、.cursor/skills/）
-- 索引格式约定（经验索引 `.workflow/context/experience/INDEX.md`）
+- 目录结构约定（.cursor/.lingxi/requirements/、.cursor/skills/）
+- 索引格式约定（经验索引 `.cursor/.lingxi/context/experience/INDEX.md`）
 
 **检查点**：
 - [ ] 是否有明确的约定？

@@ -101,4 +101,4 @@
 
 - **核心价值指引**：`README.md`（Why 和 How）
 - **技术能力分析**：`docs/05-development/research/cursor-capabilities-analysis.md`（Cursor 官方功能用法）
-- **AGENTS.md**：`.cursor/` 和 `.workflow/` 目录的硬约束
+- **AGENTS.md**：`.cursor/` 和 `.cursor/.lingxi/` 目录的硬约束

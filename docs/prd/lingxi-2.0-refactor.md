@@ -155,7 +155,7 @@ Req 是整个流程的核心，高质量的 req 文档是保证任务最终效�
 
 `/req` 命令自动生成任务编号：
 
-1. 扫描 `.workflow/requirements/` 目录
+1. 扫描 `.cursor/.lingxi/requirements/` 目录
 2. 提取所有 `*.req.*.md` 文件的编号（使用正则 `^(\d{3})\.req\..*\.md$`）
 3. 取最大编号 +1，格式化为三位数（001, 002, ...）
 4. 如果目录为空或不存在，从 001 开始
@@ -771,7 +771,7 @@ graph TD
 执行 `/build 001` 时，自动检测执行模式：
 
 1. **检测 plan 文件**：
-   - 扫描 `.workflow/requirements/` 目录
+   - 扫描 `.cursor/.lingxi/requirements/` 目录
    - 查找 `001.plan.*.md` 文件
 
 2. **模式判断**：
@@ -786,9 +786,9 @@ graph TD
 **Plan-driven 模式**（有 plan 时）：
 
 1. **读取输入**：
-   - `.workflow/requirements/001.req.<标题>.md`
-   - `.workflow/requirements/001.plan.<标题>.md`
-   - `.workflow/requirements/001.testcase.<标题>.md`
+   - `.cursor/.lingxi/requirements/001.req.<标题>.md`
+   - `.cursor/.lingxi/requirements/001.plan.<标题>.md`
+   - `.cursor/.lingxi/requirements/001.testcase.<标题>.md`
 
 2. **代码实现**：
    - 按 req 的技术方案实现功能
@@ -822,7 +822,7 @@ graph TD
 **Agent-driven 模式**（无 plan 时）：
 
 1. **读取输入**：
-   - `.workflow/requirements/001.req.<标题>.md`（仅）
+   - `.cursor/.lingxi/requirements/001.req.<标题>.md`（仅）
 
 2. **任务拆解（Agent 决策）**：
    - 基于 req 的功能需求，Agent 自行拆解为可执行的子任务
@@ -1134,7 +1134,7 @@ Review 实际上是除了 req 之外第二重要的环节，因为工作流的�
 **原结构（1.0）**：
 
 ```
-.workflow/requirements/
+.cursor/.lingxi/requirements/
 ├── in-progress/
 │   ├── REQ-001.md
 │   └── REQ-002.md
@@ -1145,7 +1145,7 @@ Review 实际上是除了 req 之外第二重要的环节，因为工作流的�
 **新结构（2.0）**：
 
 ```
-.workflow/requirements/
+.cursor/.lingxi/requirements/
 ├── 001.req.<标题>.md
 ├── 001.plan.<标题>.md
 ├── 001.testcase.<标题>.md
@@ -1155,7 +1155,7 @@ Review 实际上是除了 req 之外第二重要的环节，因为工作流的�
 
 **简化优势**：
 
-- 统一目录：所有任务文档统一存放在 `.workflow/requirements/` 目录
+- 统一目录：所有任务文档统一存放在 `.cursor/.lingxi/requirements/` 目录
 - 文件命名唯一：通过文件名（任务编号+类型）即可识别任务和阶段
 - 简化管理：无需维护 in-progress 和 completed 目录的切换
 - 便于查找：所有任务文档在同一目录，便于查找和管理
@@ -1201,7 +1201,7 @@ Review 实际上是除了 req 之外第二重要的环节，因为工作流的�
 ```markdown
 ---
 name: experience-index
-description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 .workflow/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
+description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 .cursor/.lingxi/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
 ---
 ```
 
@@ -1215,7 +1215,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
    - `/review 001` → 阶段：review，任务编号：001
 
 2. **读取对应的 req 文件**：
-   - 扫描 `.workflow/requirements/` 目录
+   - 扫描 `.cursor/.lingxi/requirements/` 目录
    - 匹配 `001.req.*.md` 文件
    - 读取 req 文件内容作为匹配上下文
 
@@ -1277,7 +1277,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 用于验证任务状态和显示任务进度，**不用于判断当前阶段**：
 
 ```
-扫描 .workflow/requirements/ 目录：
+扫描 .cursor/.lingxi/requirements/ 目录：
 - 001.req.*.md 存在 → 任务 001 已创建 req
 - 001.plan.*.md 存在 → 任务 001 已创建 plan
 - 001.testcase.*.md 存在 → 任务 001 已创建 testcase
@@ -1324,7 +1324,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
   "solution": "新的任务拆解/验收/测试策略",
   "verify": "后续如何验证该决策",
   "pointers": ["path/to/plan-file 或相关模块"],
-  "reqFile": ".workflow/requirements/001.req.<标题>.md",
+  "reqFile": ".cursor/.lingxi/requirements/001.req.<标题>.md",
   "notes": "可选补充"
 }
 -->
@@ -1365,7 +1365,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 #### 2.3.1 保持用户主动触发
 
 - 各阶段执行过程中通过 experience-capture 捕获经验候选
-- 经验候选自动收集到 `.workflow/context/session/pending-compounding-candidates.json`
+- 经验候选自动收集到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
 - 阶段完成后（或用户主动）提示可沉淀的经验候选
 
 #### 2.3.2 优化沉淀体验
@@ -1610,30 +1610,30 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 
 | 目录路径                              | 说明                             |
 | ------------------------------------- | -------------------------------- |
-| `.workflow/requirements/in-progress/` | 1.0 进行中任务目录，2.0 统一目录 |
-| `.workflow/requirements/completed/`   | 1.0 已完成任务目录，2.0 统一目录 |
-| `.workflow/context/session/`          | 1.0 会话上下文，2.0 简化         |
+| `.cursor/.lingxi/requirements/in-progress/` | 1.0 进行中任务目录，2.0 统一目录 |
+| `.cursor/.lingxi/requirements/completed/`   | 1.0 已完成任务目录，2.0 统一目录 |
+| `.cursor/.lingxi/context/session/`          | 1.0 会话上下文，2.0 简化         |
 
 #### 5.4.3 需删除的索引文件
 
 | 文件路径                           | 说明                       |
 | ---------------------------------- | -------------------------- |
-| `.workflow/requirements/INDEX.md`  | 1.0 任务状态索引，2.0 废弃 |
-| `.workflow/context/session/*.json` | 1.0 会话状态文件，2.0 废弃 |
+| `.cursor/.lingxi/requirements/INDEX.md`  | 1.0 任务状态索引，2.0 废弃 |
+| `.cursor/.lingxi/context/session/*.json` | 1.0 会话状态文件，2.0 废弃 |
 
 #### 5.4.4 需重命名/重构的文件
 
 | 原路径                                          | 新路径                                     | 说明           |
 | ----------------------------------------------- | ------------------------------------------ | -------------- |
-| `.workflow/requirements/in-progress/REQ-001.md` | `.workflow/requirements/001.req.<标题>.md` | 文件名格式变更 |
+| `.cursor/.lingxi/requirements/in-progress/REQ-001.md` | `.cursor/.lingxi/requirements/001.req.<标题>.md` | 文件名格式变更 |
 | `.cursor/skills/experience-index/`              | 保留，更新激活条件                         | 内容更新       |
 | `.cursor/skills/experience-curator/`            | 保留                                       | 无需变更       |
 
 #### 5.4.5 清理执行顺序
 
 1. **备份用户数据**：
-   - 提示用户备份 `.workflow/requirements/` 下的有价值文档
-   - 提示用户备份 `.workflow/context/experience/` 下的经验文件
+   - 提示用户备份 `.cursor/.lingxi/requirements/` 下的有价值文档
+   - 提示用户备份 `.cursor/.lingxi/context/experience/` 下的经验文件
 
 2. **删除旧结构**：
    - 删除 5.4.1-5.4.3 列出的所有文件和目录
@@ -1641,7 +1641,7 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 
 3. **创建新结构**：
    - 创建 `.cursor/commands/` 目录及新 Command 文件
-   - 创建 `.workflow/requirements/` 统一目录（无子目录）
+   - 创建 `.cursor/.lingxi/requirements/` 统一目录（无子目录）
    - 创建 `.cursor/skills/experience-capture/` 新 Skill
 
 4. **验证清理完成**：
@@ -1728,10 +1728,10 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 - [ ] `.cursor/skills/work-stage/` 目录已删除
 - [ ] `.cursor/skills/review-stage/` 目录已删除
 - [ ] `.cursor/skills/archive-stage/` 目录已删除
-- [ ] `.workflow/requirements/in-progress/` 目录已删除
-- [ ] `.workflow/requirements/completed/` 目录已删除
-- [ ] `.workflow/requirements/INDEX.md` 文件已删除
-- [ ] `.workflow/context/session/` 目录已删除或清空
+- [ ] `.cursor/.lingxi/requirements/in-progress/` 目录已删除
+- [ ] `.cursor/.lingxi/requirements/completed/` 目录已删除
+- [ ] `.cursor/.lingxi/requirements/INDEX.md` 文件已删除
+- [ ] `.cursor/.lingxi/context/session/` 目录已删除或清空
 - [ ] 无任何 deprecated 标记的代码残留
 - [ ] 新结构 `.cursor/commands/` 目录已创建
 - [ ] 新结构 `.cursor/skills/experience-capture/` 目录已创建

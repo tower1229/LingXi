@@ -226,20 +226,20 @@ info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
-WORKFLOW_EXISTS=false
+LINGXI_EXISTS=false
 
 if [ -d ".cursor" ]; then
     CURSOR_EXISTS=true
     warning ".cursor 目录已存在"
 fi
 
-if [ -d ".workflow" ]; then
-    WORKFLOW_EXISTS=true
-    warning ".workflow 目录已存在"
+if [ -d ".cursor/.lingxi" ]; then
+    LINGXI_EXISTS=true
+    warning ".cursor/.lingxi 目录已存在"
 fi
 
 # 询问是否继续（合并安装模式）
-if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
+if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
     if [ "$AUTO_CONFIRM" = true ]; then
         # 设置了 AUTO_CONFIRM，自动确认
         response="y"
@@ -411,8 +411,8 @@ done
 
 success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
 
-# 创建 .workflow 目录结构
-info "创建 .workflow 目录结构..."
+# 创建 .cursor/.lingxi 目录结构
+info "创建 .cursor/.lingxi 目录结构..."
 while IFS= read -r dir; do
     [ -z "$dir" ] && continue
     # 去除可能的 Windows 回车符（\r）
@@ -477,10 +477,10 @@ if [ -f ".gitignore" ]; then
 else
     cat > .gitignore << 'EOF'
 # Local workspace for temp code clones, generated artifacts, etc.
-.workflow/workspace/
+.cursor/.lingxi/workspace/
 
 # Session-level context (ephemeral, not a knowledge base)
-.workflow/context/session/
+.cursor/.lingxi/context/session/
 
 # OS / IDE
 .DS_Store
@@ -497,8 +497,8 @@ info "已安装的文件："
 echo "  - .cursor/commands/ ($command_count 个命令)"
 echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
-echo "  - .workflow/ 目录结构"
-if [ "$CURSOR_EXISTS" = true ] || [ "$WORKFLOW_EXISTS" = true ]; then
+echo "  - .cursor/.lingxi/ 目录结构"
+if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
     echo ""
     info "✓ 已保留您现有的文件（合并安装模式）"
 fi

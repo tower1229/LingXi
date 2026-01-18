@@ -82,7 +82,7 @@ isProject: false
 
 **参考**：
 
-- [AI Native 设计原则](../../.workflow/context/experience/ai-native-design.md)
+- [AI Native 设计原则](../../.cursor/.lingxi/context/experience/ai-native-design.md)
 - [各 Skills 实现](../03-implementation/skills/)
 ```
 
@@ -92,7 +92,7 @@ isProject: false
 
 **内容**：
 
-- 从`.workflow/context/experience/ai-native-design.md`迁移并扩展
+- 从`.cursor/.lingxi/context/experience/ai-native-design.md`迁移并扩展
 - 增加更多设计示例和反模式
 - 增加文档编写中的应用指南
 

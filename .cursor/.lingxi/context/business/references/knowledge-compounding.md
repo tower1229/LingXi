@@ -79,7 +79,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 1. **解析注释**：从最新消息中读取 EXP-CANDIDATE JSON
 2. **成长过滤器**：判断是否进入长期知识库
 3. **最小上下文包**：合并高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表）
-4. **暂存**：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`
+4. **暂存**：写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
 
 **特点**：
 - 静默处理，不干扰主对话
@@ -118,10 +118,10 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 | 目标 | 适用场景 | 位置 |
 |------|---------|------|
-| **经验文档**（默认） | 容易忘、下次会遇到、需要提醒/指针 | `.workflow/context/experience/` |
+| **经验文档**（默认） | 容易忘、下次会遇到、需要提醒/指针 | `.cursor/.lingxi/context/experience/` |
 | **规则/自动拦截** | 高频且可自动判定 | hook/lint/CI |
 | **Skill/流程升级** | 可复用流程或重复步骤 | `.cursor/skills/` |
-| **长期上下文补齐** | 考古/服务边界/配置规范 | `.workflow/context/tech/services/` 或 `.workflow/context/business/` |
+| **长期上下文补齐** | 考古/服务边界/配置规范 | `.cursor/.lingxi/context/tech/services/` 或 `.cursor/.lingxi/context/business/` |
 
 ### 分流原则
 
@@ -205,7 +205,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 在沉淀新经验前，必须执行冲突检测：
 
-1. **读取所有现有经验**：读取 `.workflow/context/experience/INDEX.md` 中的所有 active 经验
+1. **读取所有现有经验**：读取 `.cursor/.lingxi/context/experience/INDEX.md` 中的所有 active 经验
 2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
 3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
 4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
@@ -222,13 +222,13 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### experience-depositor 处理
 
-1. **读取暂存**：加载 `.workflow/context/session/pending-compounding-candidates.json`
+1. **读取暂存**：加载 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
 2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers
 3. **请求选择**：支持全选/部分/放弃
 4. **沉淀分流**：判断应沉淀到哪里
 5. **成长过滤器**：再次确认是否进入长期知识库
 6. **冲突检测**：检查与现有经验的冲突
-7. **写入**：按模板写入 `.workflow/context/experience/<tag>-<title>.md`，更新 INDEX
+7. **写入**：按模板写入 `.cursor/.lingxi/context/experience/<tag>-<title>.md`，更新 INDEX
 8. **触发 curator**：在实际新增经验后调用 `experience-curator` 进行治理
 9. **清理**：从暂存中移除已处理项；未写入项保留
 

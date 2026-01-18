@@ -24,7 +24,7 @@
   - 不负责外部系统集成（仅提供机制，不实现具体集成）
 - **与其他业务模块的边界**：
   - 与 Cursor Editor：依赖 Cursor Nightly 的 Skills 机制，但不控制 Cursor 本身
-  - 与项目代码：通过 `.workflow/` 目录管理 workflow 相关文件，不侵入项目代码
+  - 与项目代码：通过 `.cursor/.lingxi/` 目录管理 workflow 相关文件，不侵入项目代码
 
 ## 3) 关键流程（Processes）
 
@@ -44,10 +44,10 @@
 
 - **经验沉淀流程**：
   1. 在工作过程中输出 EXP-CANDIDATE 注释
-  2. experience-collector（后台）自动收集并暂存到 `.workflow/context/session/pending-compounding-candidates.json`
+  2. experience-collector（后台）自动收集并暂存到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
   3. 用户执行 `/flow 沉淀 ...` 确认沉淀
   4. experience-depositor 展示候选，执行沉淀分流
-  5. 写入经验到 `.workflow/context/experience/`
+  5. 写入经验到 `.cursor/.lingxi/context/experience/`
   6. experience-curator 自动触发治理（合并/取代、质量准则建议）
   - **关键决策点**：
     - 成长过滤器：判断是否进入长期知识库
@@ -58,8 +58,8 @@
 - **项目初始化流程**：
   1. 用户执行 `/init` 命令
   2. 引导式收集项目信息（技术栈、项目结构、开发规范、业务流程、服务/模块）
-  3. 生成业务上下文文档（`.workflow/context/business/`）
-  4. 生成服务上下文文档（`.workflow/context/tech/services/`，如适用）
+  3. 生成业务上下文文档（`.cursor/.lingxi/context/business/`）
+  4. 生成服务上下文文档（`.cursor/.lingxi/context/tech/services/`，如适用）
   5. 识别并输出经验候选（EXP-CANDIDATE）
   6. 生成初始化报告
   - **关键决策点**：
@@ -71,7 +71,7 @@
 
 - **业务约束**：
   - 阶段推进必须通过人工闸门（不能自动推进）
-  - 经验沉淀必须用户确认（禁止未确认写入 `.workflow/context/experience/`）
+  - 经验沉淀必须用户确认（禁止未确认写入 `.cursor/.lingxi/context/experience/`）
   - 质量准则采纳必须用户确认（禁止未确认写入 `.cursor/rules/qs-*`）
   - INDEX.md 是需求状态的单一事实源（SSoT）
   - 经验必须包含 Decision Shape 和 Judgment Capsule

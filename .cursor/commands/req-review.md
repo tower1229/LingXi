@@ -18,7 +18,7 @@ args:
 ## 前置要求
 
 - **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
-- req 文档已存在：`.workflow/requirements/<taskId>.req.*.md`
+- req 文档已存在：`.cursor/.lingxi/requirements/<taskId>.req.*.md`
 
 ## 使用方式
 
@@ -32,7 +32,7 @@ args:
 /req-review 001
 ```
 
-命令会自动查找 `.workflow/requirements/001.req.*.md` 文件。
+命令会自动查找 `.cursor/.lingxi/requirements/001.req.*.md` 文件。
 
 ## 产物
 
@@ -42,7 +42,7 @@ args:
 
 ### 1. 读取 req 文件
 
-- 扫描 `.workflow/requirements/` 目录
+- 扫描 `.cursor/.lingxi/requirements/` 目录
 - 查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
 - 如果找不到文件，提示用户并提供解决方案
 
@@ -162,4 +162,4 @@ args:
 
 1. **独立命令**：不再是 `/flow` 流程的一部分，可随时独立执行
 2. **文件命名**：适配新的文件命名格式 `001.req.<标题>.md`
-3. **文件位置**：从 `.workflow/requirements/in-progress/` 改为 `.workflow/requirements/`
+3. **文件位置**：从 `.cursor/.lingxi/requirements/in-progress/` 改为 `.cursor/.lingxi/requirements/`

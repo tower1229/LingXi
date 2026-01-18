@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 验证和更新 .workflow/context/experience/INDEX.md 格式的脚本
+ * 验证和更新 .cursor/.lingxi/context/experience/INDEX.md 格式的脚本
  * 
  * 功能：
  * 1. 索引生成：扫描经验文件目录，自动生成 INDEX.md
@@ -47,7 +47,7 @@ const VALID_STRENGTH = ['hypothesis', 'validated', 'enforced'];
 const EXPECTED_HEADER = ['Tag', 'Title', 'Trigger (when to load)', 'Surface signal', 'Hidden risk', 'Status', 'Scope', 'Strength', 'Replaces', 'ReplacedBy', 'File'];
 
 // 经验文件目录
-const EXPERIENCE_DIR = path.join(process.cwd(), '.workflow/context/experience');
+const EXPERIENCE_DIR = path.join(process.cwd(), '.cursor/.lingxi/context/experience');
 const INDEX_PATH = path.join(EXPERIENCE_DIR, 'INDEX.md');
 
 /**
@@ -173,7 +173,7 @@ function scanExperienceFiles() {
       const fields = extractFieldsFromFile(filePath);
       files.push({
         ...fields,
-        file: `.workflow/context/experience/${entry.name}`,
+        file: `.cursor/.lingxi/context/experience/${entry.name}`,
         filePath,
       });
     }

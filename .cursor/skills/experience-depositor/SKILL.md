@@ -1,18 +1,18 @@
 ---
 name: experience-depositor
-description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .workflow/context/experience。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选经验（如 1,3）时激活，或在 /init 命令初始化项目过程中需要沉淀经验候选时激活。
+description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .cursor/.lingxi/context/experience。当用户通过 /remember ... 命令提取新经验时激活，或当用户直接输入编号选择候选经验（如 1,3）时激活，或在 /init 命令初始化项目过程中需要沉淀经验候选时激活。
 ---
 
 # Experience Depositor
 
 ## Inputs（从上下文获取）
 
-1. `.workflow/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + experience-capture 生成）
-2. `.workflow/requirements/<taskId>.plan.<标题>.md` 的 Compounding Candidates（如存在）
+1. `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + experience-capture 生成）
+2. `.cursor/.lingxi/requirements/<taskId>.plan.<标题>.md` 的 Compounding Candidates（如存在）
 3. plan Worklog / review 复利候选（必要时）
 4. 用户输入（可能是编号选择，如 `1,3` 或 `1 3`）
 
-**注意**：2.0 中 plan 文档位于 `.workflow/requirements/` 统一目录，文件命名格式为 `001.plan.<标题>.md`。
+**注意**：2.0 中 plan 文档位于 `.cursor/.lingxi/requirements/` 统一目录，文件命名格式为 `001.plan.<标题>.md`。
 
 ## Instructions
 
@@ -22,7 +22,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 > **注意**：编号选择通常直接输入即可（如 `1,3`），无需 `/remember` 前缀。如果用户使用 `/remember 1,3`，也支持，但直接输入编号更简单。
 
-1. **读取候选列表**：从 `.workflow/context/session/pending-compounding-candidates.json` 读取所有候选
+1. **读取候选列表**：从 `.cursor/.lingxi/context/session/pending-compounding-candidates.json` 读取所有候选
 2. **解析编号**：提取用户输入中的数字（支持逗号、空格分隔，如 `1,3`、`1 3`、`1, 2, 3`）
 3. **选择候选**：根据编号选择对应的候选（编号从 1 开始，对应数组索引 0）
 4. **验证编号**：如果编号超出范围，提示用户并展示候选列表
@@ -81,7 +81,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 ### 3) 冲突检测
 
-读取 `.workflow/context/experience/INDEX.md`，对选择的候选检查：
+读取 `.cursor/.lingxi/context/experience/INDEX.md`，对选择的候选检查：
 
 - 触发条件相同/相似，且解决方案矛盾 → 冲突：旧经验标记 deprecated，新经验记录替代关系
 - 触发条件相近且解决方案相同/相似 → 重复：默认合并（或请求用户确认合并策略）
@@ -126,7 +126,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 在决定写入经验文档（长期）之前，需要让用户选择存储目标：
 
-- **选项 A：存入经验库**：写入 `.workflow/context/experience/`，下次匹配时作为提醒
+- **选项 A：存入经验库**：写入 `.cursor/.lingxi/context/experience/`，下次匹配时作为提醒
 - **选项 B：存入规则库**：写入 `.cursor/rules/qs-*/`，作为 Cursor 规则自动加载
 
 **预览输出格式**（在生成经验预览时同时展示）：
@@ -142,7 +142,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 ### 存储目标选择
 
-- **A) 存入经验库**：写入 .workflow/context/experience/，下次匹配时作为提醒
+- **A) 存入经验库**：写入 .cursor/.lingxi/context/experience/，下次匹配时作为提醒
 
 - **B) 存入规则库**：写入 .cursor/rules/，作为 Cursor 规则自动加载
 
@@ -199,7 +199,7 @@ AI 应根据以下因素综合判断：
 根据用户选择的存储目标和推荐载体，写入对应位置：
 
 - **如果选择 experience**：
-  - 写入 `.workflow/context/experience/<tag>-<title>.md`
+  - 写入 `.cursor/.lingxi/context/experience/<tag>-<title>.md`
   - **自动更新 INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update` 更新索引
     - 如果更新失败，输出错误信息，但不影响经验文件写入
     - 保持静默成功原则：更新成功时不输出确认信息
@@ -240,8 +240,8 @@ AI 应根据以下因素综合判断：
 
 - **如果选择 A（经验库）**：
 
-  - `.workflow/context/experience/<tag>-<title>.md`
-  - 更新 `.workflow/context/experience/INDEX.md`
+  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`
+  - 更新 `.cursor/.lingxi/context/experience/INDEX.md`
   - 触发 `experience-curator` 治理流程
 
 - **如果选择 B（规则库）**：

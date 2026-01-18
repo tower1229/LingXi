@@ -4,7 +4,7 @@
 
 智能提取并沉淀质量标准，支持从用户输入直接提取质量标准，或从对话历史中提取"刚解决的问题/踩的坑"。这是最低摩擦的"即时沉淀入口"。
 
-**存储目标**：用户可选择存入经验库（`.workflow/context/experience/`）或规则库（`.cursor/rules/qs-*/`），AI 推荐规则应用方式。
+**存储目标**：用户可选择存入经验库（`.cursor/.lingxi/context/experience/`）或规则库（`.cursor/rules/qs-*/`），AI 推荐规则应用方式。
 
 ---
 
@@ -40,8 +40,8 @@
 
 - **如果选择经验库**：
 
-  - `.workflow/context/experience/<tag>-<title>.md`（一条经验文件，需用户确认后写入）
-  - `.workflow/context/experience/INDEX.md`（更新索引，需用户确认后写入）
+  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`（一条经验文件，需用户确认后写入）
+  - `.cursor/.lingxi/context/experience/INDEX.md`（更新索引，需用户确认后写入）
 
 - **如果选择规则库**：
   - `.cursor/rules/qs-{type}-{scope}/RULE.md`（质量准则规则，需用户确认后写入）

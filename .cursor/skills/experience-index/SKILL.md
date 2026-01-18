@@ -1,6 +1,6 @@
 ---
 name: experience-index
-description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 .workflow/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
+description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 .cursor/.lingxi/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
 ---
 
 # Experience Index
@@ -26,7 +26,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 
 #### 1.2 读取对应的 req 文件
 
-- 扫描 `.workflow/requirements/` 目录
+- 扫描 `.cursor/.lingxi/requirements/` 目录
 - 匹配 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
 - 读取 req 文件内容作为匹配上下文
 
@@ -44,7 +44,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 ### 2. 经验匹配流程（遵循上下文组织原则）
 
 **分层加载策略**：
-1. **先读取索引**：读取 `.workflow/context/experience/INDEX.md`（索引层）
+1. **先读取索引**：读取 `.cursor/.lingxi/context/experience/INDEX.md`（索引层）
 2. **只匹配 Status = `active` 的经验**（过滤 `deprecated`）
 3. **LLM 语义匹配**：使用以下匹配任务进行智能匹配
 

@@ -4,7 +4,7 @@
 
 Business Context 用于沉淀业务流程、业务规则、协作上下文等业务相关信息，帮助 workflow 快速理解项目的业务领域和业务逻辑。
 
-**位置**：`.workflow/context/business/<topic>.md`
+**位置**：`.cursor/.lingxi/context/business/<topic>.md`
 
 **设计原则**（参考 `service-loader`）：
 - **先索引后细节**：产物以"概要 + 指针"为主，不复制大段业务文档
@@ -73,7 +73,7 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 | 维度 | Business Context | Service Context |
 |-----|-----------------|----------------|
 | **关注点** | 业务逻辑、业务流程、业务规则 | 技术实现、服务边界、技术依赖 |
-| **位置** | `.workflow/context/business/` | `.workflow/context/tech/services/` |
+| **位置** | `.cursor/.lingxi/context/business/` | `.cursor/.lingxi/context/tech/services/` |
 | **使用场景** | 理解业务领域、业务决策 | 理解技术架构、服务调用 |
 | **示例** | 用户注册流程、订单处理规则 | API 服务、数据库服务 |
 
@@ -184,14 +184,14 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 
 当执行 `/init` 命令或使用 `service-loader` 时：
 
-1. **技术层面**：使用 `service-loader` 生成服务上下文（`.workflow/context/tech/services/<service>.md`）
-2. **业务层面**：使用 Business Context 模板生成业务上下文（`.workflow/context/business/<topic>.md`）
+1. **技术层面**：使用 `service-loader` 生成服务上下文（`.cursor/.lingxi/context/tech/services/<service>.md`）
+2. **业务层面**：使用 Business Context 模板生成业务上下文（`.cursor/.lingxi/context/business/<topic>.md`）
 3. **经验层面**：识别可沉淀的业务规则/坑点，通过 `/flow 沉淀` 沉淀为 Experience
 
 ---
 
 ## 参考
 
-- [Service Loader SKILL.md](../../../../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制参考
-- [Experience Depositor SKILL.md](../../../../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制参考
+- [Service Loader SKILL.md](../../../../../.cursor/skills/service-loader/SKILL.md) - 服务上下文加载机制参考
+- [Experience Depositor SKILL.md](../../../../../.cursor/skills/experience-depositor/SKILL.md) - 经验沉淀机制参考
 - [Data Models](../../../../docs/02-design/data-models.md) - 数据模型定义

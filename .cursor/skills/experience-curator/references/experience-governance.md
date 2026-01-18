@@ -10,7 +10,7 @@
 
 当满足以下任一条件时，必须自动触发 `experience-curator` 进行治理：
 
-1. **经验文件新增**：`experience-depositor` 成功写入至少 1 条新经验文件到 `.workflow/context/experience/`
+1. **经验文件新增**：`experience-depositor` 成功写入至少 1 条新经验文件到 `.cursor/.lingxi/context/experience/`
 2. **经验数量达到阈值**（可选，未来扩展）：当经验库中 active 经验数量达到特定阈值（如 50 条）时，触发批量治理
 3. **发现明显重复**（可选，未来扩展）：在写入新经验时，系统检测到与现有经验明显重复（Tag 相同或 Decision being made 相同）
 
@@ -109,7 +109,7 @@ sequenceDiagram
 在执行任何治理动作前，必须先备份：
 
 ```bash
-cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.bak
+cp .cursor/.lingxi/context/experience/INDEX.md .cursor/.lingxi/context/experience/INDEX.md.bak
 ```
 
 ### 1) 读取索引与新经验
@@ -170,7 +170,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 ### 回滚方式
 如需撤销本次治理，执行：
 ```bash
-cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.md
+cp .cursor/.lingxi/context/experience/INDEX.md.bak .cursor/.lingxi/context/experience/INDEX.md
 ```
 ```
 
@@ -243,7 +243,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 如需撤销本次治理，执行：
 
 ```bash
-cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.md
+cp .cursor/.lingxi/context/experience/INDEX.md.bak .cursor/.lingxi/context/experience/INDEX.md
 ```
 
 ### 回滚限制

@@ -50,27 +50,25 @@
     ]
   },
   "workflowDirectories": [
-    ".workflow/requirements/in-progress",
-    ".workflow/requirements/completed",
-    ".workflow/context/business",
-    ".workflow/context/business/references",
-    ".workflow/context/tech/services",
-    ".workflow/context/experience",
-    ".workflow/context/session",
-    ".workflow/workspace"
+    ".cursor/.lingxi/requirements",
+    ".cursor/.lingxi/context/business",
+    ".cursor/.lingxi/context/business/references",
+    ".cursor/.lingxi/context/tech/services",
+    ".cursor/.lingxi/context/experience",
+    ".cursor/.lingxi/context/session",
+    ".cursor/.lingxi/workspace"
   ],
   "workflowTemplateFiles": [
-    ".workflow/context/business/references/business-context-template.md"
+    ".cursor/.lingxi/context/business/references/business-context-template.md"
   ],
   "workflowIndexFiles": [
-    ".workflow/requirements/INDEX.md",
-    ".workflow/context/experience/INDEX.md"
+    ".cursor/.lingxi/context/experience/INDEX.md"
   ],
   "gitignoreEntries": [
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".workflow/workspace/",
+    ".cursor/.lingxi/workspace/",
     "",
     "# Session-level context (ephemeral, not a knowledge base)",
-    ".workflow/context/session/"
+    ".cursor/.lingxi/context/session/"
   ]
 }

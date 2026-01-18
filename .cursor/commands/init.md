@@ -2,14 +2,14 @@
 
 ## 命令用途
 
-引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.workflow/context/experience/`）、规则（`.cursor/rules/qs-*`）、业务上下文（`.workflow/context/business/`）和服务上下文（`.workflow/context/tech/services/`）中。
+引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/context/experience/`）、规则（`.cursor/rules/qs-*`）、业务上下文（`.cursor/.lingxi/context/business/`）和服务上下文（`.cursor/.lingxi/context/tech/services/`）中。
 
 ---
 
 ## 前置要求（必须）
 
 - **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
-- **项目已安装 workflow**：确保 `.workflow/` 目录结构已存在
+- **项目已安装 workflow**：确保 `.cursor/.lingxi/` 目录结构已存在
 
 ---
 
@@ -33,11 +33,11 @@
 
 ## 产物（必须写入）
 
-- `.workflow/context/business/<topic>.md`（业务上下文文档，至少 1 个）
-- `.workflow/context/tech/services/<service>.md`（服务上下文文档，如适用）
-- `.workflow/context/experience/<tag>-<title>.md`（经验文档，如触发沉淀）
-- `.workflow/context/session/pending-compounding-candidates.json`（经验候选暂存，如生成 EXP-CANDIDATE）
-- `.workflow/context/experience/INDEX.md`（经验索引，如写入经验）
+- `.cursor/.lingxi/context/business/<topic>.md`（业务上下文文档，至少 1 个）
+- `.cursor/.lingxi/context/tech/services/<service>.md`（服务上下文文档，如适用）
+- `.cursor/.lingxi/context/experience/<tag>-<title>.md`（经验文档，如触发沉淀）
+- `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（经验候选暂存，如生成 EXP-CANDIDATE）
+- `.cursor/.lingxi/context/experience/INDEX.md`（经验索引，如写入经验）
 - `.cursor/rules/qs-*`（质量规则，如用户采纳质量准则建议）
 
 ---
@@ -58,7 +58,7 @@
 
 根据收集的信息，生成相应的上下文文档：
 
-- **业务上下文文档**：使用 [Business Context 模板](../../.workflow/context/business/references/business-context-template.md)，至少生成 1 个示例
+- **业务上下文文档**：使用 [Business Context 模板](../../../.cursor/.lingxi/context/business/references/business-context-template.md)，至少生成 1 个示例
 - **服务上下文文档**（如适用）：调用 `service-loader` Skill 生成
 
 ### 3) 识别并输出经验候选

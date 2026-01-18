@@ -9,7 +9,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 1. 读取输入
 
-- 扫描 `.workflow/requirements/` 目录
+- 扫描 `.cursor/.lingxi/requirements/` 目录
 - 查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
 - 如果找不到文件，提示用户并提供解决方案
 - 识别需求类型（前端/后端/全栈）和复杂度
@@ -94,7 +94,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 如果需求涉及存量系统/多服务协作，参考 `service-loader` 补齐服务上下文：
 
-- 生成/更新 `.workflow/context/tech/services/<service>.md`
+- 生成/更新 `.cursor/.lingxi/context/tech/services/<service>.md`
 - 只写"概要 + 指针 + 常见坑"，避免长文档膨胀
 
 ### 5. 澄清性问题（复杂需求必选）

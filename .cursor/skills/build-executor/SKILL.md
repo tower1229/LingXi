@@ -12,7 +12,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 执行 `/build <taskId>` 时，自动检测执行模式：
 
 1. **检测 plan 文件**：
-   - 扫描 `.workflow/requirements/` 目录
+   - 扫描 `.cursor/.lingxi/requirements/` 目录
    - 查找 `<taskId>.plan.*.md` 文件（如 `001.plan.*.md`）
 
 2. **模式判断**：
@@ -26,9 +26,9 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 #### 2.1 读取输入
 
-- `.workflow/requirements/<taskId>.req.<标题>.md`
-- `.workflow/requirements/<taskId>.plan.<标题>.md`
-- `.workflow/requirements/<taskId>.testcase.<标题>.md`
+- `.cursor/.lingxi/requirements/<taskId>.req.<标题>.md`
+- `.cursor/.lingxi/requirements/<taskId>.plan.<标题>.md`
+- `.cursor/.lingxi/requirements/<taskId>.testcase.<标题>.md`
 
 #### 2.2 代码实现
 
@@ -67,7 +67,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 #### 3.1 读取输入
 
-- `.workflow/requirements/<taskId>.req.<标题>.md`（仅）
+- `.cursor/.lingxi/requirements/<taskId>.req.<标题>.md`（仅）
 
 #### 3.2 任务拆解（Agent 决策）
 
