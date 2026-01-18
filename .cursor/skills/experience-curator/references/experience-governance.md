@@ -24,7 +24,7 @@
 2. **某类问题反复出现**：Trigger 相似的经验 ≥ 2 条，且都经过验证（Strength ≥ validated）
 3. **从 Judgment Capsule 可抽象**：经验的 Judgment Capsule 完整，可以抽象为可复用的判断标准
 
-**注意**：质量准则建议只是建议，必须用户明确采纳（`/flow 采纳质量准则`）才会创建规则。
+**注意**：2.0 中不再输出质量准则建议。用户如需创建规则，可在 `/remember` 命令中选择"存入规则库"，或直接调用 `rules-creator` Skill 创建规则。
 
 ## 治理流程
 
@@ -194,7 +194,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 ## 成长循环：质量准则建议（需人工采纳）
 
 以下建议从近期沉淀中提炼，采纳后将由 `rules-creator` Skill 创建规则。
-请使用 `/flow 采纳质量准则 <序号>` 采纳，或 `/flow 忽略质量准则` 跳过。
+**注意**：2.0 中不再输出质量准则建议。用户如需创建规则，可在 `/remember` 命令中选择"存入规则库"，或直接调用 `rules-creator` Skill 创建规则。
 
 | # | 建议 | Type | Scope | 目标规则 |
 |---|------|------|-------|----------|
@@ -227,7 +227,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 
 ### 质量准则建议（仅建议）
 
-- **不得自动写入**：必须等用户 `/flow 采纳质量准则` 或 `/flow 忽略质量准则`
+- **不得自动写入**：必须等用户明确选择存储目标（在 `/remember` 中选择"存入规则库"）
 - **明确标注为建议**：不是强制要求
 
 ## 禁止事项

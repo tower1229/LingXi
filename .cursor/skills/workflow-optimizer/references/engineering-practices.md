@@ -130,7 +130,7 @@
 
 **在 workflow 中的应用**：
 - 明确的阶段推进协议（菜单选项）
-- 明确的确认机制（`/flow 沉淀 ...`）
+- 明确的确认机制（`/remember ...` 或用户选择存储目标）
 - 明确的索引和引用关系
 
 **检查点**：
@@ -205,7 +205,7 @@
 - **可维护性**：扩展不需要修改现有代码
 
 **在 workflow 中的应用**：
-- Skills 可以扩展，而不需要修改 flow-router
+- Skills 可以扩展，而不需要修改命令文件（2.0 中命令独立，通过 description 匹配自动激活）
 - Rules 可以添加，而不需要修改现有 Rules
 - 经验可以积累，而不需要修改核心机制
 
@@ -255,9 +255,9 @@
 **原则**：通过约定减少配置，提高开发效率。
 
 **在 workflow 中的应用**：
-- 文件命名约定（REQ-xxx.md、REQ-xxx.plan.md）
+- 文件命名约定（001.req.<标题>.md、001.plan.<标题>.md）
 - 目录结构约定（.workflow/requirements/、.cursor/skills/）
-- 索引格式约定
+- 索引格式约定（经验索引 `.workflow/context/experience/INDEX.md`）
 
 **检查点**：
 - [ ] 是否有明确的约定？

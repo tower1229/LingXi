@@ -7,10 +7,12 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .w
 
 ## Inputs（从上下文获取）
 
-1. `.workflow/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + experience-collector 生成）
-2. `.workflow/requirements/in-progress/<REQ-xxx>.plan.md` 的 Compounding Candidates
+1. `.workflow/context/session/pending-compounding-candidates.json`（由 EXP-CANDIDATE + experience-capture 生成）
+2. `.workflow/requirements/<taskId>.plan.<标题>.md` 的 Compounding Candidates（如存在）
 3. plan Worklog / review 复利候选（必要时）
 4. 用户输入（可能是编号选择，如 `1,3` 或 `1 3`）
+
+**注意**：2.0 中 plan 文档位于 `.workflow/requirements/` 统一目录，文件命名格式为 `001.plan.<标题>.md`。
 
 ## Instructions
 
