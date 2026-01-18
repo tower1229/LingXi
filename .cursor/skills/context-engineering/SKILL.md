@@ -1,6 +1,6 @@
 ---
 name: context-engineering
-description: 此 Skill 提供最小高信号上下文原则（分层、指针优先、避免上下文膨胀）。当任意阶段（init/req/audit/plan/work/review/archive）需要补充/组织上下文时激活，指导如何组织信息。
+description: 此 Skill 提供最小高信号上下文原则（分层、指针优先、避免上下文膨胀）。当任意阶段（init/req/audit/plan/work/review/archive）需要补充/组织上下文时激活，或在 /remember 命令提取经验时需要组织上下文信息时激活，指导如何组织信息。
 ---
 
 # Context Engineering
