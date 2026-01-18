@@ -1,6 +1,10 @@
 {
   "commands": [
-    "commands/flow.md",
+    "commands/req.md",
+    "commands/req-review.md",
+    "commands/plan.md",
+    "commands/build.md",
+    "commands/review.md",
     "commands/init.md",
     "commands/remember.md"
   ],
@@ -25,28 +29,56 @@
     ]
   },
   "skills": [
-    "skills/audit/SKILL.md",
-    "skills/archive/SKILL.md",
-    "skills/context-engineering/SKILL.md",
+    "skills/build-executor/SKILL.md",
+    "skills/candidate-evaluator/SKILL.md",
+    "skills/experience-capture/SKILL.md",
     "skills/experience-curator/SKILL.md",
     "skills/experience-depositor/SKILL.md",
     "skills/experience-index/SKILL.md",
-    "skills/flow-router/SKILL.md",
-    "skills/index-manager/SKILL.md",
-    "skills/plan/SKILL.md",
-    "skills/plan-manager/SKILL.md",
-    "skills/req/SKILL.md",
-    "skills/review/SKILL.md",
+    "skills/plan-executor/SKILL.md",
+    "skills/req-executor/SKILL.md",
+    "skills/review-executor/SKILL.md",
     "skills/rules-creator/SKILL.md",
-    "skills/service-loader/SKILL.md",
-    "skills/work/SKILL.md"
+    "skills/service-loader/SKILL.md"
   ],
+  "agents": {
+    "files": [
+      "agents/experience-collector.md",
+      "agents/experience-depositor.md",
+      "agents/reviewer-doc-consistency.md",
+      "agents/reviewer-performance.md",
+      "agents/reviewer-security.md"
+    ]
+  },
   "references": {
     "experience-curator": [
       "skills/experience-curator/references/experience-governance.md"
     ],
-    "flow-router": [
-      "skills/flow-router/references/semantics-capsule.md"
+    "experience-capture": [
+      "skills/experience-capture/references/req-triggers.md",
+      "skills/experience-capture/references/plan-triggers.md",
+      "skills/experience-capture/references/build-triggers.md",
+      "skills/experience-capture/references/review-triggers.md"
+    ],
+    "workflow-optimizer": [
+      "skills/workflow-optimizer/references/workflow-vision.md",
+      "skills/workflow-optimizer/references/commands-guide.md",
+      "skills/workflow-optimizer/references/rules-guide.md",
+      "skills/workflow-optimizer/references/skills-guide.md",
+      "skills/workflow-optimizer/references/hooks-guide.md",
+      "skills/workflow-optimizer/references/subagents-guide.md",
+      "skills/workflow-optimizer/references/engineering-practices.md",
+      "skills/workflow-optimizer/references/optimization-checklist.md"
+    ],
+    "write-doc": [
+      "skills/write-doc/references/writing-style.md"
+    ],
+    "skill-creator": [
+      "skills/skill-creator/references/workflows.md",
+      "skills/skill-creator/references/output-patterns.md"
+    ],
+    "agents": [
+      "agents/references/noise-filter.md"
     ]
   },
   "workflowDirectories": [

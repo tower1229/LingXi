@@ -1,3 +1,5 @@
+<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+
 ---
 name: workflow-test-plan
 overview: 通过创建一个验证 INDEX.md 格式的 Node.js 脚本来完整测试 workflow 的 6 个阶段（req → plan → audit → work → review → archive），验证各环节功能和机制是否正常工作

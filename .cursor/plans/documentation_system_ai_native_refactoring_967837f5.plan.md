@@ -1,3 +1,5 @@
+<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+
 ---
 name: Documentation System AI Native Refactoring
 overview: 基于AI native作为核心原则之一，对文档系统进行完整重构，包括结构重组、内容规划、编写规范制定和现有文档改写，确保文档系统充分体现AI native设计原则。

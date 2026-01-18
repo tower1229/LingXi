@@ -206,6 +206,19 @@ foreach ($skill in $Manifest.skills) {
     $skillCount++
 }
 
+# 下载 agents 文件
+Write-Info "下载 agents..."
+$agentCount = 0
+foreach ($agentFile in $Manifest.agents.files) {
+    $localFile = ".cursor\$agentFile"
+    if (-not (Download-File ".cursor\$agentFile" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $agentCount++
+}
+Write-Success "已下载 agents ($agentCount 个文件)"
+
 # 下载引用文件
 $refCount = 0
 foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
@@ -305,6 +318,7 @@ Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
 Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
+Write-Host "  - .cursor/agents/ ($agentCount 个文件)"
 Write-Host "  - .cursor/.lingxi/ 目录结构"
 if ($CursorExists -or $LingxiExists) {
     Write-Host ""
@@ -313,7 +327,7 @@ if ($CursorExists -or $LingxiExists) {
 Write-Host ""
 Write-Info "下一步："
 Write-Host "  1. 在 Cursor 中打开项目"
-Write-Host "  2. 运行 /flow <需求描述> 创建第一个需求"
+Write-Host "  2. 运行 /req <需求描述> 创建第一个需求"
 Write-Host "  3. 查看 README.md 了解完整工作流"
 Write-Host ""
 Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"

@@ -20,7 +20,7 @@ sequenceDiagram
     Skill->>Collector: 自动调用（后台）
     Collector->>Collector: 成长过滤器
     Collector->>Session: 暂存候选
-    User->>Depositor: /flow 沉淀 1,3
+    User->>Depositor: /remember 1,3
     Depositor->>Session: 读取暂存
     Depositor->>User: 展示候选，请求选择
     User->>Depositor: 确认选择
@@ -216,9 +216,9 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 1. **查看候选**：stop hook 在对话结束时提醒有待沉淀候选
 2. **选择沉淀**：
-   - `/flow 沉淀 1,3`：沉淀第 1 和第 3 条
-   - `/flow 沉淀 全部`：沉淀全部
-   - `/flow 忽略沉淀`：忽略并清空候选
+   - `/remember 1,3`：沉淀第 1 和第 3 条
+   - `/remember 全部`：沉淀全部
+   - `/remember 忽略沉淀（如不需要沉淀）`：忽略并清空候选
 
 ### experience-depositor 处理
 
@@ -235,7 +235,6 @@ EXP-CANDIDATE 应在以下阶段输出：
 ## 与 /remember 的区别
 
 - **`/remember`**：即时沉淀**单条经验**，不需要 REQ-xxx，最低摩擦
-- **`/flow 沉淀`**：围绕一个 **REQ-xxx** 做**系统性复利收尾**（多条经验 + 上下文补齐 + 需求状态推进）
 
 两者互补，不冲突。
 
