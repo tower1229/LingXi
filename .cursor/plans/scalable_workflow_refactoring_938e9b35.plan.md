@@ -1,3 +1,5 @@
+<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+
 ---
 name: Scalable Workflow Refactoring
 overview: 将工作流改造为可伸缩模式。核心是升级 req 阶段的"提纯+放大"能力，强化 plan 的"深度澄清+代码库分析"能力，用户选择跳过 plan 时自动生成轻量 plan。

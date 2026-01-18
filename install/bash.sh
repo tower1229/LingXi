@@ -321,6 +321,7 @@ mkdir -p .cursor/commands
 mkdir -p .cursor/rules
 mkdir -p .cursor/skills
 mkdir -p .cursor/hooks
+mkdir -p .cursor/agents
 
 # 下载 commands 文件
 info "下载 commands..."
@@ -394,20 +395,70 @@ while IFS= read -r skill; do
     skill_count=$((skill_count + 1))
 done < <(get_json_array "skills")
 
+# 下载 agents 文件
+info "下载 agents..."
+agent_count=0
+while IFS= read -r agent_file; do
+    [ -z "$agent_file" ] && continue
+    local_file=".cursor/${agent_file}"
+    if ! download_file ".cursor/${agent_file}" "$local_file"; then
+        error "安装失败"
+        exit 1
+    fi
+    agent_count=$((agent_count + 1))
+done < <(get_json_object_array "agents" "files")
+success "已下载 agents ($agent_count 个文件)"
+
 # 下载引用文件
 ref_count=0
-for ref_key in experience-curator flow-router; do
-    while IFS= read -r ref_file; do
-        [ -z "$ref_file" ] && continue
-        mkdir -p ".cursor/$(dirname "$ref_file")"
-        local_file=".cursor/${ref_file}"
-        if ! download_file ".cursor/${ref_file}" "$local_file"; then
-            error "安装失败"
-            exit 1
-        fi
-        ref_count=$((ref_count + 1))
-    done < <(get_json_object_array "references" "$ref_key")
-done
+# 动态遍历所有 references（experience-curator, agents 等）
+# 获取 references 对象的所有 keys
+if command -v jq &> /dev/null; then
+    # 使用 jq 获取所有 keys
+    for ref_key in $(jq -r '.references | keys[]' "$MANIFEST_PATH" 2>/dev/null); do
+        while IFS= read -r ref_file; do
+            [ -z "$ref_file" ] && continue
+            mkdir -p ".cursor/$(dirname "$ref_file")"
+            local_file=".cursor/${ref_file}"
+            if ! download_file ".cursor/${ref_file}" "$local_file"; then
+                error "安装失败"
+                exit 1
+            fi
+            ref_count=$((ref_count + 1))
+        done < <(get_json_object_array "references" "$ref_key")
+    done
+elif [ -n "$PYTHON_CMD" ]; then
+    # 使用 Python 获取所有 keys
+    for ref_key in $($PYTHON_CMD -c "
+import sys
+import json
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(newline='\n')
+try:
+    with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    refs = data.get('references', {})
+    for key in refs.keys():
+        print(key)
+except Exception as e:
+    sys.stderr.write(f'JSON 解析错误: {e}\n')
+    sys.exit(1)
+" 2>/dev/null); do
+        while IFS= read -r ref_file; do
+            [ -z "$ref_file" ] && continue
+            mkdir -p ".cursor/$(dirname "$ref_file")"
+            local_file=".cursor/${ref_file}"
+            if ! download_file ".cursor/${ref_file}" "$local_file"; then
+                error "安装失败"
+                exit 1
+            fi
+            ref_count=$((ref_count + 1))
+        done < <(get_json_object_array "references" "$ref_key")
+    done
+else
+    error "需要 jq 或 Python 3 来解析 JSON references"
+    exit 1
+fi
 
 success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
 
@@ -497,6 +548,7 @@ info "已安装的文件："
 echo "  - .cursor/commands/ ($command_count 个命令)"
 echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
+echo "  - .cursor/agents/ ($agent_count 个文件)"
 echo "  - .cursor/.lingxi/ 目录结构"
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
     echo ""
@@ -505,7 +557,7 @@ fi
 echo ""
 info "下一步："
 echo "  1. 在 Cursor 中打开项目"
-echo "  2. 运行 /flow <需求描述> 创建第一个需求"
+echo "  2. 运行 /req <需求描述> 创建第一个需求"
 echo "  3. 查看 README.md 了解完整工作流"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"

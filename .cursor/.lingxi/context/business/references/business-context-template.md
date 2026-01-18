@@ -53,7 +53,7 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 
 - 常见误解：容易误解的业务概念或规则
 - 常见坑点：常见的业务逻辑错误或陷阱
-  - 若属于"高价值可复用坑"，记录为 experience 候选（走 `/flow 沉淀`）
+  - 若属于"高价值可复用坑"，记录为 experience 候选（使用  沉淀`/remember`）
 - 常见问题解答：常见问题的答案和指针
 ```
 
@@ -186,7 +186,7 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 
 1. **技术层面**：使用 `service-loader` 生成服务上下文（`.cursor/.lingxi/context/tech/services/<service>.md`）
 2. **业务层面**：使用 Business Context 模板生成业务上下文（`.cursor/.lingxi/context/business/<topic>.md`）
-3. **经验层面**：识别可沉淀的业务规则/坑点，通过 `/flow 沉淀` 沉淀为 Experience
+3. **经验层面**：识别可沉淀的业务规则/坑点，通过 `/remember` 沉淀为 Experience
 
 ---
 
