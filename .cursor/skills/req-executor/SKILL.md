@@ -183,11 +183,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ### 8. Requirement 文档生成
 
-根据选择的模板生成 req 文档，包含以下关键标记：
-
-- `<!-- PLAN-EXTRACT:GOAL-START -->` 到 `<!-- PLAN-EXTRACT:GOAL-END -->`：目标回放
-- `<!-- PLAN-EXTRACT:TASKS-START -->` 到 `<!-- PLAN-EXTRACT:TASKS-END -->`：任务清单（功能需求表格）
-- `<!-- PLAN-EXTRACT:VALIDATION-START -->` 到 `<!-- PLAN-EXTRACT:VALIDATION-END -->`：验收检查清单
+根据选择的模板生成 req 文档。
 
 #### 完整模板（全栈或复杂需求）
 
@@ -222,9 +218,6 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 - 架构思路（分层、模块划分）
 - 关键技术点（核心算法/设计模式）
 - **技术方案不包含实现细节**（具体代码、文件路径、函数签名）
-
-<!-- PLAN-EXTRACT:GOAL-START -->
-<!-- PLAN-EXTRACT:GOAL-END -->
 
 ---
 
@@ -265,13 +258,9 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 4. 功能需求
 
-<!-- PLAN-EXTRACT:TASKS-START -->
-
 | 编号 | 需求描述 | 实现方案            | 验收标准     | 优先级   |
 | ---- | -------- | ------------------- | ------------ | -------- |
 | F1   | ...      | 关键文件 + 实现模式 | 可验证的标准 | 必须实现 |
-
-<!-- PLAN-EXTRACT:TASKS-END -->
 
 **实现方案列内容要求**：
 
@@ -358,11 +347,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 10. 验收检查清单
 
-<!-- PLAN-EXTRACT:VALIDATION-START -->
-
 - [ ] ...
-
-<!-- PLAN-EXTRACT:VALIDATION-END -->
 
 ---
 
@@ -402,9 +387,6 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ### 1.3 解决方案概述
 
-<!-- PLAN-EXTRACT:GOAL-START -->
-<!-- PLAN-EXTRACT:GOAL-END -->
-
 ---
 
 ## 2. 目标
@@ -417,32 +399,16 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 3. 功能需求
 
-<!-- PLAN-EXTRACT:TASKS-START -->
-
 | 编号 | 需求描述 | 实现方案            | 验收标准     | 优先级   |
 | ---- | -------- | ------------------- | ------------ | -------- |
 | F1   | ...      | 关键文件 + 实现模式 | 可验证的标准 | 必须实现 |
-
-<!-- PLAN-EXTRACT:TASKS-END -->
 
 ---
 
 ## 4. 验收检查清单
 
-<!-- PLAN-EXTRACT:VALIDATION-START -->
-
 - [ ] ...
-
-<!-- PLAN-EXTRACT:VALIDATION-END -->
 ```
-
-#### 关键标记说明
-
-文档中包含以下标记，用于后续 plan 阶段的自动提取：
-
-- `<!-- PLAN-EXTRACT:GOAL-START -->` 到 `<!-- PLAN-EXTRACT:GOAL-END -->`：目标回放
-- `<!-- PLAN-EXTRACT:TASKS-START -->` 到 `<!-- PLAN-EXTRACT:TASKS-END -->`：任务清单（功能需求表格）
-- `<!-- PLAN-EXTRACT:VALIDATION-START -->` 到 `<!-- PLAN-EXTRACT:VALIDATION-END -->`：验收检查清单
 
 #### 文件命名约定
 
@@ -505,7 +471,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑
 2. **静默原则**：简单需求静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **Fail Fast**：必要信息缺失时必须询问，不猜测
-4. **文档质量**：生成的 req 文档必须包含所有必要的 PLAN-EXTRACT 标记
+4. **文档质量**：生成的 req 文档应该结构清晰、内容完整，符合需求分析的设计目标
 
 ---
 
