@@ -71,7 +71,16 @@ args:
 
 - **优秀开发者优先**：按需选择命令，直接命令零等待，符合"称心如意"
 - **新手友好**：命令语义清晰，降低学习成本
-- **不向后兼容**：与2.0不兼容的设计全部移除，无需兼容
+- **彻底重构**：1.0 所有文件和结构全部删除，2.0 从零构建，无历史包袱
+
+#### 不向后兼容声明
+
+本次重构 **不考虑向后兼容**，采用"推倒重建"策略：
+
+- **1.0 所有文件将被删除**：包括 flow-router、各阶段 Skill、旧目录结构等
+- **不提供迁移工具**：用户需手动迁移有价值的经验和文档
+- **不保留 deprecated 标记**：旧代码不作为过渡，直接移除
+- **全新目录结构**：2.0 采用全新的命名和组织方式
 
 ### 1.2 Req：造物计划（设计+产品+技术方案概览）
 
@@ -1490,7 +1499,8 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 | -------- | ---------------------------- | -------------------------------- |
 | 生命周期 | 完整生命周期管理             | 废弃生命周期，允许停留在任意阶段 |
 | 环节依赖 | 前一环节完成才能进入下一环节 | 所有环节独立，可跳过             |
-| 状态追踪 | 通过 INDEX.md 追踪状态       | 通过文件存在性推断（可选）       |
+| 状态追踪 | 通过 INDEX.md 追踪状态       | 对话历史优先 + 文件验证补充      |
+| 兼容性   | -                            | **不向后兼容，1.0 全部删除**     |
 
 ### 3.3 经验管理对比
 
@@ -1515,8 +1525,10 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
    - 从各阶段 Skill 中提取执行逻辑到对应 Command
    - 保留辅助 Skills（plan-manager, index-manager 等）
 
-3. **废弃 flow-router**：
-   - 标记 flow-router 为 deprecated（可选保留作为智能路由）
+3. **删除 1.0 旧文件**（详见 5.4 清理清单）：
+   - 删除 flow-router 及相关路由逻辑
+   - 删除各阶段旧 Skill 文件
+   - 删除旧目录结构
 
 ### 4.2 阶段 2：经验管理优化
 
@@ -1540,9 +1552,10 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
    - 测试流程解耦（跳过环节）
    - 测试经验注入和捕获
 
-2. **兼容性测试**：
-   - 确保现有经验库正常工作
-   - 确保现有 req/plan 文档可正常读取
+2. **清理验证**：
+   - 确保所有 1.0 旧文件已删除
+   - 确保无 deprecated 代码残留
+   - 验证 2.0 新结构完整性
 
 3. **性能测试**：
    - 测试经验匹配性能
@@ -1578,14 +1591,63 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 - 统一检测策略：对话历史优先 + 文件验证补充（详见 2.2.2 节）
 - 兜底机制：对话历史缺失时提示用户明确指定
 
-### 5.4 向后兼容性
+### 5.4 旧结构清理计划
 
-**风险**：现有工作流可能依赖 flow-router
+本次重构不向后兼容，以下为需要删除的 1.0 旧文件和结构：
 
-**应对**：
+#### 5.4.1 需删除的 Skill 文件
 
-- 保留 flow-router 作为可选智能路由（标记为 deprecated）
-- 提供迁移指南，帮助用户迁移到新命令
+| 文件路径                        | 说明                                      |
+| ------------------------------- | ----------------------------------------- |
+| `.cursor/skills/flow-router/`   | 1.0 统一入口路由，2.0 废弃                |
+| `.cursor/skills/req-stage/`     | 1.0 req 阶段 Skill，逻辑迁移至 Command    |
+| `.cursor/skills/plan-stage/`    | 1.0 plan 阶段 Skill，逻辑迁移至 Command   |
+| `.cursor/skills/work-stage/`    | 1.0 work 阶段 Skill，2.0 改名为 build     |
+| `.cursor/skills/review-stage/`  | 1.0 review 阶段 Skill，逻辑迁移至 Command |
+| `.cursor/skills/archive-stage/` | 1.0 archive 阶段 Skill，2.0 废弃          |
+
+#### 5.4.2 需删除的目录结构
+
+| 目录路径                              | 说明                             |
+| ------------------------------------- | -------------------------------- |
+| `.workflow/requirements/in-progress/` | 1.0 进行中任务目录，2.0 统一目录 |
+| `.workflow/requirements/completed/`   | 1.0 已完成任务目录，2.0 统一目录 |
+| `.workflow/context/session/`          | 1.0 会话上下文，2.0 简化         |
+
+#### 5.4.3 需删除的索引文件
+
+| 文件路径                           | 说明                       |
+| ---------------------------------- | -------------------------- |
+| `.workflow/requirements/INDEX.md`  | 1.0 任务状态索引，2.0 废弃 |
+| `.workflow/context/session/*.json` | 1.0 会话状态文件，2.0 废弃 |
+
+#### 5.4.4 需重命名/重构的文件
+
+| 原路径                                          | 新路径                                     | 说明           |
+| ----------------------------------------------- | ------------------------------------------ | -------------- |
+| `.workflow/requirements/in-progress/REQ-001.md` | `.workflow/requirements/001.req.<标题>.md` | 文件名格式变更 |
+| `.cursor/skills/experience-index/`              | 保留，更新激活条件                         | 内容更新       |
+| `.cursor/skills/experience-curator/`            | 保留                                       | 无需变更       |
+
+#### 5.4.5 清理执行顺序
+
+1. **备份用户数据**：
+   - 提示用户备份 `.workflow/requirements/` 下的有价值文档
+   - 提示用户备份 `.workflow/context/experience/` 下的经验文件
+
+2. **删除旧结构**：
+   - 删除 5.4.1-5.4.3 列出的所有文件和目录
+   - 清空 `.cursor/skills/` 下的旧 Skill（保留 experience-\* 相关）
+
+3. **创建新结构**：
+   - 创建 `.cursor/commands/` 目录及新 Command 文件
+   - 创建 `.workflow/requirements/` 统一目录（无子目录）
+   - 创建 `.cursor/skills/experience-capture/` 新 Skill
+
+4. **验证清理完成**：
+   - 确认无 `in-progress/`、`completed/` 子目录
+   - 确认无 `INDEX.md` 状态文件
+   - 确认无 flow-router 相关文件
 
 ## 六、价值对齐评估
 
@@ -1657,5 +1719,21 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 - [ ] 特殊字符标题正确替换
 - [ ] req 文件不存在时其他命令正确报错
 - [ ] 对话历史缺失时正确提示用户指定任务编号
+
+### 8.5 旧结构清理验收
+
+- [ ] `.cursor/skills/flow-router/` 目录已删除
+- [ ] `.cursor/skills/req-stage/` 目录已删除
+- [ ] `.cursor/skills/plan-stage/` 目录已删除
+- [ ] `.cursor/skills/work-stage/` 目录已删除
+- [ ] `.cursor/skills/review-stage/` 目录已删除
+- [ ] `.cursor/skills/archive-stage/` 目录已删除
+- [ ] `.workflow/requirements/in-progress/` 目录已删除
+- [ ] `.workflow/requirements/completed/` 目录已删除
+- [ ] `.workflow/requirements/INDEX.md` 文件已删除
+- [ ] `.workflow/context/session/` 目录已删除或清空
+- [ ] 无任何 deprecated 标记的代码残留
+- [ ] 新结构 `.cursor/commands/` 目录已创建
+- [ ] 新结构 `.cursor/skills/experience-capture/` 目录已创建
 
 <!-- PLAN-EXTRACT:VALIDATION-END -->
