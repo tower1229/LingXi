@@ -26,13 +26,12 @@
 
 ## What（实现）
 
-- **可伸缩工作流**：可组合、可并行的任务系统（req→plan→audit→work→review→archive），兼顾工程严谨与轻便快捷
-- **极简入口**：一个命令(`/flow`)驱动开发全生命周期，剩下的交给自然语言，零认知负担
-- **质量资产化**：过程产物、经验库、规则库自动沉淀，越用越聪明，越用越懂你。（也支持主动沉淀 `/remember`）
-- **知识整合**：发挥大模型自然语言理解优势，实现质量资产主动治理，让知识始终保鲜
+- **可伸缩工作流**：可组合、可并行的任务系统，兼顾工程严谨与轻便快捷
+- **质量资产化**：过程产物、经验库、规则库自动沉淀，越用越聪明，越用越懂你
+- **知识整合**：基于大模型自然语言理解，实现质量资产主动治理，让知识始终保鲜
 - **人工门控**：灵犀始终遵从创造者的指引，相信你拥有真正的判断力、品味和责任感
 - **上下文运营**：智能匹配相关经验，让模型聚焦关键信息，提高输出质量
-- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在当前项目落地 LinkXi Workflow
+- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中落地 LingXi Workflow
 ---
 
 ## 安装与快速开始
@@ -74,24 +73,67 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 ### 快速开始
 
-#### 1) 开始一个需求
+#### 1) 初始化项目（首次使用）
 
-在 Cursor 输入：
-
-```
-/flow <一句话需求描述>
-```
-
-也可以继续已有需求或自动查找进行中的任务：
+如果是首次在现有项目中使用 LingXi，建议先运行初始化命令：
 
 ```
-/flow REQ-xxx    # 继续指定需求
-/flow            # 自动查找并继续进行中的任务
+/init
 ```
 
-#### 2) 沉淀经验
+这会引导你收集项目信息（技术栈、常用模式、开发规则等），建立项目初始经验库。
 
-使用 `/remember` 命令随时沉淀经验，无需依赖 REQ-xxx：
+#### 2) 开始一个需求
+
+使用 `/req` 命令创建造物计划：
+
+```
+/req <需求描述>
+```
+
+**示例**：
+```
+/req 添加用户登录功能，支持邮箱和手机号登录
+/req 优化首页加载性能，目标首屏时间 < 1s
+```
+
+命令会自动生成任务编号（001, 002...）和标题，创建造物计划文档：`.cursor/.lingxi/requirements/001.req.<标题>.md`
+
+#### 3) 任务规划（可选）
+
+对于复杂任务，可以使用 `/plan` 命令进行详细规划：
+
+```
+/plan 001
+```
+
+这会基于 req 文档生成任务规划文档和测试用例文档。
+
+#### 4) 执行构建
+
+使用 `/build` 命令实现功能：
+
+```
+/build 001
+```
+
+支持两种模式：
+- **Plan-driven**：有 plan 文档时，按计划结构化执行（推荐）
+- **Agent-driven**：无 plan 文档时，Agent 基于 req 自行决策执行
+
+#### 5) 审查交付
+
+使用 `/review` 命令进行多维度审查：
+
+```
+/review 001
+```
+
+会自动进行文档一致性、安全性、性能等多维度审查，生成审查报告。
+
+#### 6) 沉淀经验（随时可用）
+
+使用 `/remember` 命令随时沉淀经验，无需依赖任务编号：
 
 ```
 /remember 用户是唯一拥有价值判断能力的人
@@ -105,10 +147,4 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 - **历史提取**：从对话历史中提取刚解决的问题/踩的坑
 - **提示词定位**：提供关键词帮助定位要提取的内容
 
-## 更多文档（维护者入口）
 
-- 文档总览：[docs/00-README.md](docs/00-README.md)
-- Why/How（归档）：[docs/01-concepts/why-how.md](docs/01-concepts/why-how.md)
-- 价值观 SSoT：[docs/01-concepts/lingxi-charter.md](docs/01-concepts/lingxi-charter.md)
-- 分层映射（价值观 → 设计原则 → 工程手段）：[docs/01-concepts/principle-ladder.md](docs/01-concepts/principle-ladder.md)
-- 设计原则与硬约束：[docs/01-concepts/key-principles.md](docs/01-concepts/key-principles.md)
