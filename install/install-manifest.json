@@ -23,8 +23,6 @@
       "hooks.json",
       "hooks/_hook-utils.mjs",
       "hooks/audit-after-shell-execution.mjs",
-      "hooks/before-shell-execution.mjs",
-      "hooks/before-submit-prompt.mjs",
       "hooks/stop.mjs"
     ]
   },
