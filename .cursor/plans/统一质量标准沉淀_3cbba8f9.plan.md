@@ -64,7 +64,7 @@ flowchart TD
 修改内容：
 
 - 在预览确认阶段，增加"存储目标选择"
-- 选项 A：存入经验库（.workflow/context/experience/）
+- 选项 A：存入经验库（.cursor/.lingxi/context/experience/）
 - 选项 B：存入规则库（.cursor/rules/qs-\*/）
 - **优化**：在预览阶段同时展示规则配置预览（如果选择 B），减少交互步骤
 - 删除"0.1) 成长循环"中自动触发 curator 建议质量准则的逻辑
@@ -83,7 +83,7 @@ flowchart TD
 
 ### 存储目标选择
 
-- **A) 存入经验库**：写入 .workflow/context/experience/，下次匹配时作为提醒
+- **A) 存入经验库**：写入 .cursor/.lingxi/context/experience/，下次匹配时作为提醒
 
 - **B) 存入规则库**：写入 .cursor/rules/，作为 Cursor 规则自动加载
 

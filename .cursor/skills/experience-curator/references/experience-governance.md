@@ -10,7 +10,7 @@
 
 当满足以下任一条件时，必须自动触发 `experience-curator` 进行治理：
 
-1. **经验文件新增**：`experience-depositor` 成功写入至少 1 条新经验文件到 `.workflow/context/experience/`
+1. **经验文件新增**：`experience-depositor` 成功写入至少 1 条新经验文件到 `.cursor/.lingxi/context/experience/`
 2. **经验数量达到阈值**（可选，未来扩展）：当经验库中 active 经验数量达到特定阈值（如 50 条）时，触发批量治理
 3. **发现明显重复**（可选，未来扩展）：在写入新经验时，系统检测到与现有经验明显重复（Tag 相同或 Decision being made 相同）
 
@@ -24,7 +24,7 @@
 2. **某类问题反复出现**：Trigger 相似的经验 ≥ 2 条，且都经过验证（Strength ≥ validated）
 3. **从 Judgment Capsule 可抽象**：经验的 Judgment Capsule 完整，可以抽象为可复用的判断标准
 
-**注意**：质量准则建议只是建议，必须用户明确采纳（`/flow 采纳质量准则`）才会创建规则。
+**注意**：2.0 中不再输出质量准则建议。用户如需创建规则，可在 `/remember` 命令中选择"存入规则库"，或直接调用 `rules-creator` Skill 创建规则。
 
 ## 治理流程
 
@@ -109,7 +109,7 @@ sequenceDiagram
 在执行任何治理动作前，必须先备份：
 
 ```bash
-cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.bak
+cp .cursor/.lingxi/context/experience/INDEX.md .cursor/.lingxi/context/experience/INDEX.md.bak
 ```
 
 ### 1) 读取索引与新经验
@@ -170,7 +170,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 ### 回滚方式
 如需撤销本次治理，执行：
 ```bash
-cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.md
+cp .cursor/.lingxi/context/experience/INDEX.md.bak .cursor/.lingxi/context/experience/INDEX.md
 ```
 ```
 
@@ -194,7 +194,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 ## 成长循环：质量准则建议（需人工采纳）
 
 以下建议从近期沉淀中提炼，采纳后将由 `rules-creator` Skill 创建规则。
-请使用 `/flow 采纳质量准则 <序号>` 采纳，或 `/flow 忽略质量准则` 跳过。
+**注意**：2.0 中不再输出质量准则建议。用户如需创建规则，可在 `/remember` 命令中选择"存入规则库"，或直接调用 `rules-creator` Skill 创建规则。
 
 | # | 建议 | Type | Scope | 目标规则 |
 |---|------|------|-------|----------|
@@ -227,7 +227,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 
 ### 质量准则建议（仅建议）
 
-- **不得自动写入**：必须等用户 `/flow 采纳质量准则` 或 `/flow 忽略质量准则`
+- **不得自动写入**：必须等用户明确选择存储目标（在 `/remember` 中选择"存入规则库"）
 - **明确标注为建议**：不是强制要求
 
 ## 禁止事项
@@ -243,7 +243,7 @@ cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.
 如需撤销本次治理，执行：
 
 ```bash
-cp .workflow/context/experience/INDEX.md.bak .workflow/context/experience/INDEX.md
+cp .cursor/.lingxi/context/experience/INDEX.md.bak .cursor/.lingxi/context/experience/INDEX.md
 ```
 
 ### 回滚限制

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 验证 .workflow/requirements/INDEX.md 格式的脚本
+ * 验证 .cursor/.lingxi/requirements/INDEX.md 格式的脚本
  * 
  * 验证内容：
  * 1. 表头格式（7 个字段）
@@ -109,8 +109,8 @@ function validateRow(row, projectRoot) {
   }
   
   // 解析 Links 字段，提取文件路径
-  // Links 格式示例：`.workflow/requirements/completed/REQ-001.md` / `.plan.md` / `.review.md`
-  // 或：`.workflow/requirements/in-progress/REQ-002.md` / `.plan.md`
+  // Links 格式示例：`.cursor/.lingxi/requirements/completed/REQ-001.md` / `.plan.md` / `.review.md`
+  // 或：`.cursor/.lingxi/requirements/in-progress/REQ-002.md` / `.plan.md`
   const filePaths = [];
   
   // 移除反引号
@@ -122,16 +122,16 @@ function validateRow(row, projectRoot) {
   let baseDir = null;
   
   parts.forEach(part => {
-    // 如果是完整路径（包含 .workflow/requirements/）
-    if (part.includes('.workflow/requirements/')) {
+    // 如果是完整路径（包含 .cursor/.lingxi/requirements/）
+    if (part.includes('.cursor/.lingxi/requirements/')) {
       // 提取完整路径
       const fullPath = path.join(projectRoot, part);
       filePaths.push(fullPath);
       
       // 提取基础目录（用于后续相对路径）
-      const match = part.match(/\.workflow\/requirements\/(in-progress|completed)\//);
+      const match = part.match(/\.cursor\/\.lingxi\/requirements\/(in-progress|completed)\//);
       if (match) {
-        baseDir = path.join(projectRoot, '.workflow/requirements', match[1]);
+        baseDir = path.join(projectRoot, '.cursor/.lingxi/requirements', match[1]);
       }
     } else if (part.endsWith('.md') || part.endsWith('.plan.md') || part.endsWith('.review.md')) {
       // 相对路径（如 `.plan.md`），需要基于 baseDir
@@ -149,7 +149,7 @@ function validateRow(row, projectRoot) {
           const fileName = part.replace(/^\./, `${reqId}.`);
           // 根据 status 判断目录
           const dir = row.status === 'completed' ? 'completed' : 'in-progress';
-          filePaths.push(path.join(projectRoot, '.workflow/requirements', dir, fileName));
+          filePaths.push(path.join(projectRoot, '.cursor/.lingxi/requirements', dir, fileName));
         }
       }
     }
@@ -187,7 +187,7 @@ function validateRow(row, projectRoot) {
  */
 function main() {
   // 获取项目根目录
-  const indexPath = process.argv[2] || path.join(process.cwd(), '.workflow/requirements/INDEX.md');
+  const indexPath = process.argv[2] || path.join(process.cwd(), '.cursor/.lingxi/requirements/INDEX.md');
   const projectRoot = path.dirname(path.dirname(path.dirname(indexPath)));
   
   // 检查文件是否存在

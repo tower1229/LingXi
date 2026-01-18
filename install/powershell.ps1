@@ -1,12 +1,17 @@
 # LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.0.1
+# Version: 1.0.2
 
 # 配置
 $RepoOwner = "tower1229"
 $RepoName = "LingXi"
 $Branch = "main"
-$BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
+# 支持通过环境变量覆盖 BASE_URL（用于本地测试）
+if ($env:BASE_URL) {
+    $BaseUrl = $env:BASE_URL
+} else {
+    $BaseUrl = "https://raw.githubusercontent.com/${RepoOwner}/${RepoName}/${Branch}"
+}
 
 # 设置错误处理
 $ErrorActionPreference = "Stop"
@@ -98,18 +103,18 @@ Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
-$WorkflowExists = Test-Path ".workflow"
+$LingxiExists = Test-Path ".cursor\.lingxi"
 
 if ($CursorExists) {
     Write-Warning ".cursor 目录已存在"
 }
 
-if ($WorkflowExists) {
-    Write-Warning ".workflow 目录已存在"
+if ($LingxiExists) {
+    Write-Warning ".cursor\.lingxi 目录已存在"
 }
 
 # 询问是否继续（合并安装模式）
-if ($CursorExists -or $WorkflowExists) {
+if ($CursorExists -or $LingxiExists) {
     if ($AutoConfirm) {
         # 设置了 AUTO_CONFIRM，自动确认
         $response = "y"
@@ -220,8 +225,8 @@ foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
 
 Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
 
-# 创建 .workflow 目录结构
-Write-Info "创建 .workflow 目录结构..."
+# 创建 .cursor/.lingxi 目录结构
+Write-Info "创建 .cursor/.lingxi 目录结构..."
 foreach ($dir in $Manifest.workflowDirectories) {
     $winPath = $dir -replace '/', '\'
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
@@ -237,6 +242,21 @@ foreach ($indexFile in $Manifest.workflowIndexFiles) {
     }
 }
 Write-Success "已下载索引文件"
+
+# 下载模板文件
+Write-Info "下载模板文件..."
+$templateCount = 0
+foreach ($templateFile in $Manifest.workflowTemplateFiles) {
+    $winPath = $templateFile -replace '/', '\'
+    if (-not (Download-File $templateFile $winPath)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $templateCount++
+}
+if ($templateCount -gt 0) {
+    Write-Success "已下载模板文件 ($templateCount 个)"
+}
 
 # 更新 .gitignore
 Write-Info "更新 .gitignore..."
@@ -265,10 +285,10 @@ if (Test-Path ".gitignore") {
 } else {
     @(
         "# Local workspace for temp code clones, generated artifacts, etc.",
-        ".workflow/workspace/",
+        ".cursor/.lingxi/workspace/",
         "",
         "# Session-level context (ephemeral, not a knowledge base)",
-        ".workflow/context/session/",
+        ".cursor/.lingxi/context/session/",
         "",
         "# OS / IDE",
         ".DS_Store",
@@ -285,8 +305,8 @@ Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
 Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
-Write-Host "  - .workflow/ 目录结构"
-if ($CursorExists -or $WorkflowExists) {
+Write-Host "  - .cursor/.lingxi/ 目录结构"
+if ($CursorExists -or $LingxiExists) {
     Write-Host ""
     Write-Info "✓ 已保留您现有的文件（合并安装模式）"
 }

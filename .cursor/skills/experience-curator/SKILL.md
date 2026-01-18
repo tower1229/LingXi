@@ -16,11 +16,11 @@ description: 此 Skill 是经验成长循环核心，支持方案模式（生成
 
 **方案模式**：
 - 新增经验的 Tag 列表（本轮沉淀的经验）
-- `.workflow/context/experience/INDEX.md`（当前经验索引）
+- `.cursor/.lingxi/context/experience/INDEX.md`（当前经验索引）
 
 **执行模式**：
 - 新增经验的 Tag 列表（本轮沉淀的经验）
-- `.workflow/context/experience/INDEX.md`（当前经验索引）
+- `.cursor/.lingxi/context/experience/INDEX.md`（当前经验索引）
 - 用户确认的治理方案（从方案模式输出）
 
 ## Outputs
@@ -43,7 +43,7 @@ description: 此 Skill 是经验成长循环核心，支持方案模式（生成
 在执行任何治理动作前，必须先备份：
 
 ```bash
-cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.bak
+cp .cursor/.lingxi/context/experience/INDEX.md .cursor/.lingxi/context/experience/INDEX.md.bak
 ```
 
 注：备份文件会在治理完成后（步骤 6）自动删除
@@ -126,7 +126,7 @@ cp .workflow/context/experience/INDEX.md .workflow/context/experience/INDEX.md.b
 治理流程结束后，必须删除备份文件：
 
 ```bash
-rm .workflow/context/experience/INDEX.md.bak
+rm .cursor/.lingxi/context/experience/INDEX.md.bak
 ```
 
 **执行时机**：

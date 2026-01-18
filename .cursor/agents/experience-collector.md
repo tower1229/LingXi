@@ -19,7 +19,7 @@ is_background: true
    - 如果通过但边界模糊（`requiresHumanJudgment: true`）→ 暂存，标记需要人工判断
    - 如果通过 → 暂存，记录评估结果（`evaluation` 字段）
 4) 最小上下文包：合并调用方提供的高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表），与候选 JSON 和评估结果一起存入暂存区。
-5) 暂存：写入或合并到 `.workflow/context/session/pending-compounding-candidates.json`，避免重复，保留时间戳与来源阶段。暂存的候选必须包含 `evaluation` 字段（阶段 1 的评估结果）。
+5) 暂存：写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`，避免重复，保留时间戳与来源阶段。暂存的候选必须包含 `evaluation` 字段（阶段 1 的评估结果）。
 6) **字段统一**：确保暂存候选时记录 `sourceStage` 字段（统一使用 `sourceStage`，不再使用 `stage` 作为来源标识）。保留 `stage` 字段用于标识候选本身的阶段（如 work/plan），`sourceStage` 用于标识候选来源阶段（用于阶段回放过滤）。
 7) 不写入经验，不触发 curator，不向用户提问；仅在必要时简短确认已接收。
 

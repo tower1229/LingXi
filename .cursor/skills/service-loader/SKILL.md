@@ -1,16 +1,16 @@
 ---
 name: service-loader
-description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成可复用资产。当需求涉及多个服务/存量系统需要先考古（服务职责、边界、依赖、入口、配置点、常见坑），或团队新人/新项目首次接入需快速建立项目级长期上下文，或 plan/work/review 阶段频繁出现"我不确定服务怎么做/在哪里改/以前有什么坑"的对话时激活，生成 .workflow/context/tech/services/<service>.md 并按需沉淀经验/规则指针。
+description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成可复用资产。当需求涉及多个服务/存量系统需要先考古（服务职责、边界、依赖、入口、配置点、常见坑），或通过 /init 命令初始化项目时需要生成服务上下文文档，或团队新人/新项目首次接入需快速建立项目级长期上下文，或 plan/work/review 阶段频繁出现"我不确定服务怎么做/在哪里改/以前有什么坑"的对话时激活，生成 .cursor/.lingxi/context/tech/services/<service>.md 并按需沉淀经验/规则指针。
 ---
 
 # Service Loader（服务上下文冷启动）
 
 ## Outputs (must write)
 
-- `.workflow/context/tech/services/<service-or-module>.md`
+- `.cursor/.lingxi/context/tech/services/<service-or-module>.md`
 - 按需更新（可选）：
-  - `.workflow/context/experience/<tag>-<title>.md`（发现高价值坑点时，需走确认沉淀）
-  - `.workflow/context/business/<topic>.md`（跨团队协作/业务边界）
+  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`（发现高价值坑点时，需走确认沉淀）
+  - `.cursor/.lingxi/context/business/<topic>.md`（跨团队协作/业务边界）
 
 ## Principles（上下文工程）
 
@@ -28,9 +28,9 @@ description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成
 - 目标：为了支撑哪个 REQ/哪个业务场景？
 - 允许的材料来源：仅仓库代码/README/配置样例，还是还包含内部文档（若没有 MCP/外链权限则跳过）
 
-### 2) 获取代码（推荐在 .workflow/workspace）
+### 2) 获取代码（推荐在 .cursor/.lingxi/workspace）
 
-将服务代码拉到 `.workflow/workspace/` 下（或在当前仓库直接分析）。
+将服务代码拉到 `.cursor/.lingxi/workspace/` 下（或在当前仓库直接分析）。
 
 如果无法拉取（无权限/无网络），则退化为：
 
@@ -39,7 +39,7 @@ description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成
 
 ### 3) 生成服务概要文档（模板）
 
-创建 `.workflow/context/tech/services/<service>.md`，结构建议如下：
+创建 `.cursor/.lingxi/context/tech/services/<service>.md`，结构建议如下：
 
 ```markdown
 # <Service>（服务上下文）

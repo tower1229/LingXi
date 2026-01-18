@@ -1,7 +1,7 @@
 # Quality Standards Index（质量准则索引）
 
 > 本文件记录所有已创建的质量准则规则及其溯源。
-> 由 `/flow 采纳质量准则` 命令更新。
+> 通过 `/remember` 命令或 `rules-creator` Skill 创建规则时自动更新。
 
 ---
 
