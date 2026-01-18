@@ -1,16 +1,6 @@
 {
     "version": 1,
     "hooks": {
-        "beforeSubmitPrompt": [
-            {
-                "command": "node hooks/before-submit-prompt.mjs"
-            }
-        ],
-        "beforeShellExecution": [
-            {
-                "command": "node hooks/before-shell-execution.mjs"
-            }
-        ],
         "afterShellExecution": [
             {
                 "command": "node hooks/audit-after-shell-execution.mjs"
