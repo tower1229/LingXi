@@ -46,14 +46,45 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 **分层加载策略**：
 1. **先读取索引**：读取 `.workflow/context/experience/INDEX.md`（索引层）
 2. **只匹配 Status = `active` 的经验**（过滤 `deprecated`）
-3. **基于索引进行匹配**：基于当前场景（req 内容/阶段/涉及模块）做关键词 + 语义匹配 Trigger（when to load）
-4. **优先返回高 Strength 经验**：`enforced` > `validated` > `hypothesis`
-5. **优先返回 broad Scope 经验**：`broad` > `medium` > `narrow`
-6. **多维度匹配策略**：
-   - **任务编号 + 阶段 + Trigger 完全匹配**：优先返回（得分 > 0.7）
-   - **阶段 + Trigger 匹配**：中优先级（得分 0.4-0.7，跨任务复用）
-   - **仅 Trigger 关键词匹配**：低优先级（得分 0.3-0.4）
-7. **按需加载细节**：仅在需要详细内容时，才加载对应的经验文件（细节层）
+3. **LLM 语义匹配**：使用以下匹配任务进行智能匹配
+
+**LLM 匹配任务**：
+
+任务：基于当前场景，从经验列表中找出相关经验
+
+输入：
+- 当前场景：[req 内容摘要] + 阶段：[plan]
+  - req 内容摘要：技术选型、功能描述、架构思路等关键信息
+  - 当前阶段：req/plan/build/review
+- 经验列表：INDEX.md 中所有 `active` 经验的摘要
+  - 每个经验包含：Tag、Title、Trigger、Surface signal、Hidden risk
+
+匹配维度：
+- **Trigger 匹配**：经验的 Trigger 是否与当前场景相关
+- **阶段匹配**：经验是否适用于当前阶段
+- **风险匹配**：经验的 Hidden risk 是否与当前场景的风险相关
+- **信号匹配**：经验的 Surface signal 是否与当前场景的信号匹配
+
+输出要求：
+- 返回相关经验的 Tag 列表
+- 对每个相关经验，给出相关性得分（0-1）和理由
+- 只返回得分 >= 0.3 的经验
+- 按得分降序排列，最多返回 Top 5
+
+得分计算：
+- 基础得分：0-1（基于相关性，由 LLM 判断）
+- 阶段加权：
+  - 当前阶段匹配：+0.2
+  - 相邻阶段匹配：+0.1（如 plan 阶段匹配 req/build 阶段经验）
+  - 其他阶段：+0
+- 最终得分 = min(1.0, 基础得分 + 阶段加权)
+
+优先级排序：
+- 首先按最终得分降序
+- 得分相同时，优先返回高 Strength 经验：`enforced` > `validated` > `hypothesis`
+- 得分和 Strength 相同时，优先返回 broad Scope 经验：`broad` > `medium` > `narrow`
+
+4. **按需加载细节**：仅在需要详细内容时，才加载对应的经验文件（细节层）
 
 ### 3. 输出规则（静默成功原则 + 最小高信号）
 

@@ -198,7 +198,13 @@ AI 应根据以下因素综合判断：
 
 根据用户选择的存储目标和推荐载体，写入对应位置：
 
-- **如果选择 experience**：写入 `.workflow/context/experience/<tag>-<title>.md`，更新 INDEX
+- **如果选择 experience**：
+  - 写入 `.workflow/context/experience/<tag>-<title>.md`
+  - **自动更新 INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update` 更新索引
+    - 如果更新失败，输出错误信息，但不影响经验文件写入
+    - 保持静默成功原则：更新成功时不输出确认信息
+  - 触发 `experience-curator` 治理流程
+
 - **如果选择 rules**：调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`
 - **如果选择其他载体**：按对应载体的写入规范执行
 
