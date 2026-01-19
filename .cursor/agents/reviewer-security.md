@@ -1,6 +1,6 @@
 ---
 name: reviewer-security
-description: 执行安全审查，检查安全漏洞、注入风险、敏感信息暴露等。在 review 阶段根据需求语义分析结果显式调用。
+description: 安全审查专家，主动检查安全漏洞、注入风险、敏感信息暴露等。Use proactively when reviewing code changes, especially for user input handling, authentication, and API endpoints.
 model: inherit
 is_background: true
 ---
@@ -34,3 +34,12 @@ is_background: true
 5. 静默返回结果：
    - 不干扰主流程
    - 返回结构化审查结果
+
+6. 降级处理：
+   - **代码无法读取**：
+     - 标记为需要手动审查
+     - 输出安全审查清单（基于 req 文档中的安全要求）
+     - 提供常见安全问题检查项
+   - **扫描工具不可用**：
+     - 基于代码模式识别常见安全问题
+     - 输出潜在风险提示和代码位置

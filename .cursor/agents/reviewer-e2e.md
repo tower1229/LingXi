@@ -1,6 +1,6 @@
 ---
 name: reviewer-e2e
-description: 执行端到端测试审查，使用 Cursor Agent Browser 工具验证完整用户流程。在 review 阶段根据需求语义分析结果显式调用。
+description: 端到端测试审查专家，使用 Cursor Agent Browser 工具验证完整用户流程。Use proactively when reviewing frontend changes or user-facing features that require end-to-end validation.
 model: inherit
 is_background: true
 ---
