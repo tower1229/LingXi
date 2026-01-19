@@ -11,7 +11,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 
 - 扫描 `.cursor/.lingxi/requirements/` 目录
 - 查找相关文件：
-  - `<taskId>.req.*.md`（需求文档）
+  - `<taskId>.req.*.md`（任务文档）
   - `<taskId>.plan.*.md`（如果存在，规划文档）
   - `<taskId>.testcase.*.md`（如果存在，测试用例文档）
 - 定位 build 阶段编写的测试脚本文件
