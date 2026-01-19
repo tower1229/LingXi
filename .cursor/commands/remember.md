@@ -44,7 +44,7 @@
   - `.cursor/.lingxi/context/experience/INDEX.md`（更新索引，需用户确认后写入）
 
 - **如果选择规则库**：
-  - `.cursor/rules/qs-{type}-{scope}/RULE.md`（质量准则规则，需用户确认后写入）
+  - `.cursor/rules/qs-{type}-{scope}.mdc`（质量准则规则，需用户确认后写入）
   - `.cursor/rules/quality-standards-index.md`（更新索引，需用户确认后写入）
   - `.cursor/rules/quality-standards-schema.md`（更新状态，需用户确认后写入）
 

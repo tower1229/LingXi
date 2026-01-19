@@ -14,7 +14,7 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 
 ## Outputs
 
-- 创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`（项目级质量准则）
+- 创建或更新 `.cursor/rules/qs-{type}-{scope}.mdc`（项目级质量准则）
 - 更新 `.cursor/rules/quality-standards-index.md`
 - 更新 `.cursor/rules/quality-standards-schema.md`（状态变更）
 
@@ -73,7 +73,7 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 
 目标规则名：`qs-{type}-{scope}`
 
-- **规则已存在** → 在现有 RULE.md 中追加新准则内容
+- **规则已存在** → 在现有 `qs-{type}-{scope}.mdc` 中追加新准则内容
 - **规则不存在** → 按模板创建新规则
 
 ### 3.5) 获取创建日期
@@ -90,20 +90,26 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 **Always 类型**：
 ```yaml
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 alwaysApply: true
 created: "{created_date}"
 ---
 ```
 
+> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
+
 **File-scoped 类型**：
 ```yaml
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 globs:
   - "{根据项目实际目录结构配置}"
 alwaysApply: false
 created: "{created_date}"
 ---
 ```
+
+> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
 
 > ⚠️ globs 必须根据项目实际目录结构配置，不要套用固定模式。
 > 先分析项目结构，确定相关文件的实际路径。
@@ -124,10 +130,13 @@ created: "{created_date}"
 **Manual 类型**：
 ```yaml
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 alwaysApply: false
 created: "{created_date}"
 ---
 ```
+
+> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
 
 > **注意**：如果 Cursor 不支持 frontmatter 中的 `created` 字段（解析错误），则使用方案B：在文件末尾添加 `Created: {created_date}` 字段（与现有的 `Source:` 和 `Adopted:` 保持一致）。
 
@@ -137,6 +146,7 @@ created: "{created_date}"
 
 ```markdown
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 alwaysApply: true
 created: "{created_date}"
 ---
@@ -158,6 +168,7 @@ Created: {created_date}
 
 ```markdown
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 globs:
   - "{glob1}"
   - "{glob2}"
@@ -198,6 +209,7 @@ Created: {created_date}
 
 ```markdown
 ---
+description: "{规则描述，用英文描述规则提供什么}"
 alwaysApply: false
 created: "{created_date}"
 ---
@@ -314,8 +326,8 @@ globs 必须根据项目实际目录结构配置：
 状态：{已存在/尚未创建}
 
 将执行：
-1. {创建/更新} .cursor/rules/qs-{type}-{scope}/RULE.md
-2. 配置 {frontmatter 说明}
+1. {创建/更新} .cursor/rules/qs-{type}-{scope}.mdc
+2. 配置 {frontmatter 说明}（包含必需的 description 字段）
 3. 插入准则内容
 4. 更新 .cursor/rules/quality-standards-index.md
 

@@ -9,11 +9,8 @@
     "commands/remember.md"
   ],
   "rules": {
-    "directories": [
-      "rules/qs-always-general"
-    ],
     "files": [
-      "rules/qs-always-general/RULE.md",
+      "rules/qs-always-general.mdc",
       "rules/quality-standards-index.md",
       "rules/quality-standards-schema.md"
     ]

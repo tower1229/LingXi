@@ -1,4 +1,5 @@
 ---
+description: "Core development principles: simplicity, type safety, fail fast, complete implementation, and reuse first"
 alwaysApply: true
 ---
 

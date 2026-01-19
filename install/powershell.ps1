@@ -158,16 +158,6 @@ Write-Success "已下载 commands ($commandCount 个文件)"
 # 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 Write-Info "下载 rules..."
 
-# 创建规则目录
-$ruleDirCount = 0
-foreach ($ruleDir in $Manifest.rules.directories) {
-    $destDir = ".cursor\$ruleDir"
-    if (-not (Test-Path $destDir)) {
-        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-    }
-    $ruleDirCount++
-}
-
 # 下载规则文件
 $ruleFileCount = 0
 foreach ($ruleFile in $Manifest.rules.files) {
@@ -178,7 +168,7 @@ foreach ($ruleFile in $Manifest.rules.files) {
     }
     $ruleFileCount++
 }
-Write-Success "已下载 rules ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
+Write-Success "已下载 rules ($ruleFileCount 个文件)"
 
 
 # 下载 hooks（hooks.json + scripts）
