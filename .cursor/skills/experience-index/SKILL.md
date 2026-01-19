@@ -22,7 +22,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 - `/plan 001` → 阶段：plan，任务编号：001
 - `/build 001` → 阶段：build，任务编号：001
 - `/review 001` → 阶段：review，任务编号：001
-- `/req-review 001` → 阶段：req-review，任务编号：001
+- `/review-req 001` → 阶段：review-req，任务编号：001
 
 #### 1.2 读取对应的 req 文件
 

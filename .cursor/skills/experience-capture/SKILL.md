@@ -31,7 +31,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 **特殊命令**：
 
 - `/req <描述>` → 阶段：req，任务编号：自动生成（待写入文件后确定）
-- `/req-review 001` → 阶段：req-review，任务编号：001
+- `/review-req 001` → 阶段：review-req，任务编号：001
 
 #### 1.2 L2：文件存在性验证（辅助来源）
 

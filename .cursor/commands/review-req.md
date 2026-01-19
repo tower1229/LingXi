@@ -1,5 +1,5 @@
 ---
-name: req-review
+name: review-req
 description: 审查 req 文档（可选，可多次执行）
 args:
   - name: taskId
@@ -7,7 +7,7 @@ args:
     description: 任务编号（如 001）
 ---
 
-# /req-review - 审查 req 文档
+# /review-req - 审查 req 文档
 
 ## 命令用途
 
@@ -23,13 +23,13 @@ args:
 ## 使用方式
 
 ```
-/req-review <taskId>
+/review-req <taskId>
 ```
 
 **示例**：
 
 ```
-/req-review 001
+/review-req 001
 ```
 
 命令会自动查找 `.cursor/.lingxi/requirements/001.req.*.md` 文件。
@@ -155,4 +155,3 @@ args:
 - **无问题**：如果文档质量良好，无重大问题，静默输出简要总结即可
 - **有问题**：发现问题时，详细列出问题清单和改进建议
 - **不重复审查**：如果文档刚创建且用户未做修改，可以提示"文档质量良好"或静默通过
-

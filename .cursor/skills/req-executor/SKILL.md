@@ -1,6 +1,6 @@
 ---
 name: req-executor
-description: 当执行 /req 命令时自动激活，负责需求分析、提纯、放大和造物计划文档生成。
+description: 当执行 /req 命令时自动激活，负责需求分析、提纯、放大和需求文档生成。
 ---
 
 # Req Executor
