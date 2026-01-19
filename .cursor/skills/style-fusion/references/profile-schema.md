@@ -20,7 +20,20 @@
     "vocabulary_level": "professional",
     "structure_preference": "hierarchical",
     "opening_style": "context",
-    "closing_style": "summary"
+    "closing_style": "summary",
+    "tone_and_voice": {
+      "formality": 0.6,
+      "person_usage": { "first_person": 0.3, "second_person": 0.2, "third_person": 0.3, "neutral": 0.2 },
+      "voice_preference": "active"
+    },
+    "information_density": {
+      "density_level": 0.65,
+      "detail_level": "moderate"
+    },
+    "interactivity": {
+      "interaction_style": { "question": 0.2, "directive": 0.4, "narrative": 0.3, "dialogue": 0.1 },
+      "supporting_elements": { "examples": 0.4, "code": 0.3, "diagrams": 0.2, "none": 0.1 }
+    }
   },
   "sample_count": 20,
   "last_updated": "2024-01-15T10:30:00.000Z",
@@ -93,6 +106,53 @@
 - `"call_to_action"`: 行动号召
 - `"open"`: 开放式结尾，留下思考
 
+#### tone_and_voice
+
+语气和语调，包含三个子维度。
+
+- `formality`: 正式程度，数值范围 0.0 - 1.0
+  - `0.0 - 0.3`: 非正式，口语化表达
+  - `0.3 - 0.7`: 中等正式，专业但易懂
+  - `0.7 - 1.0`: 高正式，书面化表达
+- `person_usage`: 人称使用分布，四个值的总和必须为 1.0
+  - `first_person`: 第一人称比例（"我"、"我们"）
+  - `second_person`: 第二人称比例（"你"、"您"）
+  - `third_person`: 第三人称比例（"他"、"它"）
+  - `neutral`: 中性表达比例，避免人称
+- `voice_preference`: 语态偏好，枚举值
+  - `"active"`: 主动语态为主（"我们实现了功能"）
+  - `"passive"`: 被动语态为主（"功能被实现"）
+  - `"mixed"`: 混合使用，根据语境选择
+
+#### information_density
+
+信息密度，包含两个子维度。
+
+- `density_level`: 信息密度，数值范围 0.0 - 1.0
+  - `0.0 - 0.3`: 低密度，信息稀疏，留白较多
+  - `0.3 - 0.7`: 中等密度，信息适中
+  - `0.7 - 1.0`: 高密度，信息密集，内容充实
+- `detail_level`: 详细程度，枚举值
+  - `"overview"`: 概览性，提供总体框架
+  - `"moderate"`: 中等详细，平衡概述和细节
+  - `"detailed"`: 详细，提供具体细节和示例
+  - `"comprehensive"`: 全面，覆盖所有方面
+
+#### interactivity
+
+交互性，包含两个子维度。
+
+- `interaction_style`: 交互风格分布，四个值的总和必须为 1.0
+  - `question`: 使用问题引导读者思考的比例
+  - `directive`: 使用指令、命令式表达的比例
+  - `narrative`: 叙事性，按事件流程描述的比例
+  - `dialogue`: 对话式，模拟对话交流的比例
+- `supporting_elements`: 支持元素分布，四个值的总和必须为 1.0
+  - `examples`: 使用示例说明的比例
+  - `code`: 包含代码片段的比例
+  - `diagrams`: 使用图表、图示的比例
+  - `none`: 不使用额外支持元素的比例
+
 ### sample_count
 
 已融合的样本数量。用于计算融合权重和置信度。
@@ -117,7 +177,13 @@
   "dimension_variance": {
     "emotion_intensity": 0.05,
     "sentence_length": 0.02,
-    "logic_pattern": 0.03
+    "logic_pattern": 0.03,
+    "tone_and_voice": {
+      "formality": 0.04
+    },
+    "information_density": {
+      "density_level": 0.03
+    }
   },
   "confidence": 0.85
 }
@@ -133,6 +199,7 @@
 
 - 数值越小，表示该维度越稳定
 - 用于计算置信度
+- 对于嵌套维度（如 `tone_and_voice.formality`），使用点号分隔的键名
 
 ### confidence
 
@@ -140,11 +207,18 @@
 
 ## 版本兼容性
 
-### v1.0（当前版本）
+### v1.0（已废弃）
 
 - 7 个风格维度
 - 基础融合算法
 - 置信度计算
+
+### v2.0（当前版本）
+
+- 10 个风格维度（新增：tone_and_voice, information_density, interactivity）
+- 增强的融合算法
+- 置信度计算
+- 向后兼容：旧 profile.json 缺少新维度时，使用默认值
 
 ### 未来扩展
 
@@ -159,10 +233,10 @@
 
 ### 必需检查
 
-1. **分布归一化**：`sentence_length` 和 `logic_pattern` 的所有值总和必须为 1.0（允许 0.99 - 1.01 的误差）
-2. **数值范围**：`emotion_intensity` 必须在 0.0 - 1.0 之间
+1. **分布归一化**：所有分布类维度（`sentence_length`, `logic_pattern`, `tone_and_voice.person_usage`, `interactivity.interaction_style`, `interactivity.supporting_elements`）的所有值总和必须为 1.0（允许 0.99 - 1.01 的误差）
+2. **数值范围**：所有数值类维度（`emotion_intensity`, `tone_and_voice.formality`, `information_density.density_level`）必须在 0.0 - 1.0 之间
 3. **枚举值**：分类类维度必须是指定的枚举值之一
-4. **完整性**：所有 7 个维度都必须存在
+4. **完整性**：所有 10 个维度都必须存在（向后兼容：旧 profile 可能缺少新维度，使用默认值）
 
 ### 可选检查
 

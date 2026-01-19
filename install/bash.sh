@@ -341,19 +341,7 @@ success "已下载 commands ($command_count 个文件)"
 # 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 info "下载 rules..."
 
-# 创建规则目录
-while IFS= read -r rule_dir; do
-    [ -z "$rule_dir" ] && continue
-    mkdir -p ".cursor/${rule_dir}"
-done < <(get_json_object_array "rules" "directories")
-
 # 下载规则文件
-rule_dir_count=0
-while IFS= read -r rule_dir; do
-    [ -z "$rule_dir" ] && continue
-    rule_dir_count=$((rule_dir_count + 1))
-done < <(get_json_object_array "rules" "directories")
-
 rule_file_count=0
 while IFS= read -r rule_file; do
     [ -z "$rule_file" ] && continue
@@ -365,7 +353,7 @@ while IFS= read -r rule_file; do
     rule_file_count=$((rule_file_count + 1))
 done < <(get_json_object_array "rules" "files")
 
-success "已下载 rules ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
+success "已下载 rules ($rule_file_count 个文件)"
 
 
 # 下载 hooks 配置与脚本

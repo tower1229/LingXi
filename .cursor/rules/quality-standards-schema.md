@@ -16,14 +16,15 @@
 >
 > - workflow 工具约束已在 Skills/Commands 中实现，不在此目录管理。
 > - workflow 只默认提供 `qs-always-general` 作为最基本的初始规则，其他规则由项目通过 `/remember` 和 `rules-creator` Skill 按需创建。
-> - 本目录仅用于项目级质量准则（`.cursor/rules/qs-*`）。
+> - 本目录仅用于项目级质量准则（`.cursor/rules/qs-*.mdc`）。
+> - 规则文件使用 Cursor 标准的 MDC 格式（`.mdc` 扩展名），确保规则能被 Cursor 正确加载。
 
 ---
 
 ## 命名规则
 
 ```
-qs-{type}-{scope}/RULE.md
+qs-{type}-{scope}.mdc
 
 type:
   - always: 始终应用（alwaysApply: true）

@@ -2,7 +2,7 @@
 
 ## 命令用途
 
-引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/context/experience/`）、规则（`.cursor/rules/qs-*`）、业务上下文（`.cursor/.lingxi/context/business/`）和服务上下文（`.cursor/.lingxi/context/tech/services/`）中。
+引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/context/experience/`）、规则（`.cursor/rules/qs-*.mdc`）、业务上下文（`.cursor/.lingxi/context/business/`）和服务上下文（`.cursor/.lingxi/context/tech/services/`）中。
 
 ---
 
@@ -38,7 +38,7 @@
 - `.cursor/.lingxi/context/experience/<tag>-<title>.md`（经验文档，如触发沉淀）
 - `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（经验候选暂存，如生成 EXP-CANDIDATE）
 - `.cursor/.lingxi/context/experience/INDEX.md`（经验索引，如写入经验）
-- `.cursor/rules/qs-*`（质量规则，如用户采纳质量准则建议）
+- `.cursor/rules/qs-*.mdc`（质量规则，如用户采纳质量准则建议）
 
 ---
 
@@ -104,5 +104,3 @@
 | **用户交互** | 引导式收集项目信息 | 需求推进、阶段流转 |
 
 两者互补，不冲突。`/init` 用于项目初始化建立上下文，需求工作流用于日常开发任务。
-
----

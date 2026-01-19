@@ -205,7 +205,7 @@ AI 应根据以下因素综合判断：
     - 保持静默成功原则：更新成功时不输出确认信息
   - 触发 `experience-curator` 治理流程
 
-- **如果选择 rules**：调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`
+- **如果选择 rules**：调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}.mdc`
 - **如果选择其他载体**：按对应载体的写入规范执行
 
 **注意**：治理已在步骤 7 执行，此处只需写入文件即可。
@@ -245,7 +245,7 @@ AI 应根据以下因素综合判断：
   - 触发 `experience-curator` 治理流程
 
 - **如果选择 B（规则库）**：
-  - 调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}/RULE.md`
+  - 调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}.mdc`
   - 更新 `.cursor/rules/quality-standards-index.md`
   - 更新 `.cursor/rules/quality-standards-schema.md`
 

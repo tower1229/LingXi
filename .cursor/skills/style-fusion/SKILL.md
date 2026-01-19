@@ -35,7 +35,20 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
     "vocabulary_level": "professional",
     "structure_preference": "hierarchical",
     "opening_style": "context",
-    "closing_style": "summary"
+    "closing_style": "summary",
+    "tone_and_voice": {
+      "formality": 0.6,
+      "person_usage": { "first_person": 0.3, "second_person": 0.2, "third_person": 0.3, "neutral": 0.2 },
+      "voice_preference": "active"
+    },
+    "information_density": {
+      "density_level": 0.65,
+      "detail_level": "moderate"
+    },
+    "interactivity": {
+      "interaction_style": { "question": 0.2, "directive": 0.4, "narrative": 0.3, "dialogue": 0.1 },
+      "supporting_elements": { "examples": 0.4, "code": 0.3, "diagrams": 0.2, "none": 0.1 }
+    }
   }
 }
 ```
@@ -45,7 +58,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 **执行步骤**：
 1. 提取风格特征（同 analyze）
 2. 标准化风格向量
-3. 读取 `.cursor/style_fusion/profile.json`
+3. 读取 `.cursor/.lingxi/context/style-fusion/profile.json`
 4. 调用 `scripts/style-fusion-engine.js` 融合新旧风格
 5. 保存更新后的画像
 
@@ -71,7 +84,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 ### get_profile - 获取风格画像
 
 **执行步骤**：
-1. 读取 `.cursor/style_fusion/profile.json`
+1. 读取 `.cursor/.lingxi/context/style-fusion/profile.json`
 2. 提取主导特征
 3. 格式化输出
 
@@ -113,6 +126,12 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 - 开头：先界定问题
 - 结尾：总结结构而非情绪
 
+**语气和语调**：中等正式（0.6），第一人称和第三人称混合使用，主动语态为主
+
+**信息密度**：中等密度（0.65），中等详细程度
+
+**交互性**：指令式为主，示例和代码支持为主
+
 **主题**：解释滑动窗口算法
 ```
 
@@ -120,7 +139,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 
 ### 初始化
 
-首次使用时，自动创建 `.cursor/style_fusion/` 目录并初始化：
+首次使用时，自动创建 `.cursor/.lingxi/context/style-fusion/` 目录并初始化：
 
 ```json
 // profile.json
@@ -144,7 +163,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 1. 读取 `references/style-extractor-prompt.md`
 2. 调用 LLM 提取风格特征
 3. 标准化风格向量（分布类维度归一化）
-4. 验证完整性（7 个维度必须齐全）
+4. 验证完整性（10 个维度必须齐全）
 
 ### 风格融合
 
@@ -166,6 +185,19 @@ interface StyleProfile {
     structure_preference: "linear" | "hierarchical" | "nested";
     opening_style: "question" | "statement" | "context" | "direct";
     closing_style: "summary" | "reflection" | "call_to_action" | "open";
+    tone_and_voice: {
+      formality: number;  // 0-1
+      person_usage: { first_person: number; second_person: number; third_person: number; neutral: number; };
+      voice_preference: "active" | "passive" | "mixed";
+    };
+    information_density: {
+      density_level: number;  // 0-1
+      detail_level: "overview" | "moderate" | "detailed" | "comprehensive";
+    };
+    interactivity: {
+      interaction_style: { question: number; directive: number; narrative: number; dialogue: number; };
+      supporting_elements: { examples: number; code: number; diagrams: number; none: number; };
+    };
   };
   sample_count: number;
   last_updated: string;  // ISO 8601
@@ -183,5 +215,6 @@ interface StyleProfile {
 
 1. **风格是慢变量**：使用平滑融合策略，避免频繁震荡
 2. **JSON 稳定性优先**：数据结构稳定，便于版本控制和 diff
-3. **状态持久化**：所有状态存储在 `.cursor/style_fusion/`
+3. **状态持久化**：所有状态存储在 `.cursor/.lingxi/context/style-fusion/`
 4. **置信度计算**：基于样本数和方差，`confidence = (1 - exp(-sample_count / 10)) * (1 - variance_penalty)`
+5. **向后兼容**：旧 profile.json 可能缺少新维度（tone_and_voice, information_density, interactivity），融合时使用默认值
