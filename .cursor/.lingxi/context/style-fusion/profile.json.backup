@@ -1,0 +1,51 @@
+{
+  "style_vector": {
+    "sentence_length": {
+      "short": 0.2333,
+      "medium": 0.6,
+      "long": 0.1667
+    },
+    "logic_pattern": {
+      "deductive": 0.6333,
+      "inductive": 0.1,
+      "contrast": 0.2333,
+      "narrative": 0.0333
+    },
+    "emotion_intensity": 0.21,
+    "vocabulary_level": "professional",
+    "structure_preference": "hierarchical",
+    "opening_style": "direct",
+    "closing_style": "open",
+    "tone_and_voice": {
+      "formality": 0.5833,
+      "person_usage": {
+        "first_person": 0.2917,
+        "second_person": 0.2083,
+        "third_person": 0.2917,
+        "neutral": 0.2083
+      },
+      "voice_preference": "active"
+    },
+    "information_density": {
+      "density_level": 0.625,
+      "detail_level": "moderate"
+    },
+    "interactivity": {
+      "interaction_style": {
+        "question": 0.2083,
+        "directive": 0.375,
+        "narrative": 0.2917,
+        "dialogue": 0.125
+      },
+      "supporting_elements": {
+        "examples": 0.375,
+        "code": 0.2917,
+        "diagrams": 0.2083,
+        "none": 0.125
+      }
+    }
+  },
+  "sample_count": 6,
+  "last_updated": "2026-01-19T06:12:21.967Z",
+  "confidence": 0.4511
+}
