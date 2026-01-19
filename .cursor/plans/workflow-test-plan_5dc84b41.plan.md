@@ -1,3 +1,5 @@
+<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+
 ---
 name: workflow-test-plan
 overview: 通过创建一个验证 INDEX.md 格式的 Node.js 脚本来完整测试 workflow 的 6 个阶段（req → plan → audit → work → review → archive），验证各环节功能和机制是否正常工作
@@ -37,7 +39,7 @@ isProject: false
 
 ## 测试任务
 
-**创建验证 `.workflow/requirements/INDEX.md` 格式的 Node.js 脚本**
+**创建验证 `.cursor/.lingxi/requirements/INDEX.md` 格式的 Node.js 脚本**
 
 该脚本应验证：
 
@@ -62,14 +64,14 @@ isProject: false
 
 - [ ] 是否正确创建 `REQ-002.md` 文件（或其他编号）
 - [ ] 需求文档是否包含：概述、目标、用户故事、功能需求、验收检查清单
-- [ ] 是否正确更新 `.workflow/requirements/INDEX.md`
+- [ ] 是否正确更新 `.cursor/.lingxi/requirements/INDEX.md`
 - [ ] INDEX 状态是否正确（Status = in-progress, Current Phase = req）
 - [ ] 是否输出循环选项菜单（A/B/C/D）
 
 **预期产物**：
 
-- `.workflow/requirements/in-progress/REQ-002.md`
-- `.workflow/requirements/INDEX.md`（已更新）
+- `.cursor/.lingxi/requirements/in-progress/REQ-002.md`
+- `.cursor/.lingxi/requirements/INDEX.md`（已更新）
 
 ### 阶段 2: plan（计划制定）
 
@@ -91,8 +93,8 @@ isProject: false
 
 **预期产物**：
 
-- `.workflow/requirements/in-progress/REQ-002.plan.md`
-- `.workflow/requirements/INDEX.md`（已更新）
+- `.cursor/.lingxi/requirements/in-progress/REQ-002.plan.md`
+- `.cursor/.lingxi/requirements/INDEX.md`（已更新）
 
 ### 阶段 3: audit（技术审查）
 
@@ -127,7 +129,7 @@ isProject: false
 
 - `scripts/validate-index.js`（或类似路径）
 - `scripts/__tests__/validate-index.test.js`（测试文件）
-- `.workflow/requirements/in-progress/REQ-002.plan.md`（已更新）
+- `.cursor/.lingxi/requirements/in-progress/REQ-002.plan.md`（已更新）
 
 ### 阶段 5: review（多维度审查）
 
@@ -149,9 +151,9 @@ isProject: false
 
 **预期产物**：
 
-- `.workflow/requirements/in-progress/REQ-002.review.md`
-- `.workflow/requirements/in-progress/REQ-002.plan.md`（Blockers/High 问题已回写）
-- `.workflow/requirements/INDEX.md`（已更新）
+- `.cursor/.lingxi/requirements/in-progress/REQ-002.review.md`
+- `.cursor/.lingxi/requirements/in-progress/REQ-002.plan.md`（Blockers/High 问题已回写）
+- `.cursor/.lingxi/requirements/INDEX.md`（已更新）
 
 ### 阶段 6: archive（归档）
 
@@ -164,10 +166,10 @@ isProject: false
 
 **预期产物**：
 
-- `.workflow/requirements/completed/REQ-002.md`
-- `.workflow/requirements/completed/REQ-002.plan.md`
-- `.workflow/requirements/completed/REQ-002.review.md`
-- `.workflow/requirements/INDEX.md`（Links 已更新为 completed/ 路径，状态已更新）
+- `.cursor/.lingxi/requirements/completed/REQ-002.md`
+- `.cursor/.lingxi/requirements/completed/REQ-002.plan.md`
+- `.cursor/.lingxi/requirements/completed/REQ-002.review.md`
+- `.cursor/.lingxi/requirements/INDEX.md`（Links 已更新为 completed/ 路径，状态已更新）
 
 ## 辅助机制验证
 
@@ -191,7 +193,7 @@ isProject: false
 
 脚本应支持：
 
-1. 读取 `.workflow/requirements/INDEX.md` 文件
+1. 读取 `.cursor/.lingxi/requirements/INDEX.md` 文件
 2. 解析表头和表格行
 3. 验证表头格式（7 个字段）
 4. 验证每行的 ID 格式（REQ-xxx）

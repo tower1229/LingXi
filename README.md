@@ -1,6 +1,6 @@
-# cursor-workflow（灵犀）
+# LíngXī（灵犀）
 
-为创造者打造 AI 时代的专属法宝。
+基于 Cursor 的 Development Workflow
 
 ---
 
@@ -24,85 +24,71 @@
 
 ---
 
-## What（我们做了什么）
+## What（实现）
 
-- **极简入口**：
-- **可伸缩工作流**：
-- **质量资产化**：持续沉淀过程产物，实时提取质量标准（requirements / experience / rules / skills / hooks）
-- **知识治理体系**：每次新增经验都会主动治理，经过合并/取代/去噪，让经验库始终保鲜；稳定规则可定义为 rules
-- **人工门控**：关键阶段推进与关键写入都需要显式确认，边界清晰、责任可追溯
-- **上下文运营**：指针优先、按需展开；并按场景触发加载相关经验与提醒，让上下文“少而准”
-- **显式沉淀入口**：用 `/remember` 随时把经验写入系统（不依赖某个 REQ），把“刚学到的”立刻变成可复用资产
-- **开箱即用**：提供跨平台安装脚本，一键将灵犀安装到项目；用 `/init` 初始化 workflow
-
+- **可伸缩工作流**：可组合、可并行的任务系统，兼顾工程严谨与轻便快捷
+- **质量资产化**：过程产物、经验库、规则库自动沉淀，越用越聪明，越用越懂你
+- **知识整合**：基于大模型自然语言理解，实现质量资产主动治理，让知识始终保鲜
+- **人工门控**：灵犀始终遵从创造者的指引，相信你拥有真正的判断力、品味和责任感
+- **上下文运营**：智能匹配相关经验，让模型聚焦关键信息，提高输出质量
+- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中落地 LingXi Workflow
 ---
 
-## 使用（安装与快速开始）
+## 安装与快速开始
 
 ### 安装
 
-从 GitHub 下载并安装到当前项目，无需克隆仓库。
+#### 新项目：使用 LingXi 模板
+
+如果您要创建一个新项目，推荐直接基于 LíngXī [创建 GitHub 仓库 ⇗](https://github.com/new?template_name=LingXi&template_owner=tower1229)。
+
+或者，直接到 [LingXi repository](https://github.com/tower1229/LingXi) 下载源码作为本地开发目录。
+
+
+#### 现有项目：一键安装
+
+如果您要在已有项目中集成 LíngXī，可以使用远程安装脚本，无需克隆仓库。
 
 **Linux/macOS/Git Bash**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install-remote.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
 ```
 
 **Windows PowerShell**
 
 ```powershell
-irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
 如果 PowerShell 执行失败（执行策略限制），请先运行：
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-irm https://raw.githubusercontent.com/tower1229/cursor-workflow/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
-
-> **注意**：安装脚本会在当前项目目录创建 `.cursor/` 和 `.workflow/` 目录结构。如果这些目录已存在，脚本会提示是否覆盖。
 
 ---
 
 ### 快速开始
 
-#### 1) 开始一个需求
+#### 核心工作流命令
 
-在 Cursor 输入：
+按生命周期顺序使用以下命令完成开发任务：
 
-```
-/flow <一句话需求描述>
-```
+| 命令 | 用法 | 说明 |
+|------|------|------|
+| `/req` | `/req <需求描述>`<br><br>**示例**：<br>`/req 添加用户登录功能，支持邮箱和手机号登录`<br>`/req 优化首页加载性能，目标首屏时间 < 1s` | **创建造物计划**<br><br>自动生成任务编号（001, 002...）和标题，创建造物计划文档：<br>`.cursor/.lingxi/requirements/001.req.<标题>.md`<br><br>这是整个流程的核心文档，包含需求提纯、技术方案等。 |
+| `/req-review` | `/req-review 001` | **审查 req 文档（可选）**<br><br>对 req 文档展开多维度审查，用于辅助提升 req 文档质量。可省略，也可以多次执行。<br><br>不产出文件，仅输出审查结果和建议到对话中。 |
+| `/plan` | `/plan 001` | **任务规划（可选）**<br><br>基于 req 文档生成任务规划文档和测试用例文档。适用于复杂任务，简单任务可跳过。<br><br>**提示**：可以配合 Cursor 的 plan 模式使用。|
+| `/build` | `/build 001` | **执行构建（可选）**<br><br>支持两种模式：<br>- **Plan-driven**：有 plan 文档时，按计划结构化执行（推荐）<br>- **Agent-driven**：无 plan 文档时，Agent 基于 req 自行决策执行 <br><br>**提示**：当使用 plan 模式时，也可以使用规划模式内置的 build 功能，从而跳过灵犀的 `/build` 命令。|
+| `/review` | `/review 001` | **审查交付**<br><br>自动进行文档一致性、安全性、性能等多维度审查，生成审查报告。 |
 
-也可以继续已有需求或自动查找进行中的任务：
+#### 辅助工具
 
-```
-/flow REQ-xxx    # 继续指定需求
-/flow            # 自动查找并继续进行中的任务
-```
+| 命令 | 用法 | 说明 |
+|------|------|------|
+| `/remember` | `/remember <经验描述>`<br><br>**示例**：<br>`/remember 用户是唯一拥有价值判断能力的人`<br>`/remember 吸取刚才这个bug的经验`<br>`/remember 钱包选择问题` | **沉淀经验（随时可用）**<br><br>无需依赖任务编号，可随时沉淀经验到经验库或规则库。<br><br>**使用场景**：<br>- **直接经验表达**：直接陈述经验/原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
+| `/init` | `/init` | **初始化项目（首次使用）**<br><br>引导式收集项目信息（技术栈、常用模式、开发规则等），建立项目初始经验库。建议首次在现有项目中使用 LingXi 时运行。 |
 
-#### 2) 沉淀经验
 
-使用 `/remember` 命令随时沉淀经验，无需依赖 REQ-xxx：
-
-```
-/remember 用户是唯一拥有价值判断能力的人
-/remember 吸取刚才这个bug的经验
-/remember 钱包选择问题
-```
-
-**使用场景**：
-
-- **直接经验表达**：直接陈述经验/原则/判断
-- **历史提取**：从对话历史中提取刚解决的问题/踩的坑
-- **提示词定位**：提供关键词帮助定位要提取的内容
-
-## 更多文档（维护者入口）
-
-- 文档总览：[docs/00-README.md](docs/00-README.md)
-- Why/How（归档）：[docs/01-concepts/why-how.md](docs/01-concepts/why-how.md)
-- 价值观 SSoT：[docs/01-concepts/lingxi-charter.md](docs/01-concepts/lingxi-charter.md)
-- 分层映射（价值观 → 设计原则 → 工程手段）：[docs/01-concepts/principle-ladder.md](docs/01-concepts/principle-ladder.md)
-- 设计原则与硬约束：[docs/01-concepts/key-principles.md](docs/01-concepts/key-principles.md)

@@ -1,3 +1,5 @@
+<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+
 ---
 name: Documentation System AI Native Refactoring
 overview: 基于AI native作为核心原则之一，对文档系统进行完整重构，包括结构重组、内容规划、编写规范制定和现有文档改写，确保文档系统充分体现AI native设计原则。
@@ -82,7 +84,7 @@ isProject: false
 
 **参考**：
 
-- [AI Native 设计原则](../../.workflow/context/experience/ai-native-design.md)
+- [AI Native 设计原则](../../.cursor/.lingxi/context/experience/ai-native-design.md)
 - [各 Skills 实现](../03-implementation/skills/)
 ```
 
@@ -92,7 +94,7 @@ isProject: false
 
 **内容**：
 
-- 从`.workflow/context/experience/ai-native-design.md`迁移并扩展
+- 从`.cursor/.lingxi/context/experience/ai-native-design.md`迁移并扩展
 - 增加更多设计示例和反模式
 - 增加文档编写中的应用指南
 

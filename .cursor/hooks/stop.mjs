@@ -20,7 +20,7 @@ function parseIndexRow(line) {
 }
 
 async function archiveCompletedRequirements(projectRoot) {
-  const indexPath = path.join(projectRoot, ".workflow/requirements/INDEX.md");
+  const indexPath = path.join(projectRoot, ".cursor/.lingxi/requirements/INDEX.md");
   let raw;
   try {
     raw = await fs.readFile(indexPath, "utf8");
@@ -28,8 +28,8 @@ async function archiveCompletedRequirements(projectRoot) {
     return;
   }
 
-  const inProgressDir = path.join(projectRoot, ".workflow/requirements/in-progress");
-  const completedDir = path.join(projectRoot, ".workflow/requirements/completed");
+  const inProgressDir = path.join(projectRoot, ".cursor/.lingxi/requirements/in-progress");
+  const completedDir = path.join(projectRoot, ".cursor/.lingxi/requirements/completed");
   await fs.mkdir(completedDir, { recursive: true });
 
   const lines = raw.split(/\r?\n/);
@@ -56,12 +56,12 @@ async function archiveCompletedRequirements(projectRoot) {
     // Keep INDEX links consistent with archived location.
     const linksUpdated = row.links
       .replaceAll(
-        `.workflow/requirements/in-progress/${row.id}`,
-        `.workflow/requirements/completed/${row.id}`,
+        `.cursor/.lingxi/requirements/in-progress/${row.id}`,
+        `.cursor/.lingxi/requirements/completed/${row.id}`,
       )
       .replaceAll(
-        `.workflow\\requirements\\in-progress\\${row.id}`,
-        `.workflow\\requirements\\completed\\${row.id}`,
+        `.cursor\\.lingxi\\requirements\\in-progress\\${row.id}`,
+        `.cursor\\.lingxi\\requirements\\completed\\${row.id}`,
       );
 
     if (linksUpdated !== row.links) {
@@ -79,7 +79,7 @@ async function archiveCompletedRequirements(projectRoot) {
 async function readPendingCandidates(projectRoot) {
   const pendingFile = path.join(
     projectRoot,
-    ".workflow/context/session/pending-compounding-candidates.json",
+    ".cursor/.lingxi/context/session/pending-compounding-candidates.json",
   );
   try {
     const raw = await fs.readFile(pendingFile, "utf8");
@@ -92,7 +92,7 @@ async function readPendingCandidates(projectRoot) {
 function buildFollowupMessage(candidates) {
   const lines = candidates.map((c, i) => `${i + 1}. ${c.summary}`);
   return [
-    '检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.workflow/context/experience/）。',
+    '检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.cursor/.lingxi/context/experience/）。',
     "",
     "候选列表：",
     ...lines,
@@ -101,7 +101,7 @@ function buildFollowupMessage(candidates) {
     "- `1,3` 或 `1 3`：选择第 1 和第 3 个候选",
     "- `全部` 或 `all`：选择所有候选",
     "",
-    "约束：在你确认前，不得写入 .workflow/context/experience/。",
+    "约束：在你确认前，不得写入 .cursor/.lingxi/context/experience/。",
   ].join("\n");
 }
 

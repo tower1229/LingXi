@@ -1,0 +1,104 @@
+{
+  "commands": [
+    "commands/req.md",
+    "commands/req-review.md",
+    "commands/plan.md",
+    "commands/build.md",
+    "commands/review.md",
+    "commands/init.md",
+    "commands/remember.md"
+  ],
+  "rules": {
+    "directories": [
+      "rules/qs-always-general"
+    ],
+    "files": [
+      "rules/qs-always-general/RULE.md",
+      "rules/quality-standards-index.md",
+      "rules/quality-standards-schema.md"
+    ]
+  },
+  "hooks": {
+    "files": [
+      "hooks.json",
+      "hooks/_hook-utils.mjs",
+      "hooks/audit-after-shell-execution.mjs",
+      "hooks/stop.mjs"
+    ]
+  },
+  "skills": [
+    "skills/build-executor/SKILL.md",
+    "skills/candidate-evaluator/SKILL.md",
+    "skills/experience-capture/SKILL.md",
+    "skills/experience-curator/SKILL.md",
+    "skills/experience-depositor/SKILL.md",
+    "skills/experience-index/SKILL.md",
+    "skills/plan-executor/SKILL.md",
+    "skills/req-executor/SKILL.md",
+    "skills/review-executor/SKILL.md",
+    "skills/rules-creator/SKILL.md",
+    "skills/service-loader/SKILL.md"
+  ],
+  "agents": {
+    "files": [
+      "agents/experience-collector.md",
+      "agents/experience-depositor.md",
+      "agents/reviewer-doc-consistency.md",
+      "agents/reviewer-performance.md",
+      "agents/reviewer-security.md"
+    ]
+  },
+  "references": {
+    "experience-curator": [
+      "skills/experience-curator/references/experience-governance.md"
+    ],
+    "experience-capture": [
+      "skills/experience-capture/references/req-triggers.md",
+      "skills/experience-capture/references/plan-triggers.md",
+      "skills/experience-capture/references/build-triggers.md",
+      "skills/experience-capture/references/review-triggers.md"
+    ],
+    "workflow-optimizer": [
+      "skills/workflow-optimizer/references/workflow-vision.md",
+      "skills/workflow-optimizer/references/commands-guide.md",
+      "skills/workflow-optimizer/references/rules-guide.md",
+      "skills/workflow-optimizer/references/skills-guide.md",
+      "skills/workflow-optimizer/references/hooks-guide.md",
+      "skills/workflow-optimizer/references/subagents-guide.md",
+      "skills/workflow-optimizer/references/engineering-practices.md",
+      "skills/workflow-optimizer/references/optimization-checklist.md"
+    ],
+    "write-doc": [
+      "skills/write-doc/references/writing-style.md"
+    ],
+    "skill-creator": [
+      "skills/skill-creator/references/workflows.md",
+      "skills/skill-creator/references/output-patterns.md"
+    ],
+    "agents": [
+      "agents/references/noise-filter.md"
+    ]
+  },
+  "workflowDirectories": [
+    ".cursor/.lingxi/requirements",
+    ".cursor/.lingxi/context/business",
+    ".cursor/.lingxi/context/business/references",
+    ".cursor/.lingxi/context/tech/services",
+    ".cursor/.lingxi/context/experience",
+    ".cursor/.lingxi/context/session",
+    ".cursor/.lingxi/workspace"
+  ],
+  "workflowTemplateFiles": [
+    ".cursor/.lingxi/context/business/references/business-context-template.md"
+  ],
+  "workflowIndexFiles": [
+    ".cursor/.lingxi/context/experience/INDEX.md"
+  ],
+  "gitignoreEntries": [
+    "# Local workspace for temp code clones, generated artifacts, etc.",
+    ".cursor/.lingxi/workspace/",
+    "",
+    "# Session-level context (ephemeral, not a knowledge base)",
+    ".cursor/.lingxi/context/session/"
+  ]
+}
