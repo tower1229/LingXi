@@ -338,7 +338,6 @@ done < <(get_json_array "commands")
 success "已下载 commands ($command_count 个文件)"
 
 # 下载 rules 文件（项目级质量准则）
-# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
 info "下载 rules..."
 
 # 下载规则文件
