@@ -11,9 +11,9 @@
 |------|------|------------|
 | Always | 1 | ~30 行（每次对话） |
 | File-scoped | 0 | 按需加载 |
-| Intelligent | 1 | 按需加载 |
+| Intelligent | 0 | 按需加载 |
 | Manual | 0 | 显式引用 |
-| **合计** | **2** | - |
+| **合计** | **1** | - |
 
 ---
 
@@ -22,7 +22,7 @@
 | 规则 | 类型 | Scope | 准则数 | 最后更新 |
 |------|------|-------|--------|----------|
 | qs-always-general | always | general | 5 | 2026-01-13 |
-| qs-i-workflow | i | workflow | 1 | 2025-01-14 |
+
 
 ---
 
@@ -35,7 +35,6 @@
 | Fail Fast 尽早报错 | qs-always-general | 迁移自 development-specifications | 2026-01-13 |
 | 完整实现禁止占位 | qs-always-general | 迁移自 development-specifications | 2026-01-13 |
 | 复用优先全局搜索 | qs-always-general | 迁移自 development-specifications | 2026-01-13 |
-| 设计 workflow 功能时优先使用自然语言描述而非硬编码规则匹配 | qs-i-workflow | 经验 ai-native-design | 2025-01-14 |
 
 ---
 
@@ -47,6 +46,5 @@
 | 2026-01-13 | 架构调整 | - | workflow 工具规则迁移到 AGENTS.md（根目录和嵌套），rules 目录仅用于项目级质量准则 |
 | 2026-01-XX | 架构调整 | - | 移除 AGENTS.md，workflow 工具约束已在 Skills/Commands 中实现，rules 目录仅用于项目级质量准则 |
 | 2026-01-13 | 简化初始规则 | - | 移除 security 相关规则，workflow 只默认提供 qs-always-general 作为最基本的初始规则 |
-| 2025-01-14 | 创建 | qs-i-workflow | AI Native 设计原则：优先使用自然语言描述而非硬编码规则（仅用于本项目开发，不安装到用户项目） |
 | 2025-01-14 | 流程重构 | - | 统一质量标准沉淀机制：放弃"经验"与"质量标准"的概念区分，用户在沉淀时自主选择存储目标（经验库或规则库），AI 推荐规则应用方式，降低自动化判断的不可靠性 |
 | 2026-01-19 | 格式迁移 | - | 规则文件格式迁移到 Cursor 标准 MDC 格式：从目录结构（qs-{type}-{scope}/RULE.md）迁移到扁平化结构（qs-{type}-{scope}.mdc），确保规则能被 Cursor 正确加载 |
