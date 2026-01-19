@@ -4,19 +4,19 @@ overview: 基于 Cursor Agent Browser 实现 E2E 测试 subagent，使用官方�
 todos:
   - id: create-e2e-subagent
     content: 创建 reviewer-e2e.md subagent 文件，实现基于 @browser + 自然语言的 E2E 测试执行逻辑
-    status: pending
+    status: completed
   - id: update-review-executor-semantic
     content: 在 review-executor Skill 中增加 E2E 测试维度的语义判断逻辑（步骤 2.4）
-    status: pending
+    status: completed
   - id: update-review-executor-call
     content: 在 review-executor Skill 中增加调用 reviewer-e2e subagent 的逻辑（步骤 7.4）
-    status: pending
+    status: completed
   - id: update-review-template
     content: 更新 Review 文档模板，增加 E2E 测试审查部分和测试执行结果表格
-    status: pending
+    status: completed
   - id: update-testcase-template
     content: 扩展 testcase 文档模板，增加端到端测试用例部分（可选，阶段 3）
-    status: pending
+    status: completed
 isProject: false
 ---
 
