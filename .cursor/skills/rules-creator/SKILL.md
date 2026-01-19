@@ -24,16 +24,47 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 
 ## Instructions
 
-### 0) 检查调用来源（新增）
+### 0) 检查调用来源
 
 **如果从 experience-depositor 调用**（已提供预处理配置）：
-- 跳过步骤 1-2（类型和范围已确定）
+- 跳过步骤 0.5、1-2（需求收集、类型和范围已确定）
 - 直接使用预处理配置（type/scope/globs/description）
 - 简化交互确认（配置已在上一步确认）
 - 从步骤 3 开始执行
 
 **如果是独立调用**（用户直接创建规则）：
 - 正常执行所有步骤
+
+### 0.5) 需求收集（独立调用时）
+
+**核心原则**：从上下文推断优先，避免冗余提问。
+
+#### 1. 从上下文推断（优先）
+
+分析对话历史，提取已讨论的信息：
+- **Purpose**：规则要解决什么问题？要约束或指导什么？
+- **Scope**：应该应用到哪些文件或场景？
+- **File patterns**：如果是文件相关，具体的 globs 模式是什么？
+
+如果上下文已提供完整信息，直接使用，不重复提问。
+
+#### 2. 缺失信息收集（使用 AskQuestion tool）
+
+如果未指定 scope，询问：
+- "Should this rule always apply, or only when working with specific files?"
+
+如果提到特定文件但未提供 globs，询问：
+- "Which file patterns should this rule apply to?" (e.g., `**/*.ts`, `backend/**/*.py`)
+
+**重要**：必须明确文件模式，不能模糊。如果用户回答模糊，继续追问直到获得具体的 globs 模式。
+
+#### 3. 验证 globs 配置（File-scoped 类型）
+
+如果确定为 File-scoped 类型：
+1. 先分析项目结构（使用 `list_dir` 或 `glob_file_search`）
+2. 验证 globs 模式是否匹配实际文件
+3. 如果 globs 不匹配，提示用户并提供建议
+4. 如果匹配到过多无关文件，提示用户缩小范围
 
 ### 1) 确定规则类型（Type）[核心]
 
@@ -85,7 +116,9 @@ description: 此 Skill 用于创建或更新 Cursor Rules（qs-* 质量准则）
 
 ### 4) 配置 Frontmatter
 
-根据类型配置正确的 frontmatter：
+> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
+
+根据类型配置 frontmatter：
 
 **Always 类型**：
 ```yaml
@@ -95,8 +128,6 @@ alwaysApply: true
 created: "{created_date}"
 ---
 ```
-
-> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
 
 **File-scoped 类型**：
 ```yaml
@@ -108,11 +139,7 @@ alwaysApply: false
 created: "{created_date}"
 ---
 ```
-
-> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
-
-> ⚠️ globs 必须根据项目实际目录结构配置，不要套用固定模式。
-> 先分析项目结构，确定相关文件的实际路径。
+> ⚠️ globs 必须根据项目实际目录结构配置，先分析项目结构确定实际路径。
 
 **Intelligent 类型**：
 ```yaml
@@ -122,10 +149,7 @@ alwaysApply: false
 created: "{created_date}"
 ---
 ```
-
-> ⚠️ description 必须用**英文**描述规则**提供什么**，而不是触发条件。
-> 好的 description：`"Security guidelines for authentication and authorization"`
-> 差的 description：`"当涉及安全问题时"`
+> ⚠️ description 用**英文**描述规则**提供什么**，而非触发条件。好的：`"Security guidelines for authentication"`，差的：`"当涉及安全问题时"`
 
 **Manual 类型**：
 ```yaml
@@ -136,95 +160,19 @@ created: "{created_date}"
 ---
 ```
 
-> ⚠️ **MDC 格式要求**：所有规则文件必须包含 `description` 字段（Cursor MDC 格式必需）。
-
-> **注意**：如果 Cursor 不支持 frontmatter 中的 `created` 字段（解析错误），则使用方案B：在文件末尾添加 `Created: {created_date}` 字段（与现有的 `Source:` 和 `Adopted:` 保持一致）。
+> **注意**：如果 Cursor 不支持 frontmatter 中的 `created` 字段，则在文件末尾添加 `Created: {created_date}`。
 
 ### 5) 应用规则模板
 
-#### Always 模板
+**Always 模板**：`# {Scope} Redlines` → `## Prohibited` / `## Required`
 
-```markdown
----
-description: "{规则描述，用英文描述规则提供什么}"
-alwaysApply: true
-created: "{created_date}"
----
+**File-scoped 模板**：`# {Scope} Standards` → `## {Section}`
 
-# {Scope} Redlines
+**Intelligent 模板**：`# {Scope} Guidelines` → `## {Section}`
 
-## Prohibited
-- {禁止的行为}
+**Manual 模板**：`# {Checklist Name}` → `> Usage: @qs-m-{scope}` → `## {Check Dimension}` → `- [ ] {检查项}`
 
-## Required
-- {必须的行为}
-
----
-Source: {来源经验或"手动创建"}
-Created: {created_date}
-```
-
-#### File-scoped 模板
-
-```markdown
----
-description: "{规则描述，用英文描述规则提供什么}"
-globs:
-  - "{glob1}"
-  - "{glob2}"
-alwaysApply: false
-created: "{created_date}"
----
-
-# {Scope} Standards
-
-## {Section 1}
-- {准则内容}
-
----
-Source: {来源经验}
-Created: {created_date}
-```
-
-#### Intelligent 模板
-
-```markdown
----
-description: "This rule provides {domain} standards for {specific areas}"
-alwaysApply: false
-created: "{created_date}"
----
-
-# {Scope} Guidelines
-
-## {Section 1}
-- {准则内容}
-
----
-Source: {来源经验}
-Created: {created_date}
-```
-
-#### Manual 模板
-
-```markdown
----
-description: "{规则描述，用英文描述规则提供什么}"
-alwaysApply: false
-created: "{created_date}"
----
-
-# {Checklist Name}
-
-> Usage: @qs-m-{scope}
-
-## {Check Dimension 1}
-- [ ] {检查项}
-
----
-Source: {来源经验}
-Created: {created_date}
-```
+所有模板需包含：frontmatter（见步骤 4）+ 标题 + 内容 + `---` + `Source: {来源}` + `Created: {created_date}`
 
 ### 6) 更新索引
 
@@ -240,37 +188,44 @@ Created: {created_date}
 
 ---
 
-## Best Practices（来自 Cursor 官方文档）
+## Best Practices
 
 > 参考：https://cursor.com/cn/docs/context/rules
 
-### 规则编写原则
+### 核心原则
 
-1. **聚焦、可操作、范围明确**
-   - 每条规则解决一类问题，不要面面俱到
-   
-2. **控制在 500 行以内**
-   - 超过 500 行应拆分为多个可组合的规则
-   
-3. **提供具体示例或参考文件**
-   - 使用 `@filename.ts` 引用模板文件
-   - 用代码示例说明而不是抽象描述
+1. **保持简洁（Keep Rules Concise）**
+   - **Under 50 lines**：规则应该简洁明了，控制在 50 行以内
+   - **One concern per rule**：每条规则只解决一类问题
+   - 超过 50 行应拆分为多个可组合的规则
 
-4. **避免模糊指导**
+2. **可操作性（Actionable）**
    - 像写清晰的内部文档那样写规则
+   - 提供具体示例，而不是抽象描述
    - 差："写好的代码"
    - 好："函数不超过 50 行，单一职责"
 
-5. **复用已有规则**
+3. **具体示例（Concrete Examples）**
+   - 使用代码示例说明正确和错误的做法
+   - 使用 `@filename.ts` 引用模板文件
+   - 提供可复制的代码片段
+
+4. **复用已有规则**
    - 优先扩展现有规则而不是创建新规则
 
-### Always 类型约束
+### Always 类型特殊约束
 
-> 约束：Always 规则会占用每次对话的上下文，必须极精炼
+> ⚠️ **重要**：Always 规则会占用每次对话的上下文，必须极精炼
 
-- 每个 Always 规则 < 50 行
-- 所有 Always 规则总计 < 150 行
-- 只放"红线/底线"类内容
+- **每个 Always 规则 < 50 行**（严格限制）
+- **所有 Always 规则总计 < 150 行**
+- **只放"红线/底线"类内容**（安全、合规、核心原则）
+
+### 规则长度检查
+
+创建规则时自动检查：
+- Always 类型：如果超过 50 行，警告并建议拆分
+- 其他类型：如果超过 500 行，警告并建议拆分
 
 ### Intelligent 类型 description 写法
 
@@ -288,16 +243,12 @@ description 用于让 AI 判断规则是否相关，应当：
 
 ### File-scoped 类型 globs 配置
 
-globs 必须根据项目实际目录结构配置：
+1. **分析项目结构**：使用 `list_dir` 或 `glob_file_search` 确定实际路径
+2. **确定 globs 模式**：根据实际目录结构配置，不套用固定模式
+3. **验证匹配**：使用 `glob_file_search` 验证 globs 是否匹配实际文件
+4. **提供建议**（可选）：基于项目结构提供建议，展示匹配文件列表
 
-1. 先分析项目结构（`ls` / `tree`）
-2. 确定相关文件的实际路径模式
-3. 不要套用固定模式
-
-示例（需根据实际调整）：
-- 前端组件：`**/components/**/*.tsx`、`src/ui/**`
-- 后端 API：`**/api/**`、`server/routes/**`
-- 数据库：`**/*.sql`、`prisma/**`
+示例（需根据实际调整）：`**/components/**/*.tsx`、`**/api/**/*.ts`、`**/*.sql`
 
 ---
 
@@ -312,12 +263,15 @@ globs 必须根据项目实际目录结构配置：
 
 ## 交互确认
 
-**如果从 experience-depositor 调用**（预处理配置已确认）：
-- 跳过交互确认，直接执行创建流程
+### 如果从 experience-depositor 调用
+
+- 跳过交互确认（配置已在上一步确认）
+- 直接执行创建流程
 - 输出创建结果摘要
 
-**如果是独立调用**（用户直接创建规则）：
-创建新规则前，必须向用户确认：
+### 如果是独立调用
+
+**步骤 1：展示配置预览**
 
 ```
 准备创建质量准则规则：
@@ -325,11 +279,63 @@ globs 必须根据项目实际目录结构配置：
 目标规则：qs-{type}-{scope}
 状态：{已存在/尚未创建}
 
+配置预览：
+- Type: {type} ({type 说明})
+- Scope: {scope} ({scope 说明})
+- Description: {description}
+- Globs: {globs 或 "N/A (Always)"}
+- 规则长度预估: {预估行数} 行
+
 将执行：
 1. {创建/更新} .cursor/rules/qs-{type}-{scope}.mdc
-2. 配置 {frontmatter 说明}（包含必需的 description 字段）
-3. 插入准则内容
+2. 配置 frontmatter（{frontmatter 预览}）
+3. {插入新准则/追加到现有规则}
 4. 更新 .cursor/rules/quality-standards-index.md
+5. 更新 .cursor/rules/quality-standards-schema.md
 
 确认？ A) 确认 / B) 调整 / C) 取消
 ```
+
+**步骤 2：Globs 验证**（File-scoped 类型）
+
+如果用户确认，且类型为 File-scoped：
+1. 验证 globs 模式是否匹配项目中的实际文件
+2. 如果匹配失败，提示：
+   ```
+   ⚠️ 警告：globs 模式 "{pattern}" 未匹配到任何文件
+   
+   建议：
+   - 检查项目结构
+   - 调整 globs 模式
+   - 或选择其他类型（如 Intelligent）
+   
+   继续创建？ Y/N
+   ```
+
+---
+
+## Checklist（创建后验证）
+
+创建规则后，自动检查：
+
+- [ ] 文件是 `.mdc` 格式，位于 `.cursor/rules/`
+- [ ] Frontmatter 配置正确（description 必填）
+- [ ] Always 类型：内容 < 50 行
+- [ ] 其他类型：内容 < 500 行
+- [ ] File-scoped 类型：globs 已验证匹配实际文件
+- [ ] Intelligent 类型：description 用英文描述"提供什么"
+- [ ] 包含具体示例（代码片段或参考文件）
+- [ ] 索引文件已更新（quality-standards-index.md）
+- [ ] Schema 文件已更新（quality-standards-schema.md）
+
+如果检查失败，输出警告并提示修复。
+
+---
+
+## 示例规则
+
+**File-scoped**：`qs-fs-typescript.mdc` - TypeScript 标准（globs: `**/*.ts`, `**/*.tsx`），包含错误处理和类型安全示例
+
+**Always**：`qs-always-security.mdc` - 安全红线（alwaysApply: true），包含 Prohibited/Required 两部分
+
+参考现有规则：`.cursor/rules/qs-always-general.mdc`

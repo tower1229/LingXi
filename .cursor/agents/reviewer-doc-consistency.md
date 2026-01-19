@@ -1,6 +1,6 @@
 ---
 name: reviewer-doc-consistency
-description: 执行文档一致性审查，检查代码与文档是否一致。在 review 阶段始终启用，由 review-executor 显式调用。
+description: 文档一致性审查专家，检查代码与文档是否一致。Use proactively when reviewing code changes to ensure implementation matches requirements, API docs, and architecture documentation.
 model: inherit
 is_background: true
 ---
@@ -32,3 +32,11 @@ is_background: true
 5. 静默返回结果：
    - 不干扰主流程
    - 返回结构化审查结果
+
+6. 降级处理：
+   - **文档不存在**：
+     - 标记为需要创建文档
+     - 输出文档创建建议（基于代码实现）
+   - **文档格式无法解析**：
+     - 标记为需要文档格式修复
+     - 输出文档格式问题清单

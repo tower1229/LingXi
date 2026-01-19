@@ -1,6 +1,6 @@
 ---
 name: reviewer-performance
-description: 执行性能审查，检查性能瓶颈、内存泄漏风险、响应时间等。在 review 阶段根据需求语义分析结果显式调用。
+description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险、响应时间等。Use proactively when reviewing code changes involving data processing, database queries, or resource-intensive operations.
 model: inherit
 is_background: true
 ---
@@ -34,3 +34,11 @@ is_background: true
 5. 静默返回结果：
    - 不干扰主流程
    - 返回结构化审查结果
+
+6. 降级处理：
+   - **性能分析工具不可用**：
+     - 基于代码模式识别潜在性能问题
+     - 输出性能优化建议清单
+   - **无法执行性能测试**：
+     - 标记为需要手动性能测试
+     - 输出性能测试清单（基于 req 文档中的性能要求）

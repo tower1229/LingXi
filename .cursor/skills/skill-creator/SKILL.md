@@ -1,356 +1,495 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
-license: Complete terms in LICENSE.txt
+description: Guides users through creating effective Agent Skills for Cursor. Use when the user wants to create, write, or author a new skill, or asks about skill structure, best practices, or SKILL.md format.
+---
+# Creating Skills in Cursor
+
+This skill guides you through creating effective Agent Skills for Cursor. Skills are markdown files that teach the agent how to perform specific tasks: reviewing PRs using team standards, generating commit messages in a preferred format, querying database schemas, or any specialized workflow.
+
+## Before You Begin: Gather Requirements
+
+Before creating a skill, gather essential information from the user about:
+
+1. **Purpose and scope**: What specific task or workflow should this skill help with?
+2. **Target location**: Should this be a personal skill (~/.cursor/skills/) or project skill (.cursor/skills/)?
+3. **Trigger scenarios**: When should the agent automatically apply this skill?
+4. **Key domain knowledge**: What specialized information does the agent need that it wouldn't already know?
+5. **Output format preferences**: Are there specific templates, formats, or styles required?
+6. **Existing patterns**: Are there existing examples or conventions to follow?
+
+### Inferring from Context
+
+If you have previous conversation context, infer the skill from what was discussed. You can create skills based on workflows, patterns, or domain knowledge that emerged in the conversation.
+
+### Gathering Additional Information
+
+If you need clarification, use the AskQuestion tool when available:
+
+```
+Example AskQuestion usage:
+- "Where should this skill be stored?" with options like ["Personal (~/.cursor/skills/)", "Project (.cursor/skills/)"]
+- "Should this skill include executable scripts?" with options like ["Yes", "No"]
+```
+
+If the AskQuestion tool is not available, ask these questions conversationally.
+
 ---
 
-# Skill Creator
+## Skill File Structure
 
-This skill provides guidance for creating effective skills.
+### Directory Layout
 
-## About Skills
-
-Skills are modular, self-contained packages that extend Claude's capabilities by providing
-specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
-domains or tasks—they transform Claude from a general-purpose agent into a specialized agent
-equipped with procedural knowledge that no model can fully possess.
-
-### What Skills Provide
-
-1. Specialized workflows - Multi-step procedures for specific domains
-2. Tool integrations - Instructions for working with specific file formats or APIs
-3. Domain expertise - Company-specific knowledge, schemas, business logic
-4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
-
-## Core Principles
-
-### Concise is Key
-
-The context window is a public good. Skills share the context window with everything else Claude needs: system prompt, conversation history, other Skills' metadata, and the actual user request.
-
-**Default assumption: Claude is already very smart.** Only add context Claude doesn't already have. Challenge each piece of information: "Does Claude really need this explanation?" and "Does this paragraph justify its token cost?"
-
-Prefer concise examples over verbose explanations.
-
-### Set Appropriate Degrees of Freedom
-
-Match the level of specificity to the task's fragility and variability:
-
-**High freedom (text-based instructions)**: Use when multiple approaches are valid, decisions depend on context, or heuristics guide the approach.
-
-**Medium freedom (pseudocode or scripts with parameters)**: Use when a preferred pattern exists, some variation is acceptable, or configuration affects behavior.
-
-**Low freedom (specific scripts, few parameters)**: Use when operations are fragile and error-prone, consistency is critical, or a specific sequence must be followed.
-
-Think of Claude as exploring a path: a narrow bridge with cliffs needs specific guardrails (low freedom), while an open field allows many routes (high freedom).
-
-### Anatomy of a Skill
-
-Every skill consists of a required SKILL.md file and optional bundled resources:
+Skills are stored as directories containing a `SKILL.md` file:
 
 ```
 skill-name/
-├── SKILL.md (required)
-│   ├── YAML frontmatter metadata (required)
-│   │   ├── name: (required)
-│   │   └── description: (required)
-│   └── Markdown instructions (required)
-└── Bundled Resources (optional)
-    ├── scripts/          - Executable code (Python/Bash/etc.)
-    ├── references/       - Documentation intended to be loaded into context as needed
-    └── assets/           - Files used in output (templates, icons, fonts, etc.)
+├── SKILL.md              # Required - main instructions
+├── reference.md          # Optional - detailed documentation
+├── examples.md           # Optional - usage examples
+└── scripts/              # Optional - utility scripts
+    ├── validate.py
+    └── helper.sh
 ```
 
-#### SKILL.md (required)
+### Storage Locations
 
-Every SKILL.md consists of:
+| Type | Path | Scope |
+|------|------|-------|
+| Personal | ~/.cursor/skills/skill-name/ | Available across all your projects |
+| Project | .cursor/skills/skill-name/ | Shared with anyone using the repository |
 
-- **Frontmatter** (YAML): Contains `name` and `description` fields. These are the only fields that Claude reads to determine when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used.
-- **Body** (Markdown): Instructions and guidance for using the skill. Only loaded AFTER the skill triggers (if at all).
+**IMPORTANT**: Never create skills in `~/.cursor/skills-cursor/`. This directory is reserved for Cursor's internal built-in skills and is managed automatically by the system.
 
-#### Bundled Resources (optional)
+### SKILL.md Structure
 
-##### Scripts (`scripts/`)
+Every skill requires a `SKILL.md` file with YAML frontmatter and markdown body:
 
-Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
+```markdown
+---
+name: your-skill-name
+description: Brief description of what this skill does and when to use it
+---
 
-- **When to include**: When the same code is being rewritten repeatedly or deterministic reliability is needed
-- **Example**: `scripts/rotate_pdf.py` for PDF rotation tasks
-- **Benefits**: Token efficient, deterministic, may be executed without loading into context
-- **Note**: Scripts may still need to be read by Claude for patching or environment-specific adjustments
+# Your Skill Name
 
-##### References (`references/`)
+## Instructions
+Clear, step-by-step guidance for the agent.
 
-Documentation and reference material intended to be loaded as needed into context to inform Claude's process and thinking.
+## Examples
+Concrete examples of using this skill.
+```
 
-- **When to include**: For documentation that Claude should reference while working
-- **Examples**: `references/finance.md` for financial schemas, `references/mnda.md` for company NDA template, `references/policies.md` for company policies, `references/api_docs.md` for API specifications
-- **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
-- **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
-- **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+### Required Metadata Fields
 
-##### Assets (`assets/`)
+| Field | Requirements | Purpose |
+|-------|--------------|---------|
+| `name` | Max 64 chars, lowercase letters/numbers/hyphens only | Unique identifier for the skill |
+| `description` | Max 1024 chars, non-empty | Helps agent decide when to apply the skill |
 
-Files not intended to be loaded into context, but rather used within the output Claude produces.
+---
 
-- **When to include**: When the skill needs files that will be used in the final output
-- **Examples**: `assets/logo.png` for brand assets, `assets/slides.pptx` for PowerPoint templates, `assets/frontend-template/` for HTML/React boilerplate, `assets/font.ttf` for typography
-- **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents that get copied or modified
-- **Benefits**: Separates output resources from documentation, enables Claude to use files without loading them into context
+## Writing Effective Descriptions
 
-#### What to Not Include in a Skill
+The description is **critical** for skill discovery. The agent uses it to decide when to apply your skill.
 
-A skill should only contain essential files that directly support its functionality. Do NOT create extraneous documentation or auxiliary files, including:
+### Description Best Practices
 
-- README.md
-- INSTALLATION_GUIDE.md
-- QUICK_REFERENCE.md
-- CHANGELOG.md
-- etc.
+1. **Write in third person** (the description is injected into the system prompt):
+   - ✅ Good: "Processes Excel files and generates reports"
+   - ❌ Avoid: "I can help you process Excel files"
+   - ❌ Avoid: "You can use this to process Excel files"
 
-The skill should only contain the information needed for an AI agent to do the job at hand. It should not contain auxilary context about the process that went into creating it, setup and testing procedures, user-facing documentation, etc. Creating additional documentation files just adds clutter and confusion.
+2. **Be specific and include trigger terms**:
+   - ✅ Good: "Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction."
+   - ❌ Vague: "Helps with documents"
 
-### Progressive Disclosure Design Principle
+3. **Include both WHAT and WHEN**:
+   - WHAT: What the skill does (specific capabilities)
+   - WHEN: When the agent should use it (trigger scenarios)
 
-Skills use a three-level loading system to manage context efficiently:
+### Description Examples
 
-1. **Metadata (name + description)** - Always in context (~100 words)
-2. **SKILL.md body** - When skill triggers (<5k words)
-3. **Bundled resources** - As needed by Claude (Unlimited because scripts can be executed without reading into context window)
+```yaml
+# PDF Processing
+description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
 
-#### Progressive Disclosure Patterns
+# Excel Analysis
+description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 
-Keep SKILL.md body to the essentials and under 500 lines to minimize context bloat. Split content into separate files when approaching this limit. When splitting out content into other files, it is very important to reference them from SKILL.md and describe clearly when to read them, to ensure the reader of the skill knows they exist and when to use them.
+# Git Commit Helper
+description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
 
-**Key principle:** When a skill supports multiple variations, frameworks, or options, keep only the core workflow and selection guidance in SKILL.md. Move variant-specific details (patterns, examples, configuration) into separate reference files.
+# Code Review
+description: Review code for quality, security, and best practices following team standards. Use when reviewing pull requests, code changes, or when the user asks for a code review.
+```
 
-**Pattern 1: High-level guide with references**
+---
+
+## Core Authoring Principles
+
+### 1. Concise is Key
+
+The context window is shared with conversation history, other skills, and requests. Every token competes for space.
+
+**Default assumption**: The agent is already very smart. Only add context it doesn't already have.
+
+Challenge each piece of information:
+- "Does the agent really need this explanation?"
+- "Can I assume the agent knows this?"
+- "Does this paragraph justify its token cost?"
+
+**Good (concise)**:
+```markdown
+## Extract PDF text
+
+Use pdfplumber for text extraction:
+
+\`\`\`python
+import pdfplumber
+
+with pdfplumber.open("file.pdf") as pdf:
+    text = pdf.pages[0].extract_text()
+\`\`\`
+```
+
+**Bad (verbose)**:
+```markdown
+## Extract PDF text
+
+PDF (Portable Document Format) files are a common file format that contains
+text, images, and other content. To extract text from a PDF, you'll need to
+use a library. There are many libraries available for PDF processing, but we
+recommend pdfplumber because it's easy to use and handles most cases well...
+```
+
+### 2. Keep SKILL.md Under 500 Lines
+
+For optimal performance, the main SKILL.md file should be concise. Use progressive disclosure for detailed content.
+
+### 3. Progressive Disclosure
+
+Put essential information in SKILL.md; detailed reference material in separate files that the agent reads only when needed.
 
 ```markdown
 # PDF Processing
 
 ## Quick start
+[Essential instructions here]
 
-Extract text with pdfplumber:
-[code example]
-
-## Advanced features
-
-- **Form filling**: See [FORMS.md](FORMS.md) for complete guide
-- **API reference**: See [REFERENCE.md](REFERENCE.md) for all methods
-- **Examples**: See [EXAMPLES.md](EXAMPLES.md) for common patterns
+## Additional resources
+- For complete API details, see [reference.md](reference.md)
+- For usage examples, see [examples.md](examples.md)
 ```
 
-Claude loads FORMS.md, REFERENCE.md, or EXAMPLES.md only when needed.
+**Keep references one level deep** - link directly from SKILL.md to reference files. Deeply nested references may result in partial reads.
 
-**Pattern 2: Domain-specific organization**
+### 4. Set Appropriate Degrees of Freedom
 
-For Skills with multiple domains, organize content by domain to avoid loading irrelevant context:
+Match specificity to the task's fragility:
 
-```
-bigquery-skill/
-├── SKILL.md (overview and navigation)
-└── reference/
-    ├── finance.md (revenue, billing metrics)
-    ├── sales.md (opportunities, pipeline)
-    ├── product.md (API usage, features)
-    └── marketing.md (campaigns, attribution)
-```
+| Freedom Level | When to Use | Example |
+|---------------|-------------|---------|
+| **High** (text instructions) | Multiple valid approaches, context-dependent | Code review guidelines |
+| **Medium** (pseudocode/templates) | Preferred pattern with acceptable variation | Report generation |
+| **Low** (specific scripts) | Fragile operations, consistency critical | Database migrations |
 
-When a user asks about sales metrics, Claude only reads sales.md.
+---
 
-Similarly, for skills supporting multiple frameworks or variants, organize by variant:
+## Common Patterns
 
-```
-cloud-deploy/
-├── SKILL.md (workflow + provider selection)
-└── references/
-    ├── aws.md (AWS deployment patterns)
-    ├── gcp.md (GCP deployment patterns)
-    └── azure.md (Azure deployment patterns)
-```
+### Template Pattern
 
-When the user chooses AWS, Claude only reads aws.md.
-
-**Pattern 3: Conditional details**
-
-Show basic content, link to advanced content:
+Provide output format templates:
 
 ```markdown
-# DOCX Processing
+## Report structure
 
-## Creating documents
+Use this template:
 
-Use docx-js for new documents. See [DOCX-JS.md](DOCX-JS.md).
+\`\`\`markdown
+# [Analysis Title]
 
-## Editing documents
+## Executive summary
+[One-paragraph overview of key findings]
 
-For simple edits, modify the XML directly.
+## Key findings
+- Finding 1 with supporting data
+- Finding 2 with supporting data
 
-**For tracked changes**: See [REDLINING.md](REDLINING.md)
-**For OOXML details**: See [OOXML.md](OOXML.md)
+## Recommendations
+1. Specific actionable recommendation
+2. Specific actionable recommendation
+\`\`\`
 ```
 
-Claude reads REDLINING.md or OOXML.md only when the user needs those features.
+### Examples Pattern
 
-**Important guidelines:**
+For skills where output quality depends on seeing examples:
 
-- **Avoid deeply nested references** - Keep references one level deep from SKILL.md. All reference files should link directly from SKILL.md.
-- **Structure longer reference files** - For files longer than 100 lines, include a table of contents at the top so Claude can see the full scope when previewing.
+```markdown
+## Commit message format
 
-## Skill Creation Process
+**Example 1:**
+Input: Added user authentication with JWT tokens
+Output:
+\`\`\`
+feat(auth): implement JWT-based authentication
 
-Skill creation involves these steps:
+Add login endpoint and token validation middleware
+\`\`\`
 
-1. Understand the skill with concrete examples
-2. Plan reusable skill contents (scripts, references, assets)
-3. Initialize the skill (run init_skill.py)
-4. Edit the skill (implement resources and write SKILL.md)
-5. Package the skill (run package_skill.py)
-6. Iterate based on real usage
+**Example 2:**
+Input: Fixed bug where dates displayed incorrectly
+Output:
+\`\`\`
+fix(reports): correct date formatting in timezone conversion
 
-Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
-
-### Step 1: Understanding the Skill with Concrete Examples
-
-Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.
-
-To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
-
-For example, when building an image-editor skill, relevant questions include:
-
-- "What functionality should the image-editor skill support? Editing, rotating, anything else?"
-- "Can you give some examples of how this skill would be used?"
-- "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
-- "What would a user say that should trigger this skill?"
-
-To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
-
-Conclude this step when there is a clear sense of the functionality the skill should support.
-
-### Step 2: Planning the Reusable Skill Contents
-
-To turn concrete examples into an effective skill, analyze each example by:
-
-1. Considering how to execute on the example from scratch
-2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
-
-Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
-
-1. Rotating a PDF requires re-writing the same code each time
-2. A `scripts/rotate_pdf.py` script would be helpful to store in the skill
-
-Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
-
-1. Writing a frontend webapp requires the same boilerplate HTML/React each time
-2. An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
-
-Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
-
-1. Querying BigQuery requires re-discovering the table schemas and relationships each time
-2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
-
-To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
-
-### Step 3: Initializing the Skill
-
-At this point, it is time to actually create the skill.
-
-Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
-
-When creating a new skill from scratch, always run the `init_skill.py` script. The script conveniently generates a new template skill directory that automatically includes everything a skill requires, making the skill creation process much more efficient and reliable.
-
-Usage:
-
-```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
+Use UTC timestamps consistently across report generation
+\`\`\`
 ```
 
-The script:
+### Workflow Pattern
 
-- Creates the skill directory at the specified path
-- Generates a SKILL.md template with proper frontmatter and TODO placeholders
-- Creates example resource directories: `scripts/`, `references/`, and `assets/`
-- Adds example files in each directory that can be customized or deleted
+Break complex operations into clear steps with checklists:
 
-After initialization, customize or remove the generated SKILL.md and example files as needed.
+```markdown
+## Form filling workflow
 
-### Step 4: Edit the Skill
+Copy this checklist and track progress:
 
-When editing the (newly-generated or existing) skill, remember that the skill is being created for another instance of Claude to use. Include information that would be beneficial and non-obvious to Claude. Consider what procedural knowledge, domain-specific details, or reusable assets would help another Claude instance execute these tasks more effectively.
+\`\`\`
+Task Progress:
+- [ ] Step 1: Analyze the form
+- [ ] Step 2: Create field mapping
+- [ ] Step 3: Validate mapping
+- [ ] Step 4: Fill the form
+- [ ] Step 5: Verify output
+\`\`\`
 
-#### Learn Proven Design Patterns
-
-Consult these helpful guides based on your skill's needs:
-
-- **Multi-step processes**: See references/workflows.md for sequential workflows and conditional logic
-- **Specific output formats or quality standards**: See references/output-patterns.md for template and example patterns
-
-These files contain established best practices for effective skill design.
-
-#### Start with Reusable Skill Contents
-
-To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
-
-Added scripts must be tested by actually running them to ensure there are no bugs and that the output matches what is expected. If there are many similar scripts, only a representative sample needs to be tested to ensure confidence that they all work while balancing time to completion.
-
-Any example files and directories not needed for the skill should be deleted. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
-
-#### Update SKILL.md
-
-**Writing Guidelines:** Always use imperative/infinitive form.
-
-##### Frontmatter
-
-Write the YAML frontmatter with `name` and `description`:
-
-- `name`: The skill name
-- `description`: This is the primary triggering mechanism for your skill, and helps Claude understand when to use the skill.
-  - Include both what the Skill does and specific triggers/contexts for when to use it.
-  - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to Claude.
-  - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
-
-Do not include any other fields in YAML frontmatter.
-
-##### Body
-
-Write instructions for using the skill and its bundled resources.
-
-### Step 5: Packaging a Skill
-
-Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
-
-```bash
-scripts/package_skill.py <path/to/skill-folder>
+**Step 1: Analyze the form**
+Run: \`python scripts/analyze_form.py input.pdf\`
+...
 ```
 
-Optional output directory specification:
+### Conditional Workflow Pattern
 
-```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
+Guide through decision points:
+
+```markdown
+## Document modification workflow
+
+1. Determine the modification type:
+
+   **Creating new content?** → Follow "Creation workflow" below
+   **Editing existing content?** → Follow "Editing workflow" below
+
+2. Creation workflow:
+   - Use docx-js library
+   - Build document from scratch
+   ...
 ```
 
-The packaging script will:
+### Feedback Loop Pattern
 
-1. **Validate** the skill automatically, checking:
+For quality-critical tasks, implement validation loops:
 
-   - YAML frontmatter format and required fields
-   - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
+```markdown
+## Document editing process
 
-2. **Package** the skill if validation passes, creating a .skill file named after the skill (e.g., `my-skill.skill`) that includes all files and maintains the proper directory structure for distribution. The .skill file is a zip file with a .skill extension.
+1. Make your edits
+2. **Validate immediately**: \`python scripts/validate.py output/\`
+3. If validation fails:
+   - Review the error message
+   - Fix the issues
+   - Run validation again
+4. **Only proceed when validation passes**
+```
 
-If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
+---
 
-### Step 6: Iterate
+## Utility Scripts
 
-After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
+Pre-made scripts offer advantages over generated code:
+- More reliable than generated code
+- Save tokens (no code in context)
+- Save time (no code generation)
+- Ensure consistency across uses
 
-**Iteration workflow:**
+```markdown
+## Utility scripts
 
-1. Use the skill on real tasks
-2. Notice struggles or inefficiencies
-3. Identify how SKILL.md or bundled resources should be updated
-4. Implement changes and test again
+**analyze_form.py**: Extract all form fields from PDF
+\`\`\`bash
+python scripts/analyze_form.py input.pdf > fields.json
+\`\`\`
+
+**validate.py**: Check for errors
+\`\`\`bash
+python scripts/validate.py fields.json
+# Returns: "OK" or lists conflicts
+\`\`\`
+```
+
+Make clear whether the agent should **execute** the script (most common) or **read** it as reference.
+
+---
+
+## Anti-Patterns to Avoid
+
+### 1. Windows-Style Paths
+- ✅ Use: `scripts/helper.py`
+- ❌ Avoid: `scripts\helper.py`
+
+### 2. Too Many Options
+```markdown
+# Bad - confusing
+"You can use pypdf, or pdfplumber, or PyMuPDF, or..."
+
+# Good - provide a default with escape hatch
+"Use pdfplumber for text extraction.
+For scanned PDFs requiring OCR, use pdf2image with pytesseract instead."
+```
+
+### 3. Time-Sensitive Information
+```markdown
+# Bad - will become outdated
+"If you're doing this before August 2025, use the old API."
+
+# Good - use an "old patterns" section
+## Current method
+Use the v2 API endpoint.
+
+## Old patterns (deprecated)
+<details>
+<summary>Legacy v1 API</summary>
+...
+</details>
+```
+
+### 4. Inconsistent Terminology
+Choose one term and use it throughout:
+- ✅ Always "API endpoint" (not mixing "URL", "route", "path")
+- ✅ Always "field" (not mixing "box", "element", "control")
+
+### 5. Vague Skill Names
+- ✅ Good: `processing-pdfs`, `analyzing-spreadsheets`
+- ❌ Avoid: `helper`, `utils`, `tools`
+
+---
+
+## Skill Creation Workflow
+
+When helping a user create a skill, follow this process:
+
+### Phase 1: Discovery
+
+Gather information about:
+1. The skill's purpose and primary use case
+2. Storage location (personal vs project)
+3. Trigger scenarios
+4. Any specific requirements or constraints
+5. Existing examples or patterns to follow
+
+If you have access to the AskQuestion tool, use it for efficient structured gathering. Otherwise, ask conversationally.
+
+### Phase 2: Design
+
+1. Draft the skill name (lowercase, hyphens, max 64 chars)
+2. Write a specific, third-person description
+3. Outline the main sections needed
+4. Identify if supporting files or scripts are needed
+
+### Phase 3: Implementation
+
+1. Create the directory structure
+2. Write the SKILL.md file with frontmatter
+3. Create any supporting reference files
+4. Create any utility scripts if needed
+
+### Phase 4: Verification
+
+1. Verify the SKILL.md is under 500 lines
+2. Check that the description is specific and includes trigger terms
+3. Ensure consistent terminology throughout
+4. Verify all file references are one level deep
+5. Test that the skill can be discovered and applied
+
+---
+
+## Complete Example
+
+Here's a complete example of a well-structured skill:
+
+**Directory structure:**
+```
+code-review/
+├── SKILL.md
+├── STANDARDS.md
+└── examples.md
+```
+
+**SKILL.md:**
+```markdown
+---
+name: code-review
+description: Review code for quality, security, and maintainability following team standards. Use when reviewing pull requests, examining code changes, or when the user asks for a code review.
+---
+
+# Code Review
+
+## Quick Start
+
+When reviewing code:
+
+1. Check for correctness and potential bugs
+2. Verify security best practices
+3. Assess code readability and maintainability
+4. Ensure tests are adequate
+
+## Review Checklist
+
+- [ ] Logic is correct and handles edge cases
+- [ ] No security vulnerabilities (SQL injection, XSS, etc.)
+- [ ] Code follows project style conventions
+- [ ] Functions are appropriately sized and focused
+- [ ] Error handling is comprehensive
+- [ ] Tests cover the changes
+
+## Providing Feedback
+
+Format feedback as:
+- 🔴 **Critical**: Must fix before merge
+- 🟡 **Suggestion**: Consider improving
+- 🟢 **Nice to have**: Optional enhancement
+
+## Additional Resources
+
+- For detailed coding standards, see [STANDARDS.md](STANDARDS.md)
+- For example reviews, see [examples.md](examples.md)
+```
+
+---
+
+## Summary Checklist
+
+Before finalizing a skill, verify:
+
+### Core Quality
+- [ ] Description is specific and includes key terms
+- [ ] Description includes both WHAT and WHEN
+- [ ] Written in third person
+- [ ] SKILL.md body is under 500 lines
+- [ ] Consistent terminology throughout
+- [ ] Examples are concrete, not abstract
+
+### Structure
+- [ ] File references are one level deep
+- [ ] Progressive disclosure used appropriately
+- [ ] Workflows have clear steps
+- [ ] No time-sensitive information
+
+### If Including Scripts
+- [ ] Scripts solve problems rather than punt
+- [ ] Required packages are documented
+- [ ] Error handling is explicit and helpful
+- [ ] No Windows-style paths
