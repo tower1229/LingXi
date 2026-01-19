@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 // 风格画像存储路径
-const STYLE_DIR = path.join(process.cwd(), '.cursor', 'style_fusion');
+const STYLE_DIR = path.join(process.cwd(), '.cursor', '.lingxi', 'context', 'style-fusion');
 const PROFILE_FILE = path.join(STYLE_DIR, 'profile.json');
 const STATS_FILE = path.join(STYLE_DIR, 'stats.json');
 

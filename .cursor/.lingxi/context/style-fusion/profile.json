@@ -1,0 +1,23 @@
+{
+  "style_vector": {
+    "sentence_length": {
+      "short": 0.3,
+      "medium": 0.6,
+      "long": 0.09999999999999999
+    },
+    "logic_pattern": {
+      "deductive": 0.7000000000000001,
+      "inductive": 0.10000000000000002,
+      "contrast": 0.10000000000000002,
+      "narrative": 0.10000000000000002
+    },
+    "emotion_intensity": 0.18,
+    "vocabulary_level": "professional",
+    "structure_preference": "hierarchical",
+    "opening_style": "direct",
+    "closing_style": "open"
+  },
+  "sample_count": 1,
+  "last_updated": "2026-01-19T04:18:02.584Z",
+  "confidence": 0.09516258196404048
+}
