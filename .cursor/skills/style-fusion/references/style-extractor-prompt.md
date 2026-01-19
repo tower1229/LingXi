@@ -82,6 +82,78 @@
 
 输出格式：`"summary"`（字符串）
 
+### 8. 语气和语调 (tone_and_voice)
+
+分析文本的语气特征和语态偏好。
+
+- **formality（正式程度）**：0.0-1.0 数值
+  - 0.0-0.3：非正式，口语化表达
+  - 0.3-0.7：中等正式，专业但易懂
+  - 0.7-1.0：高正式，书面化表达
+- **person_usage（人称使用）**：分布类，总和为 1.0
+  - **first_person**：第一人称（"我"、"我们"）
+  - **second_person**：第二人称（"你"、"您"）
+  - **third_person**：第三人称（"他"、"它"）
+  - **neutral**：中性表达，避免人称
+- **voice_preference（语态偏好）**：分类类
+  - **active**：主动语态为主（"我们实现了功能"）
+  - **passive**：被动语态为主（"功能被实现"）
+  - **mixed**：混合使用，根据语境选择
+
+输出格式：
+```json
+{
+  "formality": 0.6,
+  "person_usage": { "first_person": 0.3, "second_person": 0.2, "third_person": 0.3, "neutral": 0.2 },
+  "voice_preference": "active"
+}
+```
+
+### 9. 信息密度 (information_density)
+
+评估文本的信息密度和详细程度。
+
+- **density_level（信息密度）**：0.0-1.0 数值
+  - 0.0-0.3：低密度，信息稀疏，留白较多
+  - 0.3-0.7：中等密度，信息适中
+  - 0.7-1.0：高密度，信息密集，内容充实
+- **detail_level（详细程度）**：分类类
+  - **overview**：概览性，提供总体框架
+  - **moderate**：中等详细，平衡概述和细节
+  - **detailed**：详细，提供具体细节和示例
+  - **comprehensive**：全面，覆盖所有方面
+
+输出格式：
+```json
+{
+  "density_level": 0.65,
+  "detail_level": "moderate"
+}
+```
+
+### 10. 交互性 (interactivity)
+
+分析文本的交互特征和支持元素。
+
+- **interaction_style（交互风格）**：分布类，总和为 1.0
+  - **question**：使用问题引导读者思考
+  - **directive**：使用指令、命令式表达
+  - **narrative**：叙事性，按事件流程描述
+  - **dialogue**：对话式，模拟对话交流
+- **supporting_elements（支持元素）**：分布类，总和为 1.0
+  - **examples**：使用示例说明
+  - **code**：包含代码片段
+  - **diagrams**：使用图表、图示
+  - **none**：不使用额外支持元素
+
+输出格式：
+```json
+{
+  "interaction_style": { "question": 0.2, "directive": 0.4, "narrative": 0.3, "dialogue": 0.1 },
+  "supporting_elements": { "examples": 0.4, "code": 0.3, "diagrams": 0.2, "none": 0.1 }
+}
+```
+
 ## 提取指令
 
 1. **仔细阅读文本**，理解其整体风格特征
@@ -108,14 +180,27 @@
   "vocabulary_level": "professional",
   "structure_preference": "hierarchical",
   "opening_style": "context",
-  "closing_style": "summary"
+  "closing_style": "summary",
+  "tone_and_voice": {
+    "formality": 0.6,
+    "person_usage": { "first_person": 0.3, "second_person": 0.2, "third_person": 0.3, "neutral": 0.2 },
+    "voice_preference": "active"
+  },
+  "information_density": {
+    "density_level": 0.65,
+    "detail_level": "moderate"
+  },
+  "interactivity": {
+    "interaction_style": { "question": 0.2, "directive": 0.4, "narrative": 0.3, "dialogue": 0.1 },
+    "supporting_elements": { "examples": 0.4, "code": 0.3, "diagrams": 0.2, "none": 0.1 }
+  }
 }
 ```
 
 ## 注意事项
 
-1. **数值归一化**：所有分布类维度（sentence_length, logic_pattern）的总和必须为 1.0
-2. **完整性**：必须输出所有 7 个维度，不能缺失
+1. **数值归一化**：所有分布类维度（sentence_length, logic_pattern, tone_and_voice.person_usage, interactivity.interaction_style, interactivity.supporting_elements）的总和必须为 1.0
+2. **完整性**：必须输出所有 10 个维度，不能缺失
 3. **准确性**：基于文本实际特征，不要猜测或推断
 4. **一致性**：相同风格的文本应该得到相似的风格向量
 
@@ -157,6 +242,19 @@
   "vocabulary_level": "professional",
   "structure_preference": "hierarchical",
   "opening_style": "direct",
-  "closing_style": "open"
+  "closing_style": "open",
+  "tone_and_voice": {
+    "formality": 0.5,
+    "person_usage": { "first_person": 0.0, "second_person": 0.0, "third_person": 0.0, "neutral": 1.0 },
+    "voice_preference": "active"
+  },
+  "information_density": {
+    "density_level": 0.6,
+    "detail_level": "moderate"
+  },
+  "interactivity": {
+    "interaction_style": { "question": 0.0, "directive": 0.8, "narrative": 0.2, "dialogue": 0.0 },
+    "supporting_elements": { "examples": 0.3, "code": 0.4, "diagrams": 0.0, "none": 0.3 }
+  }
 }
 ```
