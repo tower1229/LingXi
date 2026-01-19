@@ -16,6 +16,14 @@ const path = require('path');
 const STYLE_DIR = path.join(process.cwd(), '.cursor', '.lingxi', 'context', 'style-fusion');
 const PROFILE_FILE = path.join(STYLE_DIR, 'profile.json');
 const STATS_FILE = path.join(STYLE_DIR, 'stats.json');
+const PROFILE_BACKUP_FILE = path.join(STYLE_DIR, 'profile.json.backup');
+const STATS_BACKUP_FILE = path.join(STYLE_DIR, 'stats.json.backup');
+
+// 数值精度：保留4位小数
+const PRECISION = 4;
+
+// 变更检测阈值
+const CHANGE_THRESHOLD = 0.1;
 
 // 新维度默认值（用于向后兼容）
 const DEFAULT_TONE_AND_VOICE = {
@@ -34,31 +42,240 @@ const DEFAULT_INTERACTIVITY = {
   supporting_elements: { examples: 0.25, code: 0.25, diagrams: 0.25, none: 0.25 }
 };
 
+// 必需的基础维度（至少需要这些维度之一）
+const REQUIRED_BASE_DIMENSIONS = [
+  'sentence_length',
+  'logic_pattern',
+  'emotion_intensity',
+  'vocabulary_level',
+  'structure_preference',
+  'opening_style',
+  'closing_style'
+];
+
+/**
+ * 维度元数据配置
+ * 定义每个维度的类型、路径、默认值等信息
+ */
+const DIMENSION_CONFIG = {
+  // 基础分布类维度
+  sentence_length: {
+    type: 'distribution',
+    path: 'sentence_length',
+    changeDetection: 'distribution'
+  },
+  logic_pattern: {
+    type: 'distribution',
+    path: 'logic_pattern',
+    changeDetection: 'distribution'
+  },
+
+  // 基础数值类维度
+  emotion_intensity: {
+    type: 'numeric',
+    path: 'emotion_intensity',
+    changeDetection: 'numeric',
+    range: [0, 1]
+  },
+
+  // 基础分类类维度
+  vocabulary_level: {
+    type: 'categorical',
+    path: 'vocabulary_level',
+    changeDetection: 'categorical',
+    values: ['casual', 'professional', 'academic']
+  },
+  structure_preference: {
+    type: 'categorical',
+    path: 'structure_preference',
+    changeDetection: 'categorical',
+    values: ['linear', 'hierarchical', 'nested']
+  },
+  opening_style: {
+    type: 'categorical',
+    path: 'opening_style',
+    changeDetection: 'categorical',
+    values: ['question', 'statement', 'context', 'direct']
+  },
+  closing_style: {
+    type: 'categorical',
+    path: 'closing_style',
+    changeDetection: 'categorical',
+    values: ['summary', 'reflection', 'call_to_action', 'open']
+  },
+
+  // 嵌套维度：tone_and_voice
+  tone_and_voice: {
+    type: 'nested',
+    path: 'tone_and_voice',
+    default: DEFAULT_TONE_AND_VOICE,
+    fields: {
+      formality: {
+        type: 'numeric',
+        path: 'tone_and_voice.formality',
+        changeDetection: 'numeric',
+        range: [0, 1]
+      },
+      person_usage: {
+        type: 'distribution',
+        path: 'tone_and_voice.person_usage',
+        changeDetection: 'distribution'
+      },
+      voice_preference: {
+        type: 'categorical',
+        path: 'tone_and_voice.voice_preference',
+        changeDetection: 'categorical',
+        values: ['active', 'passive', 'mixed']
+      }
+    }
+  },
+
+  // 嵌套维度：information_density
+  information_density: {
+    type: 'nested',
+    path: 'information_density',
+    default: DEFAULT_INFORMATION_DENSITY,
+    fields: {
+      density_level: {
+        type: 'numeric',
+        path: 'information_density.density_level',
+        changeDetection: 'numeric',
+        range: [0, 1]
+      },
+      detail_level: {
+        type: 'categorical',
+        path: 'information_density.detail_level',
+        changeDetection: 'categorical',
+        values: ['overview', 'moderate', 'detailed', 'comprehensive']
+      }
+    }
+  },
+
+  // 嵌套维度：interactivity
+  interactivity: {
+    type: 'nested',
+    path: 'interactivity',
+    default: DEFAULT_INTERACTIVITY,
+    fields: {
+      interaction_style: {
+        type: 'distribution',
+        path: 'interactivity.interaction_style',
+        changeDetection: 'distribution'
+      },
+      supporting_elements: {
+        type: 'distribution',
+        path: 'interactivity.supporting_elements',
+        changeDetection: 'distribution'
+      }
+    }
+  }
+};
+
+/**
+ * 四舍五入到指定精度
+ */
+function roundToPrecision(value, precision = PRECISION) {
+  if (typeof value !== 'number' || isNaN(value)) return value;
+  return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
+}
+
+/**
+ * 递归四舍五入对象中的所有数值
+ */
+function roundObjectValues(obj, precision = PRECISION) {
+  if (obj === null || obj === undefined) return obj;
+  
+  if (typeof obj === 'number') {
+    return roundToPrecision(obj, precision);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => roundObjectValues(item, precision));
+  }
+  
+  if (typeof obj === 'object') {
+    const rounded = {};
+    for (const key in obj) {
+      rounded[key] = roundObjectValues(obj[key], precision);
+    }
+    return rounded;
+  }
+  
+  return obj;
+}
+
+/**
+ * 验证风格向量的基本完整性
+ */
+function validateStyleVector(styleVector) {
+  if (!styleVector || typeof styleVector !== 'object') {
+    throw new Error('Style vector must be an object');
+  }
+
+  // 检查是否至少包含一个必需的基础维度
+  const hasRequiredDimension = REQUIRED_BASE_DIMENSIONS.some(dim => 
+    styleVector[dim] !== undefined && styleVector[dim] !== null
+  );
+
+  if (!hasRequiredDimension) {
+    throw new Error(`Style vector must contain at least one of the required dimensions: ${REQUIRED_BASE_DIMENSIONS.join(', ')}`);
+  }
+
+  // 验证数值范围
+  if (styleVector.emotion_intensity !== undefined) {
+    if (typeof styleVector.emotion_intensity !== 'number' || 
+        styleVector.emotion_intensity < 0 || styleVector.emotion_intensity > 1) {
+      throw new Error('emotion_intensity must be a number between 0 and 1');
+    }
+  }
+
+  // 验证嵌套数值维度
+  if (styleVector.tone_and_voice?.formality !== undefined) {
+    if (typeof styleVector.tone_and_voice.formality !== 'number' ||
+        styleVector.tone_and_voice.formality < 0 || styleVector.tone_and_voice.formality > 1) {
+      throw new Error('tone_and_voice.formality must be a number between 0 and 1');
+    }
+  }
+
+  if (styleVector.information_density?.density_level !== undefined) {
+    if (typeof styleVector.information_density.density_level !== 'number' ||
+        styleVector.information_density.density_level < 0 || styleVector.information_density.density_level > 1) {
+      throw new Error('information_density.density_level must be a number between 0 and 1');
+    }
+  }
+
+  return true;
+}
+
 /**
  * 初始化风格画像目录和文件
  */
 function initializeStyleDir() {
-  if (!fs.existsSync(STYLE_DIR)) {
-    fs.mkdirSync(STYLE_DIR, { recursive: true });
-  }
+  try {
+    if (!fs.existsSync(STYLE_DIR)) {
+      fs.mkdirSync(STYLE_DIR, { recursive: true });
+    }
 
-  if (!fs.existsSync(PROFILE_FILE)) {
-    const initialProfile = {
-      style_vector: {},
-      sample_count: 0,
-      last_updated: null,
-      confidence: 0
-    };
-    fs.writeFileSync(PROFILE_FILE, JSON.stringify(initialProfile, null, 2));
-  }
+    if (!fs.existsSync(PROFILE_FILE)) {
+      const initialProfile = {
+        style_vector: {},
+        sample_count: 0,
+        last_updated: null,
+        confidence: 0
+      };
+      fs.writeFileSync(PROFILE_FILE, JSON.stringify(initialProfile, null, 2), 'utf-8');
+    }
 
-  if (!fs.existsSync(STATS_FILE)) {
-    const initialStats = {
-      total_samples: 0,
-      dimension_variance: {},
-      confidence: 0
-    };
-    fs.writeFileSync(STATS_FILE, JSON.stringify(initialStats, null, 2));
+    if (!fs.existsSync(STATS_FILE)) {
+      const initialStats = {
+        total_samples: 0,
+        dimension_variance: {},
+        confidence: 0
+      };
+      fs.writeFileSync(STATS_FILE, JSON.stringify(initialStats, null, 2), 'utf-8');
+    }
+  } catch (error) {
+    throw new Error(`Failed to initialize style directory: ${error.message}`);
   }
 }
 
@@ -66,54 +283,204 @@ function initializeStyleDir() {
  * 加载当前风格画像
  */
 function loadProfile() {
-  initializeStyleDir();
-  
-  if (!fs.existsSync(PROFILE_FILE)) {
-    return {
-      style_vector: {},
-      sample_count: 0,
-      last_updated: null,
-      confidence: 0
-    };
-  }
+  try {
+    initializeStyleDir();
+    
+    if (!fs.existsSync(PROFILE_FILE)) {
+      return {
+        style_vector: {},
+        sample_count: 0,
+        last_updated: null,
+        confidence: 0
+      };
+    }
 
-  const content = fs.readFileSync(PROFILE_FILE, 'utf-8');
-  return JSON.parse(content);
+    const content = fs.readFileSync(PROFILE_FILE, 'utf-8');
+    const profile = JSON.parse(content);
+    return profile;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Failed to parse profile.json: ${error.message}. The file may be corrupted.`);
+    }
+    throw new Error(`Failed to load profile: ${error.message}`);
+  }
 }
 
 /**
  * 加载统计信息
  */
 function loadStats() {
-  initializeStyleDir();
-  
-  if (!fs.existsSync(STATS_FILE)) {
-    return {
-      total_samples: 0,
-      dimension_variance: {},
-      confidence: 0
-    };
-  }
+  try {
+    initializeStyleDir();
+    
+    if (!fs.existsSync(STATS_FILE)) {
+      return {
+        total_samples: 0,
+        dimension_variance: {},
+        confidence: 0
+      };
+    }
 
-  const content = fs.readFileSync(STATS_FILE, 'utf-8');
-  return JSON.parse(content);
+    const content = fs.readFileSync(STATS_FILE, 'utf-8');
+    const stats = JSON.parse(content);
+    return stats;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Failed to parse stats.json: ${error.message}. The file may be corrupted.`);
+    }
+    throw new Error(`Failed to load stats: ${error.message}`);
+  }
 }
 
 /**
- * 保存风格画像
+ * 备份文件
+ */
+function backupFile(sourceFile, backupFile) {
+  try {
+    if (fs.existsSync(sourceFile)) {
+      fs.copyFileSync(sourceFile, backupFile);
+    }
+  } catch (error) {
+    // 备份失败不影响主流程，只记录警告
+    console.warn(`Warning: Failed to backup ${sourceFile}: ${error.message}`);
+  }
+}
+
+/**
+ * 原子性写入文件（先写临时文件，再重命名）
+ */
+function atomicWriteFile(filePath, content) {
+  const tempFile = filePath + '.tmp';
+  try {
+    // 写入临时文件
+    fs.writeFileSync(tempFile, content, 'utf-8');
+    // 原子性重命名
+    fs.renameSync(tempFile, filePath);
+  } catch (error) {
+    // 清理临时文件
+    try {
+      if (fs.existsSync(tempFile)) {
+        fs.unlinkSync(tempFile);
+      }
+    } catch (cleanupError) {
+      // 忽略清理错误
+    }
+    throw error;
+  }
+}
+
+/**
+ * 保存风格画像和统计信息（事务性）
+ */
+function saveProfileAndStats(profile, stats) {
+  try {
+    // 备份原文件
+    backupFile(PROFILE_FILE, PROFILE_BACKUP_FILE);
+    backupFile(STATS_FILE, STATS_BACKUP_FILE);
+
+    // 四舍五入数值
+    const roundedProfile = roundObjectValues(profile);
+    const roundedStats = roundObjectValues(stats);
+
+    // 原子性写入
+    atomicWriteFile(PROFILE_FILE, JSON.stringify(roundedProfile, null, 2));
+    atomicWriteFile(STATS_FILE, JSON.stringify(roundedStats, null, 2));
+  } catch (error) {
+    // 恢复备份
+    try {
+      if (fs.existsSync(PROFILE_BACKUP_FILE)) {
+        fs.copyFileSync(PROFILE_BACKUP_FILE, PROFILE_FILE);
+      }
+      if (fs.existsSync(STATS_BACKUP_FILE)) {
+        fs.copyFileSync(STATS_BACKUP_FILE, STATS_FILE);
+      }
+    } catch (restoreError) {
+      throw new Error(`Failed to save profile and stats, and restore failed: ${error.message}. Restore error: ${restoreError.message}`);
+    }
+    throw new Error(`Failed to save profile and stats: ${error.message}`);
+  }
+}
+
+/**
+ * 保存风格画像（已废弃，使用 saveProfileAndStats）
+ * @deprecated 使用 saveProfileAndStats 代替
  */
 function saveProfile(profile) {
   initializeStyleDir();
   profile.last_updated = new Date().toISOString();
-  fs.writeFileSync(PROFILE_FILE, JSON.stringify(profile, null, 2));
+  atomicWriteFile(PROFILE_FILE, JSON.stringify(roundObjectValues(profile), null, 2));
 }
 
 /**
- * 保存统计信息
+ * 保存统计信息（已废弃，使用 saveProfileAndStats）
+ * @deprecated 使用 saveProfileAndStats 代替
  */
 function saveStats(stats) {
   initializeStyleDir();
-  fs.writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2));
+  atomicWriteFile(STATS_FILE, JSON.stringify(roundObjectValues(stats), null, 2));
+}
+
+/**
+ * 归一化分布类维度（通用函数）
+ * @param {Object} dist - 分布对象（如 {short: 0.2, medium: 0.6, long: 0.2}）
+ * @returns {Object} 归一化后的分布对象
+ */
+function normalizeDistribution(dist) {
+  if (!dist || typeof dist !== 'object') return dist;
+
+  const sum = Object.values(dist).reduce((a, b) => a + b, 0);
+  if (sum > 0) {
+    Object.keys(dist).forEach(key => {
+      dist[key] = roundToPrecision(dist[key] / sum);
+    });
+  } else {
+    // 全零情况：使用均匀分布
+    const keys = Object.keys(dist);
+    const defaultValue = roundToPrecision(1 / keys.length);
+    keys.forEach(key => {
+      dist[key] = defaultValue;
+    });
+  }
+  return dist;
+}
+
+/**
+ * 根据路径获取嵌套对象的值
+ * @param {Object} obj - 对象
+ * @param {string} path - 路径，如 'tone_and_voice.person_usage'
+ * @returns {*} 值
+ */
+function getNestedValue(obj, path) {
+  if (!path) return obj;
+  const parts = path.split('.');
+  let current = obj;
+  for (const part of parts) {
+    if (current === null || current === undefined) return undefined;
+    current = current[part];
+  }
+  return current;
+}
+
+/**
+ * 根据路径设置嵌套对象的值
+ * @param {Object} obj - 对象
+ * @param {string} path - 路径
+ * @param {*} value - 值
+ */
+function setNestedValue(obj, path, value) {
+  if (!path) {
+    Object.assign(obj, value);
+    return;
+  }
+  const parts = path.split('.');
+  let current = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!current[parts[i]]) {
+      current[parts[i]] = {};
+    }
+    current = current[parts[i]];
+  }
+  current[parts[parts.length - 1]] = value;
 }
 
 /**
@@ -123,55 +490,21 @@ function saveStats(stats) {
 function normalizeStyleVector(styleVector) {
   const normalized = { ...styleVector };
 
-  // 标准化 sentence_length
-  if (normalized.sentence_length) {
-    const sum = Object.values(normalized.sentence_length).reduce((a, b) => a + b, 0);
-    if (sum > 0) {
-      Object.keys(normalized.sentence_length).forEach(key => {
-        normalized.sentence_length[key] /= sum;
-      });
-    }
-  }
+  // 需要归一化的分布类维度路径列表
+  const distributionPaths = [
+    'sentence_length',
+    'logic_pattern',
+    'tone_and_voice.person_usage',
+    'interactivity.interaction_style',
+    'interactivity.supporting_elements'
+  ];
 
-  // 标准化 logic_pattern
-  if (normalized.logic_pattern) {
-    const sum = Object.values(normalized.logic_pattern).reduce((a, b) => a + b, 0);
-    if (sum > 0) {
-      Object.keys(normalized.logic_pattern).forEach(key => {
-        normalized.logic_pattern[key] /= sum;
-      });
+  distributionPaths.forEach(path => {
+    const dist = getNestedValue(normalized, path);
+    if (dist) {
+      normalizeDistribution(dist);
     }
-  }
-
-  // 标准化 tone_and_voice.person_usage
-  if (normalized.tone_and_voice && normalized.tone_and_voice.person_usage) {
-    const sum = Object.values(normalized.tone_and_voice.person_usage).reduce((a, b) => a + b, 0);
-    if (sum > 0) {
-      Object.keys(normalized.tone_and_voice.person_usage).forEach(key => {
-        normalized.tone_and_voice.person_usage[key] /= sum;
-      });
-    }
-  }
-
-  // 标准化 interactivity.interaction_style
-  if (normalized.interactivity && normalized.interactivity.interaction_style) {
-    const sum = Object.values(normalized.interactivity.interaction_style).reduce((a, b) => a + b, 0);
-    if (sum > 0) {
-      Object.keys(normalized.interactivity.interaction_style).forEach(key => {
-        normalized.interactivity.interaction_style[key] /= sum;
-      });
-    }
-  }
-
-  // 标准化 interactivity.supporting_elements
-  if (normalized.interactivity && normalized.interactivity.supporting_elements) {
-    const sum = Object.values(normalized.interactivity.supporting_elements).reduce((a, b) => a + b, 0);
-    if (sum > 0) {
-      Object.keys(normalized.interactivity.supporting_elements).forEach(key => {
-        normalized.interactivity.supporting_elements[key] /= sum;
-      });
-    }
-  }
+  });
 
   return normalized;
 }
@@ -193,7 +526,14 @@ function fuseDistribution(oldDist, newDist, weightOld, weightNew) {
   const sum = Object.values(fused).reduce((a, b) => a + b, 0);
   if (sum > 0) {
     Object.keys(fused).forEach(key => {
-      fused[key] /= sum;
+      fused[key] = roundToPrecision(fused[key] / sum);
+    });
+  } else {
+    // 全零情况：使用均匀分布
+    const keys = Array.from(allKeys);
+    const defaultValue = roundToPrecision(1 / keys.length);
+    keys.forEach(key => {
+      fused[key] = defaultValue;
     });
   }
 
@@ -204,7 +544,8 @@ function fuseDistribution(oldDist, newDist, weightOld, weightNew) {
  * 融合数值类维度（如 emotion_intensity）
  */
 function fuseNumeric(oldValue, newValue, weightOld, weightNew) {
-  return weightOld * (oldValue || 0) + weightNew * (newValue || 0);
+  const result = weightOld * (oldValue || 0) + weightNew * (newValue || 0);
+  return roundToPrecision(result);
 }
 
 /**
@@ -222,153 +563,156 @@ function fuseCategorical(oldValue, newValue, weightOld, weightNew) {
 }
 
 /**
+ * 递归收集所有数值（用于方差计算）
+ */
+function collectNumericValues(obj, prefix = '') {
+  const values = [];
+  
+  if (obj === null || obj === undefined) {
+    return values;
+  }
+  
+  if (typeof obj === 'number') {
+    values.push({ path: prefix, value: obj });
+    return values;
+  }
+  
+  if (Array.isArray(obj)) {
+    obj.forEach((item, index) => {
+      values.push(...collectNumericValues(item, `${prefix}[${index}]`));
+    });
+    return values;
+  }
+  
+  if (typeof obj === 'object') {
+    for (const key in obj) {
+      const newPrefix = prefix ? `${prefix}.${key}` : key;
+      values.push(...collectNumericValues(obj[key], newPrefix));
+    }
+    return values;
+  }
+  
+  return values;
+}
+
+/**
  * 计算置信度
- * 基于样本数和维度稳定性
+ * 基于样本数和维度稳定性（支持嵌套方差结构）
  */
 function calculateConfidence(sampleCount, dimensionVariance) {
   // 基础置信度：随样本数增长，但增长递减
   const baseConfidence = 1 - Math.exp(-sampleCount / 10);
   
-  // 方差惩罚：方差越大，置信度越低
-  const variancePenalty = Object.values(dimensionVariance).reduce((sum, v) => sum + v, 0) / 
-                          Math.max(Object.keys(dimensionVariance).length, 1);
+  // 递归收集所有方差值（支持嵌套结构）
+  const varianceValues = collectNumericValues(dimensionVariance);
+  
+  // 计算平均方差惩罚
+  let variancePenalty = 0;
+  if (varianceValues.length > 0) {
+    const sum = varianceValues.reduce((acc, item) => acc + item.value, 0);
+    variancePenalty = sum / varianceValues.length;
+  }
+  
   const varianceFactor = Math.max(0, 1 - variancePenalty);
   
-  return Math.min(1.0, baseConfidence * varianceFactor);
+  return roundToPrecision(Math.min(1.0, baseConfidence * varianceFactor));
 }
 
 /**
- * 检测变更维度
- * 比较新旧风格向量，找出变化超过阈值的维度
+ * 检测分布类维度的变更
  */
-function detectChanges(oldVector, newVector, threshold = 0.1) {
+function detectDistributionChange(oldDist, newDist, threshold) {
+  if (!oldDist || !newDist) {
+    return oldDist !== newDist;
+  }
+
+  const oldKeys = Object.keys(oldDist);
+  const newKeys = Object.keys(newDist);
+  const allKeys = new Set([...oldKeys, ...newKeys]);
+
+  for (const key of allKeys) {
+    const oldVal = oldDist[key] || 0;
+    const newVal = newDist[key] || 0;
+    if (Math.abs(oldVal - newVal) > threshold) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 检测数值类维度的变更
+ */
+function detectNumericChange(oldVal, newVal, threshold) {
+  if (oldVal === undefined || newVal === undefined) {
+    return oldVal !== newVal;
+  }
+  return Math.abs(oldVal - newVal) > threshold;
+}
+
+/**
+ * 检测分类类维度的变更
+ */
+function detectCategoricalChange(oldVal, newVal) {
+  return oldVal !== newVal;
+}
+
+/**
+ * 检测变更维度（配置驱动）
+ */
+function detectChanges(oldVector, newVector, threshold = CHANGE_THRESHOLD) {
   const changes = [];
 
-  // 检查分布类维度
-  ['sentence_length', 'logic_pattern'].forEach(dim => {
-    if (!oldVector[dim] || !newVector[dim]) {
-      if (oldVector[dim] !== newVector[dim]) {
-        changes.push(dim);
-      }
-      return;
-    }
+  for (const [dimName, config] of Object.entries(DIMENSION_CONFIG)) {
+    if (config.type === 'nested') {
+      // 嵌套维度：检查所有子字段
+      let nestedChanged = false;
+      for (const [fieldName, fieldConfig] of Object.entries(config.fields)) {
+        const oldVal = getNestedValue(oldVector, fieldConfig.path);
+        const newVal = getNestedValue(newVector, fieldConfig.path);
 
-    const oldKeys = Object.keys(oldVector[dim]);
-    const newKeys = Object.keys(newVector[dim]);
-    const allKeys = new Set([...oldKeys, ...newKeys]);
-
-    for (const key of allKeys) {
-      const oldVal = oldVector[dim][key] || 0;
-      const newVal = newVector[dim][key] || 0;
-      if (Math.abs(oldVal - newVal) > threshold) {
-        changes.push(dim);
-        break;
-      }
-    }
-  });
-
-  // 检查嵌套分布类维度：tone_and_voice.person_usage, interactivity.interaction_style, interactivity.supporting_elements
-  if (oldVector.tone_and_voice?.person_usage && newVector.tone_and_voice?.person_usage) {
-    const oldKeys = Object.keys(oldVector.tone_and_voice.person_usage);
-    const newKeys = Object.keys(newVector.tone_and_voice.person_usage);
-    const allKeys = new Set([...oldKeys, ...newKeys]);
-    for (const key of allKeys) {
-      const oldVal = oldVector.tone_and_voice.person_usage[key] || 0;
-      const newVal = newVector.tone_and_voice.person_usage[key] || 0;
-      if (Math.abs(oldVal - newVal) > threshold) {
-        changes.push('tone_and_voice');
-        break;
-      }
-    }
-  } else if (oldVector.tone_and_voice?.person_usage !== newVector.tone_and_voice?.person_usage) {
-    changes.push('tone_and_voice');
-  }
-
-  if (oldVector.interactivity?.interaction_style && newVector.interactivity?.interaction_style) {
-    const oldKeys = Object.keys(oldVector.interactivity.interaction_style);
-    const newKeys = Object.keys(newVector.interactivity.interaction_style);
-    const allKeys = new Set([...oldKeys, ...newKeys]);
-    for (const key of allKeys) {
-      const oldVal = oldVector.interactivity.interaction_style[key] || 0;
-      const newVal = newVector.interactivity.interaction_style[key] || 0;
-      if (Math.abs(oldVal - newVal) > threshold) {
-        changes.push('interactivity');
-        break;
-      }
-    }
-  } else if (oldVector.interactivity?.interaction_style !== newVector.interactivity?.interaction_style) {
-    changes.push('interactivity');
-  }
-
-  if (oldVector.interactivity?.supporting_elements && newVector.interactivity?.supporting_elements) {
-    const oldKeys = Object.keys(oldVector.interactivity.supporting_elements);
-    const newKeys = Object.keys(newVector.interactivity.supporting_elements);
-    const allKeys = new Set([...oldKeys, ...newKeys]);
-    for (const key of allKeys) {
-      const oldVal = oldVector.interactivity.supporting_elements[key] || 0;
-      const newVal = newVector.interactivity.supporting_elements[key] || 0;
-      if (Math.abs(oldVal - newVal) > threshold) {
-        if (!changes.includes('interactivity')) {
-          changes.push('interactivity');
+        let changed = false;
+        switch (fieldConfig.changeDetection) {
+          case 'distribution':
+            changed = detectDistributionChange(oldVal, newVal, threshold);
+            break;
+          case 'numeric':
+            changed = detectNumericChange(oldVal, newVal, threshold);
+            break;
+          case 'categorical':
+            changed = detectCategoricalChange(oldVal, newVal);
+            break;
         }
-        break;
+
+        if (changed) {
+          nestedChanged = true;
+          break;
+        }
       }
-    }
-  } else if (oldVector.interactivity?.supporting_elements !== newVector.interactivity?.supporting_elements) {
-    if (!changes.includes('interactivity')) {
-      changes.push('interactivity');
-    }
-  }
-
-  // 检查数值类维度
-  ['emotion_intensity'].forEach(dim => {
-    if (oldVector[dim] !== undefined && newVector[dim] !== undefined) {
-      if (Math.abs(oldVector[dim] - newVector[dim]) > threshold) {
-        changes.push(dim);
+      if (nestedChanged) {
+        changes.push(dimName);
       }
-    } else if (oldVector[dim] !== newVector[dim]) {
-      changes.push(dim);
-    }
-  });
+    } else {
+      // 基础维度
+      const oldVal = getNestedValue(oldVector, config.path);
+      const newVal = getNestedValue(newVector, config.path);
 
-  // 检查嵌套数值类维度：tone_and_voice.formality, information_density.density_level
-  if (oldVector.tone_and_voice?.formality !== undefined && newVector.tone_and_voice?.formality !== undefined) {
-    if (Math.abs(oldVector.tone_and_voice.formality - newVector.tone_and_voice.formality) > threshold) {
-      if (!changes.includes('tone_and_voice')) {
-        changes.push('tone_and_voice');
+      let changed = false;
+      switch (config.changeDetection) {
+        case 'distribution':
+          changed = detectDistributionChange(oldVal, newVal, threshold);
+          break;
+        case 'numeric':
+          changed = detectNumericChange(oldVal, newVal, threshold);
+          break;
+        case 'categorical':
+          changed = detectCategoricalChange(oldVal, newVal);
+          break;
       }
-    }
-  } else if (oldVector.tone_and_voice?.formality !== newVector.tone_and_voice?.formality) {
-    if (!changes.includes('tone_and_voice')) {
-      changes.push('tone_and_voice');
-    }
-  }
 
-  if (oldVector.information_density?.density_level !== undefined && newVector.information_density?.density_level !== undefined) {
-    if (Math.abs(oldVector.information_density.density_level - newVector.information_density.density_level) > threshold) {
-      changes.push('information_density');
-    }
-  } else if (oldVector.information_density?.density_level !== newVector.information_density?.density_level) {
-    changes.push('information_density');
-  }
-
-  // 检查分类类维度
-  ['vocabulary_level', 'structure_preference', 'opening_style', 'closing_style'].forEach(dim => {
-    if (oldVector[dim] !== newVector[dim]) {
-      changes.push(dim);
-    }
-  });
-
-  // 检查嵌套分类类维度：tone_and_voice.voice_preference, information_density.detail_level
-  if (oldVector.tone_and_voice?.voice_preference !== newVector.tone_and_voice?.voice_preference) {
-    if (!changes.includes('tone_and_voice')) {
-      changes.push('tone_and_voice');
-    }
-  }
-
-  if (oldVector.information_density?.detail_level !== newVector.information_density?.detail_level) {
-    if (!changes.includes('information_density')) {
-      changes.push('information_density');
+      if (changed) {
+        changes.push(dimName);
+      }
     }
   }
 
@@ -376,275 +720,223 @@ function detectChanges(oldVector, newVector, threshold = 0.1) {
 }
 
 /**
- * 更新维度方差（用于置信度计算）
+ * 更新单个数值维度的方差
+ */
+function updateNumericVariance(variance, path, oldVal, newVal, sampleCount) {
+  if (oldVal === undefined || newVal === undefined) return variance;
+
+  const diff = Math.abs(oldVal - newVal);
+  const alpha = 1 / (sampleCount + 1);
+
+  // 获取或创建嵌套路径
+  const parts = path.split('.');
+  let current = variance;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!current[parts[i]]) {
+      current[parts[i]] = {};
+    }
+    current = current[parts[i]];
+  }
+
+  const key = parts[parts.length - 1];
+  const oldVariance = current[key] || 0;
+  current[key] = roundToPrecision((1 - alpha) * oldVariance + alpha * diff * diff);
+
+  return variance;
+}
+
+/**
+ * 更新维度方差（配置驱动）
  */
 function updateVariance(stats, oldVector, newVector, sampleCount) {
   const variance = { ...stats.dimension_variance };
 
-  // 对于数值类维度，计算方差
-  ['emotion_intensity'].forEach(dim => {
-    if (oldVector[dim] !== undefined && newVector[dim] !== undefined) {
-      const diff = Math.abs(oldVector[dim] - newVector[dim]);
-      if (!variance[dim]) {
-        variance[dim] = 0;
+  // 遍历所有数值类维度
+  for (const [dimName, config] of Object.entries(DIMENSION_CONFIG)) {
+    if (config.type === 'nested') {
+      // 嵌套维度：处理所有数值类子字段
+      for (const [fieldName, fieldConfig] of Object.entries(config.fields)) {
+        if (fieldConfig.type === 'numeric') {
+          const oldVal = getNestedValue(oldVector, fieldConfig.path);
+          const newVal = getNestedValue(newVector, fieldConfig.path);
+          updateNumericVariance(variance, fieldConfig.path, oldVal, newVal, sampleCount);
+        }
       }
-      // 使用指数移动平均更新方差估计
-      const alpha = 1 / (sampleCount + 1);
-      variance[dim] = (1 - alpha) * variance[dim] + alpha * diff * diff;
+    } else if (config.type === 'numeric') {
+      // 基础数值维度
+      const oldVal = getNestedValue(oldVector, config.path);
+      const newVal = getNestedValue(newVector, config.path);
+      updateNumericVariance(variance, config.path, oldVal, newVal, sampleCount);
     }
-  });
-
-  // 对于嵌套数值类维度，计算方差
-  // tone_and_voice.formality
-  if (oldVector.tone_and_voice?.formality !== undefined && newVector.tone_and_voice?.formality !== undefined) {
-    const diff = Math.abs(oldVector.tone_and_voice.formality - newVector.tone_and_voice.formality);
-    if (!variance.tone_and_voice) {
-      variance.tone_and_voice = {};
-    }
-    if (!variance.tone_and_voice.formality) {
-      variance.tone_and_voice.formality = 0;
-    }
-    const alpha = 1 / (sampleCount + 1);
-    variance.tone_and_voice.formality = (1 - alpha) * variance.tone_and_voice.formality + alpha * diff * diff;
-  }
-
-  // information_density.density_level
-  if (oldVector.information_density?.density_level !== undefined && newVector.information_density?.density_level !== undefined) {
-    const diff = Math.abs(oldVector.information_density.density_level - newVector.information_density.density_level);
-    if (!variance.information_density) {
-      variance.information_density = {};
-    }
-    if (!variance.information_density.density_level) {
-      variance.information_density.density_level = 0;
-    }
-    const alpha = 1 / (sampleCount + 1);
-    variance.information_density.density_level = (1 - alpha) * variance.information_density.density_level + alpha * diff * diff;
   }
 
   return variance;
 }
 
 /**
+ * 融合单个维度（配置驱动）
+ */
+function fuseDimension(oldValue, newValue, config, weightOld, weightNew, defaultValue) {
+  if (newValue === undefined) {
+    return oldValue;
+  }
+
+  const oldVal = oldValue || defaultValue;
+
+  switch (config.type) {
+    case 'distribution':
+      return fuseDistribution(oldVal, newValue, weightOld, weightNew);
+    case 'numeric':
+      return fuseNumeric(oldVal, newValue, weightOld, weightNew);
+    case 'categorical':
+      return fuseCategorical(oldVal, newValue, weightOld, weightNew);
+    case 'nested':
+      // 嵌套维度：递归融合所有子字段
+      const fused = {};
+      for (const [fieldName, fieldConfig] of Object.entries(config.fields)) {
+        const oldFieldVal = oldValue ? oldValue[fieldName] : undefined;
+        const newFieldVal = newValue ? newValue[fieldName] : undefined;
+        const fieldDefault = defaultValue ? defaultValue[fieldName] : undefined;
+        fused[fieldName] = fuseDimension(oldFieldVal, newFieldVal, fieldConfig, weightOld, weightNew, fieldDefault);
+      }
+      return fused;
+    default:
+      return newValue;
+  }
+}
+
+/**
  * 主融合函数
  * 
  * @param {Object} newStyleVector - 新提取的风格向量
- * @returns {Object} 融合结果 { status, payload }
+ * @returns {Object} 融合结果 { status, payload } 或 { status: 'error', error: string }
  */
 function fuseStyle(newStyleVector) {
-  // 标准化新风格向量
-  const normalizedNew = normalizeStyleVector(newStyleVector);
+  try {
+    // 输入验证
+    validateStyleVector(newStyleVector);
 
-  // 加载当前画像
-  const profile = loadProfile();
-  const stats = loadStats();
+    // 标准化新风格向量
+    const normalizedNew = normalizeStyleVector(newStyleVector);
 
-  const oldVector = profile.style_vector || {};
-  const sampleCount = profile.sample_count || 0;
+    // 加载当前画像
+    const profile = loadProfile();
+    const stats = loadStats();
 
-  // 计算融合权重
-  // 新样本权重随样本数增加而递减（避免后期震荡）
-  const weightNew = 1 / (sampleCount + 1);
-  const weightOld = 1 - weightNew;
+    const oldVector = profile.style_vector || {};
+    const sampleCount = profile.sample_count || 0;
 
-  // 融合风格向量
-  const fusedVector = {};
+    // 计算融合权重
+    // 新样本权重随样本数增加而递减（避免后期震荡）
+    const weightNew = 1 / (sampleCount + 1);
+    const weightOld = 1 - weightNew;
 
-  // 融合分布类维度
-  if (normalizedNew.sentence_length) {
-    fusedVector.sentence_length = fuseDistribution(
-      oldVector.sentence_length,
-      normalizedNew.sentence_length,
-      weightOld,
-      weightNew
-    );
-  } else if (oldVector.sentence_length) {
-    fusedVector.sentence_length = oldVector.sentence_length;
-  }
+    // 融合风格向量（配置驱动）
+    const fusedVector = {};
 
-  if (normalizedNew.logic_pattern) {
-    fusedVector.logic_pattern = fuseDistribution(
-      oldVector.logic_pattern,
-      normalizedNew.logic_pattern,
-      weightOld,
-      weightNew
-    );
-  } else if (oldVector.logic_pattern) {
-    fusedVector.logic_pattern = oldVector.logic_pattern;
-  }
+    for (const [dimName, config] of Object.entries(DIMENSION_CONFIG)) {
+      const oldVal = getNestedValue(oldVector, config.path);
+      const newVal = getNestedValue(normalizedNew, config.path);
+      const defaultValue = config.default;
 
-  // 融合数值类维度
-  if (normalizedNew.emotion_intensity !== undefined) {
-    fusedVector.emotion_intensity = fuseNumeric(
-      oldVector.emotion_intensity,
-      normalizedNew.emotion_intensity,
-      weightOld,
-      weightNew
-    );
-  } else if (oldVector.emotion_intensity !== undefined) {
-    fusedVector.emotion_intensity = oldVector.emotion_intensity;
-  }
-
-  // 融合分类类维度
-  ['vocabulary_level', 'structure_preference', 'opening_style', 'closing_style'].forEach(dim => {
-    if (normalizedNew[dim] !== undefined) {
-      fusedVector[dim] = fuseCategorical(
-        oldVector[dim],
-        normalizedNew[dim],
-        weightOld,
-        weightNew
-      );
-    } else if (oldVector[dim] !== undefined) {
-      fusedVector[dim] = oldVector[dim];
+      if (newVal !== undefined) {
+        const fused = fuseDimension(oldVal, newVal, config, weightOld, weightNew, defaultValue);
+        setNestedValue(fusedVector, config.path, fused);
+      } else if (oldVal !== undefined) {
+        setNestedValue(fusedVector, config.path, oldVal);
+      }
     }
-  });
 
-  // 融合 tone_and_voice
-  if (normalizedNew.tone_and_voice) {
-    const oldTone = oldVector.tone_and_voice || DEFAULT_TONE_AND_VOICE;
-    fusedVector.tone_and_voice = {
-      formality: fuseNumeric(
-        oldTone.formality,
-        normalizedNew.tone_and_voice.formality,
-        weightOld,
-        weightNew
-      ),
-      person_usage: fuseDistribution(
-        oldTone.person_usage,
-        normalizedNew.tone_and_voice.person_usage,
-        weightOld,
-        weightNew
-      ),
-      voice_preference: fuseCategorical(
-        oldTone.voice_preference,
-        normalizedNew.tone_and_voice.voice_preference,
-        weightOld,
-        weightNew
-      )
+    // 更新样本数
+    const newSampleCount = sampleCount + 1;
+
+    // 检测变更
+    const changedDimensions = detectChanges(oldVector, fusedVector);
+
+    // 更新方差
+    const updatedVariance = updateVariance(stats, oldVector, fusedVector, newSampleCount);
+
+    // 计算置信度
+    const confidence = calculateConfidence(newSampleCount, updatedVariance);
+
+    // 更新画像
+    const updatedProfile = {
+      style_vector: fusedVector,
+      sample_count: newSampleCount,
+      last_updated: new Date().toISOString(),
+      confidence: confidence
     };
-  } else if (oldVector.tone_and_voice) {
-    fusedVector.tone_and_voice = oldVector.tone_and_voice;
-  }
 
-  // 融合 information_density
-  if (normalizedNew.information_density) {
-    const oldDensity = oldVector.information_density || DEFAULT_INFORMATION_DENSITY;
-    fusedVector.information_density = {
-      density_level: fuseNumeric(
-        oldDensity.density_level,
-        normalizedNew.information_density.density_level,
-        weightOld,
-        weightNew
-      ),
-      detail_level: fuseCategorical(
-        oldDensity.detail_level,
-        normalizedNew.information_density.detail_level,
-        weightOld,
-        weightNew
-      )
+    // 更新统计信息
+    const updatedStats = {
+      total_samples: newSampleCount,
+      dimension_variance: updatedVariance,
+      confidence: confidence
     };
-  } else if (oldVector.information_density) {
-    fusedVector.information_density = oldVector.information_density;
-  }
 
-  // 融合 interactivity
-  if (normalizedNew.interactivity) {
-    const oldInteractivity = oldVector.interactivity || DEFAULT_INTERACTIVITY;
-    fusedVector.interactivity = {
-      interaction_style: fuseDistribution(
-        oldInteractivity.interaction_style,
-        normalizedNew.interactivity.interaction_style,
-        weightOld,
-        weightNew
-      ),
-      supporting_elements: fuseDistribution(
-        oldInteractivity.supporting_elements,
-        normalizedNew.interactivity.supporting_elements,
-        weightOld,
-        weightNew
-      )
+    // 事务性保存
+    saveProfileAndStats(updatedProfile, updatedStats);
+
+    // 返回结果
+    return {
+      status: changedDimensions.length > 0 ? 'updated' : 'no_change',
+      payload: {
+        changed_dimensions: changedDimensions,
+        confidence: confidence,
+        sample_count: newSampleCount
+      }
     };
-  } else if (oldVector.interactivity) {
-    fusedVector.interactivity = oldVector.interactivity;
+  } catch (error) {
+    return {
+      status: 'error',
+      error: error.message
+    };
   }
-
-  // 更新样本数
-  const newSampleCount = sampleCount + 1;
-
-  // 检测变更
-  const changedDimensions = detectChanges(oldVector, fusedVector);
-
-  // 更新方差
-  const updatedVariance = updateVariance(stats, oldVector, fusedVector, newSampleCount);
-
-  // 计算置信度
-  const confidence = calculateConfidence(newSampleCount, updatedVariance);
-
-  // 更新画像
-  const updatedProfile = {
-    style_vector: fusedVector,
-    sample_count: newSampleCount,
-    last_updated: new Date().toISOString(),
-    confidence: confidence
-  };
-
-  // 更新统计信息
-  const updatedStats = {
-    total_samples: newSampleCount,
-    dimension_variance: updatedVariance,
-    confidence: confidence
-  };
-
-  // 保存
-  saveProfile(updatedProfile);
-  saveStats(updatedStats);
-
-  // 返回结果
-  return {
-    status: changedDimensions.length > 0 ? 'updated' : 'no_change',
-    payload: {
-      changed_dimensions: changedDimensions,
-      confidence: confidence,
-      sample_count: newSampleCount
-    }
-  };
 }
 
 /**
  * 获取当前风格画像
  */
 function getProfile() {
-  const profile = loadProfile();
-  const stats = loadStats();
+  try {
+    const profile = loadProfile();
+    const stats = loadStats();
 
-  // 提取主导特征
-  const dominantTraits = {};
-  
-  if (profile.style_vector.sentence_length) {
-    const sl = profile.style_vector.sentence_length;
-    const maxKey = Object.keys(sl).reduce((a, b) => sl[a] > sl[b] ? a : b);
-    dominantTraits.sentence_length = maxKey === 'medium' ? 'medium-heavy' : maxKey;
-  }
-
-  if (profile.style_vector.logic_pattern) {
-    const lp = profile.style_vector.logic_pattern;
-    const maxKey = Object.keys(lp).reduce((a, b) => lp[a] > lp[b] ? a : b);
-    dominantTraits.logic_pattern = maxKey;
-  }
-
-  if (profile.style_vector.emotion_intensity !== undefined) {
-    const ei = profile.style_vector.emotion_intensity;
-    dominantTraits.emotion_intensity = ei < 0.3 ? 'low' : ei < 0.7 ? 'medium' : 'high';
-  }
-
-  return {
-    status: 'ok',
-    payload: {
-      dominant_traits: dominantTraits,
-      style_vector: profile.style_vector,
-      confidence: profile.confidence,
-      sample_count: profile.sample_count
+    // 提取主导特征
+    const dominantTraits = {};
+    
+    if (profile.style_vector.sentence_length) {
+      const sl = profile.style_vector.sentence_length;
+      const maxKey = Object.keys(sl).reduce((a, b) => sl[a] > sl[b] ? a : b);
+      dominantTraits.sentence_length = maxKey === 'medium' ? 'medium-heavy' : maxKey;
     }
-  };
+
+    if (profile.style_vector.logic_pattern) {
+      const lp = profile.style_vector.logic_pattern;
+      const maxKey = Object.keys(lp).reduce((a, b) => lp[a] > lp[b] ? a : b);
+      dominantTraits.logic_pattern = maxKey;
+    }
+
+    if (profile.style_vector.emotion_intensity !== undefined) {
+      const ei = profile.style_vector.emotion_intensity;
+      dominantTraits.emotion_intensity = ei < 0.3 ? 'low' : ei < 0.7 ? 'medium' : 'high';
+    }
+
+    return {
+      status: 'ok',
+      payload: {
+        dominant_traits: dominantTraits,
+        style_vector: profile.style_vector,
+        confidence: profile.confidence,
+        sample_count: profile.sample_count
+      }
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      error: error.message
+    };
+  }
 }
 
 // 导出函数
@@ -652,7 +944,9 @@ module.exports = {
   fuseStyle,
   getProfile,
   loadProfile,
-  normalizeStyleVector
+  normalizeStyleVector,
+  validateStyleVector,
+  roundObjectValues
 };
 
 // 如果直接运行，执行测试
@@ -660,7 +954,7 @@ if (require.main === module) {
   console.log('Style Fusion Engine Test');
   console.log('=======================');
   
-  // 测试融合
+  // 测试融合 - 包含所有10个维度
   const testVector = {
     sentence_length: { short: 0.2, medium: 0.6, long: 0.2 },
     logic_pattern: { deductive: 0.6, inductive: 0.1, contrast: 0.3, narrative: 0.0 },
@@ -668,14 +962,54 @@ if (require.main === module) {
     vocabulary_level: 'professional',
     structure_preference: 'hierarchical',
     opening_style: 'context',
-    closing_style: 'summary'
+    closing_style: 'summary',
+    tone_and_voice: {
+      formality: 0.6,
+      person_usage: { first_person: 0.3, second_person: 0.2, third_person: 0.3, neutral: 0.2 },
+      voice_preference: 'active'
+    },
+    information_density: {
+      density_level: 0.65,
+      detail_level: 'moderate'
+    },
+    interactivity: {
+      interaction_style: { question: 0.2, directive: 0.4, narrative: 0.3, dialogue: 0.1 },
+      supporting_elements: { examples: 0.4, code: 0.3, diagrams: 0.2, none: 0.1 }
+    }
   };
 
-  console.log('\n1. Testing style fusion...');
-  const result = fuseStyle(testVector);
-  console.log('Result:', JSON.stringify(result, null, 2));
+  console.log('\n1. Testing input validation...');
+  try {
+    validateStyleVector(testVector);
+    console.log('✓ Input validation passed');
+  } catch (error) {
+    console.error('✗ Input validation failed:', error.message);
+  }
 
-  console.log('\n2. Getting profile...');
+  console.log('\n2. Testing style fusion...');
+  const result = fuseStyle(testVector);
+  if (result.status === 'error') {
+    console.error('✗ Fusion failed:', result.error);
+  } else {
+    console.log('✓ Fusion succeeded');
+    console.log('Result:', JSON.stringify(result, null, 2));
+  }
+
+  console.log('\n3. Getting profile...');
   const profile = getProfile();
-  console.log('Profile:', JSON.stringify(profile, null, 2));
+  if (profile.status === 'error') {
+    console.error('✗ Get profile failed:', profile.error);
+  } else {
+    console.log('✓ Get profile succeeded');
+    console.log('Profile:', JSON.stringify(profile, null, 2));
+  }
+
+  console.log('\n4. Testing error handling...');
+  const invalidVector = { invalid: 'data' };
+  const errorResult = fuseStyle(invalidVector);
+  if (errorResult.status === 'error') {
+    console.log('✓ Error handling works:', errorResult.error);
+  } else {
+    console.error('✗ Error handling failed: should have returned error');
+  }
 }
