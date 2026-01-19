@@ -79,7 +79,7 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 | 命令 | 用法 | 说明 |
 |------|------|------|
 | `/req` | `/req <需求描述>`<br><br>**示例**：<br>`/req 添加用户登录功能，支持邮箱和手机号登录`<br>`/req 优化首页加载性能，目标首屏时间 < 1s` | **创建造物计划**<br><br>自动生成任务编号（001, 002...）和标题，创建造物计划文档：<br>`.cursor/.lingxi/requirements/001.req.<标题>.md`<br><br>这是整个流程的核心文档，包含需求提纯、技术方案等。 |
-| `/req-review` | `/req-review 001` | **审查 req 文档（可选）**<br><br>对 req 文档展开多维度审查，用于辅助提升 req 文档质量。可省略，也可以多次执行。<br><br>不产出文件，仅输出审查结果和建议到对话中。 |
+| `/review-req` | `/review-req 001` | **审查 req 文档（可选）**<br><br>对 req 文档展开多维度审查，用于辅助提升 req 文档质量。可省略，也可以多次执行。<br><br>不产出文件，仅输出审查结果和建议到对话中。 |
 | `/plan` | `/plan 001` | **任务规划（可选）**<br><br>基于 req 文档生成任务规划文档和测试用例文档。适用于复杂任务，简单任务可跳过。<br><br>**提示**：可以配合 Cursor 的 plan 模式使用。|
 | `/build` | `/build 001` | **执行构建（可选）**<br><br>支持两种模式：<br>- **Plan-driven**：有 plan 文档时，按计划结构化执行（推荐）<br>- **Agent-driven**：无 plan 文档时，Agent 基于 req 自行决策执行 <br><br>**提示**：当使用 plan 模式时，也可以使用规划模式内置的 build 功能，从而跳过灵犀的 `/build` 命令。|
 | `/review` | `/review 001` | **审查交付**<br><br>自动进行文档一致性、安全性、性能等多维度审查，生成审查报告。 |
