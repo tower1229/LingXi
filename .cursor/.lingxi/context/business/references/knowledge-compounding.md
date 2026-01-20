@@ -13,17 +13,19 @@ sequenceDiagram
     participant Evaluator as candidate-evaluator
     participant Session as session/pending-compounding-candidates.json
     participant User
+    participant StopHook as stop hook
     participant Depositor as experience-depositor
     participant Experience as experience/
     participant Curator as experience-curator
     
     Skill->>Capture: 识别经验信号
     Capture->>Capture: 生成 EXP-CANDIDATE
-    Capture->>User: 输出摘要，询问确认
-    User->>Capture: 确认（A/B/C）
-    Capture->>Evaluator: 调用阶段 1 评估
+    Capture->>Evaluator: 调用阶段 1 评估（静默）
     Evaluator->>Capture: 返回评估结果
-    Capture->>Session: 写入暂存候选
+    Capture->>Session: 写入暂存候选（静默）
+    Capture->>User: 输出一行状态："已暂存 X 条经验候选"
+    Note over User,StopHook: 会话结束时
+    StopHook->>User: 提醒："检测到有待沉淀的经验候选，使用 /remember"
     User->>Depositor: /remember 1,3
     Depositor->>Session: 读取暂存
     Depositor->>User: 展示候选，请求选择
@@ -82,13 +84,15 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 1. **识别经验信号**：分析用户输入，识别经验信号（判断、取舍、边界、约束等）
 2. **生成 EXP-CANDIDATE**：基于语义理解生成结构化 EXP-CANDIDATE JSON
-3. **用户确认**：输出用户友好的摘要，询问用户确认
-4. **评估**：用户确认后，调用 `candidate-evaluator` 执行阶段 1 评估
-5. **暂存**：评估通过后，写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
+3. **评估**：直接调用 `candidate-evaluator` 执行阶段 1 评估（静默执行）
+4. **暂存**：评估通过后，静默写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
+5. **状态反馈**：输出一行状态信息：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
 
 **特点**：
-- 输出用户友好的摘要，不输出技术细节（JSON 结构）
-- 用户确认后才执行评估和写入，符合"人工门控"原则
+- 静默执行评估和写入，不打断用户流程
+- 只输出一行状态信息，不输出技术细节（JSON 结构）
+- 不询问用户确认，所有候选暂存到中转文件
+- 最终沉淀选择在 `/remember` 阶段进行（由 stop hook 提醒），符合"人工门控"原则
 - 不写入经验，不触发 curator
 - 评估结果包含在暂存的候选对象中
 

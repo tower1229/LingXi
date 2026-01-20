@@ -90,18 +90,19 @@ async function readPendingCandidates(projectRoot) {
 }
 
 function buildFollowupMessage(candidates) {
-  const lines = candidates.map((c, i) => `${i + 1}. ${c.summary}`);
+  const lines = candidates.map((c, i) => `${i + 1}. ${c.summary || c.trigger || `候选 ${i + 1}`}`);
   return [
-    '检测到本轮输出包含可沉淀的"复利候选"。请先向我确认是否要写入知识库（.cursor/.lingxi/context/experience/）。',
+    "检测到有待沉淀的经验候选。使用 `/remember` 命令查看并选择要沉淀的候选：",
     "",
     "候选列表：",
     ...lines,
     "",
-    "请直接输入编号选择要沉淀的候选：",
-    "- `1,3` 或 `1 3`：选择第 1 和第 3 个候选",
-    "- `全部` 或 `all`：选择所有候选",
+    "使用方式：",
+    "- `/remember` - 查看所有候选并选择沉淀",
+    "- `/remember 1,3` - 直接选择第 1 和第 3 个候选进行沉淀",
+    "- `/remember 全部` - 选择所有候选进行沉淀",
     "",
-    "约束：在你确认前，不得写入 .cursor/.lingxi/context/experience/。",
+    "所有候选已暂存在中转文件，不会自动写入经验库。",
   ].join("\n");
 }
 
