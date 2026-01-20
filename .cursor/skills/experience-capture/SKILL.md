@@ -55,7 +55,10 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001、/
 
 当对话历史缺失（如新会话）时：
 
-- 提示用户明确指定任务编号
+- **检测失败处理**：
+  1. 输出明确的错误提示："无法自动检测当前阶段和任务编号"
+  2. 要求用户明确指定：提示用户输入命令格式（如 `/plan 001`）或直接指定任务编号
+  3. 提供解决方案：说明如何通过命令参数获取（如 `/build 001`）
 - 或通过命令参数获取（如 `/build 001`）
 
 **为什么文件推断不能作为主要来源**：
@@ -141,21 +144,40 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001、/
 
 1. **直接执行阶段 1 评估**
    - 调用 `candidate-evaluator` Skill，传递 EXP-CANDIDATE JSON 和 `stage1` 参数
-   - 执行阶段 1 评估（结构完整性、判断结构质量、可复用性、沉淀载体适配性）
+   - 执行阶段 1 评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型判断、Level 判断、沉淀载体适配性）
    - 如果评估不通过，记录过滤原因，静默跳过，不写入文件
+   - 如果知识可获得性高且不需要规则约束 → 静默过滤，不写入文件
    - 如果评估通过，继续执行步骤 2
 
-2. **静默写入文件**
+2. **Level 和 Type 自动判断**
+   - 从评估结果中提取 `level` 和 `type` 字段
+   - 将 Level 和 Type 添加到 EXP-CANDIDATE JSON：
+     ```json
+     {
+       "level": "team",
+       "type": "knowledge",
+       ...
+     }
+     ```
+   - Level 判断标准：
+     - team：技术栈选择、架构模式、团队规范、跨项目通用原则
+     - project：项目特定架构、业务规则、项目约定、项目内复用模式
+   - Type 判断标准：
+     - standard：强约束、预设通行方案、可自动检查
+     - knowledge：复杂判断、认知触发、风险匹配
+
+3. **静默写入文件**
    - 读取 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（如果存在）
    - 如果文件不存在，创建新文件，初始化为：`{"candidates": [], "asked": false}`
    - 将评估通过的候选合并到 `candidates` 数组
    - 保留 `asked` 标志（如果已存在）
-   - 为每个候选添加 `evaluation` 字段（阶段 1 的评估结果）
+   - 为每个候选添加 `evaluation` 字段（阶段 1 的评估结果，包含 level、type、knowledgeAccessibility）
    - 为每个候选添加 `sourceStage` 字段（标识候选来源阶段）
+   - 为每个候选添加 `level` 和 `type` 字段（从评估结果中提取）
    - 为每个候选添加时间戳
    - 写入文件
 
-3. **输出一行状态信息（最小反馈）**
+4. **输出一行状态信息（最小反馈）**
    - 格式：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
    - 如果同时识别多个候选，汇总数量
    - 如果评估过滤了部分候选，静默处理，不说明过滤原因（保持低打扰）
@@ -184,6 +206,8 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001、/
 - `taskId`：任务编号（001, 002, ...），对于 `/init` 命令设为 `null`
 - `stage`：当前阶段（req/plan/build/review/init）
 - `reqFile`：关联的 req 文件路径（用于后续匹配和追溯），对于 `/init` 命令设为 `null` 或省略
+- `level`：沉淀层级（team/project），从评估结果中提取
+- `type`：经验类型（standard/knowledge），从评估结果中提取
 
 **对于 `/init` 命令的特殊处理**：
 

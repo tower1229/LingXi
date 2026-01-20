@@ -16,7 +16,7 @@
   - 需求全生命周期管理（req → plan → build → review）
   - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀）
   - 经验治理机制（experience-curator 合并/取代、质量准则建议）
-  - 规则管理（rules-creator 创建质量规则）
+  - 质量资产管理（通过 Experience 系统统一管理团队级标准/经验和项目级经验）
   - 上下文管理（service-loader 服务上下文、business context 业务上下文）
 - **不负责什么**：
   - 不负责代码实现（由 AI 根据 plan 执行）
@@ -41,7 +41,7 @@
   - **关键决策点**：
     - 各阶段使用独立命令，用户明确控制流程推进
     - 经验沉淀通过  命令独立执行（随时可用）
-    - 质量准则采纳通过 rules-creator skill 处理
+    - 质量资产沉淀通过 experience-depositor 处理
   - **指针**：、、、
 
 - **经验沉淀流程**：
@@ -54,7 +54,7 @@
   7. experience-curator 自动触发治理（合并/取代、质量准则建议）
   - **关键决策点**：
     - 成长过滤器：判断是否进入长期知识库
-    - 沉淀分流：判断应沉淀到哪里（experience/rules/skills/context）
+    - 沉淀分流：判断应沉淀到哪里（团队级标准/经验、项目级经验、skills/context）
     - 冲突检测：检查与现有经验的冲突
   - **指针**：、、
 
@@ -75,12 +75,12 @@
 - **业务约束**：
   - 各阶段使用独立命令，用户明确控制流程
   - 经验沉淀必须用户确认（禁止未确认写入 ）
-  - 质量准则采纳必须用户确认（禁止未确认写入 ）
+  - 质量资产沉淀必须用户确认（禁止未确认写入经验库）
   - INDEX.md 是需求状态的单一事实源（SSoT）
   - 经验必须包含 Decision Shape 和 Judgment Capsule
 - **业务逻辑要点**：
   - 成长过滤器：判断经验是否进入长期知识库（"一年后，在完全不同的项目里，这条信息还能帮我提前做出正确判断吗？"）
-  - 沉淀分流：将知识放到最合适的载体（experience/rules/skills/context）
+  - 沉淀分流：将知识放到最合适的载体（团队级标准/经验、项目级经验、skills/context）
   - 经验治理：自动合并/取代，保持经验库精炼
   - 指针：、
 
@@ -88,14 +88,13 @@
 
 - **涉及团队/角色**：
   - 使用 workflow 的工程师：通过独立命令（、、、）推进需求，通过  确认经验沉淀
-  - workflow 维护者：维护 Skills、Rules、Hooks，扩展 workflow 能力
+  - workflow 维护者：维护 Skills、Hooks，扩展 workflow 能力
 - **协作方式**：
   - 通过 Skills 机制扩展能力（）
-  - 通过 Rules 机制定义质量准则（）
+  - 通过 Experience 系统定义质量准则（团队级标准/经验和项目级经验）
   - 通过 Hooks 机制扩展行为（）
 - **关键接口/契约**：
   - Skills 接口：Skills 必须包含 frontmatter（name、description），遵循 Skill 规范
-  - Rules 接口：Rules 必须遵循命名规范（），包含 frontmatter
   - 数据模型接口：INDEX.md 必须遵循表头结构，经验文档必须包含必要字段
 
 ## 6) 常见问题（FAQ）

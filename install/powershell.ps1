@@ -123,7 +123,7 @@ if ($CursorExists -or $LingxiExists) {
         # 询问用户确认（交互式）
         Write-Host ""
         Write-Info "检测到已有目录，将以合并模式安装："
-        Write-Info "  - 保留您现有的文件（rules、plans 等）"
+        Write-Info "  - 保留您现有的文件（plans 等）"
         Write-Info "  - 仅添加/更新灵犀需要的文件"
         Write-Host ""
         $response = Read-Host "是否继续？ (y/N)"
@@ -137,7 +137,6 @@ if ($CursorExists -or $LingxiExists) {
 # 创建 .cursor 目录结构
 Write-Info "创建 .cursor 目录结构..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
@@ -153,23 +152,6 @@ foreach ($cmd in $Manifest.commands) {
     $commandCount++
 }
 Write-Success "已下载 commands ($commandCount 个文件)"
-
-# 下载 rules（项目级质量准则）
-# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
-Write-Info "下载 rules..."
-
-# 下载规则文件
-$ruleFileCount = 0
-foreach ($ruleFile in $Manifest.rules.files) {
-    $localFile = ".cursor\$ruleFile"
-    if (-not (Download-File ".cursor\$ruleFile" $localFile)) {
-        Write-Error "安装失败"
-        exit 1
-    }
-    $ruleFileCount++
-}
-Write-Success "已下载 rules ($ruleFileCount 个文件)"
-
 
 # 下载 hooks（hooks.json + scripts）
 Write-Info "下载 hooks..."
@@ -233,6 +215,17 @@ Write-Info "创建 .cursor/.lingxi 目录结构..."
 foreach ($dir in $Manifest.workflowDirectories) {
     $winPath = $dir -replace '/', '\'
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
+}
+
+# 创建 session 目录的初始文件
+Write-Info "创建 session 初始文件..."
+$sessionFile = ".cursor\.lingxi\context\session\pending-compounding-candidates.json"
+if (-not (Test-Path $sessionFile)) {
+    @{
+        candidates = @()
+        asked = $false
+    } | ConvertTo-Json -Depth 10 | Out-File -FilePath $sessionFile -Encoding UTF8 -NoNewline
+    Write-Success "已创建 pending-compounding-candidates.json"
 }
 
 # 下载 INDEX.md 文件
@@ -306,7 +299,6 @@ Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
-Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .cursor/agents/ ($agentCount 个文件)"
 Write-Host "  - .cursor/.lingxi/ 目录结构"

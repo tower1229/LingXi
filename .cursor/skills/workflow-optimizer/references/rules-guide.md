@@ -1,5 +1,7 @@
 # Rules 技术指南
 
+> **注意**：本文档描述 Cursor 官方的 Rules 功能。**灵犀不使用 Cursor Rules 机制**，所有质量资产统一通过 Experience 系统（团队级标准/经验和项目级经验）管理。本文档仅作为技术参考，用于了解 Cursor Rules 的能力边界。
+
 ## 概述
 
 基于 Cursor 官方文档的 Rules 功能用法和最佳实践。

@@ -16,11 +16,13 @@ description: 此 Skill 是经验成长循环核心，支持方案模式（生成
 
 **方案模式**：
 - 新增经验的 Tag 列表（本轮沉淀的经验）
-- `.cursor/.lingxi/context/experience/INDEX.md`（当前经验索引）
+- 新增经验的 Level（team/project）
+- 对应的 INDEX.md（`team/INDEX.md` 或 `project/INDEX.md`）
 
 **执行模式**：
 - 新增经验的 Tag 列表（本轮沉淀的经验）
-- `.cursor/.lingxi/context/experience/INDEX.md`（当前经验索引）
+- 新增经验的 Level（team/project）
+- 对应的 INDEX.md（`team/INDEX.md` 或 `project/INDEX.md`）
 - 用户确认的治理方案（从方案模式输出）
 
 ## Outputs
@@ -29,7 +31,7 @@ description: 此 Skill 是经验成长循环核心，支持方案模式（生成
 - 治理方案（输出到对话，不执行）
 
 **执行模式**（must write）：
-- 更新后的 `INDEX.md`（合并/取代后的索引）
+- 更新后的 `INDEX.md`（`team/INDEX.md` 或 `project/INDEX.md`，根据 Level 确定）
 - 变更报告（输出到对话）
 
 注：`INDEX.md.bak`（执行前备份）会在治理完成后自动删除
@@ -38,19 +40,25 @@ description: 此 Skill 是经验成长循环核心，支持方案模式（生成
 
 ## Instructions
 
-### 0) 备份索引（回滚准备）
+### 0) 确定索引路径
+
+根据新增经验的 Level，确定对应的 INDEX.md 路径：
+- Level = team → `team/INDEX.md`
+- Level = project → `project/INDEX.md`
+
+### 0.5) 备份索引（回滚准备）
 
 在执行任何治理动作前，必须先备份：
 
 ```bash
-cp .cursor/.lingxi/context/experience/INDEX.md .cursor/.lingxi/context/experience/INDEX.md.bak
+cp .cursor/.lingxi/context/experience/{level}/INDEX.md .cursor/.lingxi/context/experience/{level}/INDEX.md.bak
 ```
 
 注：备份文件会在治理完成后（步骤 6）自动删除
 
 ### 1) 读取索引与新经验
 
-- 读取 `INDEX.md` 中所有 `Status = active` 的经验
+- 读取对应的 `INDEX.md`（根据 Level 确定）中所有 `Status = active` 的经验
 - 识别本轮新增的经验（从对话上下文获取）
 - 读取本轮新增经验文件内容，确保包含并可提取以下结构化字段：
   - `Decision Shape`（Decision being made / Alternatives rejected / Discriminating signal）
@@ -126,8 +134,10 @@ cp .cursor/.lingxi/context/experience/INDEX.md .cursor/.lingxi/context/experienc
 治理流程结束后，必须删除备份文件：
 
 ```bash
-rm .cursor/.lingxi/context/experience/INDEX.md.bak
+rm .cursor/.lingxi/context/experience/{level}/INDEX.md.bak
 ```
+
+其中 `{level}` 根据新增经验的 Level 确定（team 或 project）
 
 **执行时机**：
 

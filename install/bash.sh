@@ -248,7 +248,7 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
         # 询问用户确认（交互式）
         echo ""
         info "检测到已有目录，将以合并模式安装："
-        info "  - 保留您现有的文件（rules、plans 等）"
+        info "  - 保留您现有的文件（plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
 
@@ -318,7 +318,6 @@ download_file() {
 # 创建 .cursor 目录结构
 info "创建 .cursor 目录结构..."
 mkdir -p .cursor/commands
-mkdir -p .cursor/rules
 mkdir -p .cursor/skills
 mkdir -p .cursor/hooks
 mkdir -p .cursor/agents
@@ -336,24 +335,6 @@ while IFS= read -r cmd; do
     command_count=$((command_count + 1))
 done < <(get_json_array "commands")
 success "已下载 commands ($command_count 个文件)"
-
-# 下载 rules 文件（项目级质量准则）
-info "下载 rules..."
-
-# 下载规则文件
-rule_file_count=0
-while IFS= read -r rule_file; do
-    [ -z "$rule_file" ] && continue
-    local_file=".cursor/${rule_file}"
-    if ! download_file ".cursor/${rule_file}" "$local_file"; then
-        error "安装失败"
-        exit 1
-    fi
-    rule_file_count=$((rule_file_count + 1))
-done < <(get_json_object_array "rules" "files")
-
-success "已下载 rules ($rule_file_count 个文件)"
-
 
 # 下载 hooks 配置与脚本
 info "下载 hooks..."
@@ -458,6 +439,14 @@ while IFS= read -r dir; do
     mkdir -p "$dir"
 done < <(get_json_array "workflowDirectories")
 
+# 创建 session 目录的初始文件
+info "创建 session 初始文件..."
+session_file=".cursor/.lingxi/context/session/pending-compounding-candidates.json"
+if [ ! -f "$session_file" ]; then
+    echo '{"candidates": [], "asked": false}' > "$session_file"
+    success "已创建 pending-compounding-candidates.json"
+fi
+
 # 下载 INDEX.md 文件
 info "下载索引文件..."
 while IFS= read -r index_file; do
@@ -533,7 +522,6 @@ success "安装完成！"
 echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ ($command_count 个命令)"
-echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo "  - .cursor/agents/ ($agent_count 个文件)"
 echo "  - .cursor/.lingxi/ 目录结构"

@@ -15,7 +15,7 @@
 
 ## 命令用途
 
-引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/context/experience/`）、规则（`.cursor/rules/qs-*.mdc`）、业务上下文（`.cursor/.lingxi/context/business/`）和服务上下文（`.cursor/.lingxi/context/tech/services/`）中。
+引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/context/experience/`）、业务上下文（`.cursor/.lingxi/context/business/`）和服务上下文（`.cursor/.lingxi/context/tech/services/`）中。
 
 ---
 
@@ -23,7 +23,6 @@
 
 - `service-loader`：生成服务上下文文档
 - `experience-depositor`：沉淀经验到经验库
-- `rules-creator`：创建质量规则（如需要）
 
 ---
 
@@ -41,10 +40,9 @@
 
 - `.cursor/.lingxi/context/business/<topic>.md`（业务上下文文档，至少 1 个）
 - `.cursor/.lingxi/context/tech/services/<service>.md`（服务上下文文档，如适用）
-- `.cursor/.lingxi/context/experience/<tag>-<title>.md`（经验文档，如触发沉淀）
+- `.cursor/.lingxi/context/experience/team/knowledge/<tag>-<title>.md` 或 `team/standards/<tag>-<title>.md` 或 `project/<tag>-<title>.md`（经验文档，如触发沉淀）
 - `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（经验候选暂存，如生成 EXP-CANDIDATE）
-- `.cursor/.lingxi/context/experience/INDEX.md`（经验索引，如写入经验）
-- `.cursor/rules/qs-*.mdc`（质量规则，如用户采纳质量准则建议）
+- `.cursor/.lingxi/context/experience/team/INDEX.md` 或 `project/INDEX.md`（经验索引，如写入经验）
 
 ---
 
@@ -190,7 +188,7 @@
 
 - **生成服务上下文文档**：调用 `service-loader` Skill（参考 `.cursor/skills/service-loader/SKILL.md`）
 - **沉淀经验到经验库**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
-- **创建质量规则**（如需要）：通过 `experience-depositor` 间接调用 `rules-creator` Skill
+- **沉淀质量资产**：通过 `experience-depositor` 沉淀到经验库（团队级标准/经验或项目级经验）
 
 ---
 

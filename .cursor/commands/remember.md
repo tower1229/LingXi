@@ -4,7 +4,7 @@
 
 智能提取并沉淀质量标准，支持从用户输入直接提取质量标准，或从对话历史中提取"刚解决的问题/踩的坑"。这是最低摩擦的"即时沉淀入口"。
 
-**存储目标**：用户可选择存入经验库（`.cursor/.lingxi/context/experience/`）或规则库（`.cursor/rules/qs-*/`），AI 推荐规则应用方式。
+**存储目标**：用户可选择存入团队级标准（`team/standards/`）、团队级经验（`team/knowledge/`）或项目级经验（`project/`）。
 
 ---
 
@@ -38,15 +38,19 @@
 
 根据用户选择的存储目标：
 
-- **如果选择经验库**：
+根据用户选择的存储目标：
 
-  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`（一条经验文件，需用户确认后写入）
-  - `.cursor/.lingxi/context/experience/INDEX.md`（更新索引，需用户确认后写入）
+- **如果选择团队级标准**：
+  - `.cursor/.lingxi/context/experience/team/standards/<tag>-<title>.md`（标准文件，需用户确认后写入）
+  - `.cursor/.lingxi/context/experience/team/INDEX.md`（更新索引，需用户确认后写入）
 
-- **如果选择规则库**：
-  - `.cursor/rules/qs-{type}-{scope}.mdc`（质量准则规则，需用户确认后写入）
-  - `.cursor/rules/quality-standards-index.md`（更新索引，需用户确认后写入）
-  - `.cursor/rules/quality-standards-schema.md`（更新状态，需用户确认后写入）
+- **如果选择团队级经验**：
+  - `.cursor/.lingxi/context/experience/team/knowledge/<tag>-<title>.md`（经验文件，需用户确认后写入）
+  - `.cursor/.lingxi/context/experience/team/INDEX.md`（更新索引，需用户确认后写入）
+
+- **如果选择项目级经验**：
+  - `.cursor/.lingxi/context/experience/project/<tag>-<title>.md`（经验文件，需用户确认后写入）
+  - `.cursor/.lingxi/context/experience/project/INDEX.md`（更新索引，需用户确认后写入）
 
 ---
 
@@ -93,7 +97,7 @@
 
 - 冲突检测
 - 预览生成和存储目标选择
-- 写入经验库或规则库
+- 写入经验库（团队级标准/经验或项目级经验）
 - 索引更新
 - curator 治理触发
 
@@ -105,10 +109,10 @@
 
 - **经验沉淀流程**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
   - 编号选择解析（如果用户输入是编号格式）
-  - 冲突检测
-  - 预览生成和存储目标选择
-  - 写入经验库或规则库
-  - 索引更新
+  - 冲突检测（根据 Level 读取对应的 INDEX.md）
+  - 预览生成和存储目标选择（团队级标准/经验或项目级经验）
+  - 写入对应目录
+  - 索引更新（更新对应的 INDEX.md）
   - curator 治理触发
 
 ---
@@ -118,8 +122,7 @@
 - **信息提取阶段**：如果识别到可沉淀经验，输出提取的信息摘要
 - **委托给 experience-depositor**：后续的预览、确认、写入等流程由 `experience-depositor` 处理
 - **最后输出**（由 experience-depositor 输出）：
-  - 如果存入经验库：用 3-6 行简短说明：提取了什么经验、触发条件是什么、下次会在什么场景下自动提醒
-  - 如果存入规则库：用 3-6 行简短说明：创建了什么规则、应用方式是什么、何时会自动加载
+  - 用 3-6 行简短说明：提取了什么经验、触发条件是什么、下次会在什么场景下自动提醒
 
 ---
 

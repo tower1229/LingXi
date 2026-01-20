@@ -57,21 +57,22 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .c
 
 按 stage/时间排序，展示候选：
 
-**展示格式**（重点展示核心信息）：
+**展示格式**（重点展示核心信息，增加 Level 和 Type 展示）：
 
 ```markdown
 ## 经验候选列表
 
-### 候选 1：[标题]
+### 候选 1：[标题] [团队级/项目级] [标准/经验]
 - **触发条件**：什么情况下会用到这条经验
 - **判断**：当时的判断是什么
 - **备选方案**：考虑了哪些其他方案（如有）
 - **判断依据**：基于什么做出这个判断
 - **解决方案**：最终采用的方案
 - **验证方式**：如何验证这个决策正确性
-- **推荐载体**：experience（简要理由：高可复用性且判断结构完整）
+- **推荐存储**：团队级标准（强约束、执行底线）
+- **知识可获得性**：高（0.2）- Vite 官方约定，但需要规则约束
 
-### 候选 2：[标题]
+### 候选 2：[标题] [团队级/项目级] [标准/经验]
 ...
 ```
 
@@ -90,7 +91,7 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .c
 
 - **A) 全部确认**：将所有候选存入经验库
 - **B) 选择部分**：输入编号选择部分候选（如 `B 1,3` 或 `B 1 3`）
-- **C) 调整存储目标**：为部分候选选择不同的存储目标（经验库 vs 规则库）
+- **C) 调整存储目标**：为部分候选选择不同的存储目标（团队级标准 vs 团队级经验 vs 项目级经验）
 - **D) 修改候选信息**：修改候选的部分信息（如 trigger、decision 等）
 - **E) 取消**：放弃沉淀
 
@@ -101,29 +102,32 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .c
 
 - **A) 全部确认**：
   - 直接进入步骤 3（冲突检测）
-  
+
 - **B) 选择部分**：
   - 解析用户输入中的编号（如 `B 1,3` → 选择候选 1 和 3）
   - 只对选中的候选执行后续流程
   - 未选中的候选保留在暂存中
-  
+
 - **C) 调整存储目标**：
-  - 展示所有候选，让用户为每个候选选择存储目标（经验库 vs 规则库）
-  - 支持批量选择（如"全部选择经验库"）
+  - 展示所有候选，让用户为每个候选选择存储目标（团队级标准 vs 团队级经验 vs 项目级经验）
+  - 支持批量选择（如"全部选择团队级标准"）
   - 然后进入步骤 8（存储目标选择）
-  
+
 - **D) 修改候选信息**：
   - 让用户选择要修改的候选编号
   - 展示候选的当前信息，让用户修改
   - 更新候选信息后，重新展示候选列表
-  
+
 - **E) 取消**：
   - 终止流程，保留候选在暂存中
 
 ### 3) 冲突检测
 
-读取 `.cursor/.lingxi/context/experience/INDEX.md`，对选择的候选检查：
+根据候选的 Level，读取对应的 INDEX.md：
+- Level = team → 读取 `team/INDEX.md`
+- Level = project → 读取 `project/INDEX.md`
 
+对选择的候选检查：
 - 触发条件相同/相似，且解决方案矛盾 → 冲突：旧经验标记 deprecated，新经验记录替代关系
 - 触发条件相近且解决方案相同/相似 → 重复：默认合并（或请求用户确认合并策略）
 
@@ -161,93 +165,67 @@ description: 此 Skill 将学习成果、约束条件和调试结论沉淀到 .c
 - 建立 `Replaces/ReplacedBy` 追溯关系，更新 INDEX（Scope/Strength 取更优值）
 - 输出变更报告（动作/理由/影响/回滚命令）
 
-### 8) 存储目标选择（如果推荐载体包含 experience 或 rules）
-
-在决定写入经验文档（长期）或规则之前，需要让用户选择存储目标：
+### 8) 存储目标选择
 
 在决定写入经验文档（长期）之前，需要让用户选择存储目标：
 
-- **选项 A：存入经验库**：写入 `.cursor/.lingxi/context/experience/`，下次匹配时作为提醒
-- **选项 B：存入规则库**：写入 `.cursor/rules/qs-*/`，作为 Cursor 规则自动加载
+**选项**：
+- **A) 存入团队级标准**：写入 `team/standards/`，强约束、执行底线
+- **B) 存入团队级经验**：写入 `team/knowledge/`，复杂判断、认知触发
+- **C) 存入项目级经验**：写入 `project/`，项目特定、长期复用
 
 **预览输出格式**（在生成经验预览时同时展示）：
 
 ```markdown
-## 质量标准预览
+## 质量资产预览
 
 ### 内容摘要
 
 - **标题**：...
 - **触发条件**：...
 - **核心判断**：...
+- **Level**：团队级/项目级
+- **Type**：标准/经验
 
 ### 存储目标选择
 
-- **A) 存入经验库**：写入 .cursor/.lingxi/context/experience/，下次匹配时作为提醒
+- **A) 存入团队级标准**：写入 team/standards/，强约束、执行底线
+- **B) 存入团队级经验**：写入 team/knowledge/，复杂判断、认知触发
+- **C) 存入项目级经验**：写入 project/，项目特定、长期复用
 
-- **B) 存入规则库**：写入 .cursor/rules/，作为 Cursor 规则自动加载
-
-  **规则配置预览**（如果选择 B）：
-
-- **推荐应用方式**：文件匹配（上下文成本最低）
-- **推荐配置**：
-- Type: fs (file-scoped)
-- Scope: frontend
-- Globs: `**/components/**/*.tsx`（根据项目实际结构调整）
-- 理由：内容明确涉及"组件"，适合文件匹配方式
-
-请选择 A 或 B：
+请选择 A、B 或 C：
 ```
 
-**规则配置推荐逻辑**（当用户选择 B 时）：
+**推荐逻辑**：
 
-1. **分析质量标准内容**，结合项目实际情况，推荐应用方式（按优先级）：
-
-   - 文件匹配（globs）：如果内容明确关联某类文件，且项目中有明确的文件结构
-   - 智能判断（description）：如果内容是某领域的通用原则，或文件分布较散
-   - 始终应用（alwaysApply）：仅限安全红线/合规底线
-
-2. **推荐参考表**（AI 灵活判断，参考以下映射表）：
-
-AI 应根据以下因素综合判断：
-
-- 质量标准内容的核心主题和适用场景
-- **项目实际目录结构**（必须分析项目结构，不能套用固定模式）
-- 内容是否与特定文件类型/路径强绑定
-- 是否符合 Cursor Rules 的最佳实践（参考 `rules-guide.md`）
-
-**推荐参考表**（仅供参考，AI 应灵活判断）：
-
-| 关键词/主题     | 可能的推荐方式                      | 可能的 globs 示例（需根据项目实际调整）          |
-| --------------- | ----------------------------------- | ------------------------------------------------ |
-| 组件/Component  | fs（如果组件集中）或 i（如果分散）  | `**/components/**/*.tsx`（需验证项目结构）       |
-| API/接口/路由   | fs（如果 API 集中）或 i（如果分散） | `**/api/**`, `**/routes/**`（需验证项目结构）    |
-| SQL/数据库/迁移 | fs                                  | `**/*.sql`, `**/migrations/**`（需验证项目结构） |
-| 安全/密钥/权限  | always（红线）或 i（建议）          | -                                                |
-| 设计/UI/样式    | fs（如果设计文件集中）              | `**/design/**`, `**/styles/**`（需验证项目结构） |
-| 通用/架构/原则  | i                                   | -                                                |
-
-**重要**：
-
-- 必须先分析项目实际目录结构，再推荐 globs
-- 不能套用固定模式，必须根据项目实际情况调整
-- 如果无法确定，优先推荐 i（智能判断）而非 fs（文件匹配）
-
-3. **如果用户确认选择 B**，则直接进入规则创建流程（调用 rules-creator），无需再次确认配置。
+- 如果评估结果推荐 Level = team，Type = standard → 推荐 A（团队级标准）
+- 如果评估结果推荐 Level = team，Type = knowledge → 推荐 B（团队级经验）
+- 如果评估结果推荐 Level = project → 推荐 C（项目级经验）
 
 ### 9) 写入
 
-根据用户选择的存储目标和推荐载体，写入对应位置：
+根据用户选择的存储目标，写入对应位置：
 
-- **如果选择 experience**：
-  - 写入 `.cursor/.lingxi/context/experience/<tag>-<title>.md`
-  - **自动更新 INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update` 更新索引
+- **如果选择 A（团队级标准）**：
+  - 写入 `.cursor/.lingxi/context/experience/team/standards/<tag>-<title>.md`
+  - **自动更新 team/INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update --level team` 更新索引
     - 如果更新失败，输出错误信息，但不影响经验文件写入
     - 保持静默成功原则：更新成功时不输出确认信息
   - 触发 `experience-curator` 治理流程
 
-- **如果选择 rules**：调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}.mdc`
-- **如果选择其他载体**：按对应载体的写入规范执行
+- **如果选择 B（团队级经验）**：
+  - 写入 `.cursor/.lingxi/context/experience/team/knowledge/<tag>-<title>.md`
+  - **自动更新 team/INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update --level team` 更新索引
+    - 如果更新失败，输出错误信息，但不影响经验文件写入
+    - 保持静默成功原则：更新成功时不输出确认信息
+  - 触发 `experience-curator` 治理流程
+
+- **如果选择 C（项目级经验）**：
+  - 写入 `.cursor/.lingxi/context/experience/project/<tag>-<title>.md`
+  - **自动更新 project/INDEX.md**：经验文件写入成功后，自动运行 `node scripts/validate-experience-index.js --update --level project` 更新索引
+    - 如果更新失败，输出错误信息，但不影响经验文件写入
+    - 保持静默成功原则：更新成功时不输出确认信息
+  - 触发 `experience-curator` 治理流程
 
 **注意**：治理已在步骤 7 执行，此处只需写入文件即可。
 
@@ -257,10 +235,29 @@ AI 应根据以下因素综合判断：
 
 ### 经验模板（必须包含）
 
+#### 标准模板（standard）
+
+适用于团队级标准（强约束、执行底线）：
+
 - 触发条件（When to load）
+- 标准内容（执行底线、预设通行方案）
+- 判断结构（Decision Shape）
+- 认知蒸馏（Judgment Capsule）
+- 校验方式（How to verify）
+- 关联指针（Pointers）
+
+#### 经验模板（knowledge）
+
+适用于团队级经验和项目级经验（复杂判断、认知触发）：
+
+- 触发条件（When to load）
+- 表层信号（Surface signal）
+- 隐含风险（Hidden risk）
 - 问题现象（Symptom）
 - 根因（Root cause）
 - 解决方案（Fix）
+- 判断结构（Decision Shape）
+- 认知蒸馏（Judgment Capsule）
 - 校验方式（How to verify）
 - 关联指针（Pointers）
 
@@ -279,19 +276,24 @@ AI 应根据以下因素综合判断：
 
 写入（根据存储目标选择）：
 
-- **如果选择 A（经验库）**：
-
-  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`
-  - 更新 `.cursor/.lingxi/context/experience/INDEX.md`
+- **如果选择 A（团队级标准）**：
+  - `.cursor/.lingxi/context/experience/team/standards/<tag>-<title>.md`
+  - 更新 `team/INDEX.md`
   - 触发 `experience-curator` 治理流程
 
-- **如果选择 B（规则库）**：
-  - 调用 `rules-creator` skill，创建或更新 `.cursor/rules/qs-{type}-{scope}.mdc`
-  - 更新 `.cursor/rules/quality-standards-index.md`
-  - 更新 `.cursor/rules/quality-standards-schema.md`
+- **如果选择 B（团队级经验）**：
+  - `.cursor/.lingxi/context/experience/team/knowledge/<tag>-<title>.md`
+  - 更新 `team/INDEX.md`
+  - 触发 `experience-curator` 治理流程
+
+- **如果选择 C（项目级经验）**：
+  - `.cursor/.lingxi/context/experience/project/<tag>-<title>.md`
+  - 更新 `project/INDEX.md`
+  - 触发 `experience-curator` 治理流程
 
 索引写入要求（与 INDEX 表头一致）：
 
+- `Type`：经验类型（standard/knowledge）
 - `Trigger (when to load)`：用于工程检索（关键词/场景）
 - `Surface signal`：表层信号（让我应该警觉的味道）
 - `Hidden risk`：隐含风险（真正会炸的点）

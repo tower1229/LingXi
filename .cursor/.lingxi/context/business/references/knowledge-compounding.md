@@ -109,11 +109,23 @@ EXP-CANDIDATE 应在以下阶段输出：
 - **否**：不写入 experience，改为沉淀到 session/worklog（项目记录）
 - **是**：允许写入 experience（长期判断资产）
 
+### 知识可获得性评估
+
+在成长过滤器之前，先评估知识可获得性：
+
+- **高可获得性**（0.0-0.3）：框架官方约定、标准实践
+  - 如果不需要规则约束 → 过滤（模型知识库应包含）
+  - 如果需要规则约束 → 是经验（标准类）
+- **中可获得性**（0.4-0.6）：社区最佳实践、常见但需要判断的场景
+  - 是经验（判断模式）
+- **低可获得性**（0.7-1.0）：团队/项目特定决策
+  - 是经验（团队/项目决策模式）
+
 ### 应用时机
 
 成长过滤器在两个时机应用：
 
-1. **experience-capture**：在评估阶段初步过滤，避免暂存无价值的候选
+1. **experience-capture**：在评估阶段初步过滤，避免暂存无价值的候选（包括知识可获得性过滤）
 2. **experience-depositor**：再次确认，确保只有长期资产进入 experience
 
 ### 目的
@@ -191,21 +203,31 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ## 经验模板
 
-每条经验必须包含以下字段：
+### 标准模板（standard）
 
-### 基础字段
+适用于团队级标准（强约束、执行底线）：
 
-- **触发条件（When to load）**：在什么场景下需要加载这条经验
+- **触发条件（When to load）**：在什么场景下需要加载此标准
+- **标准内容**：执行底线、预设通行方案
+- **判断结构（Decision Shape）**：必须
+- **认知蒸馏（Judgment Capsule）**：必须
+- **校验方式（How to verify）**：如何验证此标准的有效性
+- **关联指针（Pointers）**：相关文件路径、函数名、配置项等
+
+### 经验模板（knowledge）
+
+适用于团队级经验和项目级经验（复杂判断、认知触发）：
+
+- **触发条件（When to load）**：在什么场景下需要加载此经验
+- **表层信号（Surface signal）**：我闻到了熟悉的风险味道
+- **隐含风险（Hidden risk）**：真正会出问题的点
 - **问题现象（Symptom）**：用户看到/遇到的具体表现
 - **根因（Root cause）**：为什么会出现这个问题
 - **解决方案（Fix）**：如何解决/规避
+- **判断结构（Decision Shape）**：必须
+- **认知蒸馏（Judgment Capsule）**：必须
 - **校验方式（How to verify）**：如何验证问题已被解决/规避，必须可复现
 - **关联指针（Pointers）**：相关文件路径、函数名、配置项等
-
-### 判断结构字段
-
-- **Decision Shape**：判断结构（必须）
-- **Judgment Capsule**：认知蒸馏（必须）
 
 ### 可选字段
 
@@ -215,7 +237,9 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 在沉淀新经验前，必须执行冲突检测：
 
-1. **读取所有现有经验**：读取 `.cursor/.lingxi/context/experience/INDEX.md` 中的所有 active 经验
+1. **读取现有经验**：根据候选的 Level，读取对应的 INDEX.md：
+   - Level = team → 读取 `team/INDEX.md`
+   - Level = project → 读取 `project/INDEX.md`
 2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
 3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
 4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
@@ -233,12 +257,18 @@ EXP-CANDIDATE 应在以下阶段输出：
 ### experience-depositor 处理
 
 1. **读取暂存**：加载 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
-2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers
+2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers，包含 Level 和 Type 信息
 3. **请求选择**：支持全选/部分/放弃
-4. **沉淀分流**：判断应沉淀到哪里
+4. **沉淀分流**：根据 Level 和 Type 判断应沉淀到哪里：
+   - Level = team, Type = standard → `team/standards/`
+   - Level = team, Type = knowledge → `team/knowledge/`
+   - Level = project → `project/`
 5. **成长过滤器**：再次确认是否进入长期知识库
-6. **冲突检测**：检查与现有经验的冲突
-7. **写入**：按模板写入 `.cursor/.lingxi/context/experience/<tag>-<title>.md`，更新 INDEX
+6. **冲突检测**：根据 Level 检查与现有经验的冲突（读取对应的 INDEX.md）
+7. **写入**：按模板写入对应目录，更新对应的 INDEX.md：
+   - 团队级标准：`team/standards/<tag>-<title>.md`，更新 `team/INDEX.md`
+   - 团队级经验：`team/knowledge/<tag>-<title>.md`，更新 `team/INDEX.md`
+   - 项目级经验：`project/<tag>-<title>.md`，更新 `project/INDEX.md`
 8. **触发 curator**：在实际新增经验后调用 `experience-curator` 进行治理
 9. **清理**：从暂存中移除已处理项；未写入项保留
 

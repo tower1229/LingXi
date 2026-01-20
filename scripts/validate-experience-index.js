@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * 验证和更新 .cursor/.lingxi/context/experience/INDEX.md 格式的脚本
+ * 验证和更新 .cursor/.lingxi/context/experience/team/INDEX.md 和 project/INDEX.md 格式的脚本
  * 
  * 功能：
- * 1. 索引生成：扫描经验文件目录，自动生成 INDEX.md
+ * 1. 索引生成：扫描经验文件目录，自动生成 INDEX.md（支持 team/project/all）
  * 2. 索引更新：读取现有 INDEX.md，扫描经验文件目录，比较并更新索引
  * 3. 冲突检测：检测缺失的文件、缺失的索引行、字段不一致
- * 4. 格式验证：验证索引格式、字段完整性、字段格式
+ * 4. 格式验证：验证索引格式、字段完整性、字段格式（包括 Type 字段）
  */
 
 const fs = require('fs');
@@ -43,17 +43,26 @@ const VALID_STATUS = ['active', 'deprecated'];
 const VALID_SCOPE = ['narrow', 'medium', 'broad'];
 const VALID_STRENGTH = ['hypothesis', 'validated', 'enforced'];
 
-// 期望的表头字段
-const EXPECTED_HEADER = ['Tag', 'Title', 'Trigger (when to load)', 'Surface signal', 'Hidden risk', 'Status', 'Scope', 'Strength', 'Replaces', 'ReplacedBy', 'File'];
+// 期望的表头字段（增加 Type 字段）
+const EXPECTED_HEADER = ['Tag', 'Type', 'Title', 'Trigger (when to load)', 'Surface signal', 'Hidden risk', 'Status', 'Scope', 'Strength', 'Replaces', 'ReplacedBy', 'File'];
 
-// 经验文件目录
-const EXPERIENCE_DIR = path.join(process.cwd(), '.cursor/.lingxi/context/experience');
-const INDEX_PATH = path.join(EXPERIENCE_DIR, 'INDEX.md');
+// 经验文件目录（支持 team 和 project）
+const EXPERIENCE_DIRS = {
+  team: {
+    standards: path.join(process.cwd(), '.cursor/.lingxi/context/experience/team/standards'),
+    knowledge: path.join(process.cwd(), '.cursor/.lingxi/context/experience/team/knowledge'),
+    index: path.join(process.cwd(), '.cursor/.lingxi/context/experience/team/INDEX.md'),
+  },
+  project: {
+    root: path.join(process.cwd(), '.cursor/.lingxi/context/experience/project'),
+    index: path.join(process.cwd(), '.cursor/.lingxi/context/experience/project/INDEX.md'),
+  },
+};
 
 /**
  * 从经验文件中提取字段
  */
-function extractFieldsFromFile(filePath) {
+function extractFieldsFromFile(filePath, level, type) {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
   
@@ -90,7 +99,7 @@ function extractFieldsFromFile(filePath) {
   }
   trigger = trigger.trim();
   
-  return { tag, title, trigger };
+  return { tag, type, title, trigger, level };
 }
 
 /**
@@ -112,20 +121,20 @@ function parseRow(line) {
   const parts = trimmed.split('|').slice(1, -1).map(s => s.trim());
   if (parts.length < EXPECTED_HEADER.length) return null;
   
-  const [tag, title, trigger, surfaceSignal, hiddenRisk, status, scope, strength, replaces, replacedBy, file] = parts;
+  const [tag, type, title, trigger, surfaceSignal, hiddenRisk, status, scope, strength, replaces, replacedBy, file] = parts;
   
-  return { tag, title, trigger, surfaceSignal, hiddenRisk, status, scope, strength, replaces, replacedBy, file };
+  return { tag, type, title, trigger, surfaceSignal, hiddenRisk, status, scope, strength, replaces, replacedBy, file };
 }
 
 /**
  * 读取现有 INDEX.md
  */
-function readExistingIndex() {
-  if (!fs.existsSync(INDEX_PATH)) {
+function readExistingIndex(indexPath) {
+  if (!fs.existsSync(indexPath)) {
     return { header: null, rows: [] };
   }
   
-  const content = fs.readFileSync(INDEX_PATH, 'utf8');
+  const content = fs.readFileSync(indexPath, 'utf8');
   const lines = content.split('\n');
   
   let header = null;
@@ -156,27 +165,57 @@ function readExistingIndex() {
 }
 
 /**
- * 扫描经验文件目录
+ * 扫描目录中的经验文件
  */
-function scanExperienceFiles() {
-  const files = [];
-  
-  if (!fs.existsSync(EXPERIENCE_DIR)) {
-    return files;
+function scanDirectory(dirPath, level, type, files) {
+  if (!fs.existsSync(dirPath)) {
+    return;
   }
   
-  const entries = fs.readdirSync(EXPERIENCE_DIR, { withFileTypes: true });
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   
   for (const entry of entries) {
     if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'INDEX.md') {
-      const filePath = path.join(EXPERIENCE_DIR, entry.name);
-      const fields = extractFieldsFromFile(filePath);
+      const filePath = path.join(dirPath, entry.name);
+      const fields = extractFieldsFromFile(filePath, level, type);
+      
+      // 生成文件路径
+      let relativePath;
+      if (level === 'team') {
+        if (type === 'standard') {
+          relativePath = `.cursor/.lingxi/context/experience/team/standards/${entry.name}`;
+        } else {
+          relativePath = `.cursor/.lingxi/context/experience/team/knowledge/${entry.name}`;
+        }
+      } else {
+        relativePath = `.cursor/.lingxi/context/experience/project/${entry.name}`;
+      }
+      
       files.push({
         ...fields,
-        file: `.cursor/.lingxi/context/experience/${entry.name}`,
+        file: relativePath,
         filePath,
       });
     }
+  }
+}
+
+/**
+ * 扫描经验文件目录（支持多目录结构）
+ */
+function scanExperienceFiles(level = 'all') {
+  const files = [];
+  
+  if (level === 'all' || level === 'team') {
+    // 扫描 team/standards/
+    scanDirectory(EXPERIENCE_DIRS.team.standards, 'team', 'standard', files);
+    // 扫描 team/knowledge/
+    scanDirectory(EXPERIENCE_DIRS.team.knowledge, 'team', 'knowledge', files);
+  }
+  
+  if (level === 'all' || level === 'project') {
+    // 扫描 project/
+    scanDirectory(EXPERIENCE_DIRS.project.root, 'project', 'knowledge', files);
   }
   
   return files;
@@ -187,6 +226,7 @@ function scanExperienceFiles() {
  */
 function generateIndexRow(file, existingRow = null) {
   const tag = file.tag;
+  const type = file.type || (existingRow?.type || 'knowledge');
   const title = file.title || '';
   const trigger = file.trigger || '';
   const filePath = file.file;
@@ -202,6 +242,7 @@ function generateIndexRow(file, existingRow = null) {
   
   return {
     tag,
+    type,
     title,
     trigger,
     surfaceSignal,
@@ -218,12 +259,23 @@ function generateIndexRow(file, existingRow = null) {
 /**
  * 生成 INDEX.md 内容
  */
-function generateIndexContent(rows) {
+function generateIndexContent(rows, level) {
   const header = EXPECTED_HEADER.join(' | ');
   const separator = EXPECTED_HEADER.map(() => '---').join(' | ');
   
-  let content = `# Experience Index\n\n`;
-  content += `> 这里存放"会让下次更快/更稳"的经验沉淀。每条经验必须包含：触发条件、解决方案、校验方式、关联指针。\n>\n`;
+  let content = '';
+  if (level === 'team') {
+    content = `# Team Experience Index\n\n`;
+    content += `> 团队级质量资产：跨项目复用的标准和经验。\n> \n`;
+    content += `> **标准**：具有普遍适用性的执行底线或针对具体场景的预设通行方案，用于保障基本的出品质量，具有强约束力。\n`;
+    content += `> **经验**：复杂的判断模式、认知触发、风险匹配，需要深度理解的决策思路。\n>\n`;
+  } else if (level === 'project') {
+    content = `# Project Experience Index\n\n`;
+    content += `> 项目级质量资产：项目内复用的经验和约定。\n>\n`;
+  } else {
+    content = `# Experience Index\n\n`;
+  }
+  
   content += `> 重要：本索引的 Trigger 不仅用于检索，也用于"认知触发"。建议为每条经验补齐：\n>\n`;
   content += `> - Surface signal：表层信号（我闻到了熟悉的风险味道）\n`;
   content += `> - Hidden risk：隐含风险（真正会出问题的点）\n\n`;
@@ -231,12 +283,15 @@ function generateIndexContent(rows) {
   content += `| ${separator} |\n`;
   
   for (const row of rows) {
-    const line = `| ${row.tag} | ${row.title} | ${row.trigger} | ${row.surfaceSignal} | ${row.hiddenRisk} | ${row.status} | ${row.scope} | ${row.strength} | ${row.replaces} | ${row.replacedBy} | \`${row.file}\` |`;
+    const line = `| ${row.tag} | ${row.type} | ${row.title} | ${row.trigger} | ${row.surfaceSignal} | ${row.hiddenRisk} | ${row.status} | ${row.scope} | ${row.strength} | ${row.replaces} | ${row.replacedBy} | \`${row.file}\` |`;
     content += line + '\n';
   }
   
   return content;
 }
+
+// 有效值定义（增加 Type）
+const VALID_TYPE = ['standard', 'knowledge'];
 
 /**
  * 验证索引格式
@@ -246,6 +301,11 @@ function validateIndex(rows) {
   const warnings = [];
   
   for (const row of rows) {
+    // 验证 Type
+    if (row.type && !VALID_TYPE.includes(row.type)) {
+      errors.push(`行 ${row.tag}: Type 值无效 "${row.type}"，有效值：${VALID_TYPE.join(', ')}`);
+    }
+    
     // 验证 Status
     if (row.status && !VALID_STATUS.includes(row.status)) {
       errors.push(`行 ${row.tag}: Status 值无效 "${row.status}"，有效值：${VALID_STATUS.join(', ')}`);
@@ -318,7 +378,7 @@ function detectConflicts(files, existingRows) {
     }
   }
   
-  // 检测字段不一致（文件中的字段与索引中的字段不一致）
+    // 检测字段不一致（文件中的字段与索引中的字段不一致）
   for (const file of files) {
     const existingRow = existingMap.get(file.tag);
     if (existingRow) {
@@ -338,6 +398,14 @@ function detectConflicts(files, existingRows) {
           fileValue: file.trigger,
         });
       }
+      if (existingRow.type !== file.type) {
+        conflicts.fieldMismatches.push({
+          tag: file.tag,
+          field: 'type',
+          indexValue: existingRow.type,
+          fileValue: file.type,
+        });
+      }
     }
   }
   
@@ -347,9 +415,9 @@ function detectConflicts(files, existingRows) {
 /**
  * 生成索引
  */
-function generateIndex() {
-  info('扫描经验文件目录...');
-  const files = scanExperienceFiles();
+function generateIndex(level = 'all') {
+  info(`扫描经验文件目录（level: ${level}）...`);
+  const files = scanExperienceFiles(level);
   
   if (files.length === 0) {
     warning('未找到任何经验文件');
@@ -358,8 +426,21 @@ function generateIndex() {
   
   info(`找到 ${files.length} 个经验文件`);
   
+  // 根据 level 确定索引路径
+  let indexPath;
+  if (level === 'team') {
+    indexPath = EXPERIENCE_DIRS.team.index;
+  } else if (level === 'project') {
+    indexPath = EXPERIENCE_DIRS.project.index;
+  } else {
+    // all: 生成两个索引
+    generateIndex('team');
+    generateIndex('project');
+    return;
+  }
+  
   // 读取现有索引
-  const { rows: existingRows } = readExistingIndex();
+  const { rows: existingRows } = readExistingIndex(indexPath);
   const existingMap = new Map();
   for (const row of existingRows) {
     existingMap.set(row.tag, row);
@@ -375,22 +456,35 @@ function generateIndex() {
   rows.sort((a, b) => a.tag.localeCompare(b.tag));
   
   // 生成内容
-  const content = generateIndexContent(rows);
+  const content = generateIndexContent(rows, level);
   
   // 写入文件
-  fs.writeFileSync(INDEX_PATH, content, 'utf8');
-  success(`索引已生成：${rows.length} 条经验`);
+  fs.writeFileSync(indexPath, content, 'utf8');
+  success(`索引已生成：${rows.length} 条经验（${level}）`);
 }
 
 /**
  * 更新索引
  */
-function updateIndex() {
-  info('读取现有索引...');
-  const { rows: existingRows } = readExistingIndex();
+function updateIndex(level = 'all') {
+  // 根据 level 确定索引路径
+  let indexPath;
+  if (level === 'team') {
+    indexPath = EXPERIENCE_DIRS.team.index;
+  } else if (level === 'project') {
+    indexPath = EXPERIENCE_DIRS.project.index;
+  } else {
+    // all: 更新两个索引
+    updateIndex('team');
+    updateIndex('project');
+    return;
+  }
   
-  info('扫描经验文件目录...');
-  const files = scanExperienceFiles();
+  info(`读取现有索引（level: ${level}）...`);
+  const { rows: existingRows } = readExistingIndex(indexPath);
+  
+  info(`扫描经验文件目录（level: ${level}）...`);
+  const files = scanExperienceFiles(level);
   
   if (files.length === 0) {
     warning('未找到任何经验文件');
@@ -415,11 +509,11 @@ function updateIndex() {
   rows.sort((a, b) => a.tag.localeCompare(b.tag));
   
   // 生成内容
-  const content = generateIndexContent(rows);
+  const content = generateIndexContent(rows, level);
   
   // 写入文件
-  fs.writeFileSync(INDEX_PATH, content, 'utf8');
-  success(`索引已更新：${rows.length} 条经验`);
+  fs.writeFileSync(indexPath, content, 'utf8');
+  success(`索引已更新：${rows.length} 条经验（${level}）`);
   
   // 检测冲突
   const conflicts = detectConflicts(files, existingRows);
@@ -446,12 +540,25 @@ function updateIndex() {
 /**
  * 检查冲突
  */
-function checkConflicts() {
-  info('读取现有索引...');
-  const { rows: existingRows } = readExistingIndex();
+function checkConflicts(level = 'all') {
+  // 根据 level 确定索引路径
+  let indexPath;
+  if (level === 'team') {
+    indexPath = EXPERIENCE_DIRS.team.index;
+  } else if (level === 'project') {
+    indexPath = EXPERIENCE_DIRS.project.index;
+  } else {
+    // all: 检查两个索引
+    checkConflicts('team');
+    checkConflicts('project');
+    return;
+  }
   
-  info('扫描经验文件目录...');
-  const files = scanExperienceFiles();
+  info(`读取现有索引（level: ${level}）...`);
+  const { rows: existingRows } = readExistingIndex(indexPath);
+  
+  info(`扫描经验文件目录（level: ${level}）...`);
+  const files = scanExperienceFiles(level);
   
   // 检测冲突
   const conflicts = detectConflicts(files, existingRows);
@@ -496,11 +603,15 @@ function checkConflicts() {
   }
   
   if (!hasIssues) {
-    success(`检查通过：${existingRows.length} 条经验，${files.length} 个文件，无冲突`);
-    process.exit(0);
+    success(`检查通过：${existingRows.length} 条经验，${files.length} 个文件，无冲突（${level}）`);
+    if (level === 'all') {
+      process.exit(0);
+    }
   } else {
-    error('检查失败：发现冲突或错误');
-    process.exit(1);
+    error(`检查失败：发现冲突或错误（${level}）`);
+    if (level === 'all') {
+      process.exit(1);
+    }
   }
 }
 
@@ -509,26 +620,39 @@ function checkConflicts() {
  */
 function main() {
   const command = process.argv[2];
+  const levelIndex = process.argv.indexOf('--level');
+  const level = levelIndex !== -1 && process.argv[levelIndex + 1] 
+    ? process.argv[levelIndex + 1] 
+    : 'all';
   
   if (!command || command === '--help' || command === '-h') {
-    console.log('用法: node scripts/validate-experience-index.js <command>');
+    console.log('用法: node scripts/validate-experience-index.js <command> [--level <level>]');
     console.log('');
     console.log('命令:');
     console.log('  --generate  生成索引（从经验文件生成 INDEX.md）');
     console.log('  --update    更新索引（合并现有索引和经验文件）');
     console.log('  --check     检查冲突（检测索引和文件的不一致）');
+    console.log('');
+    console.log('选项:');
+    console.log('  --level <level>  指定层级：team、project 或 all（默认）');
     process.exit(0);
+  }
+  
+  // 验证 level 参数
+  if (level !== 'all' && level !== 'team' && level !== 'project') {
+    error(`无效的 level 参数: ${level}，有效值：all、team、project`);
+    process.exit(1);
   }
   
   switch (command) {
     case '--generate':
-      generateIndex();
+      generateIndex(level);
       break;
     case '--update':
-      updateIndex();
+      updateIndex(level);
       break;
     case '--check':
-      checkConflicts();
+      checkConflicts(level);
       break;
     default:
       error(`未知命令: ${command}`);
@@ -542,4 +666,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { extractFieldsFromFile, readExistingIndex, scanExperienceFiles, generateIndexRow, generateIndexContent, validateIndex, detectConflicts };
+module.exports = { extractFieldsFromFile, readExistingIndex, scanExperienceFiles, scanDirectory, generateIndexRow, generateIndexContent, validateIndex, detectConflicts };

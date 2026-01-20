@@ -1,6 +1,6 @@
 ---
 name: experience-index
-description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 .cursor/.lingxi/context/experience/INDEX.md 的 active 经验并主动提醒风险与指针。
+description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，按 Trigger 匹配 team/INDEX.md 和 project/INDEX.md 的 active 经验并主动提醒风险与指针。
 ---
 
 # Experience Index
@@ -44,9 +44,12 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 ### 2. 经验匹配流程（遵循上下文组织原则）
 
 **分层加载策略**：
-1. **先读取索引**：读取 `.cursor/.lingxi/context/experience/INDEX.md`（索引层）
-2. **只匹配 Status = `active` 的经验**（过滤 `deprecated`）
-3. **LLM 语义匹配**：使用以下匹配任务进行智能匹配
+1. **根据命令决定读取哪些索引**：
+   - `/init` → 只读取 `team/INDEX.md`（团队级标准和经验）
+   - `/req`、`/plan`、`/build`、`/review` → 读取 `team/INDEX.md` + `project/INDEX.md`（团队级标准 + 项目级经验）
+2. **先读取索引**：读取对应的 INDEX.md（索引层）
+3. **只匹配 Status = `active` 的经验**（过滤 `deprecated`）
+4. **LLM 语义匹配**：使用以下匹配任务进行智能匹配
 
 **LLM 匹配任务**：
 
@@ -57,7 +60,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
   - req 内容摘要：技术选型、功能描述、架构思路等关键信息
   - 当前阶段：req/plan/build/review
 - 经验列表：INDEX.md 中所有 `active` 经验的摘要
-  - 每个经验包含：Tag、Title、Trigger、Surface signal、Hidden risk
+  - 每个经验包含：Tag、Type、Title、Trigger、Surface signal、Hidden risk
 
 匹配维度：
 - **Trigger 匹配**：经验的 Trigger 是否与当前场景相关
@@ -83,10 +86,36 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 - 首先按最终得分降序
 - 得分相同时，优先返回高 Strength 经验：`enforced` > `validated` > `hypothesis`
 - 得分和 Strength 相同时，优先返回 broad Scope 经验：`broad` > `medium` > `narrow`
+- 得分、Strength 和 Scope 相同时，优先返回团队级标准（Type = standard，Level = team）
 
-4. **按需加载细节**：仅在需要详细内容时，才加载对应的经验文件（细节层）
+5. **按需加载细节**：仅在需要详细内容时，才加载对应的经验文件（细节层）
 
-### 3. 输出规则（静默成功原则 + 最小高信号）
+### 3. 匹配优先级
+
+**优先级 1：命令匹配**（最高优先级）
+
+根据当前命令决定匹配范围：
+- `/init` → 只匹配 team/（标准和经验）
+- `/req`、`/plan`、`/build`、`/review` → 匹配 team/（标准） + project/（经验）
+
+**优先级 2：文件匹配**（中等优先级）
+
+如果当前有打开文件：
+- globs 匹配 → 匹配文件相关的标准和经验
+- team/standards → 通用文件规范（如 `**/*.ts` → TypeScript 规范）
+- project/ → 项目特定文件模式（如 `**/services/cache/**` → 缓存策略经验）
+
+**优先级 3：语义匹配**（最低优先级）
+
+- Trigger 匹配 → 基于关键词/场景匹配
+- Surface signal 匹配 → 基于"熟悉的风险味道"匹配
+- Hidden risk 匹配 → 基于"真正会出问题的点"匹配
+
+**匹配过滤**：
+- 知识可获得性过滤：高可获得性且代码库有示例 → 降低优先级或跳过
+- 团队级标准优先：同时匹配标准和经验 → 优先返回标准（Type = standard）
+
+### 4. 输出规则（静默成功原则 + 最小高信号）
 
 **遵循"最小高信号"原则**：
 - **无匹配时**：完全静默，不输出任何内容
@@ -107,6 +136,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 | 字段         | 类型                                    | 说明                                                                       |
 | ------------ | --------------------------------------- | -------------------------------------------------------------------------- |
 | `Tag`        | 唯一标识                                | 用于引用与检索                                                             |
+| `Type`       | `standard` / `knowledge`                | 经验类型：standard=标准（强约束、执行底线），knowledge=经验（复杂判断、认知触发） |
 | `Title`      | 简短标题                                | 一句话描述经验                                                             |
 | `Trigger`    | 关键词/场景                             | 触发加载的条件（when to load，偏工程检索）                                 |
 | `Surface signal` | 句子 | 表层信号（我闻到熟悉风险味道的线索，偏认知触发） |

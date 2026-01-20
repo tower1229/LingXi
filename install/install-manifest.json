@@ -8,13 +8,6 @@
     "commands/init.md",
     "commands/remember.md"
   ],
-  "rules": {
-    "files": [
-      "rules/qs-always-general.mdc",
-      "rules/quality-standards-index.md",
-      "rules/quality-standards-schema.md"
-    ]
-  },
   "hooks": {
     "files": [
       "hooks.json",
@@ -33,7 +26,6 @@
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
-    "skills/rules-creator/SKILL.md",
     "skills/service-loader/SKILL.md"
   ],
   "agents": {
@@ -57,7 +49,6 @@
     "workflow-optimizer": [
       "skills/workflow-optimizer/references/workflow-vision.md",
       "skills/workflow-optimizer/references/commands-guide.md",
-      "skills/workflow-optimizer/references/rules-guide.md",
       "skills/workflow-optimizer/references/skills-guide.md",
       "skills/workflow-optimizer/references/hooks-guide.md",
       "skills/workflow-optimizer/references/subagents-guide.md",
@@ -81,6 +72,10 @@
     ".cursor/.lingxi/context/business/references",
     ".cursor/.lingxi/context/tech/services",
     ".cursor/.lingxi/context/experience",
+    ".cursor/.lingxi/context/experience/team",
+    ".cursor/.lingxi/context/experience/team/standards",
+    ".cursor/.lingxi/context/experience/team/knowledge",
+    ".cursor/.lingxi/context/experience/project",
     ".cursor/.lingxi/context/session",
     ".cursor/.lingxi/workspace"
   ],
@@ -88,7 +83,8 @@
     ".cursor/.lingxi/context/business/references/business-context-template.md"
   ],
   "workflowIndexFiles": [
-    ".cursor/.lingxi/context/experience/INDEX.md"
+    ".cursor/.lingxi/context/experience/team/INDEX.md",
+    ".cursor/.lingxi/context/experience/project/INDEX.md"
   ],
   "gitignoreEntries": [
     "# Local workspace for temp code clones, generated artifacts, etc.",

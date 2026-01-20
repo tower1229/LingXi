@@ -87,6 +87,6 @@
 ## 参考
 
 - **核心价值指引**：`README.md`（Why 和 How）
-- **技术能力边界**：各 guide 文件（Commands、Rules、Skills、Hooks、Subagents）
+- **技术能力边界**：各 guide 文件（Commands、Skills、Hooks、Subagents）。
 - **工程实践准则**：`engineering-practices.md`（核心原则、设计模式、质量评估框架）
 - **工作流核心约束**：`AGENTS.md`
