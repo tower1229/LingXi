@@ -14,7 +14,7 @@
 
 - **负责什么**：
   - 需求全生命周期管理（req → plan → build → review）
-  - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-collector 收集、experience-depositor 沉淀）
+  - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀）
   - 经验治理机制（experience-curator 合并/取代、质量准则建议）
   - 规则管理（rules-creator 创建质量规则）
   - 上下文管理（service-loader 服务上下文、business context 业务上下文）
@@ -45,12 +45,13 @@
   - **指针**：、、、
 
 - **经验沉淀流程**：
-  1. 在工作过程中输出 EXP-CANDIDATE 注释
-  2. experience-collector（后台）自动收集并暂存到 
-  3. 用户执行  确认沉淀
-  4. experience-depositor 展示候选，执行沉淀分流
-  5. 写入经验到 
-  6. experience-curator 自动触发治理（合并/取代、质量准则建议）
+  1. 在工作过程中，experience-capture 识别经验信号并生成 EXP-CANDIDATE
+  2. experience-capture 输出用户友好的摘要，询问用户确认
+  3. 用户确认后，experience-capture 调用 candidate-evaluator 评估并写入 `pending-compounding-candidates.json`
+  4. 用户执行 `/remember` 确认沉淀
+  5. experience-depositor 展示候选，执行沉淀分流
+  6. 写入经验到 `.cursor/.lingxi/context/experience/`
+  7. experience-curator 自动触发治理（合并/取代、质量准则建议）
   - **关键决策点**：
     - 成长过滤器：判断是否进入长期知识库
     - 沉淀分流：判断应沉淀到哪里（experience/rules/skills/context）
