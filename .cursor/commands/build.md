@@ -36,7 +36,7 @@ args:
 
 - `build-executor`：执行代码实现、测试编写和执行
 - `experience-index`：自动匹配历史经验提醒
-- `experience-capture`：统一经验捕获（自动激活）
+- `experience-capture`：统一经验捕获（通过 Cursor Skill 自动匹配机制激活）
 - `service-loader`：如适用，生成服务上下文
 
 ## 产物
@@ -65,7 +65,13 @@ args:
 
 ## 经验捕获
 
-经验捕获由 `experience-capture` Skill 统一处理。当发生实现纠正、方案切换、根因定位、测试修复等情况时，会自动捕获经验候选。
+经验捕获由 `experience-capture` Skill 统一处理。
 
-详细触发场景请参考 `experience-capture` Skill 文档。
+**激活机制**：
+- 通过 Cursor 的 Skill 自动匹配机制自动激活
+- 如果自动激活失败，经验捕获会静默跳过，可通过 `/remember` 命令手动沉淀经验
+
+**触发场景**：当发生实现纠正、方案切换、根因定位、测试修复等情况时，会自动捕获经验候选。
+
+详细触发场景和激活机制请参考 `experience-capture` Skill 文档。
 
