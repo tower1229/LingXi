@@ -1,6 +1,6 @@
 ---
 name: experience-capture
-description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等命令时自动激活，自动检测当前阶段和任务编号，提供统一的 EXP-CANDIDATE 捕获逻辑。
+description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001、/init 等命令时自动激活，自动检测当前阶段和任务编号，提供统一的 EXP-CANDIDATE 捕获逻辑。
 ---
 
 # Experience Capture
@@ -32,6 +32,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 
 - `/req <描述>` → 阶段：req，任务编号：自动生成（待写入文件后确定）
 - `/review-req 001` → 阶段：review-req，任务编号：001
+- `/init` → 阶段：init，任务编号：null
 
 #### 1.2 L2：文件存在性验证（辅助来源）
 
@@ -89,7 +90,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 3. **完整捕获流程**（当识别到经验信号时）
    - 自动检测当前阶段和任务编号（使用上述检测逻辑）
    - 基于语义理解识别经验类型和结构
-   - 参考触发场景列表（`references/req-triggers.md` 等）帮助理解经验类型，但不作为限制
+   - 参考触发场景列表（`references/req-triggers.md`、`references/init-triggers.md` 等）帮助理解经验类型，但不作为限制
    - 生成 EXP-CANDIDATE
    - 静默输出（HTML 注释包裹）
 
@@ -122,9 +123,16 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 
 **关键字段**：
 
-- `taskId`：任务编号（001, 002, ...）
-- `stage`：当前阶段（req/plan/build/review）
-- `reqFile`：关联的 req 文件路径（用于后续匹配和追溯）
+- `taskId`：任务编号（001, 002, ...），对于 `/init` 命令设为 `null`
+- `stage`：当前阶段（req/plan/build/review/init）
+- `reqFile`：关联的 req 文件路径（用于后续匹配和追溯），对于 `/init` 命令设为 `null` 或省略
+
+**对于 `/init` 命令的特殊处理**：
+
+- `taskId`：设为 `null`（因为 `/init` 不关联具体任务）
+- `stage`：设为 `init`
+- `reqFile`：设为 `null` 或省略
+- 其他字段正常填写
 
 
 ### 3. 捕获规则
