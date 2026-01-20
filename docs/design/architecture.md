@@ -26,11 +26,11 @@ Skills 承载详细的工作流指导，按职责分为：
   - `review-executor`：多维度审查和交付质量保证
 
 - **经验系统 Skills**：实现"心有灵犀"的核心能力
-  - `experience-capture`：自动捕获经验候选（在 req/plan/build/review 阶段自动激活）
-  - `experience-depositor`：评估并沉淀经验到经验库或规则库
+  - `experience-capture`：自动捕获经验候选、用户确认、评估并暂存到文件（在 req/plan/build/review/init 阶段自动激活）
+  - `experience-depositor`：读取暂存候选、展示并沉淀经验到经验库或规则库
   - `experience-curator`：智能治理经验（合并/取代关系）
   - `experience-index`：经验索引和匹配，主动提醒风险与指针
-  - `candidate-evaluator`：统一评估经验候选的质量和分类决策
+  - `candidate-evaluator`：统一评估经验候选的质量和分类决策（阶段 1 和阶段 2）
 
 - **工具类 Skills**：提供辅助能力
   - `workflow-optimizer`：工作流调优和价值判定
@@ -43,10 +43,11 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
 
-1. **自动捕获**：`experience-capture` 在 req/plan/build/review 阶段自动扫描用户输入，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE
-2. **评估沉淀**：`experience-depositor` 评估候选经验的可复用性和沉淀载体适配性，支持存入经验库或规则库
-3. **智能治理**：`experience-curator` 自动检测冲突和重复，智能合并或取代，保持知识库的整洁和一致性
-4. **主动提醒**：`experience-index` 在执行任务时自动匹配相关经验，主动提醒风险和提供指针
+1. **自动捕获**：`experience-capture` 在 req/plan/build/review/init 阶段自动扫描用户输入，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，输出用户友好的摘要并询问用户确认
+2. **评估暂存**：用户确认后，`experience-capture` 调用 `candidate-evaluator` 执行阶段 1 评估，评估通过后写入 `pending-compounding-candidates.json` 暂存
+3. **沉淀分流**：`experience-depositor` 读取暂存候选，调用 `candidate-evaluator` 执行阶段 2 详细评估，根据评估结果和用户选择，沉淀到经验库或规则库
+4. **智能治理**：`experience-curator` 自动检测冲突和重复，智能合并或取代，保持知识库的整洁和一致性
+5. **主动提醒**：`experience-index` 在执行任务时自动匹配相关经验，主动提醒风险和提供指针
 
 ### 其他机制
 
