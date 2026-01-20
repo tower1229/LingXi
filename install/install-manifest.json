@@ -38,7 +38,6 @@
   ],
   "agents": {
     "files": [
-      "agents/experience-collector.md",
       "agents/experience-depositor.md",
       "agents/reviewer-doc-consistency.md",
       "agents/reviewer-performance.md",

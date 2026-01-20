@@ -1,6 +1,6 @@
 ---
 name: candidate-evaluator
-description: 统一候选评估机制，评估 EXP-CANDIDATE 的质量和分类决策。在 experience-collector 和 experience-depositor 中调用，执行结构完整性、判断结构质量、可复用性和沉淀载体适配性评估。
+description: 统一候选评估机制，评估 EXP-CANDIDATE 的质量和分类决策。在 experience-capture 和 experience-depositor 中调用，执行结构完整性、判断结构质量、可复用性和沉淀载体适配性评估。
 ---
 
 # Candidate Evaluator
@@ -20,7 +20,7 @@ description: 统一候选评估机制，评估 EXP-CANDIDATE 的质量和分类�
 
 根据调用方指定，执行不同阶段的评估：
 
-- **阶段 1（自动评估）**：在 experience-collector 中调用，初步过滤明显不通过的候选
+- **阶段 1（自动评估）**：在 experience-capture 中调用，初步过滤明显不通过的候选
 - **阶段 2（详细评估）**：在 experience-depositor 中调用，对用户选择的候选进行详细评估
 
 ### 1. 结构完整性评估（Structural Integrity）
@@ -259,7 +259,7 @@ description: 统一候选评估机制，评估 EXP-CANDIDATE 的质量和分类�
 
 ## 使用场景
 
-### 场景 1：experience-collector 自动评估（阶段 1）
+### 场景 1：experience-capture 自动评估（阶段 1）
 
 - **时机**：检测到 EXP-CANDIDATE 时自动调用
 - **目的**：初步过滤明显不通过的候选，避免暂存无价值的候选

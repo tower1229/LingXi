@@ -54,7 +54,7 @@
    - 技术栈选择理由（为什么选择某个技术栈）
    - 架构决策（为什么选择某个架构模式）
    - 开发规范取舍（为什么采用某个规范）
-   - 输出 EXP-CANDIDATE 格式（静默输出，HTML 注释包裹）
+   - 通过 `experience-capture` Skill 识别、评估并暂存到 `pending-compounding-candidates.json`（需要用户确认）
 
 **必须明确展示**以下信息（不仅收集，还要在对话中展示供用户确认）：
 
@@ -72,8 +72,42 @@
 **输出要求**：
 
 - 展示收集的信息供用户确认
-- 静默输出识别的经验候选（EXP-CANDIDATE 格式）
-- 不干扰对话流程
+- 经验候选通过 `experience-capture` Skill 处理：输出用户友好的摘要，用户确认后评估并写入文件
+- 不输出技术细节（JSON 结构），只输出摘要
+
+**信息确认**：
+
+在信息展示后，提供结构化确认选项：
+
+```markdown
+## 请确认信息准确性
+
+- ✅ **A) 全部准确，继续**：进入下一阶段
+- 📝 **B) 需要补充**：请说明需要补充的内容
+- 🔍 **C) 需要深入调查**：请指定需要深入调查的模块
+```
+
+**下一步选择**：
+
+在阶段 1 末尾，明确每个选项的影响：
+
+```markdown
+## 下一步选择
+
+- **A) 继续深入调查所有模块**
+  - 将调查：AI 分析流水线、GitHub 数据同步、配额管理、数据版本控制等
+  - 预计耗时：5-10 分钟
+  - 产出：完整的服务上下文文档 + 更多经验候选
+
+- **B) 重点调查某个模块**
+  - 请指定模块名称（如：AI 分析流水线）
+  - 将深入调查该模块的架构、依赖、常见坑点
+  - 预计耗时：2-5 分钟
+
+- **C) 直接进入文档生成阶段**
+  - 基于当前信息生成业务上下文文档
+  - 预计耗时：1-2 分钟
+```
 
 ### 阶段 2：深入调查 + 持续识别经验候选
 
@@ -82,7 +116,7 @@
 1. 根据用户指定的调查项进行深入调查
 2. **同时回顾阶段 1 收集的信息**，补全遗漏的经验候选
 3. 识别常见坑点、深层架构决策
-4. 输出 EXP-CANDIDATE 格式
+4. 通过 `experience-capture` Skill 识别、评估并暂存经验候选（需要用户确认）
 
 **关键要求**：
 
@@ -93,8 +127,8 @@
 
 **执行内容**：
 
-1. 汇总阶段 1 和阶段 2 的所有 EXP-CANDIDATE
-2. 去重和合并相似候选
+1. 从 `.cursor/.lingxi/context/session/pending-compounding-candidates.json` 读取所有已暂存的候选
+2. 去重和合并相似候选（如果存在）
 3. 输出完整的经验候选列表（在对话中展示，包含核心信息）
 
 **输出格式**：
@@ -149,9 +183,11 @@
 
 - 必须生成至少 1 个业务上下文文档
 - 必须输出初始化报告（在对话中输出摘要）
-- **如果识别到可沉淀知识点，必须输出 EXP-CANDIDATE 格式**：
-  - 在阶段 1 和阶段 2 中，每次识别经验候选时，立即输出 EXP-CANDIDATE 格式（HTML 注释包裹，静默输出）
-  - 在阶段 3 汇总时，在对话中展示经验候选的核心信息（trigger、decision、solution 等）
-  - EXP-CANDIDATE 格式必须包含所有关键字段（taskId、stage、trigger、decision、solution、verify、pointers）
+- **如果识别到可沉淀知识点，通过 `experience-capture` Skill 处理**：
+  - 在阶段 1 和阶段 2 中，每次识别经验候选时，`experience-capture` 会输出用户友好的摘要并询问用户确认
+  - 用户确认后，调用 `candidate-evaluator` 执行阶段 1 评估，评估通过后写入 `pending-compounding-candidates.json`
+  - 在阶段 3 汇总时，从 `pending-compounding-candidates.json` 读取并展示经验候选的核心信息（trigger、decision、solution 等）
+  - EXP-CANDIDATE JSON 必须包含所有关键字段（taskId、stage、trigger、decision、solution、verify、pointers）
   - 对于 `/init` 命令，`taskId` 设为 `null`，`stage` 设为 `init`
+  - 确认环节的交互方式由 `experience-capture` Skill 处理
 - 最后用 3-6 行简短说明：生成了哪些文档、识别了哪些经验候选、如何选择沉淀（直接输入编号，如 `1,3`，由 `experience-depositor` 处理）

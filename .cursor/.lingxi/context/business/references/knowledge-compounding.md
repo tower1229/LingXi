@@ -9,17 +9,21 @@
 ```mermaid
 sequenceDiagram
     participant Skill as Stage Skill
-    participant Collector as experience-collector
+    participant Capture as experience-capture
+    participant Evaluator as candidate-evaluator
     participant Session as session/pending-compounding-candidates.json
     participant User
     participant Depositor as experience-depositor
     participant Experience as experience/
     participant Curator as experience-curator
     
-    Skill->>Skill: 输出 EXP-CANDIDATE
-    Skill->>Collector: 自动调用（后台）
-    Collector->>Collector: 成长过滤器
-    Collector->>Session: 暂存候选
+    Skill->>Capture: 识别经验信号
+    Capture->>Capture: 生成 EXP-CANDIDATE
+    Capture->>User: 输出摘要，询问确认
+    User->>Capture: 确认（A/B/C）
+    Capture->>Evaluator: 调用阶段 1 评估
+    Evaluator->>Capture: 返回评估结果
+    Capture->>Session: 写入暂存候选
     User->>Depositor: /remember 1,3
     Depositor->>Session: 读取暂存
     Depositor->>User: 展示候选，请求选择
@@ -74,17 +78,19 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### 自动收集
 
-`experience-collector` 子代理（后台）会自动：
+`experience-capture` Skill 会自动处理：
 
-1. **解析注释**：从最新消息中读取 EXP-CANDIDATE JSON
-2. **成长过滤器**：判断是否进入长期知识库
-3. **最小上下文包**：合并高信号上下文（REQ id/title/一行描述、stage、行为/验收摘要、关键决策、指针列表）
-4. **暂存**：写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
+1. **识别经验信号**：分析用户输入，识别经验信号（判断、取舍、边界、约束等）
+2. **生成 EXP-CANDIDATE**：基于语义理解生成结构化 EXP-CANDIDATE JSON
+3. **用户确认**：输出用户友好的摘要，询问用户确认
+4. **评估**：用户确认后，调用 `candidate-evaluator` 执行阶段 1 评估
+5. **暂存**：评估通过后，写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
 
 **特点**：
-- 静默处理，不干扰主对话
+- 输出用户友好的摘要，不输出技术细节（JSON 结构）
+- 用户确认后才执行评估和写入，符合"人工门控"原则
 - 不写入经验，不触发 curator
-- 仅在必要时简短确认已接收
+- 评估结果包含在暂存的候选对象中
 
 ## 成长过滤器
 
@@ -103,7 +109,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 成长过滤器在两个时机应用：
 
-1. **experience-collector**：初步过滤，避免暂存无价值的候选
+1. **experience-capture**：在评估阶段初步过滤，避免暂存无价值的候选
 2. **experience-depositor**：再次确认，确保只有长期资产进入 experience
 
 ### 目的
@@ -250,6 +256,6 @@ EXP-CANDIDATE 应在以下阶段输出：
 - **确认机制**：人工确认保证质量
 
 参考：
-- [experience-collector 实现](../03-implementation/subagents/experience-collector.md)
+- [experience-capture 实现](../../skills/experience-capture/SKILL.md)
 - [experience-depositor 实现](../03-implementation/subagents/experience-depositor.md)
 - [经验治理机制设计](./experience-governance.md)
