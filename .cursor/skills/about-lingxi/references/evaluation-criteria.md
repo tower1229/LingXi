@@ -69,6 +69,15 @@
 - [ ] **文件命名是否符合约定？**
 - [ ] **是否遵循 SSoT 原则（通过引用而非复制）？**
 
+### 文档同步
+
+- [ ] **是否需要同步更新 `about-lingxi` 中的相关文档？**
+  - 如果改动涉及 Commands、Skills、Hooks、Subagents 的增减或职责变更 → 更新 `references/architecture.md` 和 `references/component-guides.md`
+  - 如果改动涉及经验系统机制 → 更新 `references/experience-system.md`
+  - 如果改动涉及设计原则或评价准则 → 更新 `references/design-principles.md` 或 `references/evaluation-criteria.md`
+  - 如果改动涉及核心价值或实现方式 → 更新 `references/core-values.md`
+  - 如果改动涉及工作流程或使用场景 → 更新 `SKILL.md` 中的相关场景描述
+
 ## 工程实践检查
 
 ### 核心原则

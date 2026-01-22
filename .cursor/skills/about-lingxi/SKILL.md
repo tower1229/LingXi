@@ -45,7 +45,8 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 4. 加载组件指南（`references/component-guides.md`）
 5. 进行价值对齐分析（是否符合核心价值）
 6. 进行架构合理性分析（是否符合设计原则）
-7. 输出评估结果和改进建议
+7. **文档同步检查**：判断改动是否影响灵犀的架构、组件、工作流或机制，如果是，提醒需要同步更新 `about-lingxi` 中的相关文档（`SKILL.md` 或 `references/` 目录下的对应文档）
+8. 输出评估结果和改进建议
 
 ### 场景 3：组件选择决策
 
@@ -257,10 +258,19 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
    - 设计模式与最佳实践检查
    - 质量维度评估（可维护性、可扩展性、可测试性等）
 
-6. **调优建议输出**：基于分析，输出
+6. **文档同步检查**：判断改动是否影响灵犀的架构、组件、工作流或机制
+   - 如果改动涉及 Commands、Skills、Hooks、Subagents 的增减或职责变更，需要同步更新 `references/architecture.md` 和 `references/component-guides.md`
+   - 如果改动涉及经验系统机制，需要同步更新 `references/experience-system.md`
+   - 如果改动涉及设计原则或评价准则，需要同步更新 `references/design-principles.md` 或 `references/evaluation-criteria.md`
+   - 如果改动涉及核心价值或实现方式，需要同步更新 `references/core-values.md`
+   - 如果改动涉及工作流程或使用场景，需要同步更新 `SKILL.md` 中的相关场景描述
+   - 提醒用户需要同步更新相关文档，确保 `about-lingxi` 始终反映灵犀的最新状态
+
+7. **调优建议输出**：基于分析，输出
    - 价值对齐评估
    - 架构合理性评估
    - 工程实践评估
+   - 文档同步提醒（如适用）
    - 改进建议：优化方向、潜在风险、具体改进措施
    - 检查清单：参考 `references/optimization-checklist.md`
 
@@ -316,6 +326,14 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 6. **AI Native 原则**：充分利用大模型的自然语言理解能力，避免硬编码规则
 7. **静默成功**：遵循"没有消息就是好消息"的原则，减少冗余输出
 8. **渐进式披露**：SKILL.md 保持精炼，详细内容放在 references/ 目录
+9. **文档同步责任**：当对灵犀 workflow 做出改动时（新增/修改 Commands、Skills、Hooks、Subagents，调整架构、工作流或机制），需要同步更新 `about-lingxi` 中的相关文档，确保文档始终反映灵犀的最新状态。根据改动内容，判断需要更新哪些文档：
+   - 架构变更 → `references/architecture.md`
+   - 组件变更 → `references/architecture.md` 和 `references/component-guides.md`
+   - 经验系统变更 → `references/experience-system.md`
+   - 设计原则变更 → `references/design-principles.md`
+   - 评价准则变更 → `references/evaluation-criteria.md`
+   - 核心价值变更 → `references/core-values.md`
+   - 工作流程变更 → `SKILL.md` 中的相关场景描述
 
 ## 参考资料
 
