@@ -8,37 +8,28 @@
 
 ```mermaid
 sequenceDiagram
-    participant Skill as Stage Skill
-    participant Capture as experience-capture
-    participant Evaluator as candidate-evaluator
-    participant Workspace as workspace/pending-compounding-candidates.json
     participant User
     participant StopHook as stop hook
+    participant Capture as experience-capture
     participant Depositor as experience-depositor
     participant Memory as memory/
-    participant Curator as memory-curator
-    
-    Skill->>Capture: 识别经验信号
+
+    Note over User,StopHook: 任务完成时
+    StopHook->>Capture: 引导调用 experience-capture
+    Capture->>Capture: 扫描对话历史，识别经验信号
     Capture->>Capture: 生成 EXP-CANDIDATE
-    Capture->>Evaluator: 调用阶段 1 评估（静默）
-    Evaluator->>Capture: 返回评估结果
-    Capture->>Workspace: 写入暂存候选（静默）
-    Capture->>User: 输出一行状态："已暂存 X 条经验候选"
-    Note over User,StopHook: 会话结束时
-    StopHook->>User: 提醒："检测到有待沉淀的经验候选，使用 /remember"
-    User->>Depositor: /remember 1,3
-    Depositor->>Workspace: 读取暂存
-    Depositor->>User: 展示候选，请求选择
-    User->>Depositor: 确认选择
-    Depositor->>Depositor: 沉淀分流
-    Depositor->>Depositor: 成长过滤器（再次确认）
-    Depositor->>Depositor: 冲突检测
+    Capture->>Capture: 执行评估（结构完整性、判断结构质量、可复用性等）
+    Capture->>User: 在会话中展示候选列表
+    User->>Depositor: 选择候选（输入编号，如 1,3）
+    Depositor->>Depositor: 冲突检测（语义搜索 + 关键词匹配）
+    Depositor->>Depositor: 生成治理方案（方案模式）
+    Depositor->>User: 展示治理方案
+    User->>Depositor: 确认治理方案
+    Depositor->>Depositor: 执行治理动作（执行模式）
+    Depositor->>Depositor: 存储目标选择
+    Depositor->>Depositor: 写入前执行治理（最终检查）
     Depositor->>Memory: 写入经验
     Depositor->>Memory: 更新统一索引
-    Depositor->>Curator: 触发治理
-    Curator->>Curator: 合并/取代
-    Curator->>Memory: 更新统一索引
-    Curator-->>User: 输出治理报告和质量准则建议
 ```
 
 ## 即时捕获机制
@@ -81,21 +72,20 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### 自动收集
 
-`experience-capture` Skill 会自动处理：
+`experience-capture` Skill 由 stop hook 触发，自动处理：
 
-1. **识别经验信号**：分析用户输入，识别经验信号（判断、取舍、边界、约束等）
-2. **生成 EXP-CANDIDATE**：基于语义理解生成结构化 EXP-CANDIDATE JSON
-3. **评估**：直接调用 `candidate-evaluator` 执行阶段 1 评估（静默执行）
-4. **暂存**：评估通过后，静默写入或合并到 `.cursor/.lingxi/workspace/pending-compounding-candidates.json`
-5. **状态反馈**：输出一行状态信息：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
+1. **触发时机**：任务完成时，stop hook 引导调用 `experience-capture` skill
+2. **识别经验信号**：扫描整个对话历史，识别经验信号（判断、取舍、边界、约束等）
+3. **生成 EXP-CANDIDATE**：基于语义理解生成结构化 EXP-CANDIDATE JSON
+4. **执行评估**：执行评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型、Level 判断）
+5. **过滤明显不通过的候选**：静默过滤结构不完整、判断结构质量不通过、知识可获得性高且不需要规则约束的候选
+6. **会话展示**：在会话中展示候选列表，供用户选择
 
 **特点**：
-- 静默执行评估和写入，不打断用户流程
-- 只输出一行状态信息，不输出技术细节（JSON 结构）
-- 不询问用户确认，所有候选暂存到中转文件
-- 最终沉淀选择在 `/remember` 阶段进行（由 stop hook 提醒），符合"人工门控"原则
-- 不写入经验，不触发 curator
-- 评估结果包含在暂存的候选对象中
+- 任务完成时统一处理，不打断用户流程
+- 候选直接在会话中展示，无需文件暂存
+- 用户即时选择，体验更流畅
+- 评估结果包含在候选对象中
 
 ## 成长过滤器
 
@@ -174,7 +164,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 ## Decision Shape（判断结构）
 
 - Decision being made: 选择使用哪个状态管理方案
-- Alternatives rejected: 
+- Alternatives rejected:
   - Redux（过于复杂，项目规模不需要）
   - Context API（性能问题，频繁更新会导致全量重渲染）
 - Discriminating signal: 组件更新频率、状态共享范围、团队熟悉度
@@ -255,21 +245,17 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### experience-depositor 处理
 
-1. **读取暂存**：加载 `.cursor/.lingxi/workspace/pending-compounding-candidates.json`
-2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers，包含 Level 和 Type 信息
-3. **请求选择**：支持全选/部分/放弃
-4. **沉淀分流**：根据 Level 和 Type 判断应沉淀到哪里：
-   - Level = team, Type = standard → `memory/experience/team/standards/`
-   - Level = team, Type = knowledge → `memory/experience/team/knowledge/`
-   - Level = project → `memory/experience/project/`
-5. **成长过滤器**：再次确认是否进入长期知识库
-6. **冲突检测**：读取统一索引 `memory/INDEX.md`，检查与现有经验的冲突
-7. **写入**：按模板写入对应目录，更新统一索引 `memory/INDEX.md`：
+1. **获取候选**：从会话上下文获取候选（由 experience-capture 传递，包含评估结果）
+2. **冲突检测（语义搜索 + 关键词匹配）**：读取统一索引 `memory/INDEX.md`，使用语义搜索和关键词匹配双重验证，检查与现有经验的冲突
+3. **生成治理方案（方案模式）**：使用语义搜索查找相似经验，结合关键词匹配进行综合判断，生成治理方案，供用户确认
+4. **展示治理方案**：向用户展示治理方案，请求确认
+5. **执行治理动作（执行模式）**：备份索引、执行合并/替代、更新统一索引、清理备份
+6. **存储目标选择**：用户选择存储目标（团队级标准/经验或项目级经验）
+7. **写入前执行治理（最终检查）**：再次执行治理动作，确保知识库质量
+8. **写入**：按模板写入对应目录，更新统一索引 `memory/INDEX.md`：
    - 团队级标准：`memory/experience/team/standards/<tag>-<title>.md`，更新 `memory/INDEX.md`
    - 团队级经验：`memory/experience/team/knowledge/<tag>-<title>.md`，更新 `memory/INDEX.md`
    - 项目级经验：`memory/experience/project/<tag>-<title>.md`，更新 `memory/INDEX.md`
-8. **触发 curator**：在实际新增经验后调用 `memory-curator` 进行治理
-9. **清理**：从暂存中移除已处理项；未写入项保留
 
 ## 与 /remember 的区别
 

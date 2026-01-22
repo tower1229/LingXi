@@ -15,14 +15,17 @@
 
 ## 命令用途
 
-引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到经验库（`.cursor/.lingxi/memory/experience/`）、业务上下文（`.cursor/.lingxi/memory/business/`）和服务上下文（`.cursor/.lingxi/memory/tech/services/`）中。
+引导式初始化 workflow 到新项目，快速建立项目上下文（技术栈、常用模式、开发规则、业务流程），并将这些信息沉淀到记忆库：
+- 经验记忆（`.cursor/.lingxi/memory/experience/`）
+- 技术记忆（`.cursor/.lingxi/memory/tech/services/`）
+- 业务记忆（`.cursor/.lingxi/memory/business/`）
 
 ---
 
 ## 依赖的 Agent Skills
 
 - `service-loader`：生成服务上下文文档
-- `experience-depositor`：沉淀经验到经验库
+- `experience-depositor`：沉淀记忆到记忆库（经验记忆/技术记忆/业务记忆）
 
 ---
 
@@ -41,7 +44,6 @@
 - `.cursor/.lingxi/memory/business/<topic>.md`（业务上下文文档，至少 1 个）
 - `.cursor/.lingxi/memory/tech/services/<service>.md`（服务上下文文档，如适用）
 - `.cursor/.lingxi/memory/experience/team/knowledge/<tag>-<title>.md` 或 `team/standards/<tag>-<title>.md` 或 `project/<tag>-<title>.md`（经验文档，如触发沉淀）
-- `.cursor/.lingxi/workspace/pending-compounding-candidates.json`（经验候选暂存，如生成 EXP-CANDIDATE）
 - `.cursor/.lingxi/memory/INDEX.md`（统一索引，如写入经验）
 
 ---
@@ -65,7 +67,7 @@
    - 技术栈选择理由（为什么选择某个技术栈）
    - 架构决策（为什么选择某个架构模式）
    - 开发规范取舍（为什么采用某个规范）
-   - 通过 `experience-capture` Skill 识别、评估并静默暂存到 `pending-compounding-candidates.json`
+   - 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获
 
 **必须明确展示**以下信息（不仅收集，还要在对话中展示供用户确认）：
 
@@ -83,10 +85,7 @@
 **输出要求**：
 
 - 展示收集的信息供用户确认
-- **收集信息后，主动调用 `experience-capture` Skill（主动分析模式）**：
-  - 传递收集到的信息给 `experience-capture` 进行分析
-  - `experience-capture` 识别经验候选，执行阶段 1 评估，通过后静默写入 `pending-compounding-candidates.json`
-  - 输出一行状态信息：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
+- 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获和展示
 - 不输出技术细节（JSON 结构），不打断用户流程
 
 **统一选择**（信息确认 + 下一步选择）：
@@ -117,10 +116,9 @@
 
 **关键要求**：
 
-- 经验候选静默暂存，不打断用户流程，只输出一行状态信息
+- 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获和展示
 - 如果用户选择 D（信息需要补充），补充后重新展示信息，再次询问确认
 - 如果用户选择 A/B/C（信息准确），进入相应的下一步流程
-- 所有经验候选的最终沉淀选择在 `/remember` 阶段进行（由 stop hook 提醒）
 
 ### 阶段 2：深入调查 + 持续识别经验候选
 
@@ -129,7 +127,7 @@
 1. 根据用户指定的调查项进行深入调查
 2. **同时回顾阶段 1 收集的信息**，补全遗漏的经验候选
 3. 识别常见坑点、深层架构决策
-4. 通过 `experience-capture` Skill 识别、评估并暂存经验候选（需要用户确认）
+4. 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获和展示
 
 **关键要求**：
 
@@ -140,9 +138,8 @@
 
 **执行内容**：
 
-1. 从 `.cursor/.lingxi/workspace/pending-compounding-candidates.json` 读取所有已暂存的候选
-2. 去重和合并相似候选（如果存在）
-3. 输出完整的经验候选列表（在对话中展示，包含核心信息）
+1. 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获和展示
+2. 本阶段无需单独汇总，经验捕获会在任务完成时统一处理
 
 **输出格式**：
 
@@ -187,8 +184,10 @@
 本命令将以下任务委托给相应的 Skills：
 
 - **生成服务上下文文档**：调用 `service-loader` Skill（参考 `.cursor/skills/service-loader/SKILL.md`）
-- **沉淀经验到经验库**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
-- **沉淀质量资产**：通过 `experience-depositor` 沉淀到经验库（团队级标准/经验或项目级经验）
+- **沉淀记忆到记忆库**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
+  - 经验记忆：团队级标准/经验或项目级经验
+  - 技术记忆：服务上下文
+  - 业务记忆：业务上下文
 
 ---
 
@@ -196,11 +195,9 @@
 
 - 必须生成至少 1 个业务上下文文档
 - 必须输出初始化报告（在对话中输出摘要）
-- **如果识别到可沉淀知识点，通过 `experience-capture` Skill 处理**：
-  - 在阶段 1 和阶段 2 中，每次识别经验候选时，`experience-capture` 会静默执行阶段 1 评估，评估通过后写入 `pending-compounding-candidates.json`
-  - 输出一行状态信息：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
-  - 在阶段 3 汇总时，从 `pending-compounding-candidates.json` 读取并展示经验候选的核心信息（trigger、decision、solution 等）
-  - EXP-CANDIDATE JSON 必须包含所有关键字段（taskId、stage、trigger、decision、solution、verify、pointers）
+- **经验候选处理**：
+  - 经验候选将在任务完成时由 stop hook 触发 `experience-capture` 进行捕获和展示
+  - `experience-capture` 会扫描整个对话历史，识别经验信号并生成候选
+  - 候选在会话中展示，用户可选择沉淀（输入编号，如 `1,3`，由 `experience-depositor` 处理）
   - 对于 `/init` 命令，`taskId` 设为 `null`，`stage` 设为 `init`
-  - 所有候选的最终沉淀选择在 `/remember` 阶段进行（由 stop hook 提醒），不在捕获阶段打断用户
-- 最后用 3-6 行简短说明：生成了哪些文档、识别了哪些经验候选、如何选择沉淀（直接输入编号，如 `1,3`，由 `experience-depositor` 处理）
+- 最后用 3-6 行简短说明：生成了哪些文档、经验候选将在任务完成时展示

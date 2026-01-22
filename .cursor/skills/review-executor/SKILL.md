@@ -198,7 +198,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 - 是否需要更新相关文档
 - 是否需要通知相关团队
 
-**注意**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑。
+**注意**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑。
 
 ### 7. 并行执行可选维度（显式触发 subagents）
 
@@ -425,7 +425,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 
 ## 注意事项
 
-1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑
+1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑
 2. **测试质量优先**：测试脚本质量检查必须在测试执行前完成
 3. **分级输出**：所有问题按优先级分级（Blockers/High/Medium/Low）
 4. **明确结论**：审查结论必须明确（通过/需修复/拒绝）

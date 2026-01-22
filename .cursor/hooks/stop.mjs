@@ -7,34 +7,33 @@ import {
   writeStdoutJson,
 } from "./_hook-utils.mjs";
 
-async function readPendingCandidates(projectRoot) {
-  const pendingFile = path.join(
-    projectRoot,
-    ".cursor/.lingxi/workspace/pending-compounding-candidates.json",
-  );
+async function isProcessed(sessionKey, processedFile) {
   try {
-    const raw = await fs.readFile(pendingFile, "utf8");
-    return { pendingFile, data: JSON.parse(raw) };
+    const raw = await fs.readFile(processedFile, "utf8");
+    const data = JSON.parse(raw);
+    return Array.isArray(data.processed) && data.processed.includes(sessionKey);
   } catch {
-    return null;
+    return false;
   }
 }
 
-function buildFollowupMessage(candidates) {
-  const lines = candidates.map((c, i) => `${i + 1}. ${c.summary || c.trigger || `候选 ${i + 1}`}`);
-  return [
-    "检测到有待沉淀的经验候选。使用 `/remember` 命令查看并选择要沉淀的候选：",
-    "",
-    "候选列表：",
-    ...lines,
-    "",
-    "使用方式：",
-    "- `/remember` - 查看所有候选并选择沉淀",
-    "- `/remember 1,3` - 直接选择第 1 和第 3 个候选进行沉淀",
-    "- `/remember 全部` - 选择所有候选进行沉淀",
-    "",
-    "所有候选已暂存在中转文件，不会自动写入经验库。",
-  ].join("\n");
+async function markProcessed(sessionKey, processedFile) {
+  try {
+    const raw = await fs.readFile(processedFile, "utf8");
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.processed)) {
+      data.processed = [];
+    }
+    if (!data.processed.includes(sessionKey)) {
+      data.processed.push(sessionKey);
+      await fs.writeFile(processedFile, JSON.stringify(data, null, 2), "utf8");
+    }
+  } catch {
+    // 文件不存在，创建新文件
+    const data = { processed: [sessionKey] };
+    await fs.mkdir(path.dirname(processedFile), { recursive: true });
+    await fs.writeFile(processedFile, JSON.stringify(data, null, 2), "utf8");
+  }
 }
 
 async function main() {
@@ -49,26 +48,35 @@ async function main() {
 
   const projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
 
-  const pending = await readPendingCandidates(projectRoot);
-  if (!pending) return;
+  // 会话去重：基于 conversation_id + generation_id
+  const conversationId = input.conversation_id;
+  const generationId = input.generation_id;
 
-  const { pendingFile, data } = pending;
-  if (!data || data.asked === true) return;
-  if (!Array.isArray(data.candidates) || data.candidates.length === 0) return;
+  if (!conversationId || !generationId) {
+    // 缺少必要参数，静默跳过
+    return;
+  }
 
-  // 标记已提醒，防止重复 followup
-  await fs.writeFile(
-    pendingFile,
-    JSON.stringify({ ...data, asked: true }, null, 2),
-    "utf8",
+  const sessionKey = `${conversationId}-${generationId}`;
+  const processedFile = path.join(
+    projectRoot,
+    ".cursor/.lingxi/workspace/processed-sessions.json",
   );
 
+  // 检查是否已处理
+  if (await isProcessed(sessionKey, processedFile)) {
+    return; // 已处理，静默跳过
+  }
+
+  // 标记为已处理
+  await markProcessed(sessionKey, processedFile);
+
+  // 输出 prompt 引导调用 experience-capture skill
   writeStdoutJson({
-    followup_message: buildFollowupMessage(data.candidates),
+    followup_message: `请使用 @experience-capture 技能扫描本次对话（conversation_id: ${conversationId}, generation_id: ${generationId}），提取有价值的经验候选。注意过滤：单纯知识解释、临时调试猜测、尚未验证的方案、明显一次性代码。`,
   });
 }
 
 main().catch(() => {
   // 不影响主流程
 });
-

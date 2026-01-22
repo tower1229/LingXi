@@ -103,11 +103,9 @@
 
 **经验系统 Skills**：
 
-- `experience-capture`：自动捕获经验候选
-- `experience-depositor`：沉淀经验到记忆库
-- `memory-curator`：智能治理所有记忆类型
+- `experience-capture`：由 stop hook 触发，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
+- `experience-depositor`：从会话上下文获取候选，执行治理（语义搜索 + 关键词匹配）并沉淀经验到记忆库
 - `memory-index`：统一索引和匹配，支持跨维度匹配
-- `candidate-evaluator`：统一评估经验候选
 
 **工具类 Skills**：
 

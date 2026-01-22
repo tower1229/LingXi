@@ -186,7 +186,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 - 输出失败详情，包含失败的测试用例、错误信息、修复建议
 - 修复后重新执行测试，循环直到全部通过
 
-**注意**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑。
+**注意**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑。
 
 ---
 
@@ -222,7 +222,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 ## 注意事项
 
-1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑
+1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑
 2. **测试循环**：必须循环修复直到所有测试通过，才能继续下一个任务
 3. **模式选择**：根据是否存在 plan 文件自动选择模式，无需用户指定
 4. **文档同步**：确保代码与文档保持一致

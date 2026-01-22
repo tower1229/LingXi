@@ -379,7 +379,7 @@ success "已下载 agents ($agent_count 个文件)"
 
 # 下载引用文件
 ref_count=0
-# 动态遍历所有 references（memory-curator, agents 等）
+# 动态遍历所有 references（agents 等）
 # 获取 references 对象的所有 keys
 if command -v jq &> /dev/null; then
     # 使用 jq 获取所有 keys
@@ -439,13 +439,7 @@ while IFS= read -r dir; do
     mkdir -p "$dir"
 done < <(get_json_array "workflowDirectories")
 
-# 创建 workspace 目录的初始文件
-info "创建 workspace 初始文件..."
-workspace_file=".cursor/.lingxi/workspace/pending-compounding-candidates.json"
-if [ ! -f "$workspace_file" ]; then
-    echo '{"candidates": [], "asked": false}' > "$workspace_file"
-    success "已创建 pending-compounding-candidates.json"
-fi
+# workspace 目录会在首次使用时自动创建，无需初始化文件
 
 # 下载 INDEX.md 文件
 info "下载索引文件..."

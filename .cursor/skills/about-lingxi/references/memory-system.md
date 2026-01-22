@@ -8,7 +8,7 @@
 
 ### 1. 记忆捕获（experience-capture）
 
-**触发时机**：在执行 `/req`、`/plan 001`、`/build 001`、`/review 001`、`/init` 等命令时自动激活
+**触发时机**：任务完成时，由 stop hook 引导调用
 
 **检测策略**：对话历史优先 + 文件验证补充
 - L1（主要来源）：从对话历史检测当前阶段和任务编号
@@ -16,10 +16,12 @@
 - L3（兜底）：对话历史缺失时要求用户明确指定
 
 **捕获流程**：
-1. 扫描用户输入，识别经验信号（判断、取舍、边界、约束等）
-2. 生成 EXP-CANDIDATE JSON 格式
-3. 调用 `candidate-evaluator` 执行阶段 1 评估
-4. 评估通过后写入 `workspace/pending-compounding-candidates.json` 暂存
+1. stop hook 在任务完成时（`status === "completed"`）触发，引导调用 `experience-capture` skill
+2. 扫描整个对话历史，识别经验信号（判断、取舍、边界、约束等）
+3. 生成 EXP-CANDIDATE JSON 格式
+4. 执行评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型、Level 判断）
+5. 过滤明显不通过的候选
+6. 在会话中展示候选列表，供用户选择
 
 **EXP-CANDIDATE 格式**：
 ```json
@@ -39,32 +41,20 @@
 }
 ```
 
-### 2. 记忆评估（candidate-evaluator）
+### 2. 记忆沉淀（experience-depositor）
 
-**阶段 1 评估**（experience-capture 中执行）：
-- 知识可获得性过滤：高可获得性且代码库有示例 → 降低优先级或跳过
-- 经验类型判断：standard（强约束、执行底线）或 knowledge（复杂判断、认知触发）
-- Level 判断：team（团队级）或 project（项目级）
-
-**阶段 2 评估**（experience-depositor 中执行）：
-- 结构完整性检查
-- 判断结构质量评估
-- 可复用性评估
-- 沉淀载体适配性评估
-
-### 3. 记忆沉淀（experience-depositor）
-
-**触发时机**：用户执行 `/remember` 命令或直接输入编号选择候选经验
+**触发时机**：用户在 experience-capture 展示的候选列表中选择候选时，或通过 `/remember` 命令提取新经验时
 
 **沉淀流程**：
-1. 读取 `workspace/pending-compounding-candidates.json` 暂存候选
-2. 调用 `candidate-evaluator` 执行阶段 2 详细评估
-3. 展示候选及评估结果
-4. 用户选择要沉淀的候选
-5. 调用 `memory-curator` 进行冲突检测和治理
+1. 从会话上下文获取候选（由 experience-capture 传递，包含评估结果）
+2. 冲突检测（语义搜索 + 关键词匹配双重验证，读取 INDEX.md）
+3. 生成治理方案（方案模式）：使用语义搜索查找相似经验，结合关键词匹配进行综合判断，生成治理方案
+4. 展示治理方案，用户确认
+5. 执行治理动作（执行模式）：备份索引、执行合并/替代、更新统一索引、清理备份
 6. 用户选择存储目标（团队级标准/经验或项目级经验）
-7. 写入对应位置
-8. 更新统一索引 `memory/INDEX.md`
+7. 写入前执行治理（最终检查）：再次执行治理动作，确保知识库质量
+8. 写入对应位置
+9. 更新统一索引 `memory/INDEX.md`
 
 **沉淀分流**：
 - 团队级标准（`memory/experience/team/standards/`）：强约束、执行底线
@@ -75,20 +65,20 @@
 - 技术记忆（`memory/tech/services/`）：服务上下文，由 `service-loader` 生成
 - 业务记忆（`memory/business/`）：业务上下文，由 `/init` 命令生成
 
-### 4. 记忆治理（memory-curator）
+### 4. 记忆治理（集成在 experience-depositor 中）
 
-**触发时机**：在 experience-depositor 沉淀记忆后自动触发
+**触发时机**：在 experience-depositor 沉淀记忆过程中自动执行
 
-**治理模式**：
+**治理机制**：
+- **语义搜索 + 关键词匹配双重验证**：使用 Cursor 语义搜索查找相似经验，结合关键词匹配进行综合判断
 - **方案模式**：生成治理方案（建议的合并/取代动作），不执行，供用户确认
-- **执行模式**：执行治理动作，更新统一索引，输出变更报告
+- **执行模式**：执行治理动作（备份索引、执行合并/替代、更新统一索引、清理备份），输出变更报告
 
 **治理范围**：支持所有记忆类型（Experience/Tech/Business）的统一治理
 
 **治理动作**：
 - 合并：检测到相似记忆，建议合并
 - 取代：检测到冲突记忆，建议取代
-- 质量准则建议：识别可沉淀为质量准则的经验
 
 ### 5. 记忆索引和匹配（memory-index）
 
@@ -208,7 +198,5 @@
 
 - **记忆捕获**：`.cursor/skills/experience-capture/SKILL.md`
 - **记忆索引**：`.cursor/skills/memory-index/SKILL.md`
-- **记忆沉淀**：`.cursor/skills/experience-depositor/SKILL.md`
-- **记忆治理**：`.cursor/skills/memory-curator/SKILL.md`
-- **候选评估**：`.cursor/skills/candidate-evaluator/SKILL.md`
+- **记忆沉淀和治理**：`.cursor/skills/experience-depositor/SKILL.md`（包含治理功能）
 - **服务上下文**：`.cursor/skills/service-loader/SKILL.md`

@@ -26,11 +26,9 @@ Skills 承载详细的工作流指导，按职责分为：
   - `review-executor`：多维度审查和交付质量保证
 
 - **记忆系统 Skills**：实现"心有灵犀"的核心能力
-  - `experience-capture`：自动捕获经验候选、评估并暂存到文件（在 req/plan/build/review/init 阶段自动激活）
-  - `experience-depositor`：读取暂存候选、展示并沉淀经验到记忆库（团队级标准/经验或项目级经验）
-  - `memory-curator`：智能治理所有记忆类型（Experience/Tech/Business），统一索引更新
+  - `experience-capture`：由 stop hook 触发，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
+  - `experience-depositor`：从会话上下文获取候选，执行治理（语义搜索 + 关键词匹配双重验证）并沉淀经验到记忆库（团队级标准/经验或项目级经验）
   - `memory-index`：统一索引和匹配，支持跨维度匹配（Experience/Tech/Business），主动提醒风险与指针
-  - `candidate-evaluator`：统一评估经验候选的质量和分类决策（阶段 1 和阶段 2），包括知识可获得性、经验类型、Level 判断
 
 - **工具类 Skills**：提供辅助能力
   - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
@@ -42,13 +40,13 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
 
-1. **自动捕获**：`experience-capture` 在 req/plan/build/review/init 阶段自动扫描用户输入，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，自动判断 Level（team/project）和 Type（standard/knowledge），执行知识可获得性过滤
-2. **评估暂存**：`experience-capture` 调用 `candidate-evaluator` 执行阶段 1 评估（包括知识可获得性、经验类型、Level 判断），评估通过后写入 `workspace/pending-compounding-candidates.json` 暂存
-3. **沉淀分流**：`experience-depositor` 读取暂存候选，调用 `candidate-evaluator` 执行阶段 2 详细评估，根据评估结果和用户选择，沉淀到：
+1. **stop hook 触发**：任务完成时，stop hook 引导调用 `experience-capture` skill
+2. **经验捕获和评估**：`experience-capture` 扫描整个对话历史，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，执行评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型、Level 判断），在会话中展示候选供用户选择
+3. **沉淀分流**：用户选择候选后，`experience-depositor` 从会话上下文获取候选，执行治理并沉淀到：
    - 团队级标准（`memory/experience/team/standards/`）：强约束、执行底线
    - 团队级经验（`memory/experience/team/knowledge/`）：复杂判断、认知触发
    - 项目级经验（`memory/experience/project/`）：项目特定、长期复用
-4. **智能治理**：`memory-curator` 自动检测冲突和重复，智能合并或取代，统一更新 `memory/INDEX.md`，保持知识库的整洁和一致性
+4. **智能治理**：`experience-depositor` 使用语义搜索 + 关键词匹配双重验证，自动检测冲突和重复，智能合并或取代，统一更新 `memory/INDEX.md`，保持知识库的整洁和一致性
 5. **主动提醒**：`memory-index` 在执行任务时根据命令自动匹配相关记忆（`/init` → Experience Level=team，`/req`/`/plan`/`/build`/`/review` → 所有维度），支持跨维度匹配（Experience/Tech/Business），主动提醒风险和提供指针
 
 ### 其他机制

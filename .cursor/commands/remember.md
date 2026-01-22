@@ -1,10 +1,13 @@
-# /remember - 即时质量标准沉淀命令
+# /remember - 即时记忆库沉淀命令
 
 ## 命令用途
 
-智能提取并沉淀质量标准，支持从用户输入直接提取质量标准，或从对话历史中提取"刚解决的问题/踩的坑"。这是最低摩擦的"即时沉淀入口"。
+智能提取并沉淀记忆到持久化记忆库，支持从用户输入直接提取记忆，或从对话历史中提取"刚解决的问题/踩的坑"。这是最低摩擦的"即时沉淀入口"。
 
-**存储目标**：用户可选择存入团队级标准（`team/standards/`）、团队级经验（`team/knowledge/`）或项目级经验（`project/`）。
+**存储目标**：用户可选择存入：
+- **经验记忆**：团队级标准（`memory/experience/team/standards/`）、团队级经验（`memory/experience/team/knowledge/`）或项目级经验（`memory/experience/project/`）
+- **技术记忆**：服务上下文（`memory/tech/services/`）
+- **业务记忆**：业务上下文（`memory/business/`）
 
 ---
 
@@ -40,16 +43,18 @@
 
 根据用户选择的存储目标：
 
-- **如果选择团队级标准**：
-  - `.cursor/.lingxi/memory/experience/team/standards/<tag>-<title>.md`（标准文件，需用户确认后写入）
+- **如果选择经验记忆**：
+  - `.cursor/.lingxi/memory/experience/team/standards/<tag>-<title>.md` 或
+  - `.cursor/.lingxi/memory/experience/team/knowledge/<tag>-<title>.md` 或
+  - `.cursor/.lingxi/memory/experience/project/<tag>-<title>.md`（记忆文件，需用户确认后写入）
   - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
-- **如果选择团队级经验**：
-  - `.cursor/.lingxi/memory/experience/team/knowledge/<tag>-<title>.md`（经验文件，需用户确认后写入）
+- **如果选择技术记忆**：
+  - `.cursor/.lingxi/memory/tech/services/<service>.md`（服务上下文文件，需用户确认后写入）
   - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
-- **如果选择项目级经验**：
-  - `.cursor/.lingxi/memory/experience/project/<tag>-<title>.md`（经验文件，需用户确认后写入）
+- **如果选择业务记忆**：
+  - `.cursor/.lingxi/memory/business/<topic>.md`（业务上下文文件，需用户确认后写入）
   - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
 ---
@@ -84,22 +89,24 @@
 
 ### 3) 成长过滤器
 
-在决定"写入经验文档（长期）"之前，对每条候选先回答一个问题：
+在决定"写入记忆文档（长期）"之前，对每条候选先回答一个问题：
 
 > **如果我一年后在完全不同的项目里再遇到类似局面，这条信息还能帮我提前做出正确判断吗？**
 
-- 若答案是 **否**：不写入 experience，改为沉淀到 **session/worklog**（项目记录），并说明原因
-- 若答案是 **是**：允许写入 experience（长期判断资产），继续后续流程
+- 若答案是 **否**：不写入记忆库，改为沉淀到 **session/worklog**（项目记录），并说明原因
+- 若答案是 **是**：允许写入记忆库（长期判断资产），继续后续流程
 
 ### 4) 委托给 experience-depositor
 
 将提取的经验信息委托给 `experience-depositor` Skill 处理，包括：
 
-- 冲突检测
+- 冲突检测（语义搜索 + 关键词匹配双重验证）
+- 生成治理方案（方案模式）
+- 执行治理动作（执行模式）
 - 预览生成和存储目标选择
-- 写入经验库（团队级标准/经验或项目级经验）
+- 写入记忆库（经验记忆：团队级标准/经验或项目级经验；技术记忆：服务上下文；业务记忆：业务上下文）
 - 索引更新
-- curator 治理触发
+- 写入前执行治理（最终检查）
 
 ---
 
@@ -109,20 +116,22 @@
 
 - **经验沉淀流程**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
   - 编号选择解析（如果用户输入是编号格式）
-  - 冲突检测（读取统一索引 memory/INDEX.md）
-  - 预览生成和存储目标选择（团队级标准/经验或项目级经验）
+  - 冲突检测（语义搜索 + 关键词匹配双重验证，读取统一索引 memory/INDEX.md）
+  - 生成治理方案（方案模式）
+  - 执行治理动作（执行模式）
+  - 预览生成和存储目标选择（经验记忆/技术记忆/业务记忆）
   - 写入对应目录
   - 索引更新（更新统一索引 memory/INDEX.md）
-  - curator 治理触发
+  - 写入前执行治理（最终检查）
 
 ---
 
 ## 输出要求
 
-- **信息提取阶段**：如果识别到可沉淀经验，输出提取的信息摘要
+- **信息提取阶段**：如果识别到可沉淀记忆，输出提取的信息摘要
 - **委托给 experience-depositor**：后续的预览、确认、写入等流程由 `experience-depositor` 处理
 - **最后输出**（由 experience-depositor 输出）：
-  - 用 3-6 行简短说明：提取了什么经验、触发条件是什么、下次会在什么场景下自动提醒
+  - 用 3-6 行简短说明：提取了什么记忆、触发条件是什么、下次会在什么场景下自动提醒
 
 ---
 
@@ -158,7 +167,7 @@ AI：委托给 experience-depositor 处理沉淀流程
 ```
 用户：/remember 1,3
 AI：（识别为编号选择，直接委托给 experience-depositor）
-- experience-depositor 读取 workspace/pending-compounding-candidates.json
+- experience-depositor 从会话上下文获取候选（由 experience-capture 传递）
 - 解析编号：选择第 1 和第 3 个候选
 - 执行沉淀流程
 ```

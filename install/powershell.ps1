@@ -217,16 +217,7 @@ foreach ($dir in $Manifest.workflowDirectories) {
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
-# 创建 workspace 目录的初始文件
-Write-Info "创建 workspace 初始文件..."
-$workspaceFile = ".cursor\.lingxi\workspace\pending-compounding-candidates.json"
-if (-not (Test-Path $workspaceFile)) {
-    @{
-        candidates = @()
-        asked = $false
-    } | ConvertTo-Json -Depth 10 | Out-File -FilePath $workspaceFile -Encoding UTF8 -NoNewline
-    Write-Success "已创建 pending-compounding-candidates.json"
-}
+# workspace 目录会在首次使用时自动创建，无需初始化文件
 
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."

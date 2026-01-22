@@ -14,8 +14,8 @@
 
 - **负责什么**：
   - 需求全生命周期管理（req → plan → build → review）
-  - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀）
-  - 经验治理机制（memory-curator 合并/取代、质量准则建议）
+  - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀和治理）
+  - 经验治理机制（experience-depositor 使用语义搜索 + 关键词匹配双重验证，合并/取代）
   - 质量资产管理（通过记忆系统统一管理团队级标准/经验和项目级经验）
   - 上下文管理（service-loader 服务上下文、business context 业务上下文）
 - **不负责什么**：
@@ -45,14 +45,13 @@
   - **指针**：、、、
 
 - **经验沉淀流程**：
-  1. 在工作过程中，experience-capture 识别经验信号并生成 EXP-CANDIDATE
-  2. experience-capture 输出用户友好的摘要，询问用户确认
-  3. 用户确认后，experience-capture 调用 candidate-evaluator 评估并写入 `workspace/pending-compounding-candidates.json`
-  4. 用户执行 `/remember` 确认沉淀
-  5. experience-depositor 展示候选，执行沉淀分流
-  6. 写入经验到 `.cursor/.lingxi/memory/experience/`
-  7. 更新统一索引 `memory/INDEX.md`
-  8. memory-curator 自动触发治理（合并/取代、质量准则建议）
+  1. 任务完成时，stop hook 引导调用 experience-capture skill
+  2. experience-capture 扫描对话历史，识别经验信号并生成 EXP-CANDIDATE，执行评估，在会话中展示候选
+  3. 用户选择要沉淀的候选（输入编号，如 `1,3` 或 `全部`）
+  4. experience-depositor 从会话上下文获取候选，执行治理（语义搜索 + 关键词匹配双重验证）并沉淀
+  5. 写入经验到 `.cursor/.lingxi/memory/experience/`
+  6. 更新统一索引 `memory/INDEX.md`
+  7. experience-depositor 写入前执行最终治理检查（合并/取代）
   - **关键决策点**：
     - 成长过滤器：判断是否进入长期知识库
     - 沉淀分流：判断应沉淀到哪里（团队级标准/经验、项目级经验、skills/context）
@@ -82,7 +81,7 @@
 - **业务逻辑要点**：
   - 成长过滤器：判断经验是否进入长期知识库（"一年后，在完全不同的项目里，这条信息还能帮我提前做出正确判断吗？"）
   - 沉淀分流：将知识放到最合适的载体（团队级标准/经验、项目级经验、skills/context）
-  - 经验治理：自动合并/取代，保持经验库精炼
+  - 记忆治理：自动合并/取代
   - 指针：、
 
 ## 5) 协作上下文（Collaboration）
@@ -106,7 +105,7 @@
   - 误解：经验沉淀是自动的
   - 澄清：经验沉淀需要用户确认（使用  命令），遵循"确认机制"
 - **常见坑点**：
-  - 坑点：忘记执行 ，导致经验候选未被沉淀
-  - 解决方案：stop hook 会在对话结束时提醒有待沉淀候选
+  - 坑点：忘记选择经验候选进行沉淀
+  - 解决方案：stop hook 会在任务完成时引导调用 experience-capture，候选在会话中展示，用户可直接选择沉淀
   - 指针：
   - （候选）可沉淀为 experience：经验沉淀确认的重要性

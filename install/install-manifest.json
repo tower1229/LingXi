@@ -18,9 +18,7 @@
   },
   "skills": [
     "skills/build-executor/SKILL.md",
-    "skills/candidate-evaluator/SKILL.md",
     "skills/experience-capture/SKILL.md",
-    "skills/memory-curator/SKILL.md",
     "skills/experience-depositor/SKILL.md",
     "skills/memory-index/SKILL.md",
     "skills/plan-executor/SKILL.md",
@@ -30,7 +28,6 @@
   ],
   "agents": {
     "files": [
-      "agents/experience-depositor.md",
       "agents/reviewer-doc-consistency.md",
       "agents/reviewer-performance.md",
       "agents/reviewer-security.md"

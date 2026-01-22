@@ -156,10 +156,8 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **内容**：
 - 记忆捕获流程（experience-capture）
-- 记忆沉淀流程（experience-depositor）
-- 记忆治理机制（memory-curator）
+- 记忆沉淀流程（experience-depositor，包含治理）
 - 记忆索引和匹配（memory-index）
-- 记忆评估（candidate-evaluator）
 - 统一索引格式（Experience/Tech/Business）
 
 **何时加载**：场景 1、场景 2（涉及记忆系统改动时）

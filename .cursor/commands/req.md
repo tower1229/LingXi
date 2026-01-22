@@ -29,7 +29,7 @@ args:
 
 - `req-executor`：执行需求分析、提纯、放大和文档生成
 - `memory-index`：自动匹配历史记忆提醒
-- `experience-capture`：统一经验捕获（通过 Cursor Skill 自动匹配机制激活）
+- `experience-capture`：统一经验捕获（由 stop hook 触发）
 - `service-loader`：如适用，生成服务上下文
 
 ## 产物
@@ -61,10 +61,11 @@ args:
 经验捕获由 `experience-capture` Skill 统一处理，无需在命令中显式调用。
 
 **激活机制**：
-- 通过 Cursor 的 Skill 自动匹配机制自动激活
-- 如果自动激活失败，经验捕获会静默跳过，可通过 `/remember` 命令手动沉淀经验
+- 任务完成时，由 stop hook 引导调用 `experience-capture` skill
+- `experience-capture` 扫描整个对话历史，识别经验信号并生成候选
+- 候选在会话中展示，用户可选择沉淀
 
-**触发场景**：当发生以下情况时，`experience-capture` 会自动捕获经验候选：
+**触发场景**：当发生以下情况时，`experience-capture` 会识别并捕获经验候选：
 
 - 需求固化、范围调整、优先级变更
 - 目标纠正、方案选择、约束添加
