@@ -442,4 +442,4 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 
 - **原 review.md 命令**：`.cursor/commands/review.md`（备份在 `.cursor/commands-backup/review.md`）
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
-- **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
+- **记忆匹配**：`.cursor/skills/memory-index/SKILL.md`

@@ -20,9 +20,9 @@
     "skills/build-executor/SKILL.md",
     "skills/candidate-evaluator/SKILL.md",
     "skills/experience-capture/SKILL.md",
-    "skills/experience-curator/SKILL.md",
+    "skills/memory-curator/SKILL.md",
     "skills/experience-depositor/SKILL.md",
-    "skills/experience-index/SKILL.md",
+    "skills/memory-index/SKILL.md",
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
@@ -37,9 +37,6 @@
     ]
   },
   "references": {
-    "experience-curator": [
-      "skills/experience-curator/references/experience-governance.md"
-    ],
     "experience-capture": [
       "skills/experience-capture/references/req-triggers.md",
       "skills/experience-capture/references/plan-triggers.md",
@@ -68,29 +65,27 @@
   },
   "workflowDirectories": [
     ".cursor/.lingxi/requirements",
-    ".cursor/.lingxi/context/business",
-    ".cursor/.lingxi/context/business/references",
-    ".cursor/.lingxi/context/tech/services",
-    ".cursor/.lingxi/context/experience",
-    ".cursor/.lingxi/context/experience/team",
-    ".cursor/.lingxi/context/experience/team/standards",
-    ".cursor/.lingxi/context/experience/team/knowledge",
-    ".cursor/.lingxi/context/experience/project",
-    ".cursor/.lingxi/context/session",
+    ".cursor/.lingxi/memory",
+    ".cursor/.lingxi/memory/experience",
+    ".cursor/.lingxi/memory/experience/team",
+    ".cursor/.lingxi/memory/experience/team/standards",
+    ".cursor/.lingxi/memory/experience/team/knowledge",
+    ".cursor/.lingxi/memory/experience/project",
+    ".cursor/.lingxi/memory/tech",
+    ".cursor/.lingxi/memory/tech/services",
+    ".cursor/.lingxi/memory/business",
+    ".cursor/.lingxi/memory/business/references",
+    ".cursor/.lingxi/style-fusion",
     ".cursor/.lingxi/workspace"
   ],
   "workflowTemplateFiles": [
-    ".cursor/.lingxi/context/business/references/business-context-template.md"
+    ".cursor/.lingxi/memory/business/references/business-context-template.md"
   ],
   "workflowIndexFiles": [
-    ".cursor/.lingxi/context/experience/team/INDEX.md",
-    ".cursor/.lingxi/context/experience/project/INDEX.md"
+    ".cursor/.lingxi/memory/INDEX.md"
   ],
   "gitignoreEntries": [
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".cursor/.lingxi/workspace/",
-    "",
-    "# Session-level context (ephemeral, not a knowledge base)",
-    ".cursor/.lingxi/context/session/"
+    ".cursor/.lingxi/workspace/"
   ]
 }

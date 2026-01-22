@@ -10,7 +10,7 @@ import {
 async function readPendingCandidates(projectRoot) {
   const pendingFile = path.join(
     projectRoot,
-    ".cursor/.lingxi/context/session/pending-compounding-candidates.json",
+    ".cursor/.lingxi/workspace/pending-compounding-candidates.json",
   );
   try {
     const raw = await fs.readFile(pendingFile, "utf8");

@@ -217,14 +217,14 @@ foreach ($dir in $Manifest.workflowDirectories) {
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
-# 创建 session 目录的初始文件
-Write-Info "创建 session 初始文件..."
-$sessionFile = ".cursor\.lingxi\context\session\pending-compounding-candidates.json"
-if (-not (Test-Path $sessionFile)) {
+# 创建 workspace 目录的初始文件
+Write-Info "创建 workspace 初始文件..."
+$workspaceFile = ".cursor\.lingxi\workspace\pending-compounding-candidates.json"
+if (-not (Test-Path $workspaceFile)) {
     @{
         candidates = @()
         asked = $false
-    } | ConvertTo-Json -Depth 10 | Out-File -FilePath $sessionFile -Encoding UTF8 -NoNewline
+    } | ConvertTo-Json -Depth 10 | Out-File -FilePath $workspaceFile -Encoding UTF8 -NoNewline
     Write-Success "已创建 pending-compounding-candidates.json"
 }
 
@@ -282,9 +282,6 @@ if (Test-Path ".gitignore") {
     @(
         "# Local workspace for temp code clones, generated artifacts, etc.",
         ".cursor/.lingxi/workspace/",
-        "",
-        "# Session-level context (ephemeral, not a knowledge base)",
-        ".cursor/.lingxi/context/session/",
         "",
         "# OS / IDE",
         ".DS_Store",

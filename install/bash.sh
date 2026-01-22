@@ -379,7 +379,7 @@ success "已下载 agents ($agent_count 个文件)"
 
 # 下载引用文件
 ref_count=0
-# 动态遍历所有 references（experience-curator, agents 等）
+# 动态遍历所有 references（memory-curator, agents 等）
 # 获取 references 对象的所有 keys
 if command -v jq &> /dev/null; then
     # 使用 jq 获取所有 keys
@@ -439,11 +439,11 @@ while IFS= read -r dir; do
     mkdir -p "$dir"
 done < <(get_json_array "workflowDirectories")
 
-# 创建 session 目录的初始文件
-info "创建 session 初始文件..."
-session_file=".cursor/.lingxi/context/session/pending-compounding-candidates.json"
-if [ ! -f "$session_file" ]; then
-    echo '{"candidates": [], "asked": false}' > "$session_file"
+# 创建 workspace 目录的初始文件
+info "创建 workspace 初始文件..."
+workspace_file=".cursor/.lingxi/workspace/pending-compounding-candidates.json"
+if [ ! -f "$workspace_file" ]; then
+    echo '{"candidates": [], "asked": false}' > "$workspace_file"
     success "已创建 pending-compounding-candidates.json"
 fi
 
@@ -505,9 +505,6 @@ else
     cat > .gitignore << 'EOF'
 # Local workspace for temp code clones, generated artifacts, etc.
 .cursor/.lingxi/workspace/
-
-# Session-level context (ephemeral, not a knowledge base)
-.cursor/.lingxi/context/session/
 
 # OS / IDE
 .DS_Store

@@ -15,8 +15,8 @@
 - **负责什么**：
   - 需求全生命周期管理（req → plan → build → review）
   - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀）
-  - 经验治理机制（experience-curator 合并/取代、质量准则建议）
-  - 质量资产管理（通过 Experience 系统统一管理团队级标准/经验和项目级经验）
+  - 经验治理机制（memory-curator 合并/取代、质量准则建议）
+  - 质量资产管理（通过记忆系统统一管理团队级标准/经验和项目级经验）
   - 上下文管理（service-loader 服务上下文、business context 业务上下文）
 - **不负责什么**：
   - 不负责代码实现（由 AI 根据 plan 执行）
@@ -35,7 +35,7 @@
      - （可选）：任务规划
      - ：执行构建
      - ：审查交付
-  2. 每个命令执行时，experience-index 自动匹配相关经验并提醒
+  2. 每个命令执行时，memory-index 自动匹配相关记忆并提醒
   3. 阶段 Skill 执行，生成产物
   4. 用户根据需要选择继续下一阶段或返回修改
   - **关键决策点**：
@@ -47,11 +47,12 @@
 - **经验沉淀流程**：
   1. 在工作过程中，experience-capture 识别经验信号并生成 EXP-CANDIDATE
   2. experience-capture 输出用户友好的摘要，询问用户确认
-  3. 用户确认后，experience-capture 调用 candidate-evaluator 评估并写入 `pending-compounding-candidates.json`
+  3. 用户确认后，experience-capture 调用 candidate-evaluator 评估并写入 `workspace/pending-compounding-candidates.json`
   4. 用户执行 `/remember` 确认沉淀
   5. experience-depositor 展示候选，执行沉淀分流
-  6. 写入经验到 `.cursor/.lingxi/context/experience/`
-  7. experience-curator 自动触发治理（合并/取代、质量准则建议）
+  6. 写入经验到 `.cursor/.lingxi/memory/experience/`
+  7. 更新统一索引 `memory/INDEX.md`
+  8. memory-curator 自动触发治理（合并/取代、质量准则建议）
   - **关键决策点**：
     - 成长过滤器：判断是否进入长期知识库
     - 沉淀分流：判断应沉淀到哪里（团队级标准/经验、项目级经验、skills/context）
@@ -75,8 +76,8 @@
 - **业务约束**：
   - 各阶段使用独立命令，用户明确控制流程
   - 经验沉淀必须用户确认（禁止未确认写入 ）
-  - 质量资产沉淀必须用户确认（禁止未确认写入经验库）
-  - INDEX.md 是需求状态的单一事实源（SSoT）
+  - 质量资产沉淀必须用户确认（禁止未确认写入记忆库）
+  - 统一索引 `memory/INDEX.md` 是记忆的单一事实源（SSoT）
   - 经验必须包含 Decision Shape 和 Judgment Capsule
 - **业务逻辑要点**：
   - 成长过滤器：判断经验是否进入长期知识库（"一年后，在完全不同的项目里，这条信息还能帮我提前做出正确判断吗？"）
@@ -91,11 +92,11 @@
   - workflow 维护者：维护 Skills、Hooks，扩展 workflow 能力
 - **协作方式**：
   - 通过 Skills 机制扩展能力（）
-  - 通过 Experience 系统定义质量准则（团队级标准/经验和项目级经验）
+  - 通过记忆系统定义质量准则（团队级标准/经验和项目级经验）
   - 通过 Hooks 机制扩展行为（）
 - **关键接口/契约**：
   - Skills 接口：Skills 必须包含 frontmatter（name、description），遵循 Skill 规范
-  - 数据模型接口：INDEX.md 必须遵循表头结构，经验文档必须包含必要字段
+  - 数据模型接口：统一索引 `memory/INDEX.md` 必须遵循表头结构，经验文档必须包含必要字段
 
 ## 6) 常见问题（FAQ）
 

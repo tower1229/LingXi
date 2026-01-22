@@ -41,16 +41,16 @@
 根据用户选择的存储目标：
 
 - **如果选择团队级标准**：
-  - `.cursor/.lingxi/context/experience/team/standards/<tag>-<title>.md`（标准文件，需用户确认后写入）
-  - `.cursor/.lingxi/context/experience/team/INDEX.md`（更新索引，需用户确认后写入）
+  - `.cursor/.lingxi/memory/experience/team/standards/<tag>-<title>.md`（标准文件，需用户确认后写入）
+  - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
 - **如果选择团队级经验**：
-  - `.cursor/.lingxi/context/experience/team/knowledge/<tag>-<title>.md`（经验文件，需用户确认后写入）
-  - `.cursor/.lingxi/context/experience/team/INDEX.md`（更新索引，需用户确认后写入）
+  - `.cursor/.lingxi/memory/experience/team/knowledge/<tag>-<title>.md`（经验文件，需用户确认后写入）
+  - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
 - **如果选择项目级经验**：
-  - `.cursor/.lingxi/context/experience/project/<tag>-<title>.md`（经验文件，需用户确认后写入）
-  - `.cursor/.lingxi/context/experience/project/INDEX.md`（更新索引，需用户确认后写入）
+  - `.cursor/.lingxi/memory/experience/project/<tag>-<title>.md`（经验文件，需用户确认后写入）
+  - `.cursor/.lingxi/memory/INDEX.md`（更新统一索引，需用户确认后写入）
 
 ---
 
@@ -109,10 +109,10 @@
 
 - **经验沉淀流程**：调用 `experience-depositor` Skill（参考 `.cursor/skills/experience-depositor/SKILL.md`）
   - 编号选择解析（如果用户输入是编号格式）
-  - 冲突检测（根据 Level 读取对应的 INDEX.md）
+  - 冲突检测（读取统一索引 memory/INDEX.md）
   - 预览生成和存储目标选择（团队级标准/经验或项目级经验）
   - 写入对应目录
-  - 索引更新（更新对应的 INDEX.md）
+  - 索引更新（更新统一索引 memory/INDEX.md）
   - curator 治理触发
 
 ---
@@ -158,7 +158,7 @@ AI：委托给 experience-depositor 处理沉淀流程
 ```
 用户：/remember 1,3
 AI：（识别为编号选择，直接委托给 experience-depositor）
-- experience-depositor 读取 pending-compounding-candidates.json
+- experience-depositor 读取 workspace/pending-compounding-candidates.json
 - 解析编号：选择第 1 和第 3 个候选
 - 执行沉淀流程
 ```

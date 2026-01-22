@@ -4,7 +4,7 @@
 
 Business Context 用于沉淀业务流程、业务规则、协作上下文等业务相关信息，帮助 workflow 快速理解项目的业务领域和业务逻辑。
 
-**位置**：`.cursor/.lingxi/context/business/<topic>.md`
+**位置**：`.cursor/.lingxi/memory/business/<topic>.md`
 
 **设计原则**（参考 `service-loader`）：
 - **先索引后细节**：产物以"概要 + 指针"为主，不复制大段业务文档
@@ -73,7 +73,7 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 | 维度 | Business Context | Service Context |
 |-----|-----------------|----------------|
 | **关注点** | 业务逻辑、业务流程、业务规则 | 技术实现、服务边界、技术依赖 |
-| **位置** | `.cursor/.lingxi/context/business/` | `.cursor/.lingxi/context/tech/services/` |
+| **位置** | `.cursor/.lingxi/memory/business/` | `.cursor/.lingxi/memory/tech/services/` |
 | **使用场景** | 理解业务领域、业务决策 | 理解技术架构、服务调用 |
 | **示例** | 用户注册流程、订单处理规则 | API 服务、数据库服务 |
 
@@ -184,8 +184,8 @@ Business Context 用于沉淀业务流程、业务规则、协作上下文等业
 
 当执行 `/init` 命令或使用 `service-loader` 时：
 
-1. **技术层面**：使用 `service-loader` 生成服务上下文（`.cursor/.lingxi/context/tech/services/<service>.md`）
-2. **业务层面**：使用 Business Context 模板生成业务上下文（`.cursor/.lingxi/context/business/<topic>.md`）
+1. **技术层面**：使用 `service-loader` 生成服务上下文（`.cursor/.lingxi/memory/tech/services/<service>.md`）
+2. **业务层面**：使用 Business Context 模板生成业务上下文（`.cursor/.lingxi/memory/business/<topic>.md`）
 3. **经验层面**：识别可沉淀的业务规则/坑点，通过 `/remember` 沉淀为 Experience
 
 ---

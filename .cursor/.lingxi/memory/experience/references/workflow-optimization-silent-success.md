@@ -12,9 +12,9 @@
 
 ## 优化点（已审核）
 
-### ✅ 1. 经验索引静默（experience-index）
+### ✅ 1. 记忆索引静默（memory-index）
 
-**当前行为**：即使无匹配也可能输出"无相关经验"
+**当前行为**：即使无匹配也可能输出"无相关记忆"
 
 **优化后**：
 - 无匹配时：**完全静默**，不输出任何内容
@@ -22,10 +22,12 @@
 
 **输出示例**（有匹配时）：
 ```
-⚠️ 高风险：XXX（参考 EXP-001.md）
+⚠️ 高风险：XXX（参考 memory/experience/EXP-001.md）
+💡 技术上下文：认证服务（参考 memory/tech/services/auth-service.md）
+📋 业务上下文：工作流生命周期（参考 memory/business/workflow-lifecycle.md）
 ```
 
-**理由**：经验匹配是背景信息，无匹配时无需告知用户。
+**理由**：记忆匹配是背景信息，无匹配时无需告知用户。
 
 ---
 
@@ -68,7 +70,7 @@
 
 ---
 
-### ✅ 5. 经验治理报告精简（experience-curator）
+### ✅ 5. 记忆治理报告精简（memory-curator）
 
 **当前行为**：每次治理都输出完整报告
 
@@ -76,14 +78,14 @@
 - 无变更：**静默**，不输出
 - 有变更：仅输出变更摘要
   ```
-  治理：合并 EXP-001→EXP-003，deprecated 1 条（回滚：cp INDEX.md.bak INDEX.md）
+  治理：合并 EXP-001→EXP-003，deprecated 1 条（回滚：cp memory/INDEX.md.bak memory/INDEX.md）
   ```
 
 **理由**：无变更时无需告知。有变更时仅需摘要，详细信息在文件中。
 
 ---
 
-### ✅ 6. 质量准则建议静默（experience-curator）
+### ✅ 6. 质量准则建议静默（memory-curator）
 
 **当前行为**：每次沉淀都输出建议列表（可能为空）
 
@@ -151,9 +153,9 @@ D) 退出
 **当前问题**：状态摘要在 plan、checkpoint、INDEX 等多处重复
 
 **优化方案**：
-- 以 INDEX 为 SSoT（单一事实来源）
+- 以统一索引 `memory/INDEX.md` 为 SSoT（单一事实来源）
 - plan 的 Status Summary 仅显示当前阶段的关键信息（进度、当前任务、阻塞项）
-- checkpoint 引用 INDEX 或 plan，不重复完整状态
+- checkpoint 引用统一索引或 plan，不重复完整状态
 
 **理由**：减少重复信息，但保留必要的阶段内状态。
 
@@ -162,7 +164,7 @@ D) 退出
 ## 实施优先级
 
 ### 高优先级（高频场景）
-1. ✅ 经验索引静默（每次阶段切换）
+1. ✅ 记忆索引静默（每次阶段切换）
 2. ✅ 推进判据检查静默（每次阶段切换）
 3. ✅ 文件写入静默（每次文件操作）
 
@@ -171,7 +173,7 @@ D) 退出
 5. ✅ 测试状态静默（work 阶段）
 
 ### 低优先级（低频场景）
-6. ✅ 经验治理报告精简（沉淀时）
+6. ✅ 记忆治理报告精简（沉淀时）
 7. ✅ 质量准则建议静默（沉淀时）
 
 ---
@@ -180,7 +182,7 @@ D) 退出
 
 | 优化点 | 节省 token/次 | 频率 | 总节省 |
 |--------|--------------|------|--------|
-| 经验索引静默 | ~20 | 每次阶段切换 | 高频 |
+| 记忆索引静默 | ~20 | 每次阶段切换 | 高频 |
 | 推进判据静默 | ~50 | 每次阶段切换 | 高频 |
 | 文件写入静默 | ~30 | 每次文件操作 | 高频 |
 | 阶段完成精简 | ~100 | 每阶段结束 | 中频 |
@@ -196,4 +198,4 @@ D) 退出
 
 - [Linux 命令行设计哲学](https://en.wikipedia.org/wiki/Unix_philosophy#Do_one_thing_and_do_it_well)
 - [gate-protocol.md](./gate-protocol.md) - 推进判据检查
-- [workflow-lifecycle.md](./workflow-lifecycle.md) - 工作流生命周期
+- [workflow-lifecycle.md](../business/workflow-lifecycle.md) - 工作流生命周期

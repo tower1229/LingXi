@@ -58,7 +58,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 **执行步骤**：
 1. 提取风格特征（同 analyze）
 2. 标准化风格向量
-3. 读取 `.cursor/.lingxi/context/style-fusion/profile.json`
+3. 读取 `.cursor/.lingxi/style-fusion/profile.json`
 4. 调用 `scripts/style-fusion-engine.js` 融合新旧风格
 5. 保存更新后的画像
 
@@ -84,7 +84,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 ### get_profile - 获取风格画像
 
 **执行步骤**：
-1. 读取 `.cursor/.lingxi/context/style-fusion/profile.json`
+1. 读取 `.cursor/.lingxi/style-fusion/profile.json`
 2. 提取主导特征
 3. 格式化输出
 
@@ -139,7 +139,7 @@ description: 持续接收文本、抽取风格、更新长期风格画像，并�
 
 ### 初始化
 
-首次使用时，自动创建 `.cursor/.lingxi/context/style-fusion/` 目录并初始化：
+首次使用时，自动创建 `.cursor/.lingxi/style-fusion/` 目录并初始化：
 
 ```json
 // profile.json
@@ -215,6 +215,6 @@ interface StyleProfile {
 
 1. **风格是慢变量**：使用平滑融合策略，避免频繁震荡
 2. **JSON 稳定性优先**：数据结构稳定，便于版本控制和 diff
-3. **状态持久化**：所有状态存储在 `.cursor/.lingxi/context/style-fusion/`
+3. **状态持久化**：所有状态存储在 `.cursor/.lingxi/style-fusion/`
 4. **置信度计算**：基于样本数和方差，`confidence = (1 - exp(-sample_count / 10)) * (1 - variance_penalty)`
 5. **向后兼容**：旧 profile.json 可能缺少新维度（tone_and_voice, information_density, interactivity），融合时使用默认值

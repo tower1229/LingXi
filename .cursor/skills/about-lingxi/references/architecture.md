@@ -46,11 +46,11 @@ Skills 承载详细的工作流指导，按职责分为：
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
 
-#### 经验系统 Skills（实现"心有灵犀"的核心能力）
+#### 记忆系统 Skills（实现"心有灵犀"的核心能力）
 - `experience-capture`：自动捕获经验候选、评估并暂存到文件（在 req/plan/build/review/init 阶段自动激活）
-- `experience-depositor`：读取暂存候选、展示并沉淀经验到经验库（团队级标准/经验或项目级经验）
-- `experience-curator`：智能治理经验（合并/取代关系）
-- `experience-index`：经验索引和匹配，主动提醒风险与指针
+- `experience-depositor`：读取暂存候选、展示并沉淀经验到记忆库（团队级标准/经验或项目级经验）
+- `memory-curator`：智能治理所有记忆类型（Experience/Tech/Business），统一索引更新
+- `memory-index`：统一索引和匹配，支持跨维度匹配（Experience/Tech/Business），主动提醒风险与指针
 - `candidate-evaluator`：统一评估经验候选的质量和分类决策（阶段 1 和阶段 2），包括知识可获得性、经验类型、Level 判断
 
 #### 工具类 Skills（提供辅助能力）
@@ -65,16 +65,16 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. **自动捕获**：`experience-capture` 在 req/plan/build/review/init 阶段自动扫描用户输入，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，自动判断 Level（team/project）和 Type（standard/knowledge），执行知识可获得性过滤
 
-2. **评估暂存**：`experience-capture` 调用 `candidate-evaluator` 执行阶段 1 评估（包括知识可获得性、经验类型、Level 判断），评估通过后写入 `pending-compounding-candidates.json` 暂存
+2. **评估暂存**：`experience-capture` 调用 `candidate-evaluator` 执行阶段 1 评估（包括知识可获得性、经验类型、Level 判断），评估通过后写入 `workspace/pending-compounding-candidates.json` 暂存
 
 3. **沉淀分流**：`experience-depositor` 读取暂存候选，调用 `candidate-evaluator` 执行阶段 2 详细评估，根据评估结果和用户选择，沉淀到：
-   - 团队级标准（`team/standards/`）：强约束、执行底线
-   - 团队级经验（`team/knowledge/`）：复杂判断、认知触发
-   - 项目级经验（`project/`）：项目特定、长期复用
+   - 团队级标准（`memory/experience/team/standards/`）：强约束、执行底线
+   - 团队级经验（`memory/experience/team/knowledge/`）：复杂判断、认知触发
+   - 项目级经验（`memory/experience/project/`）：项目特定、长期复用
 
-4. **智能治理**：`experience-curator` 自动检测冲突和重复，智能合并或取代，保持知识库的整洁和一致性
+4. **智能治理**：`memory-curator` 自动检测冲突和重复，智能合并或取代，统一更新 `memory/INDEX.md`，保持知识库的整洁和一致性
 
-5. **主动提醒**：`experience-index` 在执行任务时根据命令自动匹配相关经验（`/init` → team/，`/req`/`/plan`/`/build`/`/review` → team/ + project/），主动提醒风险和提供指针
+5. **主动提醒**：`memory-index` 在执行任务时根据命令自动匹配相关记忆（`/init` → Experience Level=team，`/req`/`/plan`/`/build`/`/review` → 所有维度），支持跨维度匹配（Experience/Tech/Business），主动提醒风险和提供指针
 
 ### Hooks（自动化审计和门控）
 
@@ -113,18 +113,20 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── 001.req.<标题>.md
 │   ├── 001.plan.<标题>.md
 │   └── ...
-└── context/               # 上下文和经验
-    ├── experience/        # 经验库
-    │   ├── team/          # 团队级标准和经验
-    │   │   ├── INDEX.md
-    │   │   ├── standards/
-    │   │   └── knowledge/
-    │   └── project/       # 项目级经验
-    │       ├── INDEX.md
-    │       └── ...
-    ├── business/          # 业务上下文
-    └── tech/              # 技术上下文
-        └── services/      # 服务上下文
+├── memory/                # 统一记忆系统
+│   ├── INDEX.md           # 统一索引（SSoT）
+│   ├── experience/        # 经验记忆
+│   │   ├── team/          # 团队级标准和经验
+│   │   │   ├── standards/
+│   │   │   └── knowledge/
+│   │   └── project/       # 项目级经验
+│   ├── tech/              # 技术记忆
+│   │   └── services/      # 服务上下文
+│   └── business/          # 业务记忆
+│       └── references/    # 业务上下文参考资料
+├── style-fusion/          # 风格融合数据
+└── workspace/             # 工作空间
+    └── pending-compounding-candidates.json
 ```
 
 ## 工作流生命周期
@@ -145,14 +147,15 @@ Skills 承载详细的工作流指导，按职责分为：
 ### 经验沉淀流程
 
 1. 在工作过程中，`experience-capture` 识别经验信号并生成 EXP-CANDIDATE
-2. `experience-capture` 调用 `candidate-evaluator` 评估并写入 `pending-compounding-candidates.json`
+2. `experience-capture` 调用 `candidate-evaluator` 评估并写入 `workspace/pending-compounding-candidates.json`
 3. 用户执行 `/remember` 确认沉淀
 4. `experience-depositor` 展示候选，执行沉淀分流
-5. 写入经验到 `.cursor/.lingxi/context/experience/`
-6. `experience-curator` 自动触发治理（合并/取代、质量准则建议）
+5. 写入经验到 `.cursor/.lingxi/memory/experience/`
+6. 更新统一索引 `memory/INDEX.md`
+7. `memory-curator` 自动触发治理（合并/取代、质量准则建议）
 
 ## 参考
 
 - **核心组件架构**：`docs/design/architecture.md`
 - **2.0 重构方案**：`docs/prd/lingxi-2.0-refactor.md`
-- **工作流生命周期**：`.cursor/.lingxi/context/business/workflow-lifecycle.md`
+- **工作流生命周期**：`.cursor/.lingxi/memory/business/workflow-lifecycle.md`

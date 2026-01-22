@@ -149,7 +149,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 1. **功能完整性**：满足 req 中的所有功能需求
 2. **验收标准**：通过 req 定义的验收标准
-3. **代码质量**：遵循项目代码规范（由质量资产定义，通过 experience-index 匹配相关标准/经验）
+3. **代码质量**：遵循项目代码规范（由质量资产定义，通过 memory-index 匹配相关标准/经验）
 4. **测试覆盖**：确保关键功能有测试覆盖
 5. **文档一致性**：代码与相关文档保持一致
 
@@ -239,5 +239,5 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 - **原 build.md 命令**：`.cursor/commands/build.md`（备份在 `.cursor/commands-backup/build.md`）
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
-- **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
+- **记忆匹配**：`.cursor/skills/memory-index/SKILL.md`
 - **服务加载**：`.cursor/skills/service-loader/SKILL.md`

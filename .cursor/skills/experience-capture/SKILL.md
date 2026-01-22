@@ -183,7 +183,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001、/
      - knowledge：复杂判断、认知触发、风险匹配
 
 3. **静默写入文件**
-   - 读取 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`（如果存在）
+   - 读取 `.cursor/.lingxi/workspace/pending-compounding-candidates.json`（如果存在）
    - 如果文件不存在，创建新文件，初始化为：`{"candidates": [], "asked": false}`
    - 将评估通过的候选合并到 `candidates` 数组
    - 保留 `asked` 标志（如果已存在）

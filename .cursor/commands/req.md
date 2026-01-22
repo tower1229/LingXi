@@ -28,7 +28,7 @@ args:
 以下 Skills 会自动激活：
 
 - `req-executor`：执行需求分析、提纯、放大和文档生成
-- `experience-index`：自动匹配历史经验提醒
+- `memory-index`：自动匹配历史记忆提醒
 - `experience-capture`：统一经验捕获（通过 Cursor Skill 自动匹配机制激活）
 - `service-loader`：如适用，生成服务上下文
 
@@ -50,7 +50,7 @@ args:
 3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
 4. 类型识别与复杂度评估
 5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 经验融入（通过 experience-index）
+6. 记忆融入（通过 memory-index）
 7. 模板选择
 8. 文档生成
 

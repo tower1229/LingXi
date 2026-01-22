@@ -34,7 +34,7 @@ args:
 以下 Skills 会自动激活：
 
 - `plan-executor`：执行任务规划、测试设计和文档生成
-- `experience-index`：自动匹配历史经验提醒
+- `memory-index`：自动匹配历史记忆提醒
 - `experience-capture`：统一经验捕获（通过 Cursor Skill 自动匹配机制激活）
 - `service-loader`：如适用，生成服务上下文
 

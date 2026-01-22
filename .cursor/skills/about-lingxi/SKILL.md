@@ -28,7 +28,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **流程**：
 1. 加载核心价值指引（`references/core-values.md`）
 2. 加载架构概览（`references/architecture.md`）
-3. 加载关键机制说明（`references/experience-system.md`）
+3. 加载关键机制说明（`references/memory-system.md`）
 4. 输出灵犀的核心信息摘要
 
 ### 场景 2：设计新功能或改动
@@ -150,18 +150,19 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **何时加载**：场景 1、场景 2（涉及架构改动时）
 
-### 3. 经验系统机制
+### 3. 记忆系统机制
 
-**文件**：`references/experience-system.md`
+**文件**：`references/memory-system.md`
 
 **内容**：
-- 经验捕获流程（experience-capture）
-- 经验沉淀流程（experience-depositor）
-- 经验治理机制（experience-curator）
-- 经验索引和匹配（experience-index）
-- 经验评估（candidate-evaluator）
+- 记忆捕获流程（experience-capture）
+- 记忆沉淀流程（experience-depositor）
+- 记忆治理机制（memory-curator）
+- 记忆索引和匹配（memory-index）
+- 记忆评估（candidate-evaluator）
+- 统一索引格式（Experience/Tech/Business）
 
-**何时加载**：场景 1、场景 2（涉及经验系统改动时）
+**何时加载**：场景 1、场景 2（涉及记忆系统改动时）
 
 ### 4. 设计原则
 
@@ -260,7 +261,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 6. **文档同步检查**：判断改动是否影响灵犀的架构、组件、工作流或机制
    - 如果改动涉及 Commands、Skills、Hooks、Subagents 的增减或职责变更，需要同步更新 `references/architecture.md` 和 `references/component-guides.md`
-   - 如果改动涉及经验系统机制，需要同步更新 `references/experience-system.md`
+   - 如果改动涉及记忆系统机制，需要同步更新 `references/memory-system.md`
    - 如果改动涉及设计原则或评价准则，需要同步更新 `references/design-principles.md` 或 `references/evaluation-criteria.md`
    - 如果改动涉及核心价值或实现方式，需要同步更新 `references/core-values.md`
    - 如果改动涉及工作流程或使用场景，需要同步更新 `SKILL.md` 中的相关场景描述
@@ -329,7 +330,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 9. **文档同步责任**：当对灵犀 workflow 做出改动时（新增/修改 Commands、Skills、Hooks、Subagents，调整架构、工作流或机制），需要同步更新 `about-lingxi` 中的相关文档，确保文档始终反映灵犀的最新状态。根据改动内容，判断需要更新哪些文档：
    - 架构变更 → `references/architecture.md`
    - 组件变更 → `references/architecture.md` 和 `references/component-guides.md`
-   - 经验系统变更 → `references/experience-system.md`
+   - 记忆系统变更 → `references/memory-system.md`
    - 设计原则变更 → `references/design-principles.md`
    - 评价准则变更 → `references/evaluation-criteria.md`
    - 核心价值变更 → `references/core-values.md`
@@ -345,7 +346,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### Reference 文件
 - `references/core-values.md`：核心价值指引（Why 和 How）
 - `references/architecture.md`：架构概览
-- `references/experience-system.md`：经验系统机制
+- `references/memory-system.md`：记忆系统机制
 - `references/design-principles.md`：设计原则
 - `references/evaluation-criteria.md`：评价准则
 - `references/component-guides.md`：组件指南（Commands、Skills、Hooks、Subagents、Rules）

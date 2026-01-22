@@ -30,7 +30,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 以下 Skills 会自动激活：
 
 - `review-executor`：执行多维度审查和交付质量保证
-- `experience-index`：自动匹配历史经验提醒
+- `memory-index`：自动匹配历史记忆提醒
 - `experience-capture`：统一经验捕获（通过 Cursor Skill 自动匹配机制激活）
 
 以下 Subagents 会根据语义分析结果选择性启用（由 review-executor 显式调用）：

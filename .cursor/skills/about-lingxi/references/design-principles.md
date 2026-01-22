@@ -122,10 +122,10 @@
 **应用**：
 - 文件命名约定（`001.req.<标题>.md`、`001.plan.<标题>.md`）
 - 目录结构约定（`.cursor/.lingxi/requirements/`、`.cursor/skills/`）
-- 索引格式约定（经验索引 `.cursor/.lingxi/context/experience/INDEX.md`）
+- 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
 
 ## 参考
 
-- **AI Native 设计原则**：`.cursor/.lingxi/context/experience/ai-native-design.md`
-- **静默成功原则**：`.cursor/.lingxi/context/experience/references/workflow-optimization-silent-success.md`
+- **AI Native 设计原则**：`.cursor/.lingxi/memory/experience/ai-native-design.md`
+- **静默成功原则**：`.cursor/.lingxi/memory/experience/references/workflow-optimization-silent-success.md`
 - **核心价值指引**：`references/core-values.md`

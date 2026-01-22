@@ -11,32 +11,33 @@ sequenceDiagram
     participant Skill as Stage Skill
     participant Capture as experience-capture
     participant Evaluator as candidate-evaluator
-    participant Session as session/pending-compounding-candidates.json
+    participant Workspace as workspace/pending-compounding-candidates.json
     participant User
     participant StopHook as stop hook
     participant Depositor as experience-depositor
-    participant Experience as experience/
-    participant Curator as experience-curator
+    participant Memory as memory/
+    participant Curator as memory-curator
     
     Skill->>Capture: 识别经验信号
     Capture->>Capture: 生成 EXP-CANDIDATE
     Capture->>Evaluator: 调用阶段 1 评估（静默）
     Evaluator->>Capture: 返回评估结果
-    Capture->>Session: 写入暂存候选（静默）
+    Capture->>Workspace: 写入暂存候选（静默）
     Capture->>User: 输出一行状态："已暂存 X 条经验候选"
     Note over User,StopHook: 会话结束时
     StopHook->>User: 提醒："检测到有待沉淀的经验候选，使用 /remember"
     User->>Depositor: /remember 1,3
-    Depositor->>Session: 读取暂存
+    Depositor->>Workspace: 读取暂存
     Depositor->>User: 展示候选，请求选择
     User->>Depositor: 确认选择
     Depositor->>Depositor: 沉淀分流
     Depositor->>Depositor: 成长过滤器（再次确认）
     Depositor->>Depositor: 冲突检测
-    Depositor->>Experience: 写入经验
+    Depositor->>Memory: 写入经验
+    Depositor->>Memory: 更新统一索引
     Depositor->>Curator: 触发治理
     Curator->>Curator: 合并/取代
-    Curator->>Experience: 更新 INDEX
+    Curator->>Memory: 更新统一索引
     Curator-->>User: 输出治理报告和质量准则建议
 ```
 
@@ -85,7 +86,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 1. **识别经验信号**：分析用户输入，识别经验信号（判断、取舍、边界、约束等）
 2. **生成 EXP-CANDIDATE**：基于语义理解生成结构化 EXP-CANDIDATE JSON
 3. **评估**：直接调用 `candidate-evaluator` 执行阶段 1 评估（静默执行）
-4. **暂存**：评估通过后，静默写入或合并到 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
+4. **暂存**：评估通过后，静默写入或合并到 `.cursor/.lingxi/workspace/pending-compounding-candidates.json`
 5. **状态反馈**：输出一行状态信息：`已暂存 X 条经验候选（用于 /remember 阶段沉淀选择）`
 
 **特点**：
@@ -106,7 +107,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### 判断标准
 
-- **否**：不写入 experience，改为沉淀到 session/worklog（项目记录）
+- **否**：不写入 experience，改为沉淀到 workspace/worklog（项目记录）
 - **是**：允许写入 experience（长期判断资产）
 
 ### 知识可获得性评估
@@ -140,10 +141,10 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 | 目标 | 适用场景 | 位置 |
 |------|---------|------|
-| **经验文档**（默认） | 容易忘、下次会遇到、需要提醒/指针 | `.cursor/.lingxi/context/experience/` |
+| **经验文档**（默认） | 容易忘、下次会遇到、需要提醒/指针 | `.cursor/.lingxi/memory/experience/` |
 | **规则/自动拦截** | 高频且可自动判定 | hook/lint/CI |
 | **Skill/流程升级** | 可复用流程或重复步骤 | `.cursor/skills/` |
-| **长期上下文补齐** | 考古/服务边界/配置规范 | `.cursor/.lingxi/context/tech/services/` 或 `.cursor/.lingxi/context/business/` |
+| **长期上下文补齐** | 考古/服务边界/配置规范 | `.cursor/.lingxi/memory/tech/services/` 或 `.cursor/.lingxi/memory/business/` |
 
 ### 分流原则
 
@@ -237,9 +238,7 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 在沉淀新经验前，必须执行冲突检测：
 
-1. **读取现有经验**：根据候选的 Level，读取对应的 INDEX.md：
-   - Level = team → 读取 `team/INDEX.md`
-   - Level = project → 读取 `project/INDEX.md`
+1. **读取统一索引**：读取 `memory/INDEX.md`，根据候选的 Level 和 Type 匹配对应的记忆条目
 2. **冲突检测**：检查新经验是否与现有经验冲突（触发条件相同/相似且解决方案矛盾）
 3. **自动剔除矛盾旧经验**：如果检测到冲突，自动标记旧经验为 `deprecated`，并在新经验中记录替代关系
 4. **经验合并/去重**：如果检测到重复或高度相似的经验（而非冲突），提供合并选项
@@ -256,20 +255,20 @@ EXP-CANDIDATE 应在以下阶段输出：
 
 ### experience-depositor 处理
 
-1. **读取暂存**：加载 `.cursor/.lingxi/context/session/pending-compounding-candidates.json`
+1. **读取暂存**：加载 `.cursor/.lingxi/workspace/pending-compounding-candidates.json`
 2. **展示候选**：按 stage/时间排序，简要展示 trigger/decision/signal/solution/verify/pointers，包含 Level 和 Type 信息
 3. **请求选择**：支持全选/部分/放弃
 4. **沉淀分流**：根据 Level 和 Type 判断应沉淀到哪里：
-   - Level = team, Type = standard → `team/standards/`
-   - Level = team, Type = knowledge → `team/knowledge/`
-   - Level = project → `project/`
+   - Level = team, Type = standard → `memory/experience/team/standards/`
+   - Level = team, Type = knowledge → `memory/experience/team/knowledge/`
+   - Level = project → `memory/experience/project/`
 5. **成长过滤器**：再次确认是否进入长期知识库
-6. **冲突检测**：根据 Level 检查与现有经验的冲突（读取对应的 INDEX.md）
-7. **写入**：按模板写入对应目录，更新对应的 INDEX.md：
-   - 团队级标准：`team/standards/<tag>-<title>.md`，更新 `team/INDEX.md`
-   - 团队级经验：`team/knowledge/<tag>-<title>.md`，更新 `team/INDEX.md`
-   - 项目级经验：`project/<tag>-<title>.md`，更新 `project/INDEX.md`
-8. **触发 curator**：在实际新增经验后调用 `experience-curator` 进行治理
+6. **冲突检测**：读取统一索引 `memory/INDEX.md`，检查与现有经验的冲突
+7. **写入**：按模板写入对应目录，更新统一索引 `memory/INDEX.md`：
+   - 团队级标准：`memory/experience/team/standards/<tag>-<title>.md`，更新 `memory/INDEX.md`
+   - 团队级经验：`memory/experience/team/knowledge/<tag>-<title>.md`，更新 `memory/INDEX.md`
+   - 项目级经验：`memory/experience/project/<tag>-<title>.md`，更新 `memory/INDEX.md`
+8. **触发 curator**：在实际新增经验后调用 `memory-curator` 进行治理
 9. **清理**：从暂存中移除已处理项；未写入项保留
 
 ## 与 /remember 的区别

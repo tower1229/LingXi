@@ -1,16 +1,16 @@
 ---
 name: service-loader
-description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成可复用资产。当需求涉及多个服务/存量系统需要先考古（服务职责、边界、依赖、入口、配置点、常见坑），或通过 /init 命令初始化项目时需要生成服务上下文文档，或团队新人/新项目首次接入需快速建立项目级长期上下文，或 plan/work/review 阶段频繁出现"我不确定服务怎么做/在哪里改/以前有什么坑"的对话时激活，生成 .cursor/.lingxi/context/tech/services/<service>.md 并按需沉淀经验/规则指针。
+description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成可复用资产。当需求涉及多个服务/存量系统需要先考古（服务职责、边界、依赖、入口、配置点、常见坑），或通过 /init 命令初始化项目时需要生成服务上下文文档，或团队新人/新项目首次接入需快速建立项目级长期上下文，或 plan/work/review 阶段频繁出现"我不确定服务怎么做/在哪里改/以前有什么坑"的对话时激活，生成 .cursor/.lingxi/memory/tech/services/<service>.md 并按需沉淀经验/规则指针。
 ---
 
 # Service Loader（服务上下文冷启动）
 
 ## Outputs (must write)
 
-- `.cursor/.lingxi/context/tech/services/<service-or-module>.md`
+- `.cursor/.lingxi/memory/tech/services/<service-or-module>.md`
 - 按需更新（可选）：
-  - `.cursor/.lingxi/context/experience/<tag>-<title>.md`（发现高价值坑点时，需走确认沉淀）
-  - `.cursor/.lingxi/context/business/<topic>.md`（跨团队协作/业务边界）
+  - `.cursor/.lingxi/memory/experience/<tag>-<title>.md`（发现高价值坑点时，需走确认沉淀）
+  - `.cursor/.lingxi/memory/business/<topic>.md`（跨团队协作/业务边界）
 
 ## Principles（上下文工程）
 
@@ -39,7 +39,7 @@ description: 此 Skill 用于冷启动/补齐服务上下文，把"考古"变成
 
 ### 3) 生成服务概要文档（模板）
 
-创建 `.cursor/.lingxi/context/tech/services/<service>.md`，结构建议如下：
+创建 `.cursor/.lingxi/memory/tech/services/<service>.md`，结构建议如下：
 
 ```markdown
 # <Service>（服务上下文）

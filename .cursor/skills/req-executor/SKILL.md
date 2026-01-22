@@ -153,7 +153,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ### 6. 经验融入
 
-如果 `experience-index` 匹配到相关经验，在文档中引用，或在"非目标"中体现历史踩坑点。
+如果 `memory-index` 匹配到相关记忆，在文档中引用，或在"非目标"中体现历史踩坑点。
 
 **注意**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑。
 
@@ -460,7 +460,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 4. 类型识别：全栈
 5. 复杂度评估：中等/复杂
 6. 需求放大（外部调研、方案对比、最佳实践融入）
-7. 经验融入（通过 experience-index）
+7. 记忆融入（通过 memory-index）
 8. 模板选择：完整模板
 9. 文档生成
 
@@ -484,4 +484,4 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 ## 参考
 
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
-- **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
+- **记忆匹配**：`.cursor/skills/memory-index/SKILL.md`

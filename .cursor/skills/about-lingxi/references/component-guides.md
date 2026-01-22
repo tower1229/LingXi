@@ -104,9 +104,9 @@
 **经验系统 Skills**：
 
 - `experience-capture`：自动捕获经验候选
-- `experience-depositor`：沉淀经验到经验库
-- `experience-curator`：智能治理经验
-- `experience-index`：经验索引和匹配
+- `experience-depositor`：沉淀经验到记忆库
+- `memory-curator`：智能治理所有记忆类型
+- `memory-index`：统一索引和匹配，支持跨维度匹配
 - `candidate-evaluator`：统一评估经验候选
 
 **工具类 Skills**：

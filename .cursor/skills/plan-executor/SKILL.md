@@ -94,7 +94,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 如果需求涉及存量系统/多服务协作，参考 `service-loader` 补齐服务上下文：
 
-- 生成/更新 `.cursor/.lingxi/context/tech/services/<service>.md`
+- 生成/更新 `.cursor/.lingxi/memory/tech/services/<service>.md`
 - 只写"概要 + 指针 + 常见坑"，避免长文档膨胀
 
 ### 5. 澄清性问题（复杂需求必选）
@@ -143,7 +143,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 7. 规范引用
 
-生成任务时，检查项目是否有相关质量资产（通过 experience-index 匹配团队级标准/经验和项目级经验），在任务描述中明确引用。
+生成任务时，检查项目是否有相关质量资产（通过 memory-index 匹配团队级标准/经验和项目级经验），在任务描述中明确引用。
 
 ### 8. 任务拆解
 
@@ -488,5 +488,5 @@ graph TD
 
 - **原 plan.md 命令**：`.cursor/commands/plan.md`（备份在 `.cursor/commands-backup/plan.md`）
 - **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
-- **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
+- **记忆匹配**：`.cursor/skills/memory-index/SKILL.md`
 - **服务加载**：`.cursor/skills/service-loader/SKILL.md`
