@@ -354,5 +354,21 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - `references/optimization-checklist.md`：调优检查清单（价值对齐、技术边界、工程实践）
 
 ### 外部参考
-- Cursor 官方文档：Commands、Skills、Hooks、Subagents 的能力边界
-- Agent Skills 官方规范：Skills 的设计规范
+
+以下外部文档提供 Cursor 官方能力边界与 Agent Skills 规范的实时信息。当需要了解最新细节、验证能力边界或确认官方定义时，可通过这些 URL 获取实时文档内容。**注意**：主要信息应优先参考本 skill 内 `references/` 目录下的文档；外部参考仅作补充与验证来源。
+
+**Cursor 官方文档**（能力边界与适用场景）：
+- Commands: https://cursor.com/docs/context/commands
+- Skills: https://cursor.com/docs/context/skills
+- Hooks: https://cursor.com/docs/context/hooks
+- Subagents: https://cursor.com/docs/context/subagents
+- Rules: https://cursor.com/docs/context/rules
+
+**Agent Skills 官方规范**（Skills 设计规范）：
+- 主页与概述: https://agentskills.io
+- 完整规范: https://agentskills.io/specification
+
+**使用建议**：
+- 当 `references/component-guides.md` 不足以判断能力边界时，可访问上述 URL 获取官方最新定义
+- 当需验证 Skills 设计是否符合官方规范时，可参考 Agent Skills 规范文档
+- 模型可通过 `mcp_web_fetch` 等工具直接获取这些文档的实时内容
