@@ -33,7 +33,7 @@ Skills 承载详细的工作流指导，按职责分为：
   - `candidate-evaluator`：统一评估经验候选的质量和分类决策（阶段 1 和阶段 2），包括知识可获得性、经验类型、Level 判断
 
 - **工具类 Skills**：提供辅助能力
-  - `workflow-optimizer`：工作流调优和价值判定
+  - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
   - `service-loader`：服务上下文加载和考古
   - `write-doc`：文档编写和风格一致性保证
   - `style-fusion`：风格画像提取和融合
