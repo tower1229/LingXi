@@ -3,12 +3,12 @@
     "hooks": {
         "afterShellExecution": [
             {
-                "command": "node hooks/audit-after-shell-execution.mjs"
+                "command": "node .cursor/hooks/audit-after-shell-execution.mjs"
             }
         ],
         "stop": [
             {
-                "command": "node hooks/stop.mjs"
+                "command": "node .cursor/hooks/stop.mjs"
             }
         ]
     }
