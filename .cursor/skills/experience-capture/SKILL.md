@@ -1,6 +1,6 @@
 ---
 name: experience-capture
-description: 此 Skill 由 stop hook 触发，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择。
+description: 自动扫描对话历史识别经验信号，生成经验候选并执行评估。当对话中包含判断、取舍、边界约束、问题解决等经验信号时自动激活，在会话中展示候选供用户选择。
 ---
 
 # Experience Capture
@@ -13,14 +13,29 @@ description: 此 Skill 由 stop hook 触发，扫描对话历史识别经验信�
 
 **激活方式**：
 
-- **stop hook 触发**：当任务完成时，stop hook 会引导调用本 Skill
+- **自动匹配**：Agent 根据对话上下文自动判断是否需要调用本 Skill
 - **手动调用**：用户可以通过 `/remember` 命令手动触发经验捕获
+
+**触发条件**：
+
+Agent 应在以下情况下自动调用本 Skill：
+
+- 对话中包含判断和取舍（技术选型、架构决策、方案选择等）
+- 对话中包含边界和约束（项目约定、团队规范、业务规则等）
+- 对话中包含问题解决（bug 修复、性能优化、架构调整等）
+- 用户确认 AI 建议（用户采纳、接受、确认 AI 的建议或风险）
 
 **触发流程**：
 
-1. stop hook 在任务完成时（`status === "completed"`）触发
-2. stop hook 输出 followup_message，引导调用 `@experience-capture` skill
-3. 本 Skill 被调用后，扫描整个对话历史，识别经验信号
+1. Agent 根据对话上下文自动判断是否需要调用本 Skill
+2. 本 Skill 被调用后，扫描整个对话历史，识别经验信号
+3. 执行去重检查，避免重复处理同一轮对话
+
+**去重机制**：
+
+- 基于 `conversation_id + generation_id` 避免重复处理同一轮对话
+- 检查 `.cursor/.lingxi/workspace/processed-sessions.json` 记录已处理的会话
+- 如果会话已处理，静默跳过，不输出任何内容
 
 **AI Native 原则**：
 

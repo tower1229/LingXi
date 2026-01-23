@@ -11,8 +11,7 @@
   "hooks": {
     "files": [
       "hooks.json",
-      "hooks/_hook-utils.mjs",
-      "hooks/stop.mjs"
+      "hooks/_hook-utils.mjs"
     ]
   },
   "skills": [

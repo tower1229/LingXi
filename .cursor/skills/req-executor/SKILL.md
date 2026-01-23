@@ -155,7 +155,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 如果 `memory-index` 匹配到相关记忆，在文档中引用，或在"非目标"中体现历史踩坑点。
 
-**注意**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑。
+**注意**：经验捕获由 `experience-capture` Skill 统一处理（Agent 自动匹配调用），本 Skill 不包含经验捕获逻辑。
 
 ### 7. 模板选择
 
@@ -468,7 +468,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 注意事项
 
-1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑
+1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（Agent 自动匹配调用），本 Skill 不包含经验捕获逻辑
 2. **静默原则**：简单需求静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **Fail Fast**：必要信息缺失时必须询问，不猜测
 4. **文档质量**：生成的 req 文档应该结构清晰、内容完整，符合需求分析的设计目标

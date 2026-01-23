@@ -223,7 +223,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 - 如果检测到依赖冲突：提示用户，不自动安装，在 plan 中标记需要手动处理
 
-**注意**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑。
+**注意**：经验捕获由 `experience-capture` Skill 统一处理（Agent 自动匹配调用），本 Skill 不包含经验捕获逻辑。
 
 ### 11. Plan 文档写入
 
@@ -471,7 +471,7 @@ graph TD
 
 ## 注意事项
 
-1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（由 stop hook 触发），本 Skill 不包含经验捕获逻辑
+1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理（Agent 自动匹配调用），本 Skill 不包含经验捕获逻辑
 2. **静默原则**：简单需求静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **测试设计**：必须从需求中提取可测试行为，不发明未明确说明的行为
 4. **文档质量**：生成的 plan 和 testcase 文档必须完整、准确

@@ -47,7 +47,7 @@ Skills 承载详细的工作流指导，按职责分为：
 - `review-executor`：多维度审查和交付质量保证
 
 #### 记忆系统 Skills（实现"心有灵犀"的核心能力）
-- `experience-capture`：由 stop hook 触发，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
+- `experience-capture`：Agent 根据对话上下文自动匹配调用，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
 - `experience-depositor`：从会话上下文获取候选，执行治理（合并/取代，使用语义搜索 + 关键词匹配）并沉淀经验到记忆库（团队级标准/经验或项目级经验）
 - `memory-index`：统一索引和匹配，支持跨维度匹配（Experience/Tech/Business），主动提醒风险与指针
 
@@ -61,7 +61,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
 
-1. **stop hook 触发**：任务完成时，stop hook 引导调用 `experience-capture` skill
+1. **Agent 自动匹配**：Agent 根据对话上下文自动判断是否需要调用 `experience-capture` skill
 
 2. **经验捕获和评估**：`experience-capture` 扫描整个对话历史，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，执行评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型、Level 判断），在会话中展示候选供用户选择
 
@@ -76,7 +76,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（自动化审计和门控）
 
-- `stop.mjs`：任务完成时引导调用 `experience-capture` skill 进行经验捕获
+（当前无活跃的 hooks）
 
 ### Subagents（多维度审查助手）
 
@@ -101,7 +101,6 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── experience-capture/
 │   └── ...
 ├── hooks/                 # 自动化审计和门控
-│   └── stop.mjs
 └── agents/                # 多维度审查助手
     └── reviewer-*.md
 
@@ -143,7 +142,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 经验沉淀流程
 
-1. 任务完成时，stop hook 引导调用 `experience-capture` skill
+1. Agent 根据对话上下文自动判断是否需要调用 `experience-capture` skill
 2. `experience-capture` 扫描对话历史，识别经验信号并生成 EXP-CANDIDATE，执行评估，在会话中展示候选
 3. 用户选择要沉淀的候选（输入编号，如 `1,3` 或 `全部`）
 4. `experience-depositor` 从会话上下文获取候选，执行治理（使用语义搜索 + 关键词匹配）并沉淀
