@@ -33,11 +33,12 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 - `memory-index`：自动匹配历史记忆提醒
 - `experience-capture`：统一经验捕获（由 stop hook 触发）
 
-以下 Subagents 会根据语义分析结果选择性启用（由 review-executor 显式调用）：
+以下 Reviewer Skills 会根据语义分析结果选择性启用（由 review-executor 显式调用）：
 
-- `reviewer-doc-consistency`：文档一致性审查（始终启用）
-- `reviewer-security`：安全审查（基于需求/实现语义判断启用）
-- `reviewer-performance`：性能审查（基于需求/实现语义判断启用）
+- `reviewer-doc-consistency`：文档一致性审查（由 review-executor 显式调用，始终启用）
+- `reviewer-security`：安全审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
+- `reviewer-performance`：性能审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
+- `reviewer-e2e`：端到端测试审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
 
 ## 产物
 
@@ -58,7 +59,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 4. 测试脚本质量检查
 5. 测试执行
 6. 依次执行核心维度（功能、测试覆盖、架构、可维护性、回归风险）
-7. 并行执行可选维度（显式触发 subagents：文档一致性始终启用，安全/性能基于语义判断启用）
+7. 并行执行可选维度（显式调用 reviewer skills：文档一致性始终启用，安全/性能/E2E 基于语义判断启用）
 8. Review 文档生成
 9. 审查结果处理
 

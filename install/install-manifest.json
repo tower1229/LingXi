@@ -22,15 +22,13 @@
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
+    "skills/reviewer-doc-consistency/SKILL.md",
+    "skills/reviewer-e2e/SKILL.md",
+    "skills/reviewer-performance/SKILL.md",
+    "skills/reviewer-security/SKILL.md",
     "skills/service-loader/SKILL.md"
   ],
-  "agents": {
-    "files": [
-      "agents/reviewer-doc-consistency.md",
-      "agents/reviewer-performance.md",
-      "agents/reviewer-security.md"
-    ]
-  },
+  "agents": {},
   "references": {
     "experience-capture": [
       "skills/experience-capture/references/req-triggers.md",

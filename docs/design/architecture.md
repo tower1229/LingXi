@@ -1,6 +1,6 @@
 ## 核心组件架构
 
-灵犀基于 Cursor 的 Commands、Skills、Hooks、Subagents 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Hooks 等机制构建，遵循职责分离和 AI Native 设计原则。
 
 ### Commands（命令入口）
 
@@ -52,4 +52,4 @@ Skills 承载详细的工作流指导，按职责分为：
 ### 其他机制
 
 - **Hooks**：自动化审计和门控（当前无活跃的 hooks）
-- **Subagents**：多维度审查助手（doc-consistency、e2e、performance、security），提供独立的审查上下文
+- **审查类 Skills**：多维度审查助手（doc-consistency、e2e、performance、security），由 review-executor 显式调用，共享上下文

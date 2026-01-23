@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Hooks、Subagents 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Hooks 等机制构建，遵循职责分离和 AI Native 设计原则。
 
 ## What（实现）
 
@@ -57,6 +57,12 @@ Skills 承载详细的工作流指导，按职责分为：
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
 
+#### 审查类 Skills（Review 阶段专用）
+- `reviewer-doc-consistency`：文档一致性审查
+- `reviewer-security`：安全审查
+- `reviewer-performance`：性能审查
+- `reviewer-e2e`：端到端测试审查
+
 ### 经验沉淀机制
 
 灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
@@ -78,13 +84,6 @@ Skills 承载详细的工作流指导，按职责分为：
 
 （当前无活跃的 hooks）
 
-### Subagents（多维度审查助手）
-
-- `reviewer-doc-consistency`：文档一致性审查
-- `reviewer-e2e`：端到端测试审查
-- `reviewer-performance`：性能审查
-- `reviewer-security`：安全审查
-
 ## 目录结构
 
 ```
@@ -98,11 +97,15 @@ Skills 承载详细的工作流指导，按职责分为：
 ├── skills/                # 执行逻辑
 │   ├── req-executor/
 │   ├── plan-executor/
+│   ├── build-executor/
+│   ├── review-executor/
+│   ├── reviewer-doc-consistency/
+│   ├── reviewer-security/
+│   ├── reviewer-performance/
+│   ├── reviewer-e2e/
 │   ├── experience-capture/
 │   └── ...
-├── hooks/                 # 自动化审计和门控
-└── agents/                # 多维度审查助手
-    └── reviewer-*.md
+└── hooks/                 # 自动化审计和门控
 
 .cursor/.lingxi/
 ├── requirements/          # 任务文档（统一目录）

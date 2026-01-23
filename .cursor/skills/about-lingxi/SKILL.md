@@ -1,6 +1,6 @@
 ---
 name: about-lingxi
-description: 当需要了解灵犀的背景知识、架构设计、核心机制，需要对 workflow 进行调优、需要了解 workflow 各组件的设计原则（commands/skills/hooks/subagents）、需要判断应该使用哪种机制实现功能、或需要对方案进行长期收益/代价评估时自动激活。提供灵犀的核心价值指引、架构概览、关键机制、设计原则、评价准则和调优指导，帮助 agent 快速理解灵犀并做出正确的设计决策。
+description: 当需要了解灵犀的背景知识、架构设计、核心机制，需要对 workflow 进行调优、需要了解 workflow 各组件的设计原则（commands/skills/hooks）、需要判断应该使用哪种机制实现功能、或需要对方案进行长期收益/代价评估时自动激活。提供灵犀的核心价值指引、架构概览、关键机制、设计原则、评价准则和调优指导，帮助 agent 快速理解灵犀并做出正确的设计决策。
 ---
 
 # About LingXi
@@ -12,7 +12,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **功能覆盖**：
 - 快速了解灵犀的背景知识和架构
 - 对 workflow 进行调优和价值判定
-- 组件选择决策（Commands/Skills/Hooks/Subagents）
+- 组件选择决策（Commands/Skills/Hooks）
 - 架构调优和性能优化
 - 工程实践评估和质量检查
 
@@ -36,7 +36,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **触发条件**：
 - 需要对灵犀添加新功能
 - 需要修改现有机制
-- 需要选择使用哪种组件（Command/Skill/Hook/Subagent）
+- 需要选择使用哪种组件（Command/Skill/Hook）
 
 **流程**：
 1. 理解改动需求（目标、涉及组件、实现方式）
@@ -51,7 +51,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 3：组件选择决策
 
 **触发条件**：
-- 需要选择使用 Command、Skill、Hook 还是 Subagent
+- 需要选择使用 Command、Skill 还是 Hook
 - 不确定应该用哪种机制实现功能
 
 **流程**：
@@ -145,7 +145,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - Commands（命令入口）
 - Skills（执行逻辑）
 - 经验沉淀机制
-- Hooks 和 Subagents
+- Hooks
 - 目录结构
 
 **何时加载**：场景 1、场景 2（涉及架构改动时）
@@ -236,11 +236,11 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 1. **理解需求**：明确调优目标、涉及组件、实现方式
    - **调优目标**：性能优化、功能扩展、架构调整还是体验改进？
-   - **问题域**：涉及哪个/哪些组件（Commands、Skills、Hooks、Subagents）？
+   - **问题域**：涉及哪个/哪些组件（Commands、Skills、Hooks）？
 
 2. **加载背景知识**：根据调优需求，按需加载相关指南
    - 核心价值指引（Why 和 How）
-   - 技术能力边界（Commands、Skills、Hooks、Subagents 指南）
+   - 技术能力边界（Commands、Skills、Hooks 指南）
    - 工程实践准则（核心原则、设计模式、质量评估框架）
 
 3. **价值对齐分析**：基于核心价值指引（Why 和 How），分析调优方案的价值对齐
@@ -258,7 +258,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
    - 质量维度评估（可维护性、可扩展性、可测试性等）
 
 6. **文档同步检查**：判断改动是否影响灵犀的架构、组件、工作流或机制
-   - 如果改动涉及 Commands、Skills、Hooks、Subagents 的增减或职责变更，需要同步更新 `references/architecture.md` 和 `references/component-guides.md`
+   - 如果改动涉及 Commands、Skills、Hooks 的增减或职责变更，需要同步更新 `references/architecture.md` 和 `references/component-guides.md`
    - 如果改动涉及记忆系统机制，需要同步更新 `references/memory-system.md`
    - 如果改动涉及设计原则或评价准则，需要同步更新 `references/design-principles.md` 或 `references/evaluation-criteria.md`
    - 如果改动涉及核心价值或实现方式，需要同步更新 `references/core-values.md`
@@ -325,7 +325,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 6. **AI Native 原则**：充分利用大模型的自然语言理解能力，避免硬编码规则
 7. **静默成功**：遵循"没有消息就是好消息"的原则，减少冗余输出
 8. **渐进式披露**：SKILL.md 保持精炼，详细内容放在 references/ 目录
-9. **文档同步责任**：当对灵犀 workflow 做出改动时（新增/修改 Commands、Skills、Hooks、Subagents，调整架构、工作流或机制），需要同步更新 `about-lingxi` 中的相关文档，确保文档始终反映灵犀的最新状态。根据改动内容，判断需要更新哪些文档：
+9. **文档同步责任**：当对灵犀 workflow 做出改动时（新增/修改 Commands、Skills、Hooks，调整架构、工作流或机制），需要同步更新 `about-lingxi` 中的相关文档，确保文档始终反映灵犀的最新状态。根据改动内容，判断需要更新哪些文档：
    - 架构变更 → `references/architecture.md`
    - 组件变更 → `references/architecture.md` 和 `references/component-guides.md`
    - 记忆系统变更 → `references/memory-system.md`
@@ -347,7 +347,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - `references/memory-system.md`：记忆系统机制
 - `references/design-principles.md`：设计原则
 - `references/evaluation-criteria.md`：评价准则
-- `references/component-guides.md`：组件指南（Commands、Skills、Hooks、Subagents、Rules）
+- `references/component-guides.md`：组件指南（Commands、Skills、Hooks、Rules，Subagents 作为技术参考）
 - `references/engineering-practices.md`：工程实践准则（核心原则、设计模式、质量评估框架）
 - `references/optimization-checklist.md`：调优检查清单（价值对齐、技术边界、工程实践）
 

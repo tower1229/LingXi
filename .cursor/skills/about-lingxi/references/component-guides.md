@@ -114,6 +114,13 @@
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
 
+**审查类 Skills**：
+
+- `reviewer-doc-consistency`：文档一致性审查
+- `reviewer-security`：安全审查
+- `reviewer-performance`：性能审查
+- `reviewer-e2e`：端到端测试审查
+
 ## Hooks 指南
 
 ### 设计目标（官方定义）
@@ -197,10 +204,9 @@
 
 ### 在灵犀中的应用
 
-- `reviewer-doc-consistency`：文档一致性审查
-- `reviewer-e2e`：端到端测试审查
-- `reviewer-performance`：性能审查
-- `reviewer-security`：安全审查
+灵犀当前不使用 Subagents。审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
+
+**历史说明**：reviewer-doc-consistency、reviewer-security、reviewer-performance、reviewer-e2e 最初设计为 Subagents，后迁移为 Skills 以降低成本和保持架构一致性。
 
 ## 选择决策矩阵
 
