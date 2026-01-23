@@ -76,7 +76,6 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（自动化审计和门控）
 
-- `audit-after-shell-execution.mjs`：在关键节点执行检查
 - `stop.mjs`：任务完成时引导调用 `experience-capture` skill 进行经验捕获
 
 ### Subagents（多维度审查助手）
@@ -102,7 +101,7 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── experience-capture/
 │   └── ...
 ├── hooks/                 # 自动化审计和门控
-│   └── audit-after-shell-execution.mjs
+│   └── stop.mjs
 └── agents/                # 多维度审查助手
     └── reviewer-*.md
 

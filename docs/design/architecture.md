@@ -51,5 +51,5 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 其他机制
 
-- **Hooks**：自动化审计和门控（如 `audit-after-shell-execution.mjs`），在关键节点执行检查
+- **Hooks**：自动化审计和门控（如 `stop.mjs`），在关键节点执行检查
 - **Subagents**：多维度审查助手（doc-consistency、e2e、performance、security），提供独立的审查上下文

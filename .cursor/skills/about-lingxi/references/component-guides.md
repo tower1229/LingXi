@@ -156,8 +156,7 @@
 
 ### 在灵犀中的应用
 
-- `audit-after-shell-execution.mjs`：在关键节点执行检查
-- `stop.mjs`：对话结束时提醒有待沉淀候选
+- `stop.mjs`：任务完成时引导调用 `experience-capture` skill 进行经验捕获
 
 ## Subagents 指南
 

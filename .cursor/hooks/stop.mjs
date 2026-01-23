@@ -46,7 +46,9 @@ async function main() {
   const loopCount = typeof input.loop_count === "number" ? input.loop_count : 0;
   if (loopCount >= 5) return;
 
-  const projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
+  // 防止 followup_message 触发的对话再次触发 stop hook
+  // loop_count > 0 说明这是 followup_message 触发的对话，不应该再次触发
+  if (loopCount > 0) return;
 
   // 会话去重：基于 conversation_id + generation_id
   const conversationId = input.conversation_id;
@@ -55,6 +57,22 @@ async function main() {
   if (!conversationId || !generationId) {
     // 缺少必要参数，静默跳过
     return;
+  }
+
+  // 优先使用 workspace_roots 中的第一个路径（主项目）
+  // 如果没有，则回退到从脚本 URL 获取项目根目录
+  let projectRoot;
+  if (Array.isArray(input.workspace_roots) && input.workspace_roots.length > 0) {
+    // 使用第一个工作空间根目录（通常是主项目）
+    projectRoot = input.workspace_roots[0];
+    // 处理 Windows 路径格式（/C:/ -> C:\）
+    if (process.platform === "win32" && projectRoot.startsWith("/")) {
+      // 移除开头的斜杠，将 /C:/ 转换为 C:\
+      projectRoot = projectRoot.substring(1).replace(/\//g, "\\");
+    }
+  } else {
+    // 回退方案：从脚本 URL 获取
+    projectRoot = getProjectRootFromHookScriptUrl(import.meta.url);
   }
 
   const sessionKey = `${conversationId}-${generationId}`;

@@ -1,14 +1,9 @@
 {
     "version": 1,
     "hooks": {
-        "afterShellExecution": [
-            {
-                "command": "node .cursor/hooks/audit-after-shell-execution.mjs"
-            }
-        ],
         "stop": [
             {
-                "command": "node .cursor/hooks/stop.mjs"
+                // "command": "node .cursor/hooks/stop.mjs"
             }
         ]
     }
