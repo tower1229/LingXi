@@ -39,7 +39,7 @@ function info(message) {
 }
 
 // 有效值定义
-const VALID_STATUS = ['active', 'deprecated'];
+const VALID_STATUS = ['active']; // 废弃的记忆已直接删除，不再保留 deprecated 状态
 const VALID_SCOPE = ['narrow', 'medium', 'broad'];
 const VALID_STRENGTH = ['hypothesis', 'validated', 'enforced'];
 const VALID_TYPE = ['standard', 'knowledge'];
@@ -351,17 +351,22 @@ function generateMemoryIndexContent(files, existingIndex) {
   // 合并现有索引和文件
   const experienceMap = new Map();
   
-  // 从现有索引加载
+  // 从现有索引加载（只加载文件存在的条目）
   if (existingIndex.experience.rows.length > 0) {
+    const fileTags = new Set(files.experience.map(f => f.tag));
     existingIndex.experience.rows.forEach(row => {
       if (row.length >= 13) {
         const tag = row[0];
-        experienceMap.set(tag, row);
+        const status = row[6] || 'active';
+        // 只保留 active 状态且文件存在的条目（已删除的文件不在 files 中）
+        if (status === 'active' && fileTags.has(tag)) {
+          experienceMap.set(tag, row);
+        }
       }
     });
   }
   
-  // 从文件更新
+  // 从文件更新（只扫描存在的文件）
   files.experience.forEach(file => {
     const existingRow = experienceMap.get(file.tag);
     const row = existingRow || [
@@ -387,6 +392,8 @@ function generateMemoryIndexContent(files, existingIndex) {
       row[8] = file.level || 'project'; // Level
       row[12] = `\`${file.file}\``; // File
     }
+    // 确保 Status 为 active（废弃的记忆已删除，不会出现在 files 中）
+    row[6] = 'active';
     
     experienceMap.set(file.tag, row);
   });
@@ -405,10 +412,15 @@ function generateMemoryIndexContent(files, existingIndex) {
   const techMap = new Map();
   
   if (existingIndex.tech.rows.length > 0) {
+    const fileTags = new Set(files.tech.map(f => f.tag));
     existingIndex.tech.rows.forEach(row => {
       if (row.length >= 6) {
         const tag = row[0];
-        techMap.set(tag, row);
+        const status = row[4] || 'active';
+        // 只保留 active 状态且文件存在的条目（已删除的文件不在 files 中）
+        if (status === 'active' && fileTags.has(tag)) {
+          techMap.set(tag, row);
+        }
       }
     });
   }
@@ -429,6 +441,8 @@ function generateMemoryIndexContent(files, existingIndex) {
     if (!existingRow) {
       row[5] = `\`${file.file}\``;
     }
+    // 确保 Status 为 active（废弃的记忆已删除，不会出现在 files 中）
+    row[4] = 'active';
     
     techMap.set(file.tag, row);
   });
@@ -446,10 +460,15 @@ function generateMemoryIndexContent(files, existingIndex) {
   const businessMap = new Map();
   
   if (existingIndex.business.rows.length > 0) {
+    const fileTags = new Set(files.business.map(f => f.tag));
     existingIndex.business.rows.forEach(row => {
       if (row.length >= 6) {
         const tag = row[0];
-        businessMap.set(tag, row);
+        const status = row[4] || 'active';
+        // 只保留 active 状态且文件存在的条目（已删除的文件不在 files 中）
+        if (status === 'active' && fileTags.has(tag)) {
+          businessMap.set(tag, row);
+        }
       }
     });
   }
@@ -470,6 +489,8 @@ function generateMemoryIndexContent(files, existingIndex) {
     if (!existingRow) {
       row[5] = `\`${file.file}\``;
     }
+    // 确保 Status 为 active（废弃的记忆已删除，不会出现在 files 中）
+    row[4] = 'active';
     
     businessMap.set(file.tag, row);
   });
@@ -515,14 +536,16 @@ function checkConflicts() {
   const errors = [];
   const warnings = [];
   
-  // 检查 Experience
+  // 检查 Experience（只检查 active 状态的条目，已删除的文件不在索引中）
   const experienceTags = new Set(files.experience.map(f => f.tag));
   existingIndex.experience.rows.forEach(row => {
     if (row.length >= 13) {
       const tag = row[0];
+      const status = row[6] || 'active';
       const file = row[12]?.replace(/^`|`$/g, '') || '';
       
-      if (!experienceTags.has(tag) && file) {
+      // 只检查 active 状态的条目（废弃的记忆已删除，不在索引中）
+      if (status === 'active' && !experienceTags.has(tag) && file) {
         const filePath = path.join(process.cwd(), file);
         if (!fs.existsSync(filePath)) {
           errors.push(`Experience: 索引中的文件不存在 - ${tag} (${file})`);
@@ -538,14 +561,16 @@ function checkConflicts() {
     }
   });
   
-  // 检查 Tech
+  // 检查 Tech（只检查 active 状态的条目，已删除的文件不在索引中）
   const techTags = new Set(files.tech.map(f => f.tag));
   existingIndex.tech.rows.forEach(row => {
     if (row.length >= 6) {
       const tag = row[0];
+      const status = row[4] || 'active';
       const file = row[5]?.replace(/^`|`$/g, '') || '';
       
-      if (!techTags.has(tag) && file) {
+      // 只检查 active 状态的条目（废弃的记忆已删除，不在索引中）
+      if (status === 'active' && !techTags.has(tag) && file) {
         const filePath = path.join(process.cwd(), file);
         if (!fs.existsSync(filePath)) {
           errors.push(`Tech: 索引中的文件不存在 - ${tag} (${file})`);
@@ -554,14 +579,16 @@ function checkConflicts() {
     }
   });
   
-  // 检查 Business
+  // 检查 Business（只检查 active 状态的条目，已删除的文件不在索引中）
   const businessTags = new Set(files.business.map(f => f.tag));
   existingIndex.business.rows.forEach(row => {
     if (row.length >= 6) {
       const tag = row[0];
+      const status = row[4] || 'active';
       const file = row[5]?.replace(/^`|`$/g, '') || '';
       
-      if (!businessTags.has(tag) && file) {
+      // 只检查 active 状态的条目（废弃的记忆已删除，不在索引中）
+      if (status === 'active' && !businessTags.has(tag) && file) {
         const filePath = path.join(process.cwd(), file);
         if (!fs.existsSync(filePath)) {
           errors.push(`Business: 索引中的文件不存在 - ${tag} (${file})`);

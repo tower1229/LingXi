@@ -15,7 +15,7 @@
 - **负责什么**：
   - 需求全生命周期管理（req → plan → build → review）
   - 经验沉淀机制（EXP-CANDIDATE 捕获、experience-capture 评估并暂存、experience-depositor 沉淀和治理）
-  - 经验治理机制（experience-depositor 使用语义搜索 + 关键词匹配双重验证，合并/取代）
+  - 经验治理机制（experience-depositor 使用概念级语义搜索 + LLM 相似度评估，合并/取代，删除废弃经验）
   - 质量资产管理（通过记忆系统统一管理团队级标准/经验和项目级经验）
   - 上下文管理（service-loader 服务上下文、business context 业务上下文）
 - **不负责什么**：
@@ -48,7 +48,7 @@
   1. 任务完成时，stop hook 引导调用 experience-capture skill
   2. experience-capture 扫描对话历史，识别经验信号并生成 EXP-CANDIDATE，执行评估，在会话中展示候选
   3. 用户选择要沉淀的候选（输入编号，如 `1,3` 或 `全部`）
-  4. experience-depositor 从会话上下文获取候选，执行治理（语义搜索 + 关键词匹配双重验证）并沉淀
+  4. experience-depositor 从会话上下文获取候选，执行治理（概念级语义搜索 + LLM 相似度评估）并沉淀
   5. 写入经验到 `.cursor/.lingxi/memory/experience/`
   6. 更新统一索引 `memory/INDEX.md`
   7. experience-depositor 写入前执行最终治理检查（合并/取代）
@@ -81,7 +81,7 @@
 - **业务逻辑要点**：
   - 成长过滤器：判断经验是否进入长期知识库（"一年后，在完全不同的项目里，这条信息还能帮我提前做出正确判断吗？"）
   - 沉淀分流：将知识放到最合适的载体（团队级标准/经验、项目级经验、skills/context）
-  - 记忆治理：自动合并/取代
+  - 记忆治理：自动合并/取代，废弃的经验直接删除，不再保留 deprecated 状态
   - 指针：、
 
 ## 5) 协作上下文（Collaboration）

@@ -44,56 +44,49 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 ### 2. 记忆匹配流程（遵循上下文组织原则）
 
 **分层加载策略**：
-1. **读取统一索引**：读取 `memory/INDEX.md`（统一索引，包含 Experience/Tech/Business 三个维度）
-2. **根据命令决定匹配范围**：
-   - `/init` → 只匹配 Experience 中 Level = team 的记忆（团队级标准和经验）
-   - `/req`、`/plan`、`/build`、`/review` → 匹配所有维度（Experience/Tech/Business），其中 Experience 包括 Level = team 和 Level = project
-3. **只匹配 Status = `active` 的记忆**（过滤 `deprecated`）
-4. **LLM 语义匹配**：使用以下匹配任务进行智能匹配
 
-**LLM 匹配任务**：
+1. **元数据过滤（基于 INDEX.md）**：
+   - 读取 `memory/INDEX.md`，根据命令决定匹配范围
+     - `/init` → 只匹配 Experience 中 Level = team 的记忆（团队级标准和经验）
+     - `/req`、`/plan`、`/build`、`/review` → 匹配所有维度（Experience/Tech/Business），其中 Experience 包括 Level = team 和 Level = project
+   - 只匹配 `Status = active` 的记忆（已删除的记忆不在索引中）
+   - 根据 Level、Type 等元数据过滤，确定要搜索的目录
 
-任务：基于当前场景，从记忆列表中找出相关记忆
+2. **概念级语义搜索（基于完整记忆文件）**：
+   - 使用 `codebase_search` 工具对记忆文件目录进行语义搜索
+   - **构建概念化查询**：描述"当前要解决什么问题"、"要查找什么概念"，而非提取结构化字段
+     ```
+     我正在[阶段：plan/build/review]，需要[描述当前要解决的核心问题]。
+     查找相关经验：处理类似问题的判断、风险、解决方案。
+     ```
+     - 示例：`我正在 plan 阶段，需要规划一个用户认证功能，需要考虑安全性和用户体验的平衡。查找相关经验：处理类似认证问题的判断、风险、解决方案。`
+   - 查询范围限定在 `.cursor/.lingxi/memory/experience/`（根据元数据过滤结果）
+   - Cursor 语义搜索自动进行**概念级匹配**，理解记忆内容的真正含义
+   - 返回按语义相似度排序的结果
 
-输入：
-- 当前场景：[req 内容摘要] + 阶段：[plan]
-  - req 内容摘要：技术选型、功能描述、架构思路等关键信息
-  - 当前阶段：req/plan/build/review
-- 记忆列表：INDEX.md 中所有 `active` 记忆的摘要
-  - Experience：Tag、Type、Title、Trigger、Surface signal、Hidden risk、Level
-  - Tech：Tag、Title、Service、Trigger
-  - Business：Tag、Title、Topic、Trigger
+3. **LLM 概念级相似度评估**：
+   - 对语义搜索结果，使用 LLM 进行**概念级相似度评估**
+   - **评估维度**（基于概念理解，而非字段匹配）：
+     - 问题概念相似度：记忆要解决的问题是否与当前场景在概念上相似
+     - 风险概念相似度：记忆识别的风险是否与当前场景的风险在概念上相关
+     - 解决方案概念相似度：记忆的解决方案是否与当前场景在概念上相关
+     - 阶段适用性：记忆是否适用于当前阶段
+   - 让 Agent 理解记忆内容的**真正含义**，进行概念级判断
+   - 输出相似度得分（0-1）和判断理由
 
-匹配维度：
-- **Trigger 匹配**：记忆的 Trigger 是否与当前场景相关
-- **阶段匹配**：记忆是否适用于当前阶段
-- **风险匹配**：Experience 的 Hidden risk 是否与当前场景的风险相关
-- **信号匹配**：Experience 的 Surface signal 是否与当前场景的信号匹配
-- **服务匹配**：Tech 的 Service 是否与当前场景涉及的服务相关
-- **主题匹配**：Business 的 Topic 是否与当前场景的业务主题相关
+4. **元数据加权**：
+   - 对相似度得分进行元数据加权：
+     - Strength：`enforced` = 1.2, `validated` = 1.1, `hypothesis` = 1.0
+     - Scope：`broad` = 1.2, `medium` = 1.1, `narrow` = 1.0
+     - Type：`standard` = 1.1, `knowledge` = 1.0
+   - 最终得分 = 相似度得分 × 元数据权重
 
-输出要求：
-- 返回相关记忆的 Tag 列表
-- 对每个相关记忆，给出相关性得分（0-1）和理由
-- 只返回得分 >= 0.3 的记忆
-- 按得分降序排列，最多返回 Top 5
+5. **返回结果**：
+   - 按最终得分降序排列
+   - 只返回得分 >= 0.3 的记忆
+   - 最多返回 Top 5
 
-得分计算：
-- 基础得分：0-1（基于相关性，由 LLM 判断）
-- 阶段加权：
-  - 当前阶段匹配：+0.2
-  - 相邻阶段匹配：+0.1（如 plan 阶段匹配 req/build 阶段记忆）
-  - 其他阶段：+0
-- 最终得分 = min(1.0, 基础得分 + 阶段加权)
-
-优先级排序：
-- 首先按最终得分降序
-- 得分相同时，优先返回高 Strength 记忆（仅 Experience）：`enforced` > `validated` > `hypothesis`
-- 得分和 Strength 相同时，优先返回 broad Scope 记忆（仅 Experience）：`broad` > `medium` > `narrow`
-- 得分、Strength 和 Scope 相同时，优先返回团队级标准（Type = standard，Level = team）
-- 跨维度优先级：Experience > Tech > Business（经验记忆优先于技术/业务记忆）
-
-5. **按需加载细节**：仅在需要详细内容时，才加载对应的记忆文件（细节层）
+6. **按需加载细节**：仅在需要详细内容时，才加载对应的记忆文件（细节层）
 
 ### 3. 匹配优先级
 
@@ -111,13 +104,13 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 - Tech：服务相关文件（如 `**/services/auth/**` → 认证服务上下文）
 - Business：业务相关文件（如 `**/workflow/**` → 工作流业务上下文）
 
-**优先级 3：语义匹配**（最低优先级）
+**优先级 3：概念级语义匹配**（最低优先级）
 
-- Trigger 匹配 → 基于关键词/场景匹配
-- Surface signal 匹配 → 基于"熟悉的风险味道"匹配（仅 Experience）
-- Hidden risk 匹配 → 基于"真正会出问题的点"匹配（仅 Experience）
-- Service 匹配 → 基于服务名称匹配（仅 Tech）
-- Topic 匹配 → 基于业务主题匹配（仅 Business）
+- 问题概念匹配 → 基于"要解决什么问题"的概念级匹配
+- 风险概念匹配 → 基于"识别的风险"的概念级匹配（仅 Experience）
+- 解决方案概念匹配 → 基于"解决方案"的概念级匹配
+- 服务概念匹配 → 基于服务职责和边界的概念级匹配（仅 Tech）
+- 业务主题概念匹配 → 基于业务主题的概念级匹配（仅 Business）
 
 **匹配过滤**：
 - 知识可获得性过滤：高可获得性且代码库有示例 → 降低优先级或跳过
@@ -153,12 +146,12 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 | `Trigger`    | 关键词/场景                             | 触发加载的条件（when to load，偏工程检索）                                 |
 | `Surface signal` | 句子 | 表层信号（我闻到熟悉风险味道的线索，偏认知触发） |
 | `Hidden risk` | 句子 | 隐含风险（真正会出问题的点，偏认知触发） |
-| `Status`     | `active` / `deprecated`                 | active=可用，deprecated=已被合并或取代                                     |
+| `Status`     | `active`                                 | active=可用（废弃的记忆已直接删除，不再保留 deprecated 状态）             |
 | `Scope`      | `narrow` / `medium` / `broad`           | 经验适用范围：narrow=单一场景，medium=同类问题，broad=跨场景通用           |
 | `Strength`   | `hypothesis` / `validated` / `enforced` | 经验强度：hypothesis=首次总结，validated=多次验证，enforced=已转为自动拦截 |
 | `Level`      | `team` / `project`                      | 经验层级：team=团队级，project=项目级                                     |
-| `Replaces`   | 逗号分隔的 Tag 列表                     | 本经验取代了哪些旧经验（谱系链：新 → 旧）                                  |
-| `ReplacedBy` | Tag                                     | 本经验被哪条新经验取代（谱系链：旧 → 新）                                  |
+| `Replaces`   | 逗号分隔的 Tag 列表                     | 本经验取代了哪些旧经验（谱系链：新 → 旧）。注意：已删除的记忆会从 Replaces 字段中移除 |
+| `ReplacedBy` | Tag                                     | 本经验被哪条新经验取代（谱系链：旧 → 新）。注意：废弃的经验已直接删除，此字段不再使用 |
 | `File`       | 文件路径                                | 经验详情文件                                                               |
 
 ### Tech（技术记忆）
@@ -169,7 +162,7 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 | `Title`   | 简短标题            | 一句话描述技术上下文     |
 | `Service` | 服务名称            | 服务或模块名称           |
 | `Trigger` | 关键词/场景         | 触发加载的条件           |
-| `Status`  | `active` / `deprecated` | active=可用，deprecated=已废弃 |
+| `Status`  | `active` | active=可用（废弃的记忆已直接删除，不再保留 deprecated 状态） |
 | `File`    | 文件路径            | 技术上下文详情文件       |
 
 ### Business（业务记忆）
@@ -180,13 +173,13 @@ description: 此 Skill 在执行 /req、/plan 001、/build 001、/review 001 等
 | `Title`   | 简短标题            | 一句话描述业务上下文     |
 | `Topic`   | 业务主题            | 业务领域或主题           |
 | `Trigger` | 关键词/场景         | 触发加载的条件           |
-| `Status`  | `active` / `deprecated` | active=可用，deprecated=已废弃 |
+| `Status`  | `active` | active=可用（废弃的记忆已直接删除，不再保留 deprecated 状态） |
 | `File`    | 文件路径            | 业务上下文详情文件       |
 
 ## 禁止
 
 - 没匹配就硬输出"无相关记忆"（应完全静默）
 - 一次任务重复提醒同一条记忆
-- 返回 `deprecated` 状态的记忆（除非用户显式要求查看历史）
+- 返回已删除的记忆（已删除的记忆不在索引中）
 - 输出冗长的结构化格式（有匹配时仅输出关键信息）
 - 在上下文获取失败时继续执行（应先提示用户）

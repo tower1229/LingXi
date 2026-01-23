@@ -78,7 +78,7 @@
 - 无变更：**静默**，不输出
 - 有变更：仅输出变更摘要
   ```
-  治理：合并 EXP-001→EXP-003，deprecated 1 条（回滚：cp memory/INDEX.md.bak memory/INDEX.md）
+  治理：合并 EXP-001→EXP-003，删除 1 条（回滚：cp memory/INDEX.md.bak memory/INDEX.md）
   ```
 
 **理由**：无变更时无需告知。有变更时仅需摘要，详细信息在文件中。
