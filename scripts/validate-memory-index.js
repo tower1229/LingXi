@@ -103,9 +103,17 @@ function extractExperienceFields(filePath, level, type) {
       if (line.startsWith('## ')) {
         break;
       }
-      if (line.trim() && !line.startsWith('-')) {
-        trigger += (trigger ? ' ' : '') + line.trim();
-      }
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      // 支持列表与纯文本两种写法：
+      // - 列表：- xxx / * xxx / 1. xxx
+      // - 纯文本：直接一行描述
+      const normalized = trimmed
+        .replace(/^[-*]\s+/, '')
+        .replace(/^\d+\.\s+/, '')
+        .trim();
+      if (!normalized) continue;
+      trigger += (trigger ? ' ' : '') + normalized;
     }
   }
   trigger = trigger.trim();
@@ -389,7 +397,8 @@ function generateMemoryIndexContent(files, existingIndex) {
     if (file.title) row[2] = file.title;
     if (file.trigger) row[3] = file.trigger;
     if (!existingRow) {
-      row[8] = file.level || 'project'; // Level
+      // 注意：EXPERIENCE_HEADER 中 Level 列索引为 9（Strength 为 8）
+      row[9] = file.level || 'project'; // Level
       row[12] = `\`${file.file}\``; // File
     }
     // 确保 Status 为 active（废弃的记忆已删除，不会出现在 files 中）
@@ -643,4 +652,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { parseMemoryIndex, scanMemoryFiles, generateMemoryIndexContent };
+module.exports = { parseMemoryIndex, scanMemoryFiles, generateMemoryIndexContent, extractExperienceFields };
