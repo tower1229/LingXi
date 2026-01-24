@@ -56,7 +56,7 @@
 - `/build`：代码实现
 - `/review`：审查交付
 - `/remember`：记忆写入
-- `/init`：项目初始化
+- `/init`：项目初始化（Command 负责交互契约与菜单；主逻辑由 `init-executor` Skill 承载，清单定义放在 Skill 的 references 里作为 SSoT）
 
 ## Skills 指南
 

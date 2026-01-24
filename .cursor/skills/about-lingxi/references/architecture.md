@@ -29,7 +29,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/build` | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式） | `build-executor` |
 | `/review` | 审查交付（核心审查和按需审查，测试执行） | `review-executor` |
 | `/remember` | 写入记忆（随时可用，无需依赖任务编号） | `memory-curator` |
-| `/init` | 初始化项目（首次使用，引导式收集项目信息） | 多个 Skills 协作 |
+| `/init` | 初始化项目（首次使用，引导式收集项目信息并生成初始化记忆草稿） | `init-executor`（主）；按需协作：`memory-capture` / `memory-curator` |
 
 **特性**：
 - 多入口设计：所有命令独立执行，不依赖前一阶段完成
@@ -45,6 +45,7 @@ Skills 承载详细的工作流指导，按职责分为：
 - `plan-executor`：任务规划、测试设计和文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
+- `init-executor`：项目初始化（分类型收集清单 → 初始化记忆笔记草稿 → 用户门控后可选写入）
 
 #### 记忆系统 Skills（实现"心有灵犀"的核心能力）
 - `memory-retrieve`：每轮回答前检索 `memory/notes/` 并最小注入（由 Always Apply Rule 强保证触发）

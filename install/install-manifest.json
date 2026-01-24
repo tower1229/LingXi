@@ -17,6 +17,7 @@
   "skills": [
     "skills/about-lingxi/SKILL.md",
     "skills/build-executor/SKILL.md",
+    "skills/init-executor/SKILL.md",
     "skills/memory-retrieve/SKILL.md",
     "skills/memory-capture/SKILL.md",
     "skills/memory-curator/SKILL.md",
@@ -43,6 +44,9 @@
       "skills/about-lingxi/references/memory-system.md",
       "skills/about-lingxi/references/optimization-checklist.md",
       "skills/about-lingxi/references/rules-guide.md"
+    ],
+    "init-executor": [
+      "skills/init-executor/references/init-checklists.md"
     ],
     "write-doc": []
   },
