@@ -62,6 +62,18 @@ description: 尽力而为捕获对话中的“判断/取舍/边界/排障路径�
 - `portability=project-only`
 - `source=manual`（若来自 `/init` 则为 `init`）
 
+## 写入目标建议（project vs share）
+
+当候选满足以下条件时，建议把该记忆沉淀为**跨项目复用资产**，写入共享目录（需人工门控确认）：
+
+- `audience=team`
+- `portability=cross-project`
+- `recommendation.strength in [validated, enforced]`
+
+建议输出中附带一条高信号提醒（示例）：
+
+> 该候选符合团队共享条件，建议写入 `.cursor/.lingxi/memory/notes/share/`（share 是 git submodule 的硬约定目录）。如果你确认要共享，我会按该目标写入。
+
 ## 过滤规则（静默）
 
 以下情况直接过滤，不展示：

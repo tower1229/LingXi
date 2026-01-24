@@ -74,8 +74,13 @@
 
 模板：`memory/references/memory-note-template.md`
 
-## 跨项目复用（Team Memory Pack）
+## 跨项目复用（Share 目录：git submodule）
 
+灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
+
+- 共享目录：`.cursor/.lingxi/memory/notes/share/`
+- 推荐形态：**git submodule**（团队仓库，版本锁定、同步明确）
+- 生效方式：share 目录下的记忆与项目记忆一起参与检索；索引生成会递归扫描 `notes/**`。\n+
 团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
 
 - **Audience**：team / project / personal（决策权归属与适用范围）
@@ -83,13 +88,17 @@
 - **Source**：来源（如 `<packName>@<version>` / manual / init），用于审计与回溯
 - **Tags**（可选）：主题标签，便于导出筛选与聚合
 
-推荐约定：
+推荐约定（用于筛选“应进入 share 仓库”的内容）：
 
 - 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated
 - 团队级常见需求标准方案：Audience=team，Portability=cross-project，Kind=pattern/decision
 - 前后端/运维默认约定：Audience=team，Portability=cross-project，Kind=reference/tech
 - 项目内特殊备忘：Audience=project，Portability=project-only
-- 个人习惯：Audience=personal（默认不进入团队 pack）
+- 个人习惯：Audience=personal（默认不进入 share）
+
+### 冲突优先级（稳定规则）
+
+当出现同一 `Id` 同时存在于项目与 share 时，默认 **project 覆盖 share**（避免团队库更新导致项目行为不可控）。索引生成会对重复 Id 输出 warning，便于人工治理与收敛。
 
 ## 关键原则
 

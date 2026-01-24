@@ -56,6 +56,27 @@ function listMarkdownFiles(dir) {
     .map((e) => path.join(dir, e.name));
 }
 
+function listMarkdownFilesRecursive(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      out.push(...listMarkdownFilesRecursive(abs));
+    } else if (e.isFile() && e.name.endsWith('.md')) {
+      out.push(abs);
+    }
+  }
+
+  return out;
+}
+
+function toPosixPath(p) {
+  return p.split(path.sep).join('/');
+}
+
 function extractMetaValue(lines, key) {
   // 支持两种写法：
   // - **Id**: MEM-xxx
@@ -156,9 +177,10 @@ function createContext(memoryRoot) {
 }
 
 function scanNotes(notesDir) {
-  const files = listMarkdownFiles(notesDir);
+  const files = listMarkdownFilesRecursive(notesDir);
   return files.map((filePath) => {
-    const rel = `memory/notes/${path.basename(filePath)}`;
+    const relFromNotes = toPosixPath(path.relative(notesDir, filePath));
+    const rel = `memory/notes/${relFromNotes}`;
     const lines = readText(filePath).split('\n');
 
     const id = extractMetaValue(lines, 'Id') || path.basename(filePath, '.md');
@@ -181,9 +203,56 @@ function scanNotes(notesDir) {
       scope,
       supersedes,
       file: `\`${rel}\``,
+      relFromNotes,
       filePath,
     };
   });
+}
+
+function dedupeNotesById(notes) {
+  const groups = new Map();
+  for (const n of notes) {
+    if (!groups.has(n.id)) groups.set(n.id, []);
+    groups.get(n.id).push(n);
+  }
+
+  const deduped = [];
+  const duplicates = [];
+
+  for (const [id, list] of groups.entries()) {
+    if (list.length === 1) {
+      deduped.push(list[0]);
+      continue;
+    }
+
+    // project-over-share:
+    // 1) 优先 `notes/<Id>.md`（relFromNotes == `${id}.md`）
+    // 2) 其次：不在 share/ 下的最短路径
+    // 3) 最后：share/ 下的最短路径
+    const topLevelName = `${id}.md`;
+
+    const sorted = [...list].sort((a, b) => {
+      const aTop = a.relFromNotes === topLevelName ? 0 : 1;
+      const bTop = b.relFromNotes === topLevelName ? 0 : 1;
+      if (aTop !== bTop) return aTop - bTop;
+
+      const aShare = a.relFromNotes.startsWith('share/') ? 1 : 0;
+      const bShare = b.relFromNotes.startsWith('share/') ? 1 : 0;
+      if (aShare !== bShare) return aShare - bShare;
+
+      const aLen = a.relFromNotes.split('/').length;
+      const bLen = b.relFromNotes.split('/').length;
+      if (aLen !== bLen) return aLen - bLen;
+
+      return a.relFromNotes.localeCompare(b.relFromNotes);
+    });
+
+    const winner = sorted[0];
+    deduped.push(winner);
+    duplicates.push({ id, winner: winner.relFromNotes, all: sorted.map((x) => x.relFromNotes) });
+  }
+
+  return { deduped, duplicates };
 }
 
 function generateIndexContent(noteEntries, existingIndex) {
@@ -269,7 +338,12 @@ function updateIndexAt(memoryRoot) {
   safeMkdir(ctx.notesDir);
 
   const existing = parseIndex(ctx.indexPath);
-  const notes = scanNotes(ctx.notesDir);
+  const scanned = scanNotes(ctx.notesDir);
+  const { deduped: notes, duplicates } = dedupeNotesById(scanned);
+
+  for (const d of duplicates) {
+    warning(`重复 Id：${d.id}（winner=${d.winner}，others=${d.all.filter((x) => x !== d.winner).join(', ')}）`);
+  }
 
   const noteErrors = [];
   for (const n of notes) {
@@ -289,7 +363,12 @@ function checkIndexAt(memoryRoot) {
   const ctx = createContext(memoryRoot);
   info(`检查 memory/INDEX.md 与 notes 一致性... (root=${ctx.memoryRoot})`);
   const existing = parseIndex(ctx.indexPath);
-  const notes = scanNotes(ctx.notesDir);
+  const scanned = scanNotes(ctx.notesDir);
+  const { deduped: notes, duplicates } = dedupeNotesById(scanned);
+
+  for (const d of duplicates) {
+    warning(`重复 Id：${d.id}（winner=${d.winner}）`);
+  }
 
   const errors = [];
   const warnings = [];
@@ -387,6 +466,7 @@ module.exports = {
   createContext,
   parseIndex,
   scanNotes,
+  dedupeNotesById,
   generateIndexContent,
   extractWhenToLoad,
   updateIndexAt,

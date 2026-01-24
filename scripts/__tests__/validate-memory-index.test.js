@@ -110,3 +110,58 @@ test('Root: 支持自定义 memory root 更新与检查', () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+test('Recursive + Dedup: 扫描子目录并按 project-over-share 选择 winner', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lingxi-memory-recursive-'));
+  const memoryRoot = path.join(tmp, 'memory');
+  const notesDir = path.join(memoryRoot, 'notes');
+
+  // project 顶层
+  fs.mkdirSync(notesDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(notesDir, 'MEM-dup.md'),
+    [
+      '# ProjectVersion',
+      '',
+      '## Meta',
+      '',
+      '- **Id**: MEM-dup',
+      '- **Kind**: principle',
+      '- **Status**: active',
+      '- **Strength**: validated',
+      '- **Scope**: broad',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+
+  // share 子目录（重复 id）
+  const shareDir = path.join(notesDir, 'share', 'team');
+  fs.mkdirSync(shareDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(shareDir, 'MEM-dup.md'),
+    [
+      '# ShareVersion',
+      '',
+      '## Meta',
+      '',
+      '- **Id**: MEM-dup',
+      '- **Kind**: principle',
+      '- **Status**: active',
+      '- **Strength**: enforced',
+      '- **Scope**: broad',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+
+  updateIndexAt(memoryRoot);
+  const indexPath = path.join(memoryRoot, 'INDEX.md');
+  const content = fs.readFileSync(indexPath, 'utf8');
+
+  // winner 应为顶层的 `memory/notes/MEM-dup.md`
+  assert(content.includes('`memory/notes/MEM-dup.md`'), '未选择 project 顶层作为 winner');
+  assert(!content.includes('`memory/notes/share/team/MEM-dup.md`'), '不应把 share 版本写进 INDEX（被 project 覆盖）');
+
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+

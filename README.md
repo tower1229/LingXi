@@ -95,5 +95,31 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 默认启用 Always Apply Rule：`.cursor/rules/memory-injection.mdc`。
 它会在**每轮回答前**要求先检索 `memory/notes/` 并做最小注入（无匹配静默，失败可降级继续回答）。
 
+#### 经验共享（跨项目复用：share 目录 + git submodule）
+
+灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
+
+- 共享目录：`.cursor/.lingxi/memory/notes/share/`（建议作为 **git submodule**）
+
+**1) 添加 share 仓库（submodule）**
+
+```bash
+git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
+```
+
+**2) 更新 share 仓库**
+
+```bash
+git submodule update --remote --merge
+```
+
+**3) 同步记忆索引（新增共享经验后执行）**
+
+```bash
+npm run memory-sync
+```
+
+> `memory-sync` 会递归扫描 `.cursor/.lingxi/memory/notes/**` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
+
 ## 相关文档
 - [核心组件架构](./docs/design/architecture.md)

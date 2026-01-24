@@ -60,7 +60,20 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 ## 写入格式（notes 文件）
 
-写入到 `memory/notes/MEM-<stable-id>.md`，推荐使用模板：`memory/references/memory-note-template.md`。
+默认写入到项目记忆库：
+
+- `memory/notes/MEM-<stable-id>.md`
+
+当用户明确选择“共享/跨项目复用”时，允许写入到 share 目录（硬约定，通常为 git submodule）：
+
+- `memory/notes/share/MEM-<stable-id>.md`（或 share 内部子目录）
+
+推荐使用模板：`memory/references/memory-note-template.md`。
+
+写入 share 的前置条件（Fail Fast）：
+
+- `.cursor/.lingxi/memory/notes/share/` 必须存在且可写（通常已添加为 git submodule）
+- 若目录不存在或不可写：输出明确错误与解决方案（先添加 submodule / 检查权限），不要写入到错误位置
 
 最低要求（必须包含）：
 
