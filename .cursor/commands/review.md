@@ -30,14 +30,15 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 以下 Skills 会自动激活：
 
 - `review-executor`：执行多维度审查和交付质量保证
-- `experience-index`：自动匹配历史经验提醒
-- `experience-capture`：统一经验捕获（自动激活）
+- `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-capture`：统一记忆捕获（尽力而为触发）
 
-以下 Subagents 会根据语义分析结果选择性启用（由 review-executor 显式调用）：
+以下 Reviewer Skills 会根据语义分析结果选择性启用（由 review-executor 显式调用）：
 
-- `reviewer-doc-consistency`：文档一致性审查（始终启用）
-- `reviewer-security`：安全审查（基于需求/实现语义判断启用）
-- `reviewer-performance`：性能审查（基于需求/实现语义判断启用）
+- `reviewer-doc-consistency`：文档一致性审查（由 review-executor 显式调用，始终启用）
+- `reviewer-security`：安全审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
+- `reviewer-performance`：性能审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
+- `reviewer-e2e`：端到端测试审查（由 review-executor 显式调用，基于需求/实现语义判断启用）
 
 ## 产物
 
@@ -58,7 +59,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 4. 测试脚本质量检查
 5. 测试执行
 6. 依次执行核心维度（功能、测试覆盖、架构、可维护性、回归风险）
-7. 并行执行可选维度（显式触发 subagents：文档一致性始终启用，安全/性能基于语义判断启用）
+7. 并行执行可选维度（显式调用 reviewer skills：文档一致性始终启用，安全/性能/E2E 基于语义判断启用）
 8. Review 文档生成
 9. 审查结果处理
 
@@ -70,9 +71,16 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 
 详细执行流程请参考 `review-executor` Skill 文档（`.cursor/skills/review-executor/SKILL.md`）。
 
-## 经验捕获
+## 记忆捕获
 
-经验捕获由 `experience-capture` Skill 统一处理。当发现缺陷、覆盖缺口、质量问题、安全风险等情况时，会自动捕获经验候选。
+记忆捕获由 `memory-capture` Skill 统一处理。
 
-详细触发场景请参考 `experience-capture` Skill 文档。
+**激活机制**：
+- 任务完成或关键决策出现时，尽力触发 `memory-capture`
+- `memory-capture` 扫描对话上下文，识别记忆信号并生成候选
+- 候选在会话中展示，用户可选择沉淀
+
+**触发场景**：当发现缺陷、覆盖缺口、质量问题、安全风险等情况时，会自动捕获记忆候选。
+
+详细触发场景和激活机制请参考 `memory-capture` Skill 文档。
 

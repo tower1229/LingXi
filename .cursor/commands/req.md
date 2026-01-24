@@ -28,9 +28,8 @@ args:
 以下 Skills 会自动激活：
 
 - `req-executor`：执行需求分析、提纯、放大和文档生成
-- `experience-index`：自动匹配历史经验提醒
-- `experience-capture`：统一经验捕获（自动激活）
-- `service-loader`：如适用，生成服务上下文
+- `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-capture`：统一记忆捕获（尽力而为触发）
 
 ## 产物
 
@@ -50,19 +49,26 @@ args:
 3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
 4. 类型识别与复杂度评估
 5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 经验融入（通过 experience-index）
+6. 记忆融入（通过 `memory-retrieve` + Always Apply Rule 的每轮最小注入）
 7. 模板选择
 8. 文档生成
 
 详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
 
-## 经验捕获
+## 记忆捕获
 
-经验捕获由 `experience-capture` Skill 统一处理，无需在命令中显式调用。当发生以下情况时，`experience-capture` 会自动捕获经验候选：
+记忆捕获由 `memory-capture` Skill 统一处理，无需在命令中显式调用。
+
+**激活机制**：
+- 任务完成或关键决策出现时，尽力触发 `memory-capture`
+- `memory-capture` 扫描对话上下文，识别记忆信号并生成候选
+- 候选在会话中展示，用户可选择沉淀
+
+**触发场景**：当发生以下情况时，`memory-capture` 会识别并捕获记忆候选：
 
 - 需求固化、范围调整、优先级变更
 - 目标纠正、方案选择、约束添加
 - 边界明确、验收调整、风险确认
 
-详细触发场景请参考 `experience-capture` Skill 文档。
+详细触发场景和激活机制请参考 `memory-capture` Skill 文档。
 

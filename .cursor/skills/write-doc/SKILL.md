@@ -135,7 +135,7 @@ description: 此 Skill 用于编写/修改项目文档，确保文档的语言�
 
 ## 风格 prompt 来源
 
-风格 prompt 由 style-fusion skill 的 `generatePrompt` 函数自动生成，基于存储在 `.cursor/.lingxi/context/style-fusion/profile.json` 的风格画像。
+风格 prompt 由 style-fusion skill 的 `generatePrompt` 函数自动生成，基于存储在 `.cursor/.lingxi/style-fusion/profile.json` 的风格画像。
 
 如果风格画像不存在或样本数为 0，请先使用 style-fusion 分析项目文档生成风格画像：
 
@@ -172,7 +172,7 @@ if (promptResult.status === 'ok') {
 
 ### 风格画像路径
 
-风格画像存储在：`.cursor/.lingxi/context/style-fusion/profile.json`
+风格画像存储在：`.cursor/.lingxi/style-fusion/profile.json`
 
 `generatePrompt` 函数会自动读取该文件并生成格式化的 prompt。如果文件不存在或 `sample_count === 0`，函数会返回错误。
 

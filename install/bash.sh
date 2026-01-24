@@ -248,7 +248,7 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
         # 询问用户确认（交互式）
         echo ""
         info "检测到已有目录，将以合并模式安装："
-        info "  - 保留您现有的文件（rules、plans 等）"
+        info "  - 保留您现有的文件（plans 等）"
         info "  - 仅添加/更新灵犀需要的文件"
         echo ""
 
@@ -318,8 +318,8 @@ download_file() {
 # 创建 .cursor 目录结构
 info "创建 .cursor 目录结构..."
 mkdir -p .cursor/commands
-mkdir -p .cursor/rules
 mkdir -p .cursor/skills
+mkdir -p .cursor/rules
 mkdir -p .cursor/hooks
 mkdir -p .cursor/agents
 
@@ -337,23 +337,19 @@ while IFS= read -r cmd; do
 done < <(get_json_array "commands")
 success "已下载 commands ($command_count 个文件)"
 
-# 下载 rules 文件（项目级质量准则）
+# 下载 rules 文件
 info "下载 rules..."
-
-# 下载规则文件
-rule_file_count=0
-while IFS= read -r rule_file; do
-    [ -z "$rule_file" ] && continue
-    local_file=".cursor/${rule_file}"
-    if ! download_file ".cursor/${rule_file}" "$local_file"; then
+rule_count=0
+while IFS= read -r rule; do
+    [ -z "$rule" ] && continue
+    local_file=".cursor/${rule}"
+    if ! download_file ".cursor/${rule}" "$local_file"; then
         error "安装失败"
         exit 1
     fi
-    rule_file_count=$((rule_file_count + 1))
-done < <(get_json_object_array "rules" "files")
-
-success "已下载 rules ($rule_file_count 个文件)"
-
+    rule_count=$((rule_count + 1))
+done < <(get_json_array "rules")
+success "已下载 rules ($rule_count 个文件)"
 
 # 下载 hooks 配置与脚本
 info "下载 hooks..."
@@ -398,7 +394,7 @@ success "已下载 agents ($agent_count 个文件)"
 
 # 下载引用文件
 ref_count=0
-# 动态遍历所有 references（experience-curator, agents 等）
+# 动态遍历所有 references（agents 等）
 # 获取 references 对象的所有 keys
 if command -v jq &> /dev/null; then
     # 使用 jq 获取所有 keys
@@ -457,6 +453,8 @@ while IFS= read -r dir; do
     dir="${dir//$'\r'/}"
     mkdir -p "$dir"
 done < <(get_json_array "workflowDirectories")
+
+# workspace 目录会在首次使用时自动创建，无需初始化文件
 
 # 下载 INDEX.md 文件
 info "下载索引文件..."
@@ -517,9 +515,6 @@ else
 # Local workspace for temp code clones, generated artifacts, etc.
 .cursor/.lingxi/workspace/
 
-# Session-level context (ephemeral, not a knowledge base)
-.cursor/.lingxi/context/session/
-
 # OS / IDE
 .DS_Store
 Thumbs.db
@@ -533,7 +528,7 @@ success "安装完成！"
 echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ ($command_count 个命令)"
-echo "  - .cursor/rules/ ($rule_dir_count 个规则目录 + $rule_file_count 个文件)"
+echo "  - .cursor/rules/ ($rule_count 个规则)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo "  - .cursor/agents/ ($agent_count 个文件)"
 echo "  - .cursor/.lingxi/ 目录结构"
@@ -546,6 +541,11 @@ info "下一步："
 echo "  1. 在 Cursor 中打开项目"
 echo "  2. 运行 /req <需求描述> 创建第一个需求"
 echo "  3. 查看 README.md 了解完整工作流"
+echo ""
+info "经验共享（可选，跨项目复用）："
+echo "  - share 目录（已创建）：.cursor/.lingxi/memory/notes/share/"
+echo "  - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
+echo "  - 更新索引：npm run memory-sync（需 Node.js；或 yarn memory-sync）"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
 info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"

@@ -24,7 +24,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 #### 2.1 文档一致性审查（始终启用）
 
 - 所有任务都需要检查代码与文档一致性
-- 使用 subagent 并行执行：`reviewer-doc-consistency`
+- 使用 reviewer skill：`reviewer-doc-consistency`
 
 #### 2.2 安全审查（语义判断启用）
 
@@ -39,7 +39,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
    - 扫描变更代码：是否包含 SQL 操作、用户输入处理、权限检查、文件操作等
 
 3. 启用判断：
-   - 如果需求或实现中包含安全相关特征 → 启用安全审查 (subagent: `reviewer-security`)
+   - 如果需求或实现中包含安全相关特征 → 启用安全审查 (skill: `reviewer-security`)
    - 否则 → 跳过安全审查
 
 **AI Native 原则**：依赖 LLM 的语义理解能力，不进行关键词匹配。
@@ -57,7 +57,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
    - 扫描变更代码：是否包含循环遍历、数据库查询、缓存操作、异步处理等
 
 3. 启用判断：
-   - 如果需求或实现中包含性能敏感特征 → 启用性能审查 (subagent: `reviewer-performance`)
+   - 如果需求或实现中包含性能敏感特征 → 启用性能审查 (skill: `reviewer-performance`)
    - 否则 → 跳过性能审查
 
 **AI Native 原则**：依赖 LLM 的语义理解能力，综合判断是否需要性能审查。
@@ -75,7 +75,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
    - 扫描变更代码：是否包含 UI 组件、路由配置、表单处理、页面跳转等前端交互代码
 
 3. 启用判断：
-   - 如果需求或实现中包含 E2E 测试特征 → 启用 E2E 测试审查 (subagent: `reviewer-e2e`)
+   - 如果需求或实现中包含 E2E 测试特征 → 启用 E2E 测试审查 (skill: `reviewer-e2e`)
    - 否则 → 跳过 E2E 测试审查
 
 **AI Native 原则**：依赖 LLM 的语义理解能力，不进行关键词匹配。
@@ -83,7 +83,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 #### 2.5 启用决策汇总
 
 记录启用决策结果：
-- 文档一致性审查：✅ 启用 (subagent)
+- 文档一致性审查：✅ 启用 (skill)
 - 安全审查：✅/❌ (基于语义判断)
 - 性能审查：✅/❌ (基于语义判断)
 - E2E 测试审查：✅/❌ (基于语义判断)
@@ -198,47 +198,49 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 - 是否需要更新相关文档
 - 是否需要通知相关团队
 
-**注意**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑。
+**注意**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑。
 
-### 7. 并行执行可选维度（显式触发 subagents）
+### 7. 并行执行可选维度（显式调用 reviewer skills）
 
-根据步骤 2 的启用决策，显式触发对应的 subagents：
+根据步骤 2 的启用决策，显式调用对应的 reviewer skills：
+
+**说明**：虽然改为 skills，但可以按需并行执行（通过显式调用多个 skills）。reviewer skills 共享 review-executor 的上下文，可以访问 req 文档、代码文件列表等信息。
 
 #### 7.1 文档一致性审查（始终启用）
 
-- 显式调用 `reviewer-doc-consistency` subagent 执行文档一致性审查
+- 显式调用 `reviewer-doc-consistency` skill 执行文档一致性审查
 - 传入参数：req 文档路径、变更代码文件列表、plan/testcase 文档路径（如存在）
-- 后台模式：不阻塞主流程
+- 不阻塞主流程
 
 #### 7.2 安全审查（如语义判断需要）
 
 - 如果步骤 2.2 的语义分析判断需要安全审查：
-  - 显式调用 `reviewer-security` subagent 执行安全审查
+  - 显式调用 `reviewer-security` skill 执行安全审查
   - 传入参数：req 文档路径、变更代码文件列表、重点关注的安全相关代码片段
-  - 后台模式：不阻塞主流程
+  - 不阻塞主流程
 - 否则：跳过安全审查
 
 #### 7.3 性能审查（如语义判断需要）
 
 - 如果步骤 2.3 的语义分析判断需要性能审查：
-  - 显式调用 `reviewer-performance` subagent 执行性能审查
+  - 显式调用 `reviewer-performance` skill 执行性能审查
   - 传入参数：req 文档路径、变更代码文件列表、性能相关代码片段
-  - 后台模式：不阻塞主流程
+  - 不阻塞主流程
 - 否则：跳过性能审查
 
 #### 7.4 E2E 测试审查（如语义判断需要）
 
 - 如果步骤 2.4 的语义分析判断需要 E2E 测试：
-  - 显式调用 `reviewer-e2e` subagent 执行 E2E 测试审查
+  - 显式调用 `reviewer-e2e` skill 执行 E2E 测试审查
   - 传入参数：req 文档路径、testcase 文档路径（如存在）、应用启动配置（端口、启动命令等）
-  - 后台模式：不阻塞主流程
+  - 不阻塞主流程
 - 否则：跳过 E2E 测试审查
 
-#### 7.5 等待所有 subagents 完成
+#### 7.5 等待所有 reviewer skills 完成
 
-- 等待所有启用的 subagents 完成执行
-- 收集各 subagent 的审查结果
-- 如果某个 subagent 调用失败或超时：
+- 等待所有启用的 reviewer skills 完成执行
+- 收集各 reviewer skill 的审查结果
+- 如果某个 reviewer skill 调用失败或超时：
   - 记录降级原因
   - 回退到主流程依次执行该维度审查（不影响其他维度）
 - 汇总为统一格式（Blockers/High/Medium/Low）
@@ -404,7 +406,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 4. 测试脚本质量检查
 5. 测试执行
 6. 依次执行核心维度（功能、测试覆盖、架构、可维护性、回归风险）
-7. 并行执行可选维度（显式触发 subagents：文档一致性、安全、性能、E2E 测试）
+7. 并行执行可选维度（显式调用 reviewer skills：文档一致性、安全、性能、E2E 测试）
 8. Review 文档生成
 9. 审查结果处理
 
@@ -425,7 +427,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 
 ## 注意事项
 
-1. **经验捕获**：经验捕获由 `experience-capture` Skill 统一处理，本 Skill 不包含经验捕获逻辑
+1. **记忆捕获**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑
 2. **测试质量优先**：测试脚本质量检查必须在测试执行前完成
 3. **分级输出**：所有问题按优先级分级（Blockers/High/Medium/Low）
 4. **明确结论**：审查结论必须明确（通过/需修复/拒绝）
@@ -441,5 +443,5 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 ## 参考
 
 - **原 review.md 命令**：`.cursor/commands/review.md`（备份在 `.cursor/commands-backup/review.md`）
-- **经验捕获**：`.cursor/skills/experience-capture/SKILL.md`
-- **经验匹配**：`.cursor/skills/experience-index/SKILL.md`
+- **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
+- **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

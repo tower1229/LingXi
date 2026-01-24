@@ -123,7 +123,7 @@ if ($CursorExists -or $LingxiExists) {
         # 询问用户确认（交互式）
         Write-Host ""
         Write-Info "检测到已有目录，将以合并模式安装："
-        Write-Info "  - 保留您现有的文件（rules、plans 等）"
+        Write-Info "  - 保留您现有的文件（plans 等）"
         Write-Info "  - 仅添加/更新灵犀需要的文件"
         Write-Host ""
         $response = Read-Host "是否继续？ (y/N)"
@@ -137,8 +137,8 @@ if ($CursorExists -or $LingxiExists) {
 # 创建 .cursor 目录结构
 Write-Info "创建 .cursor 目录结构..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
 # 下载 commands
@@ -154,22 +154,18 @@ foreach ($cmd in $Manifest.commands) {
 }
 Write-Success "已下载 commands ($commandCount 个文件)"
 
-# 下载 rules（项目级质量准则）
-# 注意：qs-i-workflow 不在列表中（仅用于本项目开发）
+# 下载 rules
 Write-Info "下载 rules..."
-
-# 下载规则文件
-$ruleFileCount = 0
-foreach ($ruleFile in $Manifest.rules.files) {
-    $localFile = ".cursor\$ruleFile"
-    if (-not (Download-File ".cursor\$ruleFile" $localFile)) {
+$ruleCount = 0
+foreach ($rule in $Manifest.rules) {
+    $localFile = ".cursor\$rule"
+    if (-not (Download-File ".cursor\$rule" $localFile)) {
         Write-Error "安装失败"
         exit 1
     }
-    $ruleFileCount++
+    $ruleCount++
 }
-Write-Success "已下载 rules ($ruleFileCount 个文件)"
-
+Write-Success "已下载 rules ($ruleCount 个文件)"
 
 # 下载 hooks（hooks.json + scripts）
 Write-Info "下载 hooks..."
@@ -235,6 +231,8 @@ foreach ($dir in $Manifest.workflowDirectories) {
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
+# workspace 目录会在首次使用时自动创建，无需初始化文件
+
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
 foreach ($indexFile in $Manifest.workflowIndexFiles) {
@@ -290,9 +288,6 @@ if (Test-Path ".gitignore") {
         "# Local workspace for temp code clones, generated artifacts, etc.",
         ".cursor/.lingxi/workspace/",
         "",
-        "# Session-level context (ephemeral, not a knowledge base)",
-        ".cursor/.lingxi/context/session/",
-        "",
         "# OS / IDE",
         ".DS_Store",
         "Thumbs.db"
@@ -306,7 +301,7 @@ Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
-Write-Host "  - .cursor/rules/ ($ruleDirCount 个规则目录 + $ruleFileCount 个文件)"
+Write-Host "  - .cursor/rules/ ($ruleCount 个规则)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .cursor/agents/ ($agentCount 个文件)"
 Write-Host "  - .cursor/.lingxi/ 目录结构"
@@ -319,6 +314,11 @@ Write-Info "下一步："
 Write-Host "  1. 在 Cursor 中打开项目"
 Write-Host "  2. 运行 /req <需求描述> 创建第一个需求"
 Write-Host "  3. 查看 README.md 了解完整工作流"
+Write-Host ""
+Write-Info "经验共享（可选，跨项目复用）："
+Write-Host "  - share 目录（已创建）：.cursor\.lingxi\memory\notes\share\"
+Write-Host "  - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
+Write-Host "  - 更新索引：npm run memory-sync（需 Node.js；或 yarn memory-sync）"
 Write-Host ""
 Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"
 Write-Info "仓库地址：git@github.com:${RepoOwner}/${RepoName}.git"

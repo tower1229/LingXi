@@ -12,7 +12,7 @@
 
 ### 1) 心有灵犀
 
-项目级记忆，让 AI 按你的方式做事。
+持久化记忆，让 AI 按你的方式做事。
 
 ### 2) AI Native
 
@@ -27,10 +27,9 @@
 ## What（实现）
 
 - **可伸缩工作流**：可任意组合的开发流程，兼顾工程严谨与轻便快捷，是工作流，也是工具包
-- **质量资产化**：过程产物、实践经验自动沉淀，让 AI 不止聪明，还懂你
-- **知识整合**：基于自然语言理解实现质量资产主动治理，让知识始终保鲜
+- **持久化记忆库**：将判断与取舍沉淀为可检索记忆，写入前自动治理（合并优先/冲突否决），并在每轮对话前最小注入，让 AI 不止聪明，还懂你
 - **人工门控**：关键决策始终遵从创造者的指引，相信你拥有真正的判断力、品味和责任感
-- **上下文运营**：让模型聚焦关键信息，提高输出质量
+- **上下文运营**：让模型聚焦关键信息，减少上下文挤占
 - **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中落地 LingXi Workflow
 ---
 
@@ -88,8 +87,39 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 | 命令 | 用法 | 说明 |
 |------|------|------|
-| `/remember` | `/remember <经验描述>`<br><br>**示例**：<br>`/remember 用户是唯一拥有价值判断能力的人`<br>`/remember 吸取刚才这个bug的经验`<br>`/remember 钱包选择问题` | **沉淀经验（随时可用）**<br><br>无需依赖任务编号，可随时沉淀经验到经验库或规则库。<br><br>**使用场景**：<br>- **直接经验表达**：直接陈述经验/原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
-| `/init` | `/init` | **初始化项目（首次使用）**<br><br>引导式收集项目信息（技术栈、常用模式、开发规则等），建立项目初始经验库。建议首次在现有项目中使用 LingXi 时运行。 |
+| `/remember` | `/remember <记忆描述>`<br><br>**示例**：<br>`/remember 用户是唯一拥有价值判断能力的人`<br>`/remember 吸取刚才这个 bug 的经验`<br>`/remember 钱包选择问题` | **写入记忆（随时可用）**<br><br>无需依赖任务编号，可随时把“判断/取舍/排障路径/验证方式”写入记忆库（`memory/notes/`），用于后续每轮的检索注入。<br><br>**使用场景**：<br>- **直接记忆表达**：直接陈述原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
+| `/init` | `/init` | **初始化项目（首次使用）**<br><br>引导式收集项目信息（技术栈、常用模式、开发规则等），生成并写入初始记忆（`memory/notes/`）。建议首次在现有项目中使用 LingXi 时运行。 |
+
+#### 记忆注入（强保证）
+
+默认启用 Always Apply Rule：`.cursor/rules/memory-injection.mdc`。
+它会在**每轮回答前**要求先检索 `memory/notes/` 并做最小注入（无匹配静默，失败可降级继续回答）。
+
+#### 经验共享（跨项目复用：share 目录 + git submodule）
+
+灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
+
+- 共享目录：`.cursor/.lingxi/memory/notes/share/`（建议作为 **git submodule**）
+
+**1) 添加 share 仓库（submodule）**
+
+```bash
+git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
+```
+
+**2) 更新 share 仓库**
+
+```bash
+git submodule update --remote --merge
+```
+
+**3) 同步记忆索引（新增共享经验后执行）**
+
+```bash
+npm run memory-sync
+```
+
+> `memory-sync` 会递归扫描 `.cursor/.lingxi/memory/notes/**` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
 
 ## 相关文档
 - [核心组件架构](./docs/design/architecture.md)

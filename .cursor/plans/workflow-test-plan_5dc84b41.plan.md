@@ -1,4 +1,16 @@
-<!-- 历史计划：此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用，保留作为历史记录 -->
+<!-- 
+⚠️ 已废弃：此文档为 LingXi 1.0 版本的测试计划，已不再适用
+
+此文档记录 LingXi 1.0 到 2.0 演进过程中的计划，包含已废弃的 flow 相关引用和旧的文件结构（REQ-002.md、in-progress/、completed/ 目录等）。
+
+**注意**：2.0 版本已废弃以下结构：
+- 单入口 `/flow` 命令 → 改为多入口命令（/req、/plan、/build、/review）
+- `in-progress/` 和 `completed/` 目录 → 统一为 `.cursor/.lingxi/requirements/` 目录
+- `REQ-002.md` 格式 → 改为 `002.req.<标题>.md` 格式
+- `INDEX.md` 任务状态索引 → 已废弃
+
+此文档仅保留作为历史记录，请参考最新的 2.0 架构文档。
+-->
 
 ---
 name: workflow-test-plan

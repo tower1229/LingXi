@@ -1,15 +1,4 @@
 {
     "version": 1,
-    "hooks": {
-        "afterShellExecution": [
-            {
-                "command": "node hooks/audit-after-shell-execution.mjs"
-            }
-        ],
-        "stop": [
-            {
-                "command": "node hooks/stop.mjs"
-            }
-        ]
-    }
+    "hooks": {}
 }

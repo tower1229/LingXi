@@ -1,6 +1,6 @@
 ## 核心组件架构
 
-灵犀基于 Cursor 的 Commands、Skills、Rules、Hooks、Subagents 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
 
 ### Commands（命令入口）
 
@@ -12,7 +12,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/plan` | 任务规划 | `plan-executor` |
 | `/build` | 代码实现 | `build-executor` |
 | `/review` | 审查交付 | `review-executor` |
-| `/remember` | 经验沉淀 | `experience-depositor` |
+| `/remember` | 记忆写入（含治理） | `memory-curator` |
 | `/init` | 项目初始化 | 多个 Skills 协作 |
 
 ### Skills（执行逻辑）
@@ -25,32 +25,27 @@ Skills 承载详细的工作流指导，按职责分为：
   - `build-executor`：代码实现、测试编写和执行
   - `review-executor`：多维度审查和交付质量保证
 
-- **经验系统 Skills**：实现"心有灵犀"的核心能力
-  - `experience-capture`：自动捕获经验候选、用户确认、评估并暂存到文件（在 req/plan/build/review/init 阶段自动激活）
-  - `experience-depositor`：读取暂存候选、展示并沉淀经验到经验库或规则库
-  - `experience-curator`：智能治理经验（合并/取代关系）
-  - `experience-index`：经验索引和匹配，主动提醒风险与指针
-  - `candidate-evaluator`：统一评估经验候选的质量和分类决策（阶段 1 和阶段 2）
+- **记忆系统 Skills**：实现“心有灵犀”的核心能力
+  - `memory-retrieve`：每轮语义检索记忆笔记并做最小高信号注入（由 Always Apply Rule 强保证触发）
+  - `memory-capture`：尽力而为扫描对话历史识别记忆信号，产出记忆候选供用户选择
+  - `memory-curator`：记忆治理与写入（merge/replace/new/veto），写入 notes 并更新 INDEX
 
 - **工具类 Skills**：提供辅助能力
-  - `workflow-optimizer`：工作流调优和价值判定
-  - `rules-creator`：创建或更新 Cursor Rules
-  - `service-loader`：服务上下文加载和考古
+  - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
   - `write-doc`：文档编写和风格一致性保证
   - `style-fusion`：风格画像提取和融合
 
-### 经验沉淀机制
+### 记忆库机制
 
-灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
+灵犀的核心能力是“写入可提取”的记忆库，让 AI 具备持久化记忆：
 
-1. **自动捕获**：`experience-capture` 在 req/plan/build/review/init 阶段自动扫描用户输入，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，输出用户友好的摘要并询问用户确认
-2. **评估暂存**：用户确认后，`experience-capture` 调用 `candidate-evaluator` 执行阶段 1 评估，评估通过后写入 `pending-compounding-candidates.json` 暂存
-3. **沉淀分流**：`experience-depositor` 读取暂存候选，调用 `candidate-evaluator` 执行阶段 2 详细评估，根据评估结果和用户选择，沉淀到经验库或规则库
-4. **智能治理**：`experience-curator` 自动检测冲突和重复，智能合并或取代，保持知识库的整洁和一致性
-5. **主动提醒**：`experience-index` 在执行任务时自动匹配相关经验，主动提醒风险和提供指针
+1. **强保证提取与注入**：每轮对话在响应前由 Always Apply Rule 触发 `memory-retrieve`，从 `memory/notes/` 语义检索并注入 0-3 条最小提醒
+2. **尽力而为捕获**：`memory-capture` 尝试识别记忆信号并生成候选，是否写入由用户门控
+3. **写入时治理**：`memory-curator` 在每次写入时做语义 TopK 治理（优先合并，其次新增；支持冲突检测与否决），产物为：
+   - 记忆笔记：`memory/notes/MEM-*.md`
+   - 统一索引：`memory/INDEX.md`
 
 ### 其他机制
 
-- **Rules**：系统级约束规则（如 `qs-always-general.mdc`），通过 Cursor Rules 机制自动加载
-- **Hooks**：自动化审计和门控（如 `audit-after-shell-execution.mjs`），在关键节点执行检查
-- **Subagents**：多维度审查助手（doc-consistency、e2e、performance、security），提供独立的审查上下文
+- **Hooks**：自动化审计和门控
+- **审查类 Skills**：多维度审查助手（doc-consistency、e2e、performance、security），由 review-executor 显式调用，共享上下文

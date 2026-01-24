@@ -1,9 +1,6 @@
 # Local workspace for temp code clones, generated artifacts, etc.
 .cursor/.lingxi/workspace/
 
-# Session-level context (ephemeral, not a knowledge base)
-.cursor/.lingxi/context/session/
-
 # OS / IDE
 .DS_Store
 Thumbs.db

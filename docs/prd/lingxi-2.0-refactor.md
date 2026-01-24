@@ -1,5 +1,7 @@
 # 灵犀 2.0 重构方案
 
+> **Deprecated**：本文档为历史方案记录。当前版本的“记忆库/经验管理”机制已升级为 `memory-retrieve` / `memory-capture` / `memory-curator` + `memory/notes/` 扁平结构与 Always Apply 注入规则；本文中关于 `experience-capture` / `experience-depositor` / `memory-index` 的描述不再适用。
+
 ## 概述
 
 本文档描述灵犀 workflow 从 1.0 到 2.0 的完整重构方案，包括流程架构重构和质量资产化机制优化。
@@ -27,7 +29,7 @@
 
 ```markdown
 /req <描述> # 创建需求文档（产出：001.req.<标题>.md）
-/req-review 001 # 审查 req 文档（可选，可多次）
+/review-req 001 # 审查 req 文档（可选，可多次）
 /plan 001 # 生成任务规划（产出：001.plan.<标题>.md + 001.testcase.<标题>.md）
 /build 001 # 执行构建（编写测试脚本+执行单元测试+文档同步）
 /review 001 # 审查交付（产出：001.review.<标题>.md，包含测试执行+多维度审查）
@@ -536,7 +538,7 @@ Req 是整个流程的核心，高质量的 req 文档是保证任务最终效�
 
 #### 执行方式
 
-- 用户手动执行：`/req-review 001`
+- 用户手动执行：`/review-req 001`
 - 不产出文件，仅输出审查结果和建议
 
 ### 1.4 Plan：任务规划（测试用例文档 + 文档检测）
@@ -894,7 +896,7 @@ graph TD
 
 1. **功能完整性**：满足 req 中的所有功能需求
 2. **验收标准**：通过 req 定义的验收标准
-3. **代码质量**：遵循项目代码规范（由 rules 定义）
+3. **代码质量**：遵循项目代码规范（由质量资产定义，通过 experience-index 匹配相关标准/经验）
 4. **测试覆盖**：确保关键功能有测试覆盖
 5. **文档一致性**：代码与相关文档保持一致
 
@@ -1516,7 +1518,7 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 
 1. **创建新命令**（`.cursor/commands/`）：
    - `req.md`：创建需求文档
-   - `req-review.md`：审查 req 文档
+   - `review-req.md`：审查 req 文档
    - `plan.md`：生成任务规划
    - `build.md`：执行构建
    - `review.md`：审查交付
@@ -1677,7 +1679,7 @@ Jaccard = |{React}| / |{React, Hook, 状态管理, 表单验证, 表单, 校验,
 ### 8.1 流程架构重构验收
 
 - [ ] `/req <描述>` 命令可独立执行，正确生成编号和文件
-- [ ] `/req-review 001` 命令可独立执行，正确读取并审查 req 文件
+- [ ] `/review-req 001` 命令可独立执行，正确读取并审查 req 文件
 - [ ] `/plan 001` 命令可独立执行，正确生成 plan 和 testcase 文件
 - [ ] `/plan 001` 在缺少 req 文件时正确报错并提示用户
 - [ ] `/build 001` 命令可独立执行，正确检测 Plan-driven/Agent-driven 模式

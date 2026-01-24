@@ -89,7 +89,7 @@ isProject: false
 - [`.cursor/skills/experience-index/SKILL.md`](.cursor/skills/experience-index/SKILL.md)
 - [`.cursor/skills/experience-depositor/SKILL.md`](.cursor/skills/experience-depositor/SKILL.md)
 - [`.cursor/skills/experience-curator/references/experience-governance.md`](.cursor/skills/experience-curator/references/experience-governance.md)
-- [`.cursor/skills/service-loader/SKILL.md`](.cursor/skills/service-loader/SKILL.md)
+- （已移除）服务/模块上下文辅助 Skill：服务/模块上下文改为记忆笔记（`memory/notes/`，Kind=tech）
 
 #### 2.3 Scripts
 
@@ -210,7 +210,7 @@ isProject: false
 
 - 所有 executor skills
 - 所有 experience-* skills
-- service-loader skill
+- （已移除）服务/模块上下文辅助 Skill
 - experience-curator 的引用文件
 
 **Scripts（1 个文件）**：
