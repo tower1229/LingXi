@@ -8,12 +8,6 @@
     "commands/init.md",
     "commands/remember.md"
   ],
-  "hooks": {
-    "files": [
-      "hooks.json",
-      "hooks/_hook-utils.mjs"
-    ]
-  },
   "skills": [
     "skills/build-executor/SKILL.md",
     "skills/experience-capture/SKILL.md",
