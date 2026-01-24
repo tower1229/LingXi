@@ -38,10 +38,6 @@ const VALID_STATUS = ['active'];
 const VALID_STRENGTH = ['hypothesis', 'validated', 'enforced'];
 const VALID_SCOPE = ['narrow', 'medium', 'broad'];
 
-const MEMORY_ROOT = path.join(process.cwd(), '.cursor/.lingxi/memory');
-const INDEX_PATH = path.join(MEMORY_ROOT, 'INDEX.md');
-const NOTES_DIR = path.join(MEMORY_ROOT, 'notes');
-
 const INDEX_HEADER = ['Id', 'Kind', 'Title', 'When to load', 'Status', 'Strength', 'Scope', 'Supersedes', 'File'];
 
 function readText(filePath) {
@@ -148,8 +144,19 @@ function parseIndex(indexPath) {
   return { header, rows };
 }
 
-function scanNotes() {
-  const files = listMarkdownFiles(NOTES_DIR);
+function createContext(memoryRoot) {
+  const normalizedRoot = path.resolve(memoryRoot);
+  const baseDir = path.dirname(normalizedRoot);
+  return {
+    memoryRoot: normalizedRoot,
+    baseDir,
+    indexPath: path.join(normalizedRoot, 'INDEX.md'),
+    notesDir: path.join(normalizedRoot, 'notes'),
+  };
+}
+
+function scanNotes(notesDir) {
+  const files = listMarkdownFiles(notesDir);
   return files.map((filePath) => {
     const rel = `memory/notes/${path.basename(filePath)}`;
     const lines = readText(filePath).split('\n');
@@ -255,13 +262,14 @@ function validateNoteEntry(note) {
   return errs;
 }
 
-function updateIndex() {
-  info('更新 memory/INDEX.md ...');
-  safeMkdir(MEMORY_ROOT);
-  safeMkdir(NOTES_DIR);
+function updateIndexAt(memoryRoot) {
+  const ctx = createContext(memoryRoot);
+  info(`更新 memory/INDEX.md ... (root=${ctx.memoryRoot})`);
+  safeMkdir(ctx.memoryRoot);
+  safeMkdir(ctx.notesDir);
 
-  const existing = parseIndex(INDEX_PATH);
-  const notes = scanNotes();
+  const existing = parseIndex(ctx.indexPath);
+  const notes = scanNotes(ctx.notesDir);
 
   const noteErrors = [];
   for (const n of notes) {
@@ -273,14 +281,15 @@ function updateIndex() {
   }
 
   const content = generateIndexContent(notes, existing);
-  fs.writeFileSync(INDEX_PATH, content, 'utf8');
+  fs.writeFileSync(ctx.indexPath, content, 'utf8');
   success(`INDEX 已更新：notes=${notes.length}`);
 }
 
-function checkIndex() {
-  info('检查 memory/INDEX.md 与 notes 一致性...');
-  const existing = parseIndex(INDEX_PATH);
-  const notes = scanNotes();
+function checkIndexAt(memoryRoot) {
+  const ctx = createContext(memoryRoot);
+  info(`检查 memory/INDEX.md 与 notes 一致性... (root=${ctx.memoryRoot})`);
+  const existing = parseIndex(ctx.indexPath);
+  const notes = scanNotes(ctx.notesDir);
 
   const errors = [];
   const warnings = [];
@@ -300,7 +309,7 @@ function checkIndex() {
         errors.push(`索引条目指向不存在的 note：${id}`);
       }
       if (file) {
-        const abs = path.join(process.cwd(), '.cursor/.lingxi', file);
+        const abs = path.join(ctx.baseDir, file);
         if (!fs.existsSync(abs)) errors.push(`索引 File 不存在：${id} (${file})`);
       }
     }
@@ -318,23 +327,53 @@ function checkIndex() {
   success('检查通过：无冲突');
 }
 
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  if (args.includes('--help') || args.includes('-h') || args.length === 0) {
+    return { help: true };
+  }
+
+  const command = args.find((a) => a === '--update' || a === '--check');
+
+  let root = null;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--root' && args[i + 1]) {
+      root = args[i + 1];
+      break;
+    }
+    if (a.startsWith('--root=')) {
+      root = a.slice('--root='.length);
+      break;
+    }
+  }
+
+  return { command, root };
+}
+
 function main() {
-  const command = process.argv[2];
-  if (!command || command === '--help' || command === '-h') {
-    console.log('用法: node scripts/validate-memory-index.js <command>');
+  const { help, command, root } = parseArgs(process.argv);
+  if (help) {
+    console.log('用法: node scripts/validate-memory-index.js <command> [--root <memoryRoot>]');
     console.log('');
     console.log('命令:');
     console.log('  --update    更新索引（基于 memory/notes 生成/修复 INDEX.md）');
     console.log('  --check     检查冲突（检测索引与文件不一致）');
+    console.log('');
+    console.log('选项:');
+    console.log('  --root      指定 memory root（默认: .cursor/.lingxi/memory）');
     process.exit(0);
   }
 
+  const defaultRoot = path.join(process.cwd(), '.cursor/.lingxi/memory');
+  const memoryRoot = root ? path.resolve(root) : defaultRoot;
+
   switch (command) {
     case '--update':
-      updateIndex();
+      updateIndexAt(memoryRoot);
       break;
     case '--check':
-      checkIndex();
+      checkIndexAt(memoryRoot);
       break;
     default:
       error(`未知命令: ${command}`);
@@ -345,9 +384,12 @@ function main() {
 if (require.main === module) main();
 
 module.exports = {
+  createContext,
   parseIndex,
   scanNotes,
   generateIndexContent,
   extractWhenToLoad,
+  updateIndexAt,
+  checkIndexAt,
 };
 

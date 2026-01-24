@@ -6,7 +6,9 @@
     "commands/build.md",
     "commands/review.md",
     "commands/init.md",
-    "commands/remember.md"
+    "commands/remember.md",
+    "commands/memory-export.md",
+    "commands/memory-import.md"
   ],
   "rules": [
     "rules/memory-injection.mdc"
@@ -20,6 +22,8 @@
     "skills/memory-retrieve/SKILL.md",
     "skills/memory-capture/SKILL.md",
     "skills/memory-curator/SKILL.md",
+    "skills/memory-exporter/SKILL.md",
+    "skills/memory-importer/SKILL.md",
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",

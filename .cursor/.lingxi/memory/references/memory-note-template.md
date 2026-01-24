@@ -9,6 +9,10 @@
 - **Status**: active
 - **Strength**: hypothesis / validated / enforced
 - **Scope**: narrow / medium / broad
+- **Audience**: team / project / personal
+- **Portability**: cross-project / project-only
+- **Source**: <packName>@<version> / manual / init
+- **Tags**: <tag1>, <tag2> (optional)
 
 ## When to load
 

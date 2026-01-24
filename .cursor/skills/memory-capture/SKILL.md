@@ -38,6 +38,10 @@ description: 尽力而为捕获对话中的“判断/取舍/边界/排障路径�
 {
   "title": "一句话标题",
   "kind": "principle|heuristic|decision|pattern|business|tech|other",
+  "audience": "team|project|personal",
+  "portability": "cross-project|project-only",
+  "source": "<packName>@<version>|manual|init",
+  "tags": ["tag1", "tag2"],
   "whenToLoad": ["触发条件 1", "触发条件 2"],
   "oneLiner": "一句可执行提醒（用于注入）",
   "decision": "当时在判断什么（不是做了什么）",
@@ -51,6 +55,12 @@ description: 尽力而为捕获对话中的“判断/取舍/边界/排障路径�
   }
 }
 ```
+
+建议默认值（在无法判断时）：
+
+- `audience=project`
+- `portability=project-only`
+- `source=manual`（若来自 `/init` 则为 `init`）
 
 ## 过滤规则（静默）
 

@@ -66,13 +66,30 @@
 
 每条记忆一个文件，小而清晰，建议结构：
 
-- Meta（Id/Kind/Status/Strength/Scope）
+- Meta（Id/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags）
 - When to load（1-3 条）
 - One-liner（用于注入）
 - Context / Decision（decision + signals + alternatives + counter-signals）
 - Pointers（代码/文档指针）
 
 模板：`memory/references/memory-note-template.md`
+
+## 跨项目复用（Team Memory Pack）
+
+团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
+
+- **Audience**：team / project / personal（决策权归属与适用范围）
+- **Portability**：cross-project / project-only（是否允许跨项目复用）
+- **Source**：来源（如 `<packName>@<version>` / manual / init），用于审计与回溯
+- **Tags**（可选）：主题标签，便于导出筛选与聚合
+
+推荐约定：
+
+- 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated
+- 团队级常见需求标准方案：Audience=team，Portability=cross-project，Kind=pattern/decision
+- 前后端/运维默认约定：Audience=team，Portability=cross-project，Kind=reference/tech
+- 项目内特殊备忘：Audience=project，Portability=project-only
+- 个人习惯：Audience=personal（默认不进入团队 pack）
 
 ## 关键原则
 

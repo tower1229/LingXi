@@ -2,7 +2,11 @@
  * 单元测试：validate-memory-index.js（Memory-first）
  */
 
-const { generateIndexContent, extractWhenToLoad } = require('../validate-memory-index.js');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const { generateIndexContent, extractWhenToLoad, updateIndexAt, checkIndexAt } = require('../validate-memory-index.js');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -62,5 +66,47 @@ test('WhenToLoad: 支持列表写法提取', () => {
     extracted.includes('设计 workflow 功能时') && extracted.includes('需要处理自然语言输入时'),
     `WhenToLoad 提取失败：${extracted}`
   );
+});
+
+test('Root: 支持自定义 memory root 更新与检查', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lingxi-memory-root-'));
+  const memoryRoot = path.join(tmp, 'memory');
+  const notesDir = path.join(memoryRoot, 'notes');
+  fs.mkdirSync(notesDir, { recursive: true });
+
+  fs.writeFileSync(
+    path.join(notesDir, 'MEM-demo.md'),
+    [
+      '# Demo',
+      '',
+      '## Meta',
+      '',
+      '- **Id**: MEM-demo',
+      '- **Kind**: principle',
+      '- **Status**: active',
+      '- **Strength**: validated',
+      '- **Scope**: broad',
+      '',
+      '## When to load',
+      '',
+      '- 当需要做决策',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+
+  // 1) update: 生成 INDEX
+  updateIndexAt(memoryRoot);
+  const indexPath = path.join(memoryRoot, 'INDEX.md');
+  assert(fs.existsSync(indexPath), 'INDEX.md 未生成');
+
+  const content = fs.readFileSync(indexPath, 'utf8');
+  assert(content.includes('| MEM-demo |'), 'INDEX.md 未包含 MEM-demo');
+  assert(content.includes('`memory/notes/MEM-demo.md`'), 'INDEX.md File 字段不正确');
+
+  // 2) check: 不应报错退出（这里通过函数调用覆盖检查逻辑）
+  checkIndexAt(memoryRoot);
+
+  fs.rmSync(tmp, { recursive: true, force: true });
 });
 

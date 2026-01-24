@@ -64,7 +64,7 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 最低要求（必须包含）：
 
-- Meta（Id/Kind/Status/Strength/Scope）
+- Meta（Id/Kind/Status/Strength/Scope/Audience/Portability/Source；Tags 可选）
 - When to load（1-3 条）
 - One-liner（1 句）
 - Context / Decision（decision + signals）
