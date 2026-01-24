@@ -41,7 +41,7 @@
 
 - ❌ 需要上下文隔离的复杂任务（应用 Subagents）
 - ❌ 复杂的业务逻辑（应用 Skills）
-- ❌ 质量资产（应用 Experience 系统）
+- ❌ 质量资产（应用 Memory 记忆系统）
 
 **限制**：
 
@@ -55,7 +55,7 @@
 - `/plan`：任务规划
 - `/build`：代码实现
 - `/review`：审查交付
-- `/remember`：经验沉淀
+- `/remember`：记忆写入
 - `/init`：项目初始化
 
 ## Skills 指南
@@ -101,11 +101,15 @@
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
 
-**经验系统 Skills**：
+**记忆系统 Skills**：
 
-- `experience-capture`：Agent 根据对话上下文自动匹配调用，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
-- `experience-depositor`：从会话上下文获取候选，执行治理（语义搜索 + 关键词匹配）并沉淀经验到记忆库
-- `memory-index`：统一索引和匹配，支持跨维度匹配
+- `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-capture`：尽力而为捕获对话中的判断/取舍/边界，生成记忆候选供用户选择
+- `memory-curator`：写入前治理（合并优先/冲突否决），写入 `memory/notes/` 并更新 `memory/INDEX.md`
+
+**Rules（强保证触发器）**：
+
+- `.cursor/rules/memory-injection.mdc`：Always Apply，每轮回答前要求执行一次检索与最小注入（无匹配静默，失败可降级）
 
 **工具类 Skills**：
 

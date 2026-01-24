@@ -1,5 +1,7 @@
 # 灵犀 2.0 重构方案
 
+> **Deprecated**：本文档为历史方案记录。当前版本的“记忆库/经验管理”机制已升级为 `memory-retrieve` / `memory-capture` / `memory-curator` + `memory/notes/` 扁平结构与 Always Apply 注入规则；本文中关于 `experience-capture` / `experience-depositor` / `memory-index` 的描述不再适用。
+
 ## 概述
 
 本文档描述灵犀 workflow 从 1.0 到 2.0 的完整重构方案，包括流程架构重构和质量资产化机制优化。

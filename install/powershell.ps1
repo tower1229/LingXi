@@ -138,6 +138,7 @@ if ($CursorExists -or $LingxiExists) {
 Write-Info "创建 .cursor 目录结构..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 
 # 下载 commands
@@ -152,6 +153,19 @@ foreach ($cmd in $Manifest.commands) {
     $commandCount++
 }
 Write-Success "已下载 commands ($commandCount 个文件)"
+
+# 下载 rules
+Write-Info "下载 rules..."
+$ruleCount = 0
+foreach ($rule in $Manifest.rules) {
+    $localFile = ".cursor\$rule"
+    if (-not (Download-File ".cursor\$rule" $localFile)) {
+        Write-Error "安装失败"
+        exit 1
+    }
+    $ruleCount++
+}
+Write-Success "已下载 rules ($ruleCount 个文件)"
 
 # 下载 hooks（hooks.json + scripts）
 Write-Info "下载 hooks..."
@@ -287,6 +301,7 @@ Write-Success "安装完成！"
 Write-Host ""
 Write-Info "已安装的文件："
 Write-Host "  - .cursor/commands/ ($commandCount 个命令)"
+Write-Host "  - .cursor/rules/ ($ruleCount 个规则)"
 Write-Host "  - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host "  - .cursor/agents/ ($agentCount 个文件)"
 Write-Host "  - .cursor/.lingxi/ 目录结构"

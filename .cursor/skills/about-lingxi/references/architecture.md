@@ -28,7 +28,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/plan` | 任务规划（可选，适用于复杂任务） | `plan-executor` |
 | `/build` | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式） | `build-executor` |
 | `/review` | 审查交付（核心审查和按需审查，测试执行） | `review-executor` |
-| `/remember` | 沉淀经验（随时可用，无需依赖任务编号） | `experience-depositor` |
+| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | `memory-curator` |
 | `/init` | 初始化项目（首次使用，引导式收集项目信息） | 多个 Skills 协作 |
 
 **特性**：
@@ -47,9 +47,9 @@ Skills 承载详细的工作流指导，按职责分为：
 - `review-executor`：多维度审查和交付质量保证
 
 #### 记忆系统 Skills（实现"心有灵犀"的核心能力）
-- `experience-capture`：Agent 根据对话上下文自动匹配调用，扫描对话历史识别经验信号，生成经验候选并执行评估，在会话中展示候选供用户选择
-- `experience-depositor`：从会话上下文获取候选，执行治理（合并/取代，使用语义搜索 + 关键词匹配）并沉淀经验到记忆库（团队级标准/经验或项目级经验）
-- `memory-index`：统一索引和匹配，支持跨维度匹配（Experience/Tech/Business），主动提醒风险与指针
+- `memory-retrieve`：每轮回答前检索 `memory/notes/` 并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-capture`：尽力而为捕获对话中的判断/取舍/边界/排障路径，生成记忆候选供用户选择写入
+- `memory-curator`：写入前自动治理（合并优先/冲突否决），写入 `memory/notes/` 并更新 `memory/INDEX.md`
 
 #### 工具类 Skills（提供辅助能力）
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
@@ -63,22 +63,13 @@ Skills 承载详细的工作流指导，按职责分为：
 - `reviewer-performance`：性能审查
 - `reviewer-e2e`：端到端测试审查
 
-### 经验沉淀机制
+### 记忆库机制（Memory-first）
 
-灵犀的核心能力是自动捕获和沉淀经验，让 AI 具备项目级记忆：
+灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入：
 
-1. **Agent 自动匹配**：Agent 根据对话上下文自动判断是否需要调用 `experience-capture` skill
-
-2. **经验捕获和评估**：`experience-capture` 扫描整个对话历史，识别经验信号（判断、取舍、边界、约束等），生成 EXP-CANDIDATE，执行评估（结构完整性、判断结构质量、可复用性、知识可获得性、经验类型、Level 判断），在会话中展示候选供用户选择
-
-3. **沉淀分流**：用户选择候选后，`experience-depositor` 从会话上下文获取候选，执行治理并沉淀到：
-   - 团队级标准（`memory/experience/team/standards/`）：强约束、执行底线
-   - 团队级经验（`memory/experience/team/knowledge/`）：复杂判断、认知触发
-   - 项目级经验（`memory/experience/project/`）：项目特定、长期复用
-
-4. **智能治理**：`experience-depositor` 使用语义搜索 + 关键词匹配双重验证，自动检测冲突和重复，智能合并或取代，统一更新 `memory/INDEX.md`，保持知识库的整洁和一致性
-
-5. **主动提醒**：`memory-index` 在执行任务时根据命令自动匹配相关记忆（`/init` → Experience Level=team，`/req`/`/plan`/`/build`/`/review` → 所有维度），支持跨维度匹配（Experience/Tech/Business），主动提醒风险和提供指针
+1. **强保证注入**：通过 Always Apply Rule（`.cursor/rules/memory-injection.mdc`）要求每轮先执行 `memory-retrieve`
+2. **尽力而为捕获**：`memory-capture` 识别对话中的“判断/取舍/边界/排障路径”，生成候选并展示给用户
+3. **写入前治理**：`memory-curator` 对新候选做语义近邻 TopK 治理（合并优先、冲突否决/取代），并更新 `memory/INDEX.md`
 
 ### Hooks（自动化审计和门控）
 
@@ -103,8 +94,12 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── reviewer-security/
 │   ├── reviewer-performance/
 │   ├── reviewer-e2e/
-│   ├── experience-capture/
+│   ├── memory-retrieve/
+│   ├── memory-capture/
+│   ├── memory-curator/
 │   └── ...
+├── rules/                 # Rules（可用作强保证触发器）
+│   ├── memory-injection.mdc
 └── hooks/                 # 自动化审计和门控
 
 .cursor/.lingxi/
@@ -114,15 +109,8 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── memory/                # 统一记忆系统
 │   ├── INDEX.md           # 统一索引（SSoT）
-│   ├── experience/        # 经验记忆
-│   │   ├── team/          # 团队级标准和经验
-│   │   │   ├── standards/
-│   │   │   └── knowledge/
-│   │   └── project/       # 项目级经验
-│   ├── tech/              # 技术记忆
-│   │   └── services/      # 服务上下文
-│   └── business/          # 业务记忆
-│       └── references/    # 业务上下文参考资料
+│   ├── notes/             # 扁平记忆文件（语义检索的主搜索面）
+│   └── references/        # 模板与规范
 ├── style-fusion/          # 风格融合数据
 └── workspace/             # 工作空间
     └── processed-sessions.json  # 会话去重记录
@@ -143,18 +131,15 @@ Skills 承载详细的工作流指导，按职责分为：
 - 无生命周期管理，无状态路由
 - 每个命令独立执行，不依赖前一阶段完成
 
-### 经验沉淀流程
+### 记忆写入流程
 
-1. Agent 根据对话上下文自动判断是否需要调用 `experience-capture` skill
-2. `experience-capture` 扫描对话历史，识别经验信号并生成 EXP-CANDIDATE，执行评估，在会话中展示候选
-3. 用户选择要沉淀的候选（输入编号，如 `1,3` 或 `全部`）
-4. `experience-depositor` 从会话上下文获取候选，执行治理（使用语义搜索 + 关键词匹配）并沉淀
-5. 写入经验到 `.cursor/.lingxi/memory/experience/`
-6. 更新统一索引 `memory/INDEX.md`
-7. `experience-depositor` 写入前执行最终治理检查（合并/取代）
+1. `memory-capture`（尽力而为）生成候选并展示
+2. 用户通过 `/remember ...` 或 `/remember 1,3` 选择要写入的候选/内容
+3. `memory-curator` 执行写入前治理（merge/replace/new/veto）
+4. 写入 `memory/notes/` 并更新 `memory/INDEX.md`
 
 ## 参考
 
 - **核心组件架构**：`docs/design/architecture.md`
 - **2.0 重构方案**：`docs/prd/lingxi-2.0-refactor.md`
-- **工作流生命周期**：`.cursor/.lingxi/memory/business/workflow-lifecycle.md`
+- **工作流生命周期**：`.cursor/.lingxi/memory/notes/MEM-workflow-lifecycle.md`

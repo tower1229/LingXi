@@ -1,21 +1,14 @@
 # Memory Index
 
-> 灵犀统一记忆系统索引（SSoT - Single Source of Truth）
-> 
-> 所有持久化记忆（经验、技术、业务）使用统一的索引格式和匹配策略。
+> 统一记忆库索引（SSoT - Single Source of Truth）
+>
+> - 索引只存“最小元数据”，用于治理与快速定位
+> - 真实内容在 `memory/notes/*.md`，用于语义检索与注入
 
-## Experience（经验记忆）
+## Memories
 
-| Tag | Type | Title | Trigger | Surface signal | Hidden risk | Status | Scope | Strength | Level | Replaces | ReplacedBy | File |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| ai-native-design | knowledge | AI Native 设计原则 - 依赖大模型自然语言理解能力 | 设计 workflow 功能、命令或 Skill 时，需要处理用户的自然语言输入，或考虑是否要添加规则匹配逻辑时 | 设计中出现关键词列表、正则表达式或复杂的规则匹配逻辑 | 用传统编程思维（硬编码规则）限制了大模型的理解能力，导致设计复杂且难以维护 | active | broad | validated | team |  |  | `memory/experience/ai-native-design.md` |
-
-## Tech（技术记忆）
-
-| Tag | Title | Service | Trigger | Status | File |
-|---|---|---|---|---|---|
-
-## Business（业务记忆）
-
-| Tag | Title | Topic | Trigger | Status | File |
-|---|---|---|---|---|---|
+| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | File |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| MEM-ai-native-design | principle | AI Native：依赖大模型自然语言理解能力 | 你在设计 workflow / command / skill / rule，需要处理用户自然语言输入时；你想引入关键词/正则/复杂分支去“识别意图”或“辅助理解”时 | active | validated | broad |  | `memory/notes/MEM-ai-native-design.md` |
+| MEM-silent-success | principle | 静默成功：没有消息就是好消息 | 你准备输出“成功确认/无匹配提示/过程汇报”这类非决策信息时；你在设计任何自动流程（检索、治理、校验、写入），需要控制噪声与 token 时 | active | validated | broad |  | `memory/notes/MEM-silent-success.md` |
+| MEM-workflow-lifecycle | business | Workflow 生命周期（业务上下文） | 讨论灵犀工作流（req/plan/build/review）职责边界与阶段可跳过策略时；讨论记忆库（capture/curate/retrieve）的业务目的与门控原则时 | active | hypothesis | medium |  | `memory/notes/MEM-workflow-lifecycle.md` |

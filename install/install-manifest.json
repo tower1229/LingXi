@@ -8,11 +8,19 @@
     "commands/init.md",
     "commands/remember.md"
   ],
+  "rules": [
+    "rules/qs-always-general.mdc",
+    "rules/memory-injection.mdc"
+  ],
+  "hooks": {
+    "files": []
+  },
   "skills": [
+    "skills/about-lingxi/SKILL.md",
     "skills/build-executor/SKILL.md",
-    "skills/experience-capture/SKILL.md",
-    "skills/experience-depositor/SKILL.md",
-    "skills/memory-index/SKILL.md",
+    "skills/memory-retrieve/SKILL.md",
+    "skills/memory-capture/SKILL.md",
+    "skills/memory-curator/SKILL.md",
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
@@ -20,53 +28,36 @@
     "skills/reviewer-e2e/SKILL.md",
     "skills/reviewer-performance/SKILL.md",
     "skills/reviewer-security/SKILL.md",
-    "skills/service-loader/SKILL.md"
+    "skills/service-loader/SKILL.md",
+    "skills/write-doc/SKILL.md"
   ],
-  "agents": {},
+  "agents": {
+    "files": []
+  },
   "references": {
-    "experience-capture": [
-      "skills/experience-capture/references/req-triggers.md",
-      "skills/experience-capture/references/plan-triggers.md",
-      "skills/experience-capture/references/build-triggers.md",
-      "skills/experience-capture/references/review-triggers.md"
+    "about-lingxi": [
+      "skills/about-lingxi/references/architecture.md",
+      "skills/about-lingxi/references/component-guides.md",
+      "skills/about-lingxi/references/core-values.md",
+      "skills/about-lingxi/references/design-principles.md",
+      "skills/about-lingxi/references/engineering-practices.md",
+      "skills/about-lingxi/references/evaluation-criteria.md",
+      "skills/about-lingxi/references/memory-system.md",
+      "skills/about-lingxi/references/optimization-checklist.md",
+      "skills/about-lingxi/references/rules-guide.md"
     ],
-    "workflow-optimizer": [
-      "skills/workflow-optimizer/references/workflow-vision.md",
-      "skills/workflow-optimizer/references/commands-guide.md",
-      "skills/workflow-optimizer/references/skills-guide.md",
-      "skills/workflow-optimizer/references/hooks-guide.md",
-      "skills/workflow-optimizer/references/subagents-guide.md",
-      "skills/workflow-optimizer/references/engineering-practices.md",
-      "skills/workflow-optimizer/references/optimization-checklist.md"
-    ],
-    "write-doc": [
-      "skills/write-doc/references/writing-style.md"
-    ],
-    "skill-creator": [
-      "skills/skill-creator/references/workflows.md",
-      "skills/skill-creator/references/output-patterns.md"
-    ],
-    "agents": [
-      "agents/references/noise-filter.md"
-    ]
+    "write-doc": []
   },
   "workflowDirectories": [
     ".cursor/.lingxi/requirements",
     ".cursor/.lingxi/memory",
-    ".cursor/.lingxi/memory/experience",
-    ".cursor/.lingxi/memory/experience/team",
-    ".cursor/.lingxi/memory/experience/team/standards",
-    ".cursor/.lingxi/memory/experience/team/knowledge",
-    ".cursor/.lingxi/memory/experience/project",
-    ".cursor/.lingxi/memory/tech",
-    ".cursor/.lingxi/memory/tech/services",
-    ".cursor/.lingxi/memory/business",
-    ".cursor/.lingxi/memory/business/references",
+    ".cursor/.lingxi/memory/notes",
+    ".cursor/.lingxi/memory/references",
     ".cursor/.lingxi/style-fusion",
     ".cursor/.lingxi/workspace"
   ],
   "workflowTemplateFiles": [
-    ".cursor/.lingxi/memory/business/references/business-context-template.md"
+    ".cursor/.lingxi/memory/references/memory-note-template.md"
   ],
   "workflowIndexFiles": [
     ".cursor/.lingxi/memory/INDEX.md"

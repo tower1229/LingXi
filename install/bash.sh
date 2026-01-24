@@ -319,6 +319,7 @@ download_file() {
 info "创建 .cursor 目录结构..."
 mkdir -p .cursor/commands
 mkdir -p .cursor/skills
+mkdir -p .cursor/rules
 mkdir -p .cursor/hooks
 mkdir -p .cursor/agents
 
@@ -335,6 +336,20 @@ while IFS= read -r cmd; do
     command_count=$((command_count + 1))
 done < <(get_json_array "commands")
 success "已下载 commands ($command_count 个文件)"
+
+# 下载 rules 文件
+info "下载 rules..."
+rule_count=0
+while IFS= read -r rule; do
+    [ -z "$rule" ] && continue
+    local_file=".cursor/${rule}"
+    if ! download_file ".cursor/${rule}" "$local_file"; then
+        error "安装失败"
+        exit 1
+    fi
+    rule_count=$((rule_count + 1))
+done < <(get_json_array "rules")
+success "已下载 rules ($rule_count 个文件)"
 
 # 下载 hooks 配置与脚本
 info "下载 hooks..."
@@ -513,6 +528,7 @@ success "安装完成！"
 echo ""
 info "已安装的文件："
 echo "  - .cursor/commands/ ($command_count 个命令)"
+echo "  - .cursor/rules/ ($rule_count 个规则)"
 echo "  - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo "  - .cursor/agents/ ($agent_count 个文件)"
 echo "  - .cursor/.lingxi/ 目录结构"

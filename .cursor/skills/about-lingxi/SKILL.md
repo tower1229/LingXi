@@ -155,10 +155,10 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/memory-system.md`
 
 **内容**：
-- 记忆捕获流程（experience-capture）
-- 记忆沉淀流程（experience-depositor，包含治理）
-- 记忆索引和匹配（memory-index）
-- 统一索引格式（Experience/Tech/Business）
+- 记忆捕获流程（memory-capture）
+- 记忆治理与写入（memory-curator）
+- 每轮检索与最小注入（memory-retrieve + Always Apply Rule）
+- 统一索引格式（INDEX.md + notes/ 扁平结构）
 
 **何时加载**：场景 1、场景 2（涉及记忆系统改动时）
 

@@ -126,6 +126,6 @@
 
 ## 参考
 
-- **AI Native 设计原则**：`.cursor/.lingxi/memory/experience/ai-native-design.md`
-- **静默成功原则**：`.cursor/.lingxi/memory/experience/references/workflow-optimization-silent-success.md`
+- **AI Native 设计原则**：`.cursor/.lingxi/memory/notes/MEM-ai-native-design.md`
+- **静默成功原则**：`.cursor/.lingxi/memory/notes/MEM-silent-success.md`
 - **核心价值指引**：`references/core-values.md`

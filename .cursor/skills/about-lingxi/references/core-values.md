@@ -106,4 +106,4 @@
 ## 参考
 
 - **核心价值指引**：`README.md`（Why、How 和 What）
-- **AI Native 设计原则**：`.cursor/.lingxi/memory/experience/ai-native-design.md`
+- **AI Native 设计原则**：`.cursor/.lingxi/memory/notes/MEM-ai-native-design.md`
