@@ -23,7 +23,6 @@
 
 ## 依赖的 Agent Skills
 
-- `service-loader`：生成服务上下文文档
 - `memory-capture`：捕获初始化过程中的判断/取舍为记忆候选（尽力而为）
 - `memory-curator`：治理与写入记忆（合并优先、冲突否决、写入 notes + 更新 INDEX）
 
@@ -53,7 +52,7 @@
 在开始执行前，必须明确说明：
 
 - `/init` 命令的目的：建立项目上下文，快速让 AI 理解项目
-- 将生成的文档类型：业务上下文、服务上下文、记忆候选
+- 将生成的文档类型：记忆笔记（业务/技术）、记忆候选
 - 执行流程概览：信息收集 → 文档生成 → 经验识别 → 沉淀确认
 
 ### 阶段 1：信息收集 + 即时识别记忆候选
@@ -161,7 +160,7 @@
 根据收集的信息，生成相应的记忆文档：
 
 - **记忆笔记**：使用 [Memory Note Template](../../../.cursor/.lingxi/memory/references/memory-note-template.md)，至少生成 1 个示例并写入 `memory/notes/`
-- **服务/模块上下文**（如适用）：调用 `service-loader` Skill，但输出为 `memory/notes/` 中的 `Kind=tech` 记忆笔记
+- **服务/模块上下文**（如适用）：直接生成 `Kind=tech` 的记忆笔记写入 `memory/notes/`
 
 ### 阶段 5：写入记忆（如适用）
 
@@ -181,11 +180,8 @@
 
 本命令将以下任务委托给相应的 Skills：
 
-- **生成服务上下文文档**：调用 `service-loader` Skill（参考 `.cursor/skills/service-loader/SKILL.md`）
 - **写入记忆到记忆库**：调用 `memory-curator` Skill（参考 `.cursor/skills/memory-curator/SKILL.md`）
-  - 经验记忆：团队级标准/经验或项目级经验
-  - 技术记忆：服务上下文
-  - 业务记忆：业务上下文
+  - 技术/业务等记忆：统一写入 `memory/notes/` 并更新 `memory/INDEX.md`
 
 ---
 

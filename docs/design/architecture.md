@@ -1,6 +1,6 @@
 ## 核心组件架构
 
-灵犀基于 Cursor 的 Commands、Skills、Hooks 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
 
 ### Commands（命令入口）
 
@@ -32,7 +32,6 @@ Skills 承载详细的工作流指导，按职责分为：
 
 - **工具类 Skills**：提供辅助能力
   - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-  - `service-loader`：服务上下文加载和考古
   - `write-doc`：文档编写和风格一致性保证
   - `style-fusion`：风格画像提取和融合
 
@@ -48,5 +47,5 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 其他机制
 
-- **Hooks**：自动化审计和门控（当前无活跃的 hooks）
+- **Hooks**：自动化审计和门控
 - **审查类 Skills**：多维度审查助手（doc-consistency、e2e、performance、security），由 review-executor 显式调用，共享上下文

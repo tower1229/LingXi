@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Hooks 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
 
 ## What（实现）
 
@@ -53,7 +53,6 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 工具类 Skills（提供辅助能力）
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-- `service-loader`：服务上下文加载和考古
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
 
@@ -72,8 +71,7 @@ Skills 承载详细的工作流指导，按职责分为：
 3. **写入前治理**：`memory-curator` 对新候选做语义近邻 TopK 治理（合并优先、冲突否决/取代），并更新 `memory/INDEX.md`
 
 ### Hooks（自动化审计和门控）
-
-（当前无活跃的 hooks）
+（可选机制）
 
 ## 目录结构
 

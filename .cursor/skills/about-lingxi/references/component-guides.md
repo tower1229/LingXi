@@ -114,7 +114,6 @@
 **工具类 Skills**：
 
 - `about-lingxi`：快速了解灵犀的背景知识
-- `service-loader`：服务上下文加载和考古
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
 
@@ -167,7 +166,7 @@
 
 ### 在灵犀中的应用
 
-（当前无活跃的 hooks）
+（可选机制）
 
 ## Subagents 指南
 
@@ -235,7 +234,7 @@
 
 ## Rules 指南
 
-> **注意**：本文档描述 Cursor 官方的 Rules 功能。**灵犀不使用 Cursor Rules 机制**，所有质量资产统一通过 Experience 系统（团队级标准/经验和项目级经验）管理。本文档仅作为技术参考，用于了解 Cursor Rules 的能力边界。
+> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前**使用 Project Rules** 作为“强保证触发器”（例如 `.cursor/rules/memory-injection.mdc`），用于每轮对话的最小记忆注入；其他质量资产仍主要通过记忆库（`memory/notes/` + `INDEX.md`）治理与复用。
 
 ### 设计目标（官方定义）
 
@@ -266,11 +265,10 @@
 
 ### 在灵犀中的应用
 
-**灵犀不使用 Cursor Rules 机制**，所有质量资产统一通过 Experience 系统管理：
+灵犀使用 Rules 的典型用途：
 
-- 团队级标准（`team/standards/`）：强约束、执行底线
-- 团队级经验（`team/knowledge/`）：复杂判断、认知触发
-- 项目级经验（`project/`）：项目特定、长期复用
+- **强保证触发**：Always Apply（如 `.cursor/rules/memory-injection.mdc`）确保每轮回答前执行一次检索与最小注入
+- **系统级约束**：可用于补充关键的提示级约束（要求极精炼，使用指针，不复制长文）
 
 ## 参考
 

@@ -79,7 +79,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 **分析内容**：
 
-- 使用 `service-loader` 补齐服务上下文
+- 补齐服务/模块上下文（必要时将结论沉淀为 `memory/notes/` 的 `Kind=tech` 记忆笔记）
 - 使用 SemanticSearch/Grep 定位相关代码
 - 识别需要修改的现有文件和模块
 - 分析依赖关系和影响范围
@@ -92,9 +92,9 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 4. 补齐服务上下文（推荐，复杂需求必选）
 
-如果需求涉及存量系统/多服务协作，参考 `service-loader` 补齐服务上下文：
+如果需求涉及存量系统/多服务协作，补齐服务上下文：
 
-- 生成/更新 `.cursor/.lingxi/memory/tech/services/<service>.md`
+- 生成/更新 `memory/notes/` 下的 `Kind=tech` 记忆笔记（例如：`memory/notes/MEM-<service>.md`）
 - 只写"概要 + 指针 + 常见坑"，避免长文档膨胀
 
 ### 5. 澄清性问题（复杂需求必选）
@@ -489,4 +489,3 @@ graph TD
 - **原 plan.md 命令**：`.cursor/commands/plan.md`（备份在 `.cursor/commands-backup/plan.md`）
 - **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
 - **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`
-- **服务加载**：`.cursor/skills/service-loader/SKILL.md`

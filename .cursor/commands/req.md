@@ -30,7 +30,6 @@ args:
 - `req-executor`：执行需求分析、提纯、放大和文档生成
 - `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
 - `memory-capture`：统一记忆捕获（尽力而为触发）
-- `service-loader`：如适用，生成服务上下文
 
 ## 产物
 
