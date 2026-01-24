@@ -26,7 +26,8 @@
     "skills/reviewer-doc-consistency/SKILL.md",
     "skills/reviewer-e2e/SKILL.md",
     "skills/reviewer-performance/SKILL.md",
-    "skills/reviewer-security/SKILL.md"
+    "skills/reviewer-security/SKILL.md",
+    "skills/write-doc/SKILL.md"
   ],
   "agents": {
     "files": []
@@ -42,13 +43,15 @@
       "skills/about-lingxi/references/memory-system.md",
       "skills/about-lingxi/references/optimization-checklist.md",
       "skills/about-lingxi/references/rules-guide.md"
-    ]
+    ],
+    "write-doc": []
   },
   "workflowDirectories": [
     ".cursor/.lingxi/requirements",
     ".cursor/.lingxi/memory",
     ".cursor/.lingxi/memory/notes",
     ".cursor/.lingxi/memory/references",
+    ".cursor/.lingxi/style-fusion",
     ".cursor/.lingxi/workspace"
   ],
   "workflowTemplateFiles": [
