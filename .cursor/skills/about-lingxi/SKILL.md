@@ -10,6 +10,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 此 Skill 帮助 agent 快速了解灵犀（LingXi）的背景知识、架构设计和核心机制。当需要对灵犀 workflow 做出改动、进行调优、或评估方案时，提供完整的评价准则、调优流程和设计指导。
 
 **功能覆盖**：
+
 - 快速了解灵犀的背景知识和架构
 - 对 workflow 进行调优和价值判定
 - 组件选择决策（Commands/Skills/Hooks）
@@ -21,11 +22,13 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 1：快速了解灵犀
 
 **触发条件**：
+
 - Agent 需要了解灵犀是什么、如何工作
 - 新接触灵犀项目，需要快速建立认知
 - 需要理解灵犀的架构和机制
 
 **流程**：
+
 1. 加载核心价值指引（`references/core-values.md`）
 2. 加载架构概览（`references/architecture.md`）
 3. 加载关键机制说明（`references/memory-system.md`）
@@ -34,11 +37,13 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 2：设计新功能或改动
 
 **触发条件**：
+
 - 需要对灵犀添加新功能
 - 需要修改现有机制
 - 需要选择使用哪种组件（Command/Skill/Hook）
 
 **流程**：
+
 1. 理解改动需求（目标、涉及组件、实现方式）
 2. 加载相关背景知识（核心价值、架构、设计原则）
 3. 加载评价准则（`references/evaluation-criteria.md`）
@@ -51,10 +56,12 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 3：组件选择决策
 
 **触发条件**：
+
 - 需要选择使用 Command、Skill 还是 Hook
 - 不确定应该用哪种机制实现功能
 
 **流程**：
+
 1. 理解功能需求（单一操作 vs 工作流 vs 自动化）
 2. 加载组件指南（`references/component-guides.md`）
 3. 根据官方能力边界和灵犀的设计原则判断
@@ -64,10 +71,12 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 4：架构调优
 
 **触发条件**：
+
 - 需要优化某个阶段的执行效率
 - 需要分析性能瓶颈和优化空间
 
 **流程**：
+
 1. 理解当前架构（涉及哪些组件）
 2. 加载相关指南（技术能力边界、工程实践准则）
 3. 分析性能瓶颈和优化空间
@@ -77,10 +86,12 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 5：价值判定
 
 **触发条件**：
+
 - 需要判断方案是否符合灵犀的长期规划
 - 需要评估方案与核心价值的一致性
 
 **流程**：
+
 1. 加载核心价值指引（Why 和 How）
 2. 分析方案与核心价值的一致性
 3. 输出价值判定结果
@@ -88,20 +99,24 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 6：技术边界检查
 
 **触发条件**：
+
 - 需要检查改动是否符合 Cursor 的技术能力边界
 
 **流程**：
-1. 理解改动内容（涉及哪些组件）
-2. 加载相关指南（官方能力边界）
+
+1. 理解改动内容（涉及哪些组件、是否依赖 Agent 工具能力）
+2. 加载相关指南（官方能力边界、`references/cursor-agent-tools.md` 按需加载）
 3. 检查是否符合官方定义的适用场景和限制
 4. 输出技术边界检查结果
 
 ### 场景 7：工程实践评估
 
 **触发条件**：
+
 - 需要评估设计是否符合工程实践准则
 
 **流程**：
+
 1. 理解设计方案（涉及哪些组件和机制）
 2. 加载工程实践准则（`references/engineering-practices.md`）
 3. 应用相关准则进行检查（SSoT、SoC、DRY、KISS 等）
@@ -112,9 +127,11 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ### 场景 8：综合质量评估
 
 **触发条件**：
+
 - 需要全面评估调优方案的质量
 
 **流程**：
+
 1. 理解调优方案（目标、涉及组件、实现方式）
 2. 加载所有相关指南（价值指引、技术边界、工程实践）
 3. 进行价值对齐分析（Why 和 How）
@@ -130,6 +147,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/core-values.md`
 
 **内容**：
+
 - Why（远景）：为创造者打造 AI 时代的专属法宝
 - How（路径）：心有灵犀、AI Native、称心如意
 - What（实现）：可伸缩工作流、质量资产化、知识整合、人工门控、上下文运营、开箱即用
@@ -142,6 +160,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/architecture.md`
 
 **内容**：
+
 - Commands（命令入口）
 - Skills（执行逻辑）
 - 经验沉淀机制
@@ -155,6 +174,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/memory-system.md`
 
 **内容**：
+
 - 记忆捕获流程（memory-capture）
 - 记忆治理与写入（memory-curator）
 - 每轮检索与最小注入（memory-retrieve + Always Apply Rule）
@@ -167,6 +187,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/design-principles.md`
 
 **内容**：
+
 - AI Native 设计原则
 - 心有灵犀的实现方式
 - 称心如意的体验要求
@@ -180,6 +201,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/evaluation-criteria.md`
 
 **内容**：
+
 - 价值对齐检查（心有灵犀、AI Native、称心如意）
 - 架构合理性检查（组件选择、职责分离）
 - 工程实践检查（SSoT、SoC、DRY、KISS 等）
@@ -192,6 +214,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/component-guides.md`
 
 **内容**：
+
 - Commands 指南（能力边界、适用场景）
 - Skills 指南（能力边界、适用场景）
 - Hooks 指南（能力边界、适用场景）
@@ -206,6 +229,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/engineering-practices.md`
 
 **内容**：
+
 - 核心原则（SSoT、SoC、DRY、KISS、YAGNI、Fail Fast 等）
 - 设计模式与最佳实践（分层架构、约定优于配置、渐进式增强等）
 - 质量评估框架（可维护性、可扩展性、可测试性等维度）
@@ -218,11 +242,25 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 **文件**：`references/optimization-checklist.md`
 
 **内容**：
+
 - 价值对齐检查（基于 Why 和 How）
 - 技术能力边界检查（基于官方定义）
 - 工程实践准则检查（核心原则、设计模式、质量评估框架）
 
 **何时加载**：场景 2、场景 4、场景 8（需要调优检查时）
+
+### 9. Cursor Agent 工具
+
+**文件**：`references/cursor-agent-tools.md`
+
+**内容**：
+
+- Cursor Agent 内置工具一览（Semantic search、Search files and folders、Web、Fetch Rules、Read/Edit files、Run shell commands、Browser、Image generation、Ask questions）
+- 各工具作用、典型用法与约束
+- 工具调用机制概要、MCP 扩展
+- 灵犀开发中的使用建议（技术边界检查、能力选型、安全与审批）
+
+**何时加载**：场景 6（技术边界检查）；设计 Skills/Commands 或实现功能时，需了解 Agent 可用工具、做能力选型或规避冲突时
 
 ## 工作流程
 
@@ -337,11 +375,13 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 ## 参考资料
 
 ### 核心文档
+
 - `README.md`：核心价值指引（Why 和 How）
 - `docs/design/architecture.md`：核心组件架构
 - `docs/prd/lingxi-2.0-refactor.md`：2.0 重构方案
 
 ### Reference 文件
+
 - `references/core-values.md`：核心价值指引（Why 和 How）
 - `references/architecture.md`：架构概览
 - `references/memory-system.md`：记忆系统机制
@@ -350,23 +390,33 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - `references/component-guides.md`：组件指南（Commands、Skills、Rules、Hooks，Subagents 作为技术参考）
 - `references/engineering-practices.md`：工程实践准则（核心原则、设计模式、质量评估框架）
 - `references/optimization-checklist.md`：调优检查清单（价值对齐、技术边界、工程实践）
+- `references/cursor-agent-tools.md`：Cursor Agent 工具参考（内置工具一览、灵犀开发使用建议）
 
 ### 外部参考
 
 以下外部文档提供 Cursor 官方能力边界与 Agent Skills 规范的实时信息。当需要了解最新细节、验证能力边界或确认官方定义时，可通过这些 URL 获取实时文档内容。**注意**：主要信息应优先参考本 skill 内 `references/` 目录下的文档；外部参考仅作补充与验证来源。
 
 **Cursor 官方文档**（能力边界与适用场景）：
+
 - Commands: https://cursor.com/docs/context/commands
 - Skills: https://cursor.com/docs/context/skills
 - Hooks: https://cursor.com/docs/context/hooks
 - Subagents: https://cursor.com/docs/context/subagents
 - Rules: https://cursor.com/docs/context/rules
+- Agent Overview / Tools: https://cursor.com/docs/agent/overview
+- Tool Calling: https://cursor.com/learn/tool-calling
+- Semantic Search: https://cursor.com/docs/context/semantic-search
+- Terminal: https://cursor.com/docs/agent/terminal
+- Browser: https://cursor.com/docs/agent/browser
 
 **Agent Skills 官方规范**（Skills 设计规范）：
+
 - 主页与概述: https://agentskills.io
 - 完整规范: https://agentskills.io/specification
 
 **使用建议**：
+
 - 当 `references/component-guides.md` 不足以判断能力边界时，可访问上述 URL 获取官方最新定义
+- 当需了解 Agent 内置工具能力、做能力选型或技术边界检查时，可加载 `references/cursor-agent-tools.md`；若需最新细节再访问上述 Agent / Tool 相关 URL
 - 当需验证 Skills 设计是否符合官方规范时，可参考 Agent Skills 规范文档
 - 模型可通过 `mcp_web_fetch` 等工具直接获取这些文档的实时内容
