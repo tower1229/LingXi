@@ -50,12 +50,13 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 记忆系统 Skills（实现"心有灵犀"的核心能力）
 - `memory-retrieve`：每轮回答前检索 `memory/notes/` 并最小注入（由 Always Apply Rule 强保证触发）
 - `memory-capture`：尽力而为捕获对话中的判断/取舍/边界/排障路径，生成记忆候选供用户选择写入
-- `memory-curator`：写入前自动治理（合并优先/冲突否决），写入 `memory/notes/` 并更新 `memory/INDEX.md`
+- `memory-curator`：写入前自动治理（create/update/delete），写入 `memory/notes/` 并更新 `memory/INDEX.md`
 
 #### 工具类 Skills（提供辅助能力）
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
+- `memory-storage`：记忆库持久化存储能力（原子写入、事务性操作、索引管理）
 
 #### 审查类 Skills（Review 阶段专用）
 - `reviewer-doc-consistency`：文档一致性审查
@@ -69,7 +70,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. **强保证注入**：通过 Always Apply Rule（`.cursor/rules/memory-injection.mdc`）要求每轮先执行 `memory-retrieve`
 2. **尽力而为捕获**：`memory-capture` 识别对话中的“判断/取舍/边界/排障路径”，生成候选并展示给用户
-3. **写入前治理**：`memory-curator` 对新候选做语义近邻 TopK 治理（合并优先、冲突否决/取代），并更新 `memory/INDEX.md`
+3. **写入前治理**：`memory-curator` 对新候选做语义近邻 TopK 治理（create/update/delete），并更新 `memory/INDEX.md`
 
 ### Hooks（自动化审计和门控）
 （可选机制）
@@ -134,7 +135,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. `memory-capture`（尽力而为）生成候选并展示
 2. 用户通过 `/remember ...` 或 `/remember 1,3` 选择要写入的候选/内容
-3. `memory-curator` 执行写入前治理（merge/replace/new/veto）
+3. `memory-curator` 执行写入前治理（create/update/delete）
 4. 写入 `memory/notes/` 并更新 `memory/INDEX.md`
 
 ## 参考

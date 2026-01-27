@@ -2,7 +2,7 @@
 
 ## 命令用途
 
-从用户输入或对话上下文中提取**记忆**并写入持久化记忆库（`memory/notes/`），并在写入前自动进行治理（合并优先、冲突否决），用于提升后续每轮的检索注入质量。
+从用户输入或对话上下文中提取**记忆**并写入持久化记忆库（`memory/notes/`），并在写入前自动进行语义近邻治理（create/update/delete），用于提升后续每轮的检索注入质量。
 
 ---
 
@@ -75,8 +75,8 @@
 
 将提取出的记忆委托给 `memory-curator` 执行治理与写入，包括：
 
-- 语义近邻 TopK 治理（合并优先、冲突否决）
-- 用户门控确认（涉及删除/取代时必须确认）
+- 语义近邻 TopK 治理（create/update/delete）
+- 用户门控确认（涉及删除或替换时必须确认）
 - 写入 `memory/notes/`
 - 更新/校验 `memory/INDEX.md`
 
@@ -88,8 +88,8 @@
 
 - **治理与写入流程**：调用 `memory-curator` Skill（参考 `.cursor/skills/memory-curator/SKILL.md`）
   - 编号选择解析（若输入是候选编号）
-  - 语义近邻 TopK 治理（merge/replace/new/veto）
-  - 用户确认删除/取代
+  - 语义近邻 TopK 治理（create/update/delete）
+  - 用户确认删除或替换
   - 写入 `memory/notes/`
   - 更新/校验 `memory/INDEX.md`
 
