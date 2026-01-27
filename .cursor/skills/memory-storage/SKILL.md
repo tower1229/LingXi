@@ -31,12 +31,18 @@ description: 提供记忆库持久化存储能力（原子写入、事务性操�
 **命令格式**：
 
 ```bash
-# 方式 1：从文件读取（推荐，避免转义问题）
-node .cursor/skills/memory-storage/scripts/memory-storage.js <operation> --file <json-file>
-
-# 方式 2：从 stdin 读取（简单 JSON 可用）
+# 方式 1：从 stdin 读取（推荐，避免创建临时文件占用 UI）
 echo '<json>' | node .cursor/skills/memory-storage/scripts/memory-storage.js <operation>
+
+# 方式 2：从文件读取（复杂 JSON 或特殊场景可用）
+node .cursor/skills/memory-storage/scripts/memory-storage.js <operation> --file <json-file>
 ```
+
+**推荐使用 stdin 方式**：
+
+- 避免创建临时文件，防止 Cursor UI 展示临时文件
+- 符合"静默成功"原则，减少过程性内容占用 UI
+- JSON 转义可通过 `JSON.stringify()` 或单引号包裹处理
 
 **操作类型**：
 

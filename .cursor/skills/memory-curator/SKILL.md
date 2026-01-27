@@ -36,7 +36,7 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 ### 3) 决策矩阵
 
 - **merge（合并，优先）**：same_scenario && same_conclusion\n+ - 行为：把信息合并到“更完整的版本”（通常是新版本），删除被合并的旧文件\n+ - 索引：旧条目移除，新条目保留并更新 `Supersedes`（可选）
-- **replace（取代）**：conflict == true，且用户明确选择新结论\n+ - 行为：删除被取代的旧文件，保留新版本\n+ - 索引：旧条目移除，新条目记录 `Supersedes`
+- **replace（取代）**：conflict == true，且用户明确选择新结论\n+ - 行为：如果文件路径相同（same filePath），直接用 `write` 操作覆盖；如果文件路径不同，先删除旧文件再创建新文件\n+ - 索引：旧条目移除，新条目记录 `Supersedes`
 - **veto（否决）**：conflict == true 但无法判断更优、且用户未给决定性变量\n+ - 行为：不写入（避免污染），提示用户补充“决定性变量/适用边界”，或让用户明确选择保留哪一个\n+ - 输出：只输出下一步选项（最小高信号）
 - **new（新增）**：与 TopK 近邻均不构成 merge/replace\n+ - 行为：新建记忆文件与索引条目
 
@@ -49,13 +49,40 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 展示格式（示例）：
 
+**MERGE 场景**：
+
 ```markdown
 ## 治理方案（待确认）
 
 - **MERGE**：`memory/notes/MEM-xxx.md` + 新候选 → 保留新候选，删除 `memory/notes/MEM-xxx.md`
   - 理由：同场景同结论，新候选信息更完整
 
-请回复：`确认` / `取消` / `改为新增` / `查看对比`
+请选择：
+
+- ✅ **A) 确认**：执行合并操作
+- ❌ **B) 取消**：不执行任何操作
+- ➕ **C) 改为新增**：不合并，创建新记忆文件
+- 👀 **D) 查看对比**：查看新旧内容的详细对比
+
+（回复 A/B/C/D 即可，也支持完整文字如"确认"/"取消"）
+```
+
+**REPLACE 场景**：
+
+```markdown
+## 治理方案（待确认）
+
+- **REPLACE**：`memory/notes/MEM-xxx.md`（旧结论）→ 替换为新记忆（新结论）
+  - 理由：同场景但结论不同，存在冲突
+
+请选择：
+
+- ✅ **A) 确认**：执行替换操作（删除旧记忆，创建新记忆）
+- ❌ **B) 取消**：不执行任何操作
+- ➕ **C) 改为新增**：不替换，创建新记忆文件
+- 👀 **D) 查看对比**：查看新旧内容的详细对比
+
+（回复 A/B/C/D 即可，也支持完整文字如"确认"/"取消"）
 ```
 
 ## 写入格式（notes 文件）
@@ -86,6 +113,48 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 **强制要求**：必须通过 `memory-storage` 脚本写入，禁止直接操作文件系统。
 
+### 快速参考
+
+**脚本路径**：`.cursor/skills/memory-storage/scripts/memory-storage.js`
+
+**命令格式**（推荐使用 stdin，避免临时文件）：
+
+```bash
+echo '<json>' | node .cursor/skills/memory-storage/scripts/memory-storage.js write
+echo '<json>' | node .cursor/skills/memory-storage/scripts/memory-storage.js delete
+```
+
+**最小 JSON 示例**（write 操作）：
+
+```json
+{
+  "operation": "write",
+  "note": {
+    "id": "MEM-xxx",
+    "filePath": "memory/notes/MEM-xxx.md",
+    "content": "..."
+  },
+  "indexEntry": {
+    "id": "MEM-xxx",
+    "kind": "decision",
+    "title": "...",
+    "whenToLoad": ["..."],
+    "status": "active",
+    "strength": "validated",
+    "scope": "medium",
+    "supersedes": null,
+    "file": "memory/notes/MEM-xxx.md"
+  }
+}
+```
+
+**关键约束**：
+
+- ❌ 禁止直接写文件：必须通过脚本写入
+- ❌ 禁止创建临时文件：使用 stdin 传递 JSON（避免 UI 展示临时文件）
+- ❌ 禁止冗余输出：成功时完全静默
+- ✅ 使用 `run_terminal_cmd` 通过管道传递 JSON 到脚本
+
 ### 基本操作说明
 
 所有操作都通过 `memory-storage` 脚本实现：
@@ -106,22 +175,14 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
    - `note.content`：完整的 markdown 内容
    - `indexEntry`：索引条目（id, kind, title, whenToLoad, status, strength, scope, supersedes, file）
 
-3. **创建临时 JSON 文件**（使用系统临时目录）
-   - 使用 `os.tmpdir()` 或 `/tmp` 创建临时文件
-   - 文件名使用唯一标识（如 `memory-write-${timestamp}.json`）
-   - 写入 JSON 内容
+3. **通过 stdin 调用 write 操作**（避免创建临时文件）
+   - 使用 `run_terminal_cmd` 通过管道传递 JSON
+   - 命令格式：`echo '<json-string>' | node .cursor/skills/memory-storage/scripts/memory-storage.js write`
+   - 注意：JSON 字符串需要正确转义（使用单引号包裹，内部双引号需转义，或使用 JSON.stringify 生成）
 
-4. **调用 write 操作**
-   ```bash
-   node .cursor/skills/memory-storage/scripts/memory-storage.js write --file <temp-json-file>
-   ```
-
-5. **检查返回码**（仅检查一次）
+4. **检查返回码**（仅检查一次）
    - 返回码 0：成功，静默（不输出任何内容）
    - 返回码非 0：失败，输出错误信息 + 解决方案
-
-6. **清理临时文件**（无论成功失败都要清理）
-   - 删除临时 JSON 文件
 
 ### update 操作流程
 
@@ -142,7 +203,31 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
    - `note.content`：处理后的最终 markdown 内容
    - `indexEntry`：索引条目（更新相关字段）
 
-5. **创建临时 JSON 文件并调用 write 操作**（同 create 流程的步骤 3-6）
+5. **通过 stdin 调用 write 操作**（同 create 流程的步骤 3-4）
+
+### replace 操作流程
+
+**场景**：用户明确选择用新记忆替换旧记忆（conflict == true 且用户确认替换）
+
+1. **判断文件路径**
+   - 如果新记忆的 `filePath` 与旧记忆相同（same filePath，通常是 same ID）：
+     - **优化方案**：直接用 `write` 操作覆盖现有文件（更高效，单次操作，避免先删后建的额外开销）
+     - 构建 JSON 参数时，`indexEntry.supersedes` 设置为旧记忆的 ID
+     - `write` 操作会自动更新索引：移除旧条目，添加新条目（包含 `Supersedes` 字段）
+   - 如果新记忆的 `filePath` 与旧记忆不同（不同 ID）：
+     - 先删除旧文件（调用 `delete` 操作，传入旧文件的 `noteId` 和 `filePath`）
+     - 再创建新文件（调用 `write` 操作，传入新文件的 `note` 和 `indexEntry`）
+     - `indexEntry.supersedes` 设置为旧记忆的 ID
+     - `delete` 操作会从索引中移除旧条目，`write` 操作会添加新条目（包含 `Supersedes` 字段）
+
+2. **构建 JSON 参数**（同 create/update 流程）
+   - 注意：`indexEntry.supersedes` 必须设置为被替换的旧记忆 ID
+
+3. **执行操作**
+   - **路径相同**：直接调用 `write` 操作（覆盖现有文件，单次操作更高效）
+   - **路径不同**：先调用 `delete` 操作，再调用 `write` 操作
+
+4. **检查返回码**（同 create 流程的步骤 4）
 
 ### delete 操作流程
 
@@ -151,6 +236,7 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
    - 如果文件存在，继续
 
 2. **构建 JSON 参数**
+
    ```json
    {
      "operation": "delete",
@@ -159,18 +245,16 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
    }
    ```
 
-3. **创建临时 JSON 文件**（使用系统临时目录）
+3. **通过 stdin 调用 delete 操作**（避免创建临时文件）
+   - 使用 `run_terminal_cmd` 通过管道传递 JSON
+   - 命令格式：`echo '<json-string>' | node .cursor/skills/memory-storage/scripts/memory-storage.js delete`
 
-4. **调用 delete 操作**
-   ```bash
-   node .cursor/skills/memory-storage/scripts/memory-storage.js delete --file <temp-json-file>
-   ```
-
-5. **检查返回码和清理临时文件**（同 create 流程）
+4. **检查返回码**（同 create 流程的步骤 4）
 
 ### 禁止事项（避免流程混乱）
 
 - ❌ **禁止直接写文件**：不要使用 `write` 工具直接创建 `memory/notes/*.md` 文件
+- ❌ **禁止创建临时文件**：必须使用 stdin 传递 JSON，不要创建临时 JSON 文件（避免 UI 展示）
 - ❌ **禁止先写后删**：不要先写文件再删除改用脚本
 - ❌ **禁止多次验证**：脚本已处理事务性操作，不需要额外检查文件是否存在、内容是否正确
 - ❌ **禁止冗余输出**：成功时完全静默，不要输出"记忆已写入"、"验证写入结果"等中间步骤
@@ -194,6 +278,7 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 - **create 成功**：完全静默（不输出任何内容）
 - **update 成功**：完全静默（不输出任何内容）
+- **replace 成功**：完全静默（不输出任何内容）
 - **delete 成功**：完全静默（不输出任何内容）
 - **操作失败**：输出错误信息 + 解决方案（脚本的 stderr 输出）
 
@@ -201,17 +286,39 @@ description: 负责记忆库治理与写入：对新候选做语义近邻治理�
 
 - **create 场景**（无相关近邻）：静默执行，成功后不输出
 - **update 场景**（找到相关近邻）：
-  - merge 模式：如果不需要用户确认，静默执行；如果需要确认，输出摘要等待确认
-  - replace 模式：必须输出摘要等待用户确认
-- **delete 场景**：必须输出摘要等待用户确认
-- **skip 场景**：只输出下一步选项（最小高信号）
+  - merge 模式：如果不需要用户确认，静默执行；如果需要确认，输出摘要等待确认（使用 A/B/C/D 格式）
+  - replace 模式：必须输出摘要等待用户确认（使用 A/B/C/D 格式）
+- **delete 场景**：必须输出摘要等待用户确认（使用 A/B/C/D 格式）
+- **skip 场景**：只输出下一步选项（最小高信号，使用 A/B/C/D 格式）
+
+### 用户确认格式要求
+
+所有需要用户确认的场景必须使用 **A/B/C/D 快捷选择格式**：
+
+```markdown
+请选择：
+
+- ✅ **A) 确认**：执行操作
+- ❌ **B) 取消**：不执行任何操作
+- ➕ **C) 改为新增**：不替换/合并，创建新记忆文件（如适用）
+- 👀 **D) 查看对比**：查看新旧内容的详细对比（如适用）
+
+（回复 A/B/C/D 即可，也支持完整文字如"确认"/"取消"）
+```
+
+**解析规则**：
+
+- 用户回复 `A`、`确认`、`yes`、`y` 等 → 执行确认操作
+- 用户回复 `B`、`取消`、`no`、`n` 等 → 取消操作
+- 用户回复 `C`、`改为新增`、`新增` 等 → 改为新增操作（如适用）
+- 用户回复 `D`、`查看对比`、`对比` 等 → 展示详细对比（如适用）
 
 ### 禁止的输出
 
-- ❌ 不要输出"正在写入记忆..."
-- ❌ 不要输出"验证写入结果..."
-- ❌ 不要输出"检查文件是否存在..."
-- ❌ 不要输出"记忆已写入"（成功时静默）
-- ❌ 不要输出"记忆已更新"（成功时静默）
-- ❌ 不要输出"记忆已删除"（成功时静默）
-- ❌ 不要输出中间步骤的工具调用信息
+- ❌ 不要输出"正在写入记忆..."、"构建记忆内容并写入..."等过程性描述
+- ❌ 不要输出"提取记忆并委托给 memory-curator..."等委托过程描述（委托应静默进行）
+- ❌ 不要输出"查看 memory-storage 脚本的使用方式..."等内部实现细节
+- ❌ 不要输出"验证写入结果..."、"检查文件是否存在..."等中间步骤
+- ❌ 不要输出"记忆已写入"、"记忆已更新"、"记忆已删除"（成功时静默）
+- ❌ 不要输出中间步骤的工具调用信息（如"[2 tools called]"等）
+- ❌ 不要输出临时文件的创建和清理过程
