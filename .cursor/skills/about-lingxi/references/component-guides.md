@@ -103,12 +103,12 @@
 
 **记忆系统**：
 
-- `memory-retrieve`（Skill）：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-retrieve`（Skill）：每轮回答前检索并最小注入（由 sessionStart hook 注入的约定触发）
 - **lingxi-memory**（Subagent）：记忆写入通过**显式调用**（`/lingxi-memory` 或自然语言提及子代理）使用；双入口 auto/remember；在独立上下文中完成产候选、治理、门控与直接文件写入（notes + INDEX），主对话仅收一句结果
 
-**Rules（强保证触发器）**：
+**Hooks（记忆注入约定）**：
 
-- `.cursor/rules/memory-injection.mdc`：Always Apply，每轮回答前要求执行一次检索与最小注入（无匹配静默，失败可降级）
+- sessionStart（`.cursor/hooks/session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定，无匹配静默，失败可降级
 
 **工具类 Skills**：
 
@@ -165,7 +165,7 @@
 
 ### 在灵犀中的应用
 
-（可选机制）
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）；其他审计/门控为可选
 
 ## Subagents 指南
 
@@ -232,7 +232,7 @@
 
 ## Rules 指南
 
-> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前**使用 Project Rules** 作为“强保证触发器”（例如 `.cursor/rules/memory-injection.mdc`），用于每轮对话的最小记忆注入；其他质量资产仍主要通过记忆库（`memory/notes/` + `INDEX.md`）治理与复用。
+> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前通过 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入约定实现每轮记忆检索与最小注入，不使用 Rules 作为该触发器；其他质量资产仍主要通过记忆库（`memory/notes/` + `INDEX.md`）治理与复用。
 
 ### 设计目标（官方定义）
 
@@ -265,8 +265,8 @@
 
 灵犀使用 Rules 的典型用途：
 
-- **强保证触发**：Always Apply（如 `.cursor/rules/memory-injection.mdc`）确保每轮回答前执行一次检索与最小注入
-- **系统级约束**：可用于补充关键的提示级约束（要求极精炼，使用指针，不复制长文）
+- **记忆检索约定**：由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入约定，要求每轮在回答前执行 `memory-retrieve`；不使用 Rules 作为该触发器
+- **系统级约束**：Rules 可用于补充关键的提示级约束（要求极精炼，使用指针，不复制长文）
 
 ## 参考
 

@@ -25,9 +25,9 @@
 
 ### 3) 提取/注入（Retrieve + Inject）
 
-**强保证触发**：通过 Always Apply Rule 实现“每轮必做一次检索与最小注入”：
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入：
 
-- 规则文件：`.cursor/rules/memory-injection.mdc`
+- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定）
 - 执行 Skill：`memory-retrieve`
 
 **最小注入**：
@@ -93,5 +93,5 @@
 
 - **记忆写入**：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）
 - **记忆检索与注入**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
-- Always Apply Rule：`.cursor/rules/memory-injection.mdc`
+- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）
 

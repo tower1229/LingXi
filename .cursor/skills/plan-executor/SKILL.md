@@ -143,7 +143,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 7. 规范引用
 
-生成任务时，优先依赖每轮注入（Always Apply Rule + `memory-retrieve`）获得相关记忆，在任务描述中明确引用（引用文件指针即可）。
+生成任务时，优先依赖每轮注入（sessionStart hook 注入的约定 + `memory-retrieve`）获得相关记忆，在任务描述中明确引用（引用文件指针即可）。
 
 ### 8. 任务拆解
 

@@ -49,7 +49,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
 - **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
-- `memory-retrieve`（Skill）：每轮回答前检索 `memory/notes/` 并最小注入（由 Always Apply Rule 强保证触发）
+- `memory-retrieve`（Skill）：每轮回答前检索 `memory/notes/` 并最小注入（由 sessionStart hook 注入的约定触发）
 
 #### 工具类 Skills（提供辅助能力）
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
@@ -66,11 +66,11 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入：
 
-1. **强保证注入**：通过 Always Apply Rule（`.cursor/rules/memory-injection.mdc`）要求每轮先执行 `memory-retrieve`
+1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`
 2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=...` 或 `mode=auto input=...`，或自然语言提及子代理）将任务交给子代理；子代理产候选 → 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
 
-### Hooks（自动化审计和门控）
-（可选机制）
+### Hooks（sessionStart 记忆注入 + 可选审计/门控）
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定；其他审计/门控为可选
 
 ## 目录结构
 
@@ -95,9 +95,7 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── agents/                # Subagents（独立上下文）
 │   └── lingxi-memory.md   # 记忆写入
-├── rules/                 # Rules（可用作强保证触发器）
-│   ├── memory-injection.mdc
-└── hooks/                 # 自动化审计和门控
+└── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
 
 .cursor/.lingxi/
 ├── requirements/          # 任务文档（统一目录）

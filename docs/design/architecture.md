@@ -8,12 +8,13 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 
 | 命令 | 职责 | 委托的 Skill |
 |------|------|-------------|
-| `/req` | 创建任务文档 | `req-executor` |
-| `/plan` | 任务规划 | `plan-executor` |
-| `/build` | 代码实现 | `build-executor` |
+| `/req` | 创建任务文档（自动生成任务编号和标题） | `req-executor` |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件） | - |
+| `/plan` | 任务规划（可选，适用于复杂任务） | `plan-executor` |
+| `/build` | 执行构建（可选，Plan-driven / Agent-driven） | `build-executor` |
 | `/review` | 审查交付 | `review-executor` |
-| `/remember` | 记忆写入（含治理） | **lingxi-memory**（Subagent） |
-| `/init` | 项目初始化 | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
+| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | **lingxi-memory**（Subagent） |
+| `/init` | 初始化项目（首次使用，引导式收集并可选写入记忆） | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
 
 ### Skills（执行逻辑）
 
@@ -27,7 +28,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 - **记忆系统**：实现“心有灵犀”的核心能力
   - **Subagent lingxi-memory**：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与直接文件写入（notes + INDEX）
-  - `memory-retrieve`（Skill）：每轮语义检索记忆笔记并做最小高信号注入（由 Always Apply Rule 强保证触发）
+  - `memory-retrieve`（Skill）：每轮语义检索记忆笔记并做最小高信号注入（由 sessionStart hook 注入的约定触发）
 
 - **工具类 Skills**：提供辅助能力
   - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
@@ -38,10 +39,10 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是“写入可提取”的记忆库，让 AI 具备持久化记忆：
 
-1. **强保证提取与注入**：每轮对话在响应前由 Always Apply Rule 触发 `memory-retrieve`，从 `memory/notes/` 语义检索并注入 0-3 条最小提醒
+1. **提取与注入**：sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行 `memory-retrieve`，从 `memory/notes/` 语义检索并注入 0-3 条最小提醒
 2. **记忆写入**：由 **Subagent lingxi-memory** 在独立上下文中执行（用户 `/remember` 或主 Agent 委派 mode=auto）；产候选 → 治理（TopK）→ 门控 → 直接读写 `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
 
 ### 其他机制
 
-- **Hooks**：自动化审计和门控
+- **Hooks**：sessionStart hook（`session-init.mjs`）注入记忆检索约定；其他自动化审计和门控（可选）
 - **审查类 Skills**：多维度审查助手（doc-consistency、e2e、performance、security），由 review-executor 显式调用，共享上下文

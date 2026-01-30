@@ -153,7 +153,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ### 6. 记忆融入
 
-如果每轮注入（Always Apply Rule + `memory-retrieve`）检索到相关记忆，在文档中引用，或在“非目标/风险”中体现历史踩坑点。
+如果每轮注入（sessionStart hook 注入的约定 + `memory-retrieve`）检索到相关记忆，在文档中引用，或在“非目标/风险”中体现历史踩坑点。
 
 **注意**：记忆写入通过**显式调用** lingxi-memory 子代理处理（在提示中使用 `/lingxi-memory` 或自然语言「使用 lingxi-memory 子代理…」）；本 Skill 不包含捕获与写入逻辑。
 
@@ -460,7 +460,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 4. 类型识别：全栈
 5. 复杂度评估：中等/复杂
 6. 需求放大（外部调研、方案对比、最佳实践融入）
-7. 记忆融入（通过每轮注入：Always Apply Rule + `memory-retrieve`）
+7. 记忆融入（通过每轮注入：sessionStart hook 注入的约定 + `memory-retrieve`）
 8. 模板选择：完整模板
 9. 文档生成
 

@@ -41,7 +41,7 @@ args:
 3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
 4. 类型识别与复杂度评估
 5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 记忆融入（通过 `memory-retrieve` + Always Apply Rule 的每轮最小注入）
+6. 记忆融入（通过 sessionStart hook 注入的约定 + memory-retrieve 的每轮最小注入）
 7. 模板选择
 8. 文档生成
 

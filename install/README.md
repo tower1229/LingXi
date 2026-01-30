@@ -15,7 +15,7 @@
 
 - **`install-manifest.json`** - 安装清单配置文件
   - 定义需要安装的所有文件列表
-  - 包括 commands、rules、skills、hooks、agents（Subagent lingxi-memory）等
+  - 包括 commands、skills、hooks（含 sessionStart 记忆注入脚本）、agents（Subagent lingxi-memory）等；rules 可为空
 
 - **`test-install.sh`** - 本地测试脚本（开发用）
   - 用于本地测试安装脚本

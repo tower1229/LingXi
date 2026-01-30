@@ -8,11 +8,12 @@
     "commands/init.md",
     "commands/remember.md"
   ],
-  "rules": [
-    "rules/memory-injection.mdc"
-  ],
+  "rules": [],
   "hooks": {
-    "files": []
+    "files": [
+      "hooks/session-init.mjs",
+      "hooks/_hook-utils.mjs"
+    ]
   },
   "skills": [
     "skills/about-lingxi/SKILL.md",

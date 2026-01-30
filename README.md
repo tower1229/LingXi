@@ -90,10 +90,9 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 | `/remember` | `/remember <记忆描述>`<br><br>**示例**：<br>`/remember 吸取刚才这个 bug 的经验`<br>`/remember 始终使用 xxx 解决 yyy 问题` | **写入记忆（随时可用）**<br><br>无需依赖任务编号，可随时把“判断/取舍/排障路径/验证方式”写入记忆库（`memory/notes/`），用于后续每轮的检索注入。<br><br>**使用场景**：<br>- **直接记忆表达**：直接陈述原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
 | `/init` | `/init` | **初始化项目（首次使用）**<br><br>引导式收集项目信息（技术栈、常用模式、开发规则等），生成并写入初始记忆（`memory/notes/`）。建议首次在现有项目中使用 LingXi 时运行。 |
 
-#### 记忆注入（强保证）
+#### 记忆注入（sessionStart hook）
 
-默认启用 Always Apply Rule：`.cursor/rules/memory-injection.mdc`。
-它会在**每轮回答前**要求先检索 `memory/notes/` 并做最小注入（无匹配静默，失败可降级继续回答）。
+通过 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定：每轮在回答前先执行 `/memory-retrieve <当前用户消息>`，按 `memory-retrieve` Skill 检索 `memory/notes/` 并做最小注入（无匹配静默，失败可降级继续回答）。
 
 #### 经验共享（跨项目复用：share 目录 + git submodule）
 

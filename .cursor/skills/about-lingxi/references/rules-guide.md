@@ -1,6 +1,6 @@
 # Rules 技术指南
 
-> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前**使用 Project Rules** 作为“强保证触发器”（例如 `.cursor/rules/memory-injection.mdc`），用于每轮对话的最小记忆注入。本文同时作为技术参考，用于了解 Cursor Rules 的能力边界与写法约束。
+> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前通过 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入约定实现每轮记忆检索与最小注入，不使用 Rules 作为该触发器。本文同时作为技术参考，用于了解 Cursor Rules 的能力边界与写法约束。
 
 ## 概述
 
