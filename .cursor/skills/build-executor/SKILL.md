@@ -186,7 +186,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 - 输出失败详情，包含失败的测试用例、错误信息、修复建议
 - 修复后重新执行测试，循环直到全部通过
 
-**注意**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑。
+**注意**：记忆写入通过**显式调用** lingxi-memory 子代理处理（在提示中使用 `/lingxi-memory` 或自然语言「使用 lingxi-memory 子代理…」）；本 Skill 不包含捕获与写入逻辑。
 
 ---
 
@@ -222,7 +222,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 ## 注意事项
 
-1. **记忆捕获**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑
+1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
 2. **测试循环**：必须循环修复直到所有测试通过，才能继续下一个任务
 3. **模式选择**：根据是否存在 plan 文件自动选择模式，无需用户指定
 4. **文档同步**：确保代码与文档保持一致
@@ -238,5 +238,5 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 ## 参考
 
 - **原 build.md 命令**：`.cursor/commands/build.md`（备份在 `.cursor/commands-backup/build.md`）
-- **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
+- **记忆写入**：`.cursor/agents/lingxi-memory.md`
 - **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

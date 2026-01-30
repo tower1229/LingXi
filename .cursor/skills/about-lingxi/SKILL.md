@@ -175,8 +175,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **内容**：
 
-- 记忆捕获流程（memory-capture）
-- 记忆治理与写入（memory-curator）
+- 记忆写入由 **Subagent lingxi-memory** 在独立上下文中执行（双入口、直接文件写入）
 - 每轮检索与最小注入（memory-retrieve + Always Apply Rule）
 - 统一索引格式（INDEX.md + notes/ 扁平结构）
 

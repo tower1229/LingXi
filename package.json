@@ -2,8 +2,8 @@
   "name": "lingxi-workflow",
   "private": true,
   "scripts": {
-    "memory-sync": "node .cursor/skills/memory-storage/scripts/validate-index.js --update",
-    "memory-check": "node .cursor/skills/memory-storage/scripts/validate-index.js --check"
+    "memory-sync": "node scripts/validate-memory-index.js --update",
+    "memory-check": "node scripts/validate-memory-index.js --check"
   }
 }
 

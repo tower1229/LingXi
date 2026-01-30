@@ -37,7 +37,7 @@ description: 每轮对话在回答前检索记忆库并最小注入。配合 Alw
 
 **示例**：
 - "遵循 AI Native 设计原则，优先使用语义理解而非硬编码规则 [MEM-ai-native-design]"
-- "记忆库写入前必须经过用户门控确认 [MEM-memory-curator]"
+- "记忆写入通过显式调用 lingxi-memory 子代理（`/lingxi-memory` 或自然语言提及）在独立上下文中执行，写入前须用户门控确认"
 
 ## 输出行为（重要）
 

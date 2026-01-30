@@ -101,11 +101,10 @@
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
 
-**记忆系统 Skills**：
+**记忆系统**：
 
-- `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
-- `memory-capture`：尽力而为捕获对话中的判断/取舍/边界，生成记忆候选供用户选择
-- `memory-curator`：写入前治理（合并优先/冲突否决），写入 `memory/notes/` 并更新 `memory/INDEX.md`
+- `memory-retrieve`（Skill）：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
+- **lingxi-memory**（Subagent）：记忆写入通过**显式调用**（`/lingxi-memory` 或自然语言提及子代理）使用；双入口 auto/remember；在独立上下文中完成产候选、治理、门控与直接文件写入（notes + INDEX），主对话仅收一句结果
 
 **Rules（强保证触发器）**：
 
@@ -207,9 +206,8 @@
 
 ### 在灵犀中的应用
 
-灵犀当前不使用 Subagents。审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
-
-**历史说明**：reviewer-doc-consistency、reviewer-security、reviewer-performance、reviewer-e2e 最初设计为 Subagents，后迁移为 Skills 以降低成本和保持架构一致性。
+- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用——在提示中使用 `/lingxi-memory` 语法（例如 `/lingxi-memory mode=remember input=<内容>`）或自然语言提及「lingxi-memory 子代理」来调用；当用户执行 `/remember` 或主 Agent 判断存在可沉淀并决定写入时，主 Agent 以此方式将任务交给子代理；子代理在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果，减少对主对话的干扰。
+- 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
 
 ## 选择决策矩阵
 

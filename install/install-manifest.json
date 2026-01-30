@@ -19,9 +19,6 @@
     "skills/build-executor/SKILL.md",
     "skills/init-executor/SKILL.md",
     "skills/memory-retrieve/SKILL.md",
-    "skills/memory-capture/SKILL.md",
-    "skills/memory-curator/SKILL.md",
-    "skills/memory-storage/SKILL.md",
     "skills/plan-executor/SKILL.md",
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
@@ -32,7 +29,7 @@
     "skills/write-doc/SKILL.md"
   ],
   "agents": {
-    "files": []
+    "files": ["agents/lingxi-memory.md"]
   },
   "references": {
     "about-lingxi": [
