@@ -153,9 +153,9 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ### 6. 记忆融入
 
-如果每轮注入（Always Apply Rule + `memory-retrieve`）检索到相关记忆，在文档中引用，或在“非目标/风险”中体现历史踩坑点。
+如果每轮注入（sessionStart hook 注入的约定 + `memory-retrieve`）检索到相关记忆，在文档中引用，或在“非目标/风险”中体现历史踩坑点。
 
-**注意**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获与写入逻辑。
+**注意**：记忆写入通过**显式调用** lingxi-memory 子代理处理（在提示中使用 `/lingxi-memory` 或自然语言「使用 lingxi-memory 子代理…」）；本 Skill 不包含捕获与写入逻辑。
 
 ### 7. 模板选择
 
@@ -460,7 +460,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 4. 类型识别：全栈
 5. 复杂度评估：中等/复杂
 6. 需求放大（外部调研、方案对比、最佳实践融入）
-7. 记忆融入（通过每轮注入：Always Apply Rule + `memory-retrieve`）
+7. 记忆融入（通过每轮注入：sessionStart hook 注入的约定 + `memory-retrieve`）
 8. 模板选择：完整模板
 9. 文档生成
 
@@ -468,7 +468,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 注意事项
 
-1. **记忆捕获**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑
+1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
 2. **静默原则**：简单需求静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **Fail Fast**：必要信息缺失时必须询问，不猜测
 4. **文档质量**：生成的 req 文档应该结构清晰、内容完整，符合需求分析的设计目标
@@ -483,5 +483,5 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 参考
 
-- **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
+- **记忆写入**：`.cursor/agents/lingxi-memory.md`
 - **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

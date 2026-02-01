@@ -12,40 +12,22 @@
 
 ## 三大生命周期
 
-### 1) 捕获（Capture）
+### 1) 捕获与治理（Capture + Curate）：Subagent lingxi-memory
 
-**机制**：尽力而为（best-effort）。
+**执行模型**：捕获、治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。
 
-- 自动：当对话中出现判断/取舍/边界/排障路径等信号时，尽力触发 `memory-capture`
-- 手动：`/remember ...` 与 `/init` 过程中都可产生/补齐候选
-- 去重：使用 `conversation_id + generation_id` 写入 `.cursor/.lingxi/workspace/processed-sessions.json`，已处理则静默跳过
-
-**产物**：`MEM-CANDIDATE` 候选列表（在会话中展示，等待用户选择写入）。
-
-### 2) 治理（Curate）
-
-**触发时机**：每次写入前必做（write-time governance）。
-
-**核心策略**：语义近邻 TopK 治理（工程上等价于“全库治理”，但成本可控）。
-
-1. 对新候选构建概念化查询（描述“解决什么问题/约束/风险”，避免只写结论）
-2. 对 `memory/notes/` 做语义搜索取 Top 5
-3. LLM 概念级评估并决策：
-   - **merge**：同场景同结论 → 合并优先于新增
-   - **replace**：同场景结论冲突且用户明确选择新结论 → 取代（删除旧文件）
-   - **veto**：冲突但无法判断更优、用户未给决定性变量 → 否决写入，要求补齐边界/变量
-   - **new**：不构成合并/取代 → 新增
-
-**门控原则**：
-
-- 删除（merge/replace）必须用户确认
-- 冲突取舍必须用户确认
+- **双入口**：
+- **auto**：主 Agent 判断本轮存在可沉淀时，通过**显式调用**（在提示中使用 `/lingxi-memory mode=auto input=<本轮消息与上下文摘要>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **remember**：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
+- **门控**：merge/replace 时在 Subagent 对话内展示「治理方案（待确认）」与 A/B/C/D，用户确认后再执行；主对话不展示过程。
+- **治理策略**：语义近邻 TopK（create/update/delete/skip），门控原则不变（delete 与 replace 须用户确认）。
 
 ### 3) 提取/注入（Retrieve + Inject）
 
-**强保证触发**：通过 Always Apply Rule 实现“每轮必做一次检索与最小注入”：
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入：
 
-- 规则文件：`.cursor/rules/memory-injection.mdc`
+- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定）
 - 执行 Skill：`memory-retrieve`
 
 **最小注入**：
@@ -103,13 +85,13 @@
 ## 关键原则
 
 1. **写入是为了更好的提取**：不追求“分类完美”，追求“下次能检索到并帮你做对”
-2. **用户门控不可侵犯**：涉及删除/取代必须确认
+2. **用户门控不可侵犯**：涉及删除或替换必须确认
 3. **静默成功**：无匹配/成功/非决策输出尽量静默
 4. **SSoT**：索引是唯一权威清单，内容以 notes 为准
+5. **基本操作模型**：所有操作简化为 create/update/delete 三个基本操作，统一操作模型
 ## 参考
 
-- `memory-capture`：`.cursor/skills/memory-capture/SKILL.md`
-- `memory-curator`：`.cursor/skills/memory-curator/SKILL.md`
-- `memory-retrieve`：`.cursor/skills/memory-retrieve/SKILL.md`
-- Always Apply Rule：`.cursor/rules/memory-injection.mdc`
+- **记忆写入**：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）
+- **记忆检索与注入**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
+- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）
 

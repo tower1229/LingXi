@@ -198,7 +198,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 - 是否需要更新相关文档
 - 是否需要通知相关团队
 
-**注意**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑。
+**注意**：记忆写入通过**显式调用** lingxi-memory 子代理处理（在提示中使用 `/lingxi-memory` 或自然语言「使用 lingxi-memory 子代理…」）；本 Skill 不包含捕获与写入逻辑。
 
 ### 7. 并行执行可选维度（显式调用 reviewer skills）
 
@@ -427,7 +427,7 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 
 ## 注意事项
 
-1. **记忆捕获**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑
+1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
 2. **测试质量优先**：测试脚本质量检查必须在测试执行前完成
 3. **分级输出**：所有问题按优先级分级（Blockers/High/Medium/Low）
 4. **明确结论**：审查结论必须明确（通过/需修复/拒绝）
@@ -443,5 +443,5 @@ description: 当执行 /review 001 命令时自动激活，负责多维度审查
 ## 参考
 
 - **原 review.md 命令**：`.cursor/commands/review.md`（备份在 `.cursor/commands-backup/review.md`）
-- **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
+- **记忆写入**：`.cursor/agents/lingxi-memory.md`
 - **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

@@ -23,14 +23,6 @@ args:
 
 **标题自动生成**：从需求描述中提取核心关键词作为标题，最多 10 个中文字符或 20 个英文字符，特殊字符自动替换为下划线。
 
-## 依赖的 Agent Skills
-
-以下 Skills 会自动激活：
-
-- `req-executor`：执行需求分析、提纯、放大和文档生成
-- `memory-retrieve`：每轮回答前检索并最小注入（由 Always Apply Rule 强保证触发）
-- `memory-capture`：统一记忆捕获（尽力而为触发）
-
 ## 产物
 
 - `.cursor/.lingxi/requirements/001.req.<标题>.md`（任务文档）
@@ -49,7 +41,7 @@ args:
 3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
 4. 类型识别与复杂度评估
 5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 记忆融入（通过 `memory-retrieve` + Always Apply Rule 的每轮最小注入）
+6. 记忆融入（通过 sessionStart hook 注入的约定 + memory-retrieve 的每轮最小注入）
 7. 模板选择
 8. 文档生成
 
@@ -57,18 +49,17 @@ args:
 
 ## 记忆捕获
 
-记忆捕获由 `memory-capture` Skill 统一处理，无需在命令中显式调用。
+记忆写入由 **lingxi-memory** 子代理在独立上下文中执行；主对话在需要时通过**显式调用**（`/lingxi-memory mode=auto input=...` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理，本命令不包含捕获与写入逻辑。
 
 **激活机制**：
-- 任务完成或关键决策出现时，尽力触发 `memory-capture`
-- `memory-capture` 扫描对话上下文，识别记忆信号并生成候选
+
+- 任务完成或关键决策出现时，主 Agent 可使用**显式调用**：`/lingxi-memory mode=auto input=<本轮要点>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」
 - 候选在会话中展示，用户可选择沉淀
 
-**触发场景**：当发生以下情况时，`memory-capture` 会识别并捕获记忆候选：
+**触发场景**：当发生以下情况时，可**显式调用** lingxi-memory 子代理写入记忆：
 
 - 需求固化、范围调整、优先级变更
 - 目标纠正、方案选择、约束添加
 - 边界明确、验收调整、风险确认
 
-详细触发场景和激活机制请参考 `memory-capture` Skill 文档。
-
+Subagent 定义见 `.cursor/agents/lingxi-memory.md`。

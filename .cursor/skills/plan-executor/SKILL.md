@@ -143,7 +143,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 7. 规范引用
 
-生成任务时，优先依赖每轮注入（Always Apply Rule + `memory-retrieve`）获得相关记忆，在任务描述中明确引用（引用文件指针即可）。
+生成任务时，优先依赖每轮注入（sessionStart hook 注入的约定 + `memory-retrieve`）获得相关记忆，在任务描述中明确引用（引用文件指针即可）。
 
 ### 8. 任务拆解
 
@@ -223,7 +223,7 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 - 如果检测到依赖冲突：提示用户，不自动安装，在 plan 中标记需要手动处理
 
-**注意**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑。
+**注意**：记忆写入通过**显式调用** lingxi-memory 子代理处理（在提示中使用 `/lingxi-memory` 或自然语言「使用 lingxi-memory 子代理…」）；本 Skill 不包含捕获与写入逻辑。
 
 ### 11. Plan 文档写入
 
@@ -471,7 +471,7 @@ graph TD
 
 ## 注意事项
 
-1. **记忆捕获**：记忆捕获由 `memory-capture` Skill 尽力而为处理，本 Skill 不包含捕获逻辑
+1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
 2. **静默原则**：简单需求静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **测试设计**：必须从需求中提取可测试行为，不发明未明确说明的行为
 4. **文档质量**：生成的 plan 和 testcase 文档必须完整、准确
@@ -487,5 +487,5 @@ graph TD
 ## 参考
 
 - **原 plan.md 命令**：`.cursor/commands/plan.md`（备份在 `.cursor/commands-backup/plan.md`）
-- **记忆捕获**：`.cursor/skills/memory-capture/SKILL.md`
+- **记忆写入**：`.cursor/agents/lingxi-memory.md`
 - **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

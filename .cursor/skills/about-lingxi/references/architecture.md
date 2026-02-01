@@ -28,8 +28,8 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/plan` | 任务规划（可选，适用于复杂任务） | `plan-executor` |
 | `/build` | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式） | `build-executor` |
 | `/review` | 审查交付（核心审查和按需审查，测试执行） | `review-executor` |
-| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | `memory-curator` |
-| `/init` | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；按需协作：`memory-capture` / `memory-curator` |
+| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | **lingxi-memory**（Subagent） |
+| `/init` | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；写入时通过**显式调用** **lingxi-memory** 子代理（`/lingxi-memory` 或自然语言提及） |
 
 **特性**：
 - 多入口设计：所有命令独立执行，不依赖前一阶段完成
@@ -47,10 +47,9 @@ Skills 承载详细的工作流指导，按职责分为：
 - `review-executor`：多维度审查和交付质量保证
 - `init-executor`：项目初始化（分类型收集清单 → 连续编号候选清单 → 用户门控后可选写入）
 
-#### 记忆系统 Skills（实现"心有灵犀"的核心能力）
-- `memory-retrieve`：每轮回答前检索 `memory/notes/` 并最小注入（由 Always Apply Rule 强保证触发）
-- `memory-capture`：尽力而为捕获对话中的判断/取舍/边界/排障路径，生成记忆候选供用户选择写入
-- `memory-curator`：写入前自动治理（合并优先/冲突否决），写入 `memory/notes/` 并更新 `memory/INDEX.md`
+#### 记忆系统（实现"心有灵犀"的核心能力）
+- **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
+- `memory-retrieve`（Skill）：每轮回答前检索 `memory/notes/` 并最小注入（由 sessionStart hook 注入的约定触发）
 
 #### 工具类 Skills（提供辅助能力）
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
@@ -67,12 +66,11 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入：
 
-1. **强保证注入**：通过 Always Apply Rule（`.cursor/rules/memory-injection.mdc`）要求每轮先执行 `memory-retrieve`
-2. **尽力而为捕获**：`memory-capture` 识别对话中的“判断/取舍/边界/排障路径”，生成候选并展示给用户
-3. **写入前治理**：`memory-curator` 对新候选做语义近邻 TopK 治理（合并优先、冲突否决/取代），并更新 `memory/INDEX.md`
+1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`
+2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=...` 或 `mode=auto input=...`，或自然语言提及子代理）将任务交给子代理；子代理产候选 → 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
 
-### Hooks（自动化审计和门控）
-（可选机制）
+### Hooks（sessionStart 记忆注入 + 可选审计/门控）
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定；其他审计/门控为可选
 
 ## 目录结构
 
@@ -94,12 +92,10 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── reviewer-performance/
 │   ├── reviewer-e2e/
 │   ├── memory-retrieve/
-│   ├── memory-capture/
-│   ├── memory-curator/
 │   └── ...
-├── rules/                 # Rules（可用作强保证触发器）
-│   ├── memory-injection.mdc
-└── hooks/                 # 自动化审计和门控
+├── agents/                # Subagents（独立上下文）
+│   └── lingxi-memory.md   # 记忆写入
+└── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
 
 .cursor/.lingxi/
 ├── requirements/          # 任务文档（统一目录）
@@ -132,10 +128,10 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 记忆写入流程
 
-1. `memory-capture`（尽力而为）生成候选并展示
-2. 用户通过 `/remember ...` 或 `/remember 1,3` 选择要写入的候选/内容
-3. `memory-curator` 执行写入前治理（merge/replace/new/veto）
-4. 写入 `memory/notes/` 并更新 `memory/INDEX.md`
+1. 用户执行 `/remember ...` 或 `/init` 后选择写入，或主 Agent 判断存在可沉淀并委派
+2. 主 Agent 通过**显式调用**（在提示中使用 `/lingxi-memory mode=remember input=...` 或 `/lingxi-memory mode=auto input=...`，或自然语言「使用 lingxi-memory 子代理…」）将任务交给 **lingxi-memory** 子代理
+3. 子代理在独立上下文中：产候选 → 治理（TopK）→ 门控（如需）→ 直接读写 `memory/notes/` 与 `memory/INDEX.md`
+4. 主对话仅收一句结果或静默
 
 ## 参考
 

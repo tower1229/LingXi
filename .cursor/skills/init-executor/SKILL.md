@@ -97,10 +97,10 @@ description: 按项目类型（A-H）引导式初始化：基于收集清单生�
 
 当且仅当 Q2 为 `All` / `1,3` 时：
 - 从“记忆候选清单”中确定要写入的条目（`All` 为全部；`1,3` 为所选编号）
-- 将被选中的条目整体委托给 `memory-curator` 做治理与写入（合并优先、冲突否决；涉及删除/取代必须用户确认）
-- 写入 `.cursor/.lingxi/memory/notes/` 并更新 `.cursor/.lingxi/memory/INDEX.md`
+- 将待写入的候选通过**显式调用**交给 lingxi-memory 子代理：在提示中使用 `/lingxi-memory mode=remember input=<选中的条目或编号>`（或 `mode=init`，必要时在 input 或后续消息中传 `context`），或自然语言如「使用 lingxi-memory 子代理将选中的候选写入记忆库：<条目摘要或编号>」
+- 子代理在独立上下文中完成治理与写入（合并优先、冲突否决；涉及删除/取代须用户在其对话内确认），直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`
 
-写入失败时需要输出明确错误与解决方案；写入成功保持静默（只在最后报告中列出结果）。
+主对话根据子代理返回展示一句结果或静默；写入失败时输出明确错误与解决方案。
 
 ### 6) 初始化报告（最小高信号）
 
