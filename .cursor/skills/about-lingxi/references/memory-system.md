@@ -10,6 +10,12 @@
 - `memory/notes/`：扁平记忆文件（语义搜索的主搜索面）
 - `memory/references/`：模板与规范（按需加载）
 
+## 每轮参与
+
+检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过双入口（auto/remember）在需要时触发，新输入与后续轮次自然带来纠错与更新机会。
+
+**「何时写入、何时纠错」由「每轮触发检索 + 按需写入」的机制覆盖，无需额外“记忆可错/纠错”规则。**
+
 ## 三大生命周期
 
 ### 1) 捕获与治理（Capture + Curate）：Subagent lingxi-memory
@@ -44,7 +50,9 @@
 
 | Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | File |
 
-## 记忆文件（notes/*.md）
+## 记忆文件（notes/\*.md）
+
+记忆应记录**可复用的品味与约定**（原则、决策、模式、排障路径等），不存任务级实施细节（如某次迁移步骤、某任务的具体实现顺序）。
 
 每条记忆一个文件，小而清晰，建议结构：
 
@@ -62,7 +70,8 @@
 
 - 共享目录：`.cursor/.lingxi/memory/notes/share/`
 - 推荐形态：**git submodule**（团队仓库，版本锁定、同步明确）
-- 生效方式：share 目录下的记忆与项目记忆一起参与检索；索引生成会递归扫描 `notes/**`。\n+
+- 生效方式：share 目录下的记忆与项目记忆一起参与检索；索引生成会递归扫描 `notes/**`。
+
 团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
 
 - **Audience**：team / project / personal（决策权归属与适用范围）
@@ -89,9 +98,9 @@
 3. **静默成功**：无匹配/成功/非决策输出尽量静默
 4. **SSoT**：索引是唯一权威清单，内容以 notes 为准
 5. **基本操作模型**：所有操作简化为 create/update/delete 三个基本操作，统一操作模型
+
 ## 参考
 
 - **记忆写入**：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）
 - **记忆检索与注入**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）
-

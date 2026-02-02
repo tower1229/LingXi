@@ -41,19 +41,7 @@ args:
 
 ## 执行逻辑
 
-本命令将执行逻辑委托给 `plan-executor` Skill，包括：
-
-1. 理解 req 文档内容并生成 plan 所需内容
-2. 代码库分析（复杂需求）
-3. 服务上下文补齐（推荐）
-4. 澄清性问题（复杂需求）
-5. 外部知识放大（推荐）
-6. 任务拆解
-7. 测试设计
-8. 测试框架检测与安装
-9. 文档生成（plan + testcase）
-
-详细执行流程请参考 `plan-executor` Skill 文档（`.cursor/skills/plan-executor/SKILL.md`）。
+本命令将执行逻辑委托给 `plan-executor` Skill。详细执行流程请参考 `plan-executor` Skill 文档（`.cursor/skills/plan-executor/SKILL.md`）。
 
 ## 记忆捕获
 

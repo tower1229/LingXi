@@ -34,18 +34,7 @@ args:
 
 ## 执行逻辑
 
-本命令将执行逻辑委托给 `req-executor` Skill，包括：
-
-1. 项目上下文分析
-2. 任务编号和标题生成
-3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
-4. 类型识别与复杂度评估
-5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 记忆融入（通过 sessionStart hook 注入的约定 + memory-retrieve 的每轮最小注入）
-7. 模板选择
-8. 文档生成
-
-详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
+本命令将执行逻辑委托给 `req-executor` Skill。详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
 
 ## 记忆捕获
 
