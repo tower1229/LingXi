@@ -20,7 +20,7 @@ model: inherit
 
 在给定 mode 与 input 下：
 
-1. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时从 input+context 分析并产出候选，无则静默返回。
+1. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时从 input+context 分析并产出候选，无则静默返回。当 input（或 context）包含用户的**拒绝、否定、排除**（如「不要 X」「别用 Y」「这里不能用 Z」）时，**也应产出候选**。mode=auto 时**倾向多产出 1–2 条候选**供用户门控筛选，而不是过度保守导致不产出；若确实无任何可沉淀点再静默返回。
 2. **治理**：对 `memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
 3. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。
 4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。
@@ -37,6 +37,8 @@ model: inherit
 - **One-liner (for injection)**：一句可执行提醒
 - **Context / Decision**：Decision, Signals, Alternatives（可选）, Counter-signals（可选）
 - **Pointers**（可选）
+
+**反例/拒绝类候选**：当 input 包含用户的拒绝、否定、排除时，产出的候选的 One-liner 或 Decision 可表述为**约束/禁止**（如「本项目此处不用 var，用 let/const」）；**Counter-signals** 或 **When to load** 中体现「何时不适用」或「在什么情况下必须遵守该禁止」。反例类候选与现有 note 的冲突按既有治理逻辑（same_scenario、conflict 等）处理。
 
 ### 治理逻辑（语义近邻 TopK）
 
@@ -58,7 +60,7 @@ merge/replace 时在本对话内输出：
 
 - **MERGE**（或 **REPLACE**）：… 理由：…
 
-请选择：✅ A) 确认  ❌ B) 取消  ➕ C) 改为新增  👀 D) 查看对比
+请选择：✅ A) 确认 ❌ B) 取消 ➕ C) 改为新增 👀 D) 查看对比
 ```
 
 支持用户回复 A/B/C/D 或「确认」「取消」等。**仅在用户确认后**执行写入或删除。
