@@ -9,6 +9,7 @@ import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
@@ -26,8 +27,16 @@ function truncate(s, max = MAX_PREVIEW) {
   return s.length <= max ? s : s.slice(0, max) + "...";
 }
 
+/**
+ * 获取系统当前时间戳（ISO 8601格式，UTC）
+ */
+function getSystemTimestamp() {
+  // 使用系统API获取当前时间，转换为ISO 8601格式
+  return new Date().toISOString();
+}
+
 function buildPayload(input) {
-  const ts = new Date().toISOString();
+  const ts = getSystemTimestamp();
   const conversation_id = input.conversation_id ?? "";
   const generation_id = input.generation_id ?? "";
   const hookName = input.hook_event_name ?? "";
@@ -78,19 +87,67 @@ function getAllowOutput(hookName) {
   return {};
 }
 
+/**
+ * 轮转审计日志文件：当文件超过大小限制时，删除总条数一半的旧日志
+ */
+function rotateAuditFile(auditPath) {
+  try {
+    const stats = fs.statSync(auditPath, { throwIfNoEntry: false });
+    if (!stats || stats.size < MAX_FILE_SIZE) {
+      return; // 无需轮转
+    }
+
+    // 读取所有日志行
+    const content = fs.readFileSync(auditPath, { encoding: "utf8" });
+    const lines = content.split("\n").filter((line) => line.trim().length > 0);
+
+    // 计算需要保留的行数（保留后一半）
+    const totalLines = lines.length;
+    const keepLines = Math.ceil(totalLines / 2); // 保留后一半，向上取整
+
+    if (keepLines >= totalLines) {
+      // 如果保留行数等于总行数，说明只有1行或0行，无需清理
+      return;
+    }
+
+    // 保留后一半的行
+    const linesToKeep = lines.slice(-keepLines);
+    const newContent = linesToKeep.join("\n") + "\n";
+
+    // 写回文件（使用临时文件确保原子性）
+    const tempPath = auditPath + ".tmp";
+    fs.writeFileSync(tempPath, newContent, { encoding: "utf8" });
+    fs.renameSync(tempPath, auditPath);
+  } catch (err) {
+    // 轮转失败不影响主流程，静默降级
+    console.error("[lingxi-audit] Rotation failed:", err.message);
+  }
+}
+
 async function main() {
   const input = await readStdinJson();
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
-  const auditPath = path.join(projectRoot, AUDIT_REL);
+  let auditPath = path.join(projectRoot, AUDIT_REL);
   const workspaceDir = path.dirname(auditPath);
 
-  const payload = buildPayload(input);
-  const line = JSON.stringify(payload) + "\n";
-
+  // 确保目录存在
   if (!fs.existsSync(workspaceDir)) {
     fs.mkdirSync(workspaceDir, { recursive: true });
   }
-  fs.appendFileSync(auditPath, line, "utf8");
+
+  // 检查文件大小并轮转（如果存在且超过限制）
+  if (fs.existsSync(auditPath)) {
+    rotateAuditFile(auditPath);
+  }
+
+  // 构建 payload，确保 JSON.stringify 正确处理 Unicode
+  const payload = buildPayload(input);
+  // JSON.stringify 默认会将非 ASCII 字符转义为 \uXXXX，这是 JSON 标准
+  // 如果需要保留原始字符，可以使用 JSON.stringify(payload, null, 0) 但输出会更大
+  const line = JSON.stringify(payload) + "\n";
+
+  // 使用 UTF-8 编码写入（明确指定，确保跨平台一致性）
+  fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
 
   const out = getAllowOutput(input.hook_event_name);
   writeStdoutJson(out);
