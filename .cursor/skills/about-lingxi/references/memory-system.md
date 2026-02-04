@@ -50,7 +50,9 @@
 
 建议字段：
 
-| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | File |
+| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
+
+CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id），用于审计与治理关联。
 
 ## 记忆文件（notes/\*.md）
 
@@ -58,7 +60,7 @@
 
 每条记忆一个文件，小而清晰，建议结构：
 
-- Meta（Id/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags）
+- Meta（Id/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags/CreatedAt/UpdatedAt/Session）
 - When to load（1-3 条）
 - One-liner（用于注入）
 - Context / Decision（decision + signals + alternatives + counter-signals）

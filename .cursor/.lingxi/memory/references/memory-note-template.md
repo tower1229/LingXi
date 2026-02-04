@@ -12,8 +12,11 @@
 - **Scope**: narrow / medium / broad
 - **Audience**: team / project / personal
 - **Portability**: cross-project / project-only
-- **Source**: <packName>@<version> / manual / init
+- **Source**: <packName>@<version> / manual / init / user / auto
 - **Tags**: <tag1>, <tag2> (optional)
+- **CreatedAt**: ISO 8601 时间，创建时间
+- **UpdatedAt**: ISO 8601 时间，最后更新时间
+- **Session**: 创建/更新时的会话 ID（conversation_id），用于审计与治理关联
 
 ## When to load
 

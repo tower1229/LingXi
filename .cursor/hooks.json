@@ -5,6 +5,46 @@
             {
                 "command": "node .cursor/hooks/session-init.mjs"
             }
+        ],
+        "beforeSubmitPrompt": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "afterAgentResponse": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "postToolUse": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "postToolUseFailure": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "subagentStart": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "subagentStop": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "sessionEnd": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
+        "stop": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
         ]
     }
 }

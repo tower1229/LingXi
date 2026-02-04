@@ -15,6 +15,8 @@ model: inherit
   - **remember**：用户执行 `/remember`；传入用户原始内容（或编号如 `1,3`、`全部`）与必要上下文。
 - **input**：用户 `/remember` 的原文、编号选择，或（mode=auto 时）本轮消息/要点。
 - **context**（按需）：项目/背景/相关记忆的简短摘要。你**仅根据本次调用收到的内容**工作，不访问主对话历史。
+- **conversation_id**（按需）：当前会话 ID，由父代理从 sessionStart 约定或上下文获取并传入，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
+- **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
 
 ## 职责（单一）
 
@@ -23,7 +25,7 @@ model: inherit
 1. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时从 input+context 分析并产出候选，无则静默返回。当 input（或 context）包含用户的**拒绝、否定、排除**（如「不要 X」「别用 Y」「这里不能用 Z」）时，**也应产出候选**。mode=auto 时**倾向多产出 1–2 条候选**供用户门控筛选，而不是过度保守导致不产出；若确实无任何可沉淀点再静默返回。
 2. **治理**：对 `memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
 3. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。
-4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。
+4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」）。
 5. **回传主对话**：仅一句结果（如「已记下：…」或「需在记忆库对话中确认：MERGE …」）；成功可静默；失败一句错误与建议。
 
 ## 候选与治理（规范内聚）
@@ -68,15 +70,26 @@ merge/replace 时在本对话内输出：
 ### INDEX 格式（直接读写）
 
 - 路径：`.cursor/.lingxi/memory/INDEX.md`
-- 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | File |`
-- 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。
+- 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |`
+- 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（当前会话 ID，即本次调用传入的 conversation_id）。
+
+### 记忆审计（写盘后必须执行）
+
+每次**新建 note**、**更新 note**、**删除 note** 或**更新 INDEX** 后，在同一流程内追加一条记忆审计 NDJSON 到 `.cursor/.lingxi/workspace/audit.log`（与主审计同一文件）。方式：在项目根目录执行：
+
+```bash
+node .cursor/hooks/append-memory-audit.mjs '<JSON>'
+```
+
+JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_updated` | `memory_note_deleted` | `memory_index_updated`）、`ts`（由脚本自动生成）、`conversation_id`、`generation_id`（本次调用传入）、`note_id`、`operation`（如 create/update/delete）、`source`（如 user/auto）、`file`（note 相对路径）。memory_index_updated 可不含 note_id，可选 `reason`。详见 req §8.2 记忆审计字段约定。
 
 ## 写入实现（直接文件操作）
 
 - **禁止**调用任何 memory-storage 脚本；使用 Cursor 提供的**读/写/编辑文件**能力。
-- 新建：写入 `.cursor/.lingxi/memory/notes/MEM-<id>.md`（内容符合模板），在 INDEX 表后追加一行。
-- 更新：读取目标 note，按 merge/replace 规则改内容后写回；更新 INDEX 中对应行。
-- 删除：删除 note 文件，从 INDEX 中移除该行。
+- 新建：写入 `.cursor/.lingxi/memory/notes/MEM-<id>.md`（内容符合模板，Meta 含 CreatedAt、UpdatedAt、Source、Session），在 INDEX 表后追加一行；然后调用 append-memory-audit.mjs 写入 `memory_note_created` 事件。
+- 更新：读取目标 note，按 merge/replace 规则改内容后写回（更新 UpdatedAt、Session）；更新 INDEX 中对应行；然后调用 append-memory-audit.mjs 写入 `memory_note_updated` 事件。
+- 删除：删除 note 文件，从 INDEX 中移除该行；然后调用 append-memory-audit.mjs 写入 `memory_note_deleted` 事件。
+- 每次更新 INDEX 后可选追加 `memory_index_updated` 事件（如批量刷新时）。
 - Id 格式：`MEM-` + 稳定标识（如数字或短哈希），保证唯一。
 
 ## 输出原则
