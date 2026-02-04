@@ -34,18 +34,7 @@ args:
 
 ## 执行逻辑
 
-本命令将执行逻辑委托给 `req-executor` Skill，包括：
-
-1. 项目上下文分析
-2. 任务编号和标题生成
-3. 需求提纯（5W1H、隐含意图挖掘、用户确认）
-4. 类型识别与复杂度评估
-5. 需求放大（外部调研、方案对比、最佳实践融入）
-6. 记忆融入（通过 sessionStart hook 注入的约定 + memory-retrieve 的每轮最小注入）
-7. 模板选择
-8. 文档生成
-
-详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
+本命令将执行逻辑委托给 `req-executor` Skill。详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
 
 ## 记忆捕获
 
@@ -56,7 +45,7 @@ args:
 - 任务完成或关键决策出现时，主 Agent 可使用**显式调用**：`/lingxi-memory mode=auto input=<本轮要点>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」
 - 候选在会话中展示，用户可选择沉淀
 
-**触发场景**：当发生以下情况时，可**显式调用** lingxi-memory 子代理写入记忆：
+**触发场景**：当发生以下情况时，可**显式调用** lingxi-memory 子代理写入记忆：用户拒绝、纠正、排除（如不要/别用/改成…）时也识别并传入记忆候选。
 
 - 需求固化、范围调整、优先级变更
 - 目标纠正、方案选择、约束添加

@@ -1,6 +1,7 @@
 # Memory Note Template
 
 > 目标：写出**更利于语义检索与最小注入**的记忆文件（小而清晰）。
+> 记忆应记录**可复用的品味与约定**（原则、决策、模式、排障路径等），**不要**写入一次性任务实施细节（如某次迁移步骤、某任务的具体实现顺序）。
 
 ## Meta
 
@@ -11,8 +12,11 @@
 - **Scope**: narrow / medium / broad
 - **Audience**: team / project / personal
 - **Portability**: cross-project / project-only
-- **Source**: <packName>@<version> / manual / init
+- **Source**: <packName>@<version> / manual / init / user / auto
 - **Tags**: <tag1>, <tag2> (optional)
+- **CreatedAt**: ISO 8601 时间，创建时间
+- **UpdatedAt**: ISO 8601 时间，最后更新时间
+- **Session**: 创建/更新时的会话 ID（conversation_id），用于审计与治理关联
 
 ## When to load
 
@@ -20,7 +24,7 @@
 
 ## One-liner (for injection)
 
-一句话可执行提醒：你希望下次我在类似场景下“立刻做对”的那句话。
+一句话可执行提醒：你希望下次我在类似场景下“立刻做对”的那句话。**拒绝、排除、反例**（如「不要…」「这里不用…」）也可写成记忆；用 **Counter-signals** 或 **One-liner** 表达禁止/约束，便于检索时注入。
 
 ## Context / Decision
 
@@ -32,4 +36,3 @@
 ## Pointers
 
 尽量给可定位的指针（文件/目录/模块名），避免大段复制内容。
-

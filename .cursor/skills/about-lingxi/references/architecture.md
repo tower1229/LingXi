@@ -19,19 +19,20 @@
 
 ### Commands（命令入口）
 
-Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。
+Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 req、plan、build、review 等命令，除 `/req` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
-| 命令 | 职责 | 委托的 Skill |
-|------|------|-------------|
-| `/req` | 创建任务文档（自动生成任务编号和标题） | `req-executor` |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件） | - |
-| `/plan` | 任务规划（可选，适用于复杂任务） | `plan-executor` |
-| `/build` | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式） | `build-executor` |
-| `/review` | 审查交付（核心审查和按需审查，测试执行） | `review-executor` |
-| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | **lingxi-memory**（Subagent） |
-| `/init` | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；写入时通过**显式调用** **lingxi-memory** 子代理（`/lingxi-memory` 或自然语言提及） |
+| 命令          | 职责                                                                                   | 委托的 Skill                                                                                              |
+| ------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `/req`        | 创建任务文档（自动生成任务编号和标题）                                                 | `req-executor`                                                                                            |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）                                          | -                                                                                                         |
+| `/plan`       | 任务规划（可选，适用于复杂任务）                                                       | `plan-executor`                                                                                           |
+| `/build`      | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式）                            | `build-executor`                                                                                          |
+| `/review`     | 审查交付（核心审查和按需审查，测试执行）                                               | `review-executor`                                                                                         |
+| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                                 | **lingxi-memory**（Subagent）                                                                             |
+| `/init`       | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；写入时通过**显式调用** **lingxi-memory** 子代理（`/lingxi-memory` 或自然语言提及） |
 
 **特性**：
+
 - 多入口设计：所有命令独立执行，不依赖前一阶段完成
 - 流程解耦：所有环节可跳过，按需执行
 - 手动指定任务编号：除 `/req` 外所有命令必须手动指定任务编号（001, 002, ...）
@@ -41,6 +42,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 Skills 承载详细的工作流指导，按职责分为：
 
 #### Executor Skills（执行核心工作流）
+
 - `req-executor`：需求分析、提纯、放大和文档生成
 - `plan-executor`：任务规划、测试设计和文档生成
 - `build-executor`：代码实现、测试编写和执行
@@ -48,15 +50,18 @@ Skills 承载详细的工作流指导，按职责分为：
 - `init-executor`：项目初始化（分类型收集清单 → 连续编号候选清单 → 用户门控后可选写入）
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
+
 - **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
 - `memory-retrieve`（Skill）：每轮回答前检索 `memory/notes/` 并最小注入（由 sessionStart hook 注入的约定触发）
 
 #### 工具类 Skills（提供辅助能力）
+
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
 - `write-doc`：文档编写和风格一致性保证
 - `style-fusion`：风格画像提取和融合
 
 #### 审查类 Skills（Review 阶段专用）
+
 - `reviewer-doc-consistency`：文档一致性审查
 - `reviewer-security`：安全审查
 - `reviewer-performance`：性能审查
@@ -70,6 +75,7 @@ Skills 承载详细的工作流指导，按职责分为：
 2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=...` 或 `mode=auto input=...`，或自然语言提及子代理）将任务交给子代理；子代理产候选 → 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
+
 - **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定；其他审计/门控为可选
 
 ## 目录结构
@@ -122,6 +128,7 @@ Skills 承载详细的工作流指导，按职责分为：
 5. `/review 001`：审查交付（自动进行多维度审查，生成审查报告，包含核心审查和按需审查）
 
 **特性**：
+
 - 所有环节可跳过，按需执行
 - 无生命周期管理，无状态路由
 - 每个命令独立执行，不依赖前一阶段完成

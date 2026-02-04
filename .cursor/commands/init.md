@@ -28,6 +28,10 @@
 
 命令无需参数，通过对话式引导收集项目信息。
 
+## 执行逻辑
+
+本命令将执行逻辑委托给 `init-executor` Skill。详细执行流程与收集清单见 `.cursor/skills/init-executor/SKILL.md` 及 `skills/init-executor/references/init-checklists.md`。
+
 ---
 
 ## 写入门控（关键规则）
