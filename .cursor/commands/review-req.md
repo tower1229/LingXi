@@ -17,7 +17,6 @@ args:
 
 ## 前置要求
 
-- **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
 - req 文档已存在：`.cursor/.lingxi/requirements/<taskId>.req.*.md`
 
 ## 使用方式
@@ -162,4 +161,7 @@ args:
 
 - **无问题**：如果文档质量良好，无重大问题，静默输出简要总结即可
 - **有问题**：发现问题时，详细列出问题清单和改进建议
-- **不重复审查**：如果文档刚创建且用户未做修改，可以提示"文档质量良好"或静默通过
+
+### 5. 下一步建议（有输出时）
+
+审查结果输出后，当本次回复已有正文（总体评价、问题清单等）时，在末尾追加「下一步可尝试（选一项）」的 A/B/C/D 四项，A 为推荐；按质量自检（是否发现 Blockers/High）决定 A：无 Blockers/High 时 A=plan/build，有 Blockers/High 时 A=先改 req。格式、允许动作集合与推荐逻辑见 `.cursor/.lingxi/requirements/002.req.工作流下一步建议.md` 附录 6.1、6.2、6.5。当用户下一轮仅输入 A、B、C 或 D 时，视为选择该选项，执行或引导执行对应命令。
