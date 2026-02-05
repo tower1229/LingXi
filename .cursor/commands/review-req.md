@@ -3,8 +3,8 @@ name: review-req
 description: 审查 req 文档（可选，可多次执行）
 args:
   - name: taskId
-    required: true
-    description: 任务编号（如 001）
+    required: false
+    description: 任务编号（如 001），省略时自动查找最新编号的任务
 ---
 
 # /review-req - 审查 req 文档
@@ -22,8 +22,11 @@ args:
 ## 使用方式
 
 ```
-/review-req <taskId>
+/review-req [taskId]
 ```
+
+- **指定 taskId**：审查指定任务的 req 文档
+- **省略 taskId**：自动查找最新编号的任务
 
 **示例**：
 

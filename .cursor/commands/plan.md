@@ -3,8 +3,8 @@ name: plan
 description: 生成任务规划（产出：001.plan.<标题>.md + 001.testcase.<标题>.md）
 args:
   - name: taskId
-    required: true
-    description: 任务编号（如 001）
+    required: false
+    description: 任务编号（如 001），省略时自动查找最新编号的任务
 ---
 
 # /plan - 任务规划
@@ -18,8 +18,11 @@ args:
 ## 使用方式
 
 ```
-/plan <taskId>
+/plan [taskId]
 ```
+
+- **指定 taskId**：基于指定任务的 req 文档生成规划
+- **省略 taskId**：自动查找最新编号的任务
 
 **示例**：
 

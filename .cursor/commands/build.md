@@ -3,8 +3,8 @@ name: build
 description: 执行构建（双模式：Plan-driven 或 Agent-driven）
 args:
   - name: taskId
-    required: true
-    description: 任务编号（如 001）
+    required: false
+    description: 任务编号（如 001），省略时自动查找最新编号的任务
 ---
 
 # /build - 执行构建
@@ -21,8 +21,11 @@ args:
 ## 使用方式
 
 ```
-/build <taskId>
+/build [taskId]
 ```
+
+- **指定 taskId**：构建指定任务
+- **省略 taskId**：自动查找最新编号的任务
 
 **示例**：
 

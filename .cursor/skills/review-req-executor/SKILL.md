@@ -10,7 +10,8 @@ description: 当执行 /review-req 命令时自动激活，负责对 req 文档�
 ### 1. 读取 req 文件
 
 - 扫描 `.cursor/.lingxi/requirements/` 目录
-- 查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
+- **如果指定 taskId**：查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
+- **如果省略 taskId**：提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 - 如果找不到文件，输出错误信息并提供解决方案
 
 ### 2. 解析 req 元数据
@@ -293,7 +294,7 @@ req 文档是「集设计灵感、产品构思、实现途径于一体的任务�
 
 ## 与 Commands 的协作
 
-本 Skill 由 `/review-req <taskId>` 命令自动激活，执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
+本 Skill 由 `/review-req` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
 
 ---
 

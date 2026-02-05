@@ -1,6 +1,6 @@
 ---
 name: build-executor
-description: 当执行 /build 001 命令时自动激活，负责代码实现、测试编写和执行。
+description: 当执行 /build 命令时自动激活（taskId 可选，省略时使用最新任务），负责代码实现、测试编写和执行。
 ---
 
 # Build Executor
@@ -9,19 +9,21 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 ### 1. 模式检测（自动）
 
-执行 `/build <taskId>` 时，自动检测执行模式：
+执行 `/build [taskId]` 时，自动检测执行模式：
 
-1. **检测 plan 文件**：
+1. **确定 taskId**：
+   - **如果指定 taskId**：使用指定的任务编号
+   - **如果省略 taskId**：扫描 `.cursor/.lingxi/requirements/` 目录，提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 
+2. **检测 plan 文件**：
    - 扫描 `.cursor/.lingxi/requirements/` 目录
    - 查找 `<taskId>.plan.*.md` 文件（如 `001.plan.*.md`）
 
-2. **模式判断**：
-
+3. **模式判断**：
    - **存在 plan 文件** → Plan-driven 模式
    - **不存在 plan 文件** → Agent-driven 模式
 
-3. **模式提示**：
+4. **模式提示**：
    - 静默检测，在开始执行时输出当前模式（如："检测到 plan 文档，进入 Plan-driven 模式"）
 
 ### 2. Plan-driven 模式执行逻辑（有 plan 时）
@@ -251,7 +253,7 @@ description: 当执行 /build 001 命令时自动激活，负责代码实现、�
 
 ## 与 Commands 的协作
 
-本 Skill 由 `/build 001` 命令自动激活，执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
+本 Skill 由 `/build` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
 
 ---
 
