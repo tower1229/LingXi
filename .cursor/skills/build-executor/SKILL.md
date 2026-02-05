@@ -13,10 +13,10 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 1. **确定 taskId**：
    - **如果指定 taskId**：使用指定的任务编号
-   - **如果省略 taskId**：扫描 `.cursor/.lingxi/requirements/` 目录，提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
+   - **如果省略 taskId**：扫描 `.cursor/.lingxi/tasks/` 目录，提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 
 2. **检测 plan 文件**：
-   - 扫描 `.cursor/.lingxi/requirements/` 目录
+   - 扫描 `.cursor/.lingxi/tasks/` 目录
    - 查找 `<taskId>.plan.*.md` 文件（如 `001.plan.*.md`）
 
 3. **模式判断**：
@@ -30,9 +30,9 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 #### 2.1 读取输入
 
-- `.cursor/.lingxi/requirements/<taskId>.req.<标题>.md`
-- `.cursor/.lingxi/requirements/<taskId>.plan.<标题>.md`
-- `.cursor/.lingxi/requirements/<taskId>.testcase.<标题>.md`
+- `.cursor/.lingxi/tasks/<taskId>.req.<标题>.md`
+- `.cursor/.lingxi/tasks/<taskId>.plan.<标题>.md`
+- `.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`
 
 #### 2.2 代码实现
 
@@ -72,7 +72,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 #### 3.1 读取输入
 
-- `.cursor/.lingxi/requirements/<taskId>.req.<标题>.md`（仅）
+- `.cursor/.lingxi/tasks/<taskId>.req.<标题>.md`（仅）
 
 #### 3.2 任务拆解（Agent 决策）
 

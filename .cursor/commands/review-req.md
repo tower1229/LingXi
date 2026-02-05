@@ -17,7 +17,7 @@ args:
 
 ## 前置要求
 
-- req 文档已存在：`.cursor/.lingxi/requirements/<taskId>.req.*.md`
+- req 文档已存在：`.cursor/.lingxi/tasks/<taskId>.req.*.md`
 
 ## 使用方式
 
@@ -34,7 +34,7 @@ args:
 /review-req 001
 ```
 
-命令会自动查找 `.cursor/.lingxi/requirements/001.req.*.md` 文件。
+命令会自动查找 `.cursor/.lingxi/tasks/001.req.*.md` 文件。
 
 ## 产物
 

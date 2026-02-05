@@ -9,7 +9,7 @@ description: 当执行 /plan 命令时自动激活（taskId 可选，省略时�
 
 ### 1. 读取输入
 
-- 扫描 `.cursor/.lingxi/requirements/` 目录
+- 扫描 `.cursor/.lingxi/tasks/` 目录
 - **如果指定 taskId**：查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
 - **如果省略 taskId**：提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 - 如果找不到文件，提示用户并提供解决方案

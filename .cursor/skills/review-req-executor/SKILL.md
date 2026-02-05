@@ -1,6 +1,6 @@
 ---
 name: review-req-executor
-description: 当执行 /review-req 命令时自动激活，负责对 req 文档进行多维度审查，辅助提升需求文档质量。
+description: 当执行 /review-req 命令时自动激活，负责对 req 文档进行多维度审查，辅助提升任务文档质量。
 ---
 
 # Review Req Executor
@@ -9,7 +9,7 @@ description: 当执行 /review-req 命令时自动激活，负责对 req 文档�
 
 ### 1. 读取 req 文件
 
-- 扫描 `.cursor/.lingxi/requirements/` 目录
+- 扫描 `.cursor/.lingxi/tasks/` 目录
 - **如果指定 taskId**：查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
 - **如果省略 taskId**：提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 - 如果找不到文件，输出错误信息并提供解决方案

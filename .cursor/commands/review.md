@@ -43,7 +43,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 
 ## 产物
 
-- `.cursor/.lingxi/requirements/<taskId>.review.<标题>.md`（审查总结报告，**不存档**）
+- `.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（审查总结报告，**不存档**）
 
 **输出规则（静默成功原则）**：
 

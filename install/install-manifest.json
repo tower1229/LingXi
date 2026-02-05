@@ -30,7 +30,9 @@
     "skills/write-doc/SKILL.md"
   ],
   "agents": {
-    "files": ["agents/lingxi-memory.md"]
+    "files": [
+      "agents/lingxi-memory.md"
+    ]
   },
   "references": {
     "about-lingxi": [
@@ -50,7 +52,7 @@
     "write-doc": []
   },
   "workflowDirectories": [
-    ".cursor/.lingxi/requirements",
+    ".cursor/.lingxi/tasks",
     ".cursor/.lingxi/memory",
     ".cursor/.lingxi/memory/notes",
     ".cursor/.lingxi/memory/notes/share",
