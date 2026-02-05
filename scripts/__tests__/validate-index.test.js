@@ -79,7 +79,7 @@ test('B1: 验证表头格式 - 字段顺序错误', () => {
 
 // B2: 验证 ID 格式
 test('B2: 验证 ID 格式 - 正确格式', () => {
-  const line = '| REQ-001 | Test | in-progress | req | Next |  | `.cursor/.lingxi/requirements/in-progress/REQ-001.md` |';
+  const line = '| REQ-001 | Test | in-progress | req | Next |  | `.cursor/.lingxi/tasks/in-progress/REQ-001.md` |';
   const row = parseRow(line);
   if (!row || row.id !== 'REQ-001') {
     throw new Error('期望解析成功，但解析失败');
@@ -87,7 +87,7 @@ test('B2: 验证 ID 格式 - 正确格式', () => {
 });
 
 test('B2: 验证 ID 格式 - 数字不足3位', () => {
-  const line = '| REQ-1 | Test | in-progress | req | Next |  | `.cursor/.lingxi/requirements/in-progress/REQ-1.md` |';
+  const line = '| REQ-1 | Test | in-progress | req | Next |  | `.cursor/.lingxi/tasks/in-progress/REQ-1.md` |';
   const row = parseRow(line);
   if (row) {
     throw new Error('期望解析失败（ID 格式不正确），但解析成功');
@@ -95,7 +95,7 @@ test('B2: 验证 ID 格式 - 数字不足3位', () => {
 });
 
 test('B2: 验证 ID 格式 - 非数字', () => {
-  const line = '| REQ-abc | Test | in-progress | req | Next |  | `.cursor/.lingxi/requirements/in-progress/REQ-abc.md` |';
+  const line = '| REQ-abc | Test | in-progress | req | Next |  | `.cursor/.lingxi/tasks/in-progress/REQ-abc.md` |';
   const row = parseRow(line);
   if (row) {
     throw new Error('期望解析失败（ID 格式不正确），但解析成功');
@@ -112,7 +112,7 @@ test('B3: 验证 Status 值 - 有效值', () => {
       id: 'REQ-001',
       status: status,
       currentPhase: 'req',
-      links: `.cursor/.lingxi/requirements/in-progress/REQ-001.md`
+      links: `.cursor/.lingxi/tasks/in-progress/REQ-001.md`
     };
     const errors = validateRow(row, projectRoot);
     // 只检查 status 相关的错误
@@ -128,7 +128,7 @@ test('B3: 验证 Status 值 - 无效值', () => {
     id: 'REQ-001',
     status: 'invalid-status',
     currentPhase: 'req',
-    links: `.cursor/.lingxi/requirements/in-progress/REQ-001.md`
+    links: `.cursor/.lingxi/tasks/in-progress/REQ-001.md`
   };
   const errors = validateRow(row, __dirname);
   const statusErrors = errors.filter(e => e.includes('Status 值无效'));
@@ -147,7 +147,7 @@ test('B4: 验证 Current Phase 值 - 有效值', () => {
       id: 'REQ-001',
       status: 'in-progress',
       currentPhase: phase,
-      links: `.cursor/.lingxi/requirements/in-progress/REQ-001.md`
+      links: `.cursor/.lingxi/tasks/in-progress/REQ-001.md`
     };
     const errors = validateRow(row, projectRoot);
     // 只检查 phase 相关的错误
@@ -163,7 +163,7 @@ test('B4: 验证 Current Phase 值 - 无效值', () => {
     id: 'REQ-001',
     status: 'in-progress',
     currentPhase: 'invalid-phase',
-    links: `.cursor/.lingxi/requirements/in-progress/REQ-001.md`
+    links: `.cursor/.lingxi/tasks/in-progress/REQ-001.md`
   };
   const errors = validateRow(row, __dirname);
   const phaseErrors = errors.filter(e => e.includes('Current Phase 值无效'));
@@ -180,7 +180,7 @@ test('B5: 检查文件一致性 - 文件存在', () => {
     id: 'REQ-001',
     status: 'completed',
     currentPhase: 'archive',
-    links: '`.cursor/.lingxi/requirements/completed/REQ-001.md` / `.plan.md` / `.review.md`'
+    links: '`.cursor/.lingxi/tasks/completed/REQ-001.md` / `.plan.md` / `.review.md`'
   };
   const errors = validateRow(row, projectRoot);
   const fileErrors = errors.filter(e => e.includes('文件不存在'));
@@ -197,7 +197,7 @@ test('B6: 检查目录一致性 - Status=completed, 文件在 completed/', () =>
     id: 'REQ-001',
     status: 'completed',
     currentPhase: 'archive',
-    links: '`.cursor/.lingxi/requirements/completed/REQ-001.md` / `.plan.md` / `.review.md`'
+    links: '`.cursor/.lingxi/tasks/completed/REQ-001.md` / `.plan.md` / `.review.md`'
   };
   const errors = validateRow(row, projectRoot);
   const dirErrors = errors.filter(e => e.includes('Status 为 "completed" 但文件在 in-progress/'));
@@ -212,7 +212,7 @@ test('B6: 检查目录一致性 - Status=in-progress, 文件在 in-progress/', (
     id: 'REQ-002',
     status: 'planned',
     currentPhase: 'audit',
-    links: '`.cursor/.lingxi/requirements/in-progress/REQ-002.md` / `.plan.md`'
+    links: '`.cursor/.lingxi/tasks/in-progress/REQ-002.md` / `.plan.md`'
   };
   const errors = validateRow(row, projectRoot);
   const dirErrors = errors.filter(e => e.includes('Status 为') && e.includes('但文件在 completed/'));
@@ -224,7 +224,7 @@ test('B6: 检查目录一致性 - Status=in-progress, 文件在 in-progress/', (
 // B7: 输出验证结果（通过主函数测试）
 test('B7: 输出验证结果 - 所有验证通过', () => {
   // 使用实际项目的 INDEX.md
-  const indexPath = path.join(__dirname, '../../../.cursor/.lingxi/requirements/INDEX.md');
+  const indexPath = path.join(__dirname, '../../../.cursor/.lingxi/tasks/INDEX.md');
   if (fs.existsSync(indexPath)) {
     // 读取并解析
     const content = fs.readFileSync(indexPath, 'utf8');

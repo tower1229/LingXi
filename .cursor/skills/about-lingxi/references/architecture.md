@@ -104,7 +104,7 @@ Skills 承载详细的工作流指导，按职责分为：
 └── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
 
 .cursor/.lingxi/
-├── requirements/          # 任务文档（统一目录）
+├── tasks/                 # 任务文档（统一目录）
 │   ├── 001.req.<标题>.md
 │   ├── 001.plan.<标题>.md
 │   └── ...

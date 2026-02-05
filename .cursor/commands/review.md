@@ -3,8 +3,8 @@ name: review
 description: 审查交付（产出：001.review.<标题>.md，不存档）
 args:
   - name: taskId
-    required: true
-    description: 任务编号（如 001）
+    required: false
+    description: 任务编号（如 001），省略时自动查找最新编号的任务
 ---
 
 # /review - 审查交付
@@ -16,8 +16,11 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 ## 使用方式
 
 ```
-/review <taskId>
+/review [taskId]
 ```
+
+- **指定 taskId**：审查指定任务的交付
+- **省略 taskId**：自动查找最新编号的任务
 
 **示例**：
 
@@ -40,7 +43,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 
 ## 产物
 
-- `.cursor/.lingxi/requirements/<taskId>.review.<标题>.md`（审查总结报告，**不存档**）
+- `.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（审查总结报告，**不存档**）
 
 **输出规则（静默成功原则）**：
 

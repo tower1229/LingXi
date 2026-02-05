@@ -1,6 +1,6 @@
 ---
 name: plan-executor
-description: 当执行 /plan 001 命令时自动激活，负责任务规划、测试设计和文档生成。
+description: 当执行 /plan 命令时自动激活（taskId 可选，省略时使用最新任务），负责任务规划、测试设计和文档生成。
 ---
 
 # Plan Executor
@@ -9,8 +9,9 @@ description: 当执行 /plan 001 命令时自动激活，负责任务规划、�
 
 ### 1. 读取输入
 
-- 扫描 `.cursor/.lingxi/requirements/` 目录
-- 查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
+- 扫描 `.cursor/.lingxi/tasks/` 目录
+- **如果指定 taskId**：查找 `<taskId>.req.*.md` 文件（如 `001.req.*.md`）
+- **如果省略 taskId**：提取所有 `*.req.*.md` 文件的编号，选取最大编号的任务
 - 如果找不到文件，提示用户并提供解决方案
 - 识别需求类型（前端/后端/全栈）和复杂度
 
@@ -388,8 +389,9 @@ graph TD
 
 - **场景描述**：简要描述要验证的用户流程
 - **前置条件**：
-  - 服务器运行在：`http://localhost:3000`
+  - 服务器运行在：`http://localhost:3000`（或从项目配置检测）
   - 测试数据准备：...
+  - 环境要求：...
 - **测试步骤**：
   1. 导航到 `/login`
   2. 输入邮箱：`user@example.com`
@@ -397,10 +399,15 @@ graph TD
   4. 点击"登录"按钮
   5. 验证跳转到 `/dashboard`
 - **验证点**：
-  - URL 变更：`/login` → `/dashboard`
-  - 页面元素：存在用户头像元素（`.user-avatar`）
-  - 文本匹配：页面包含"欢迎"文本
-  - 网络请求：POST `/api/login` 返回 200
+  - **URL 变更**：`/login` → `/dashboard`
+  - **页面元素**：存在用户头像元素（`.user-avatar`）
+  - **文本匹配**：页面包含"欢迎"文本
+  - **网络请求**：POST `/api/login` 返回 200（如关键流程涉及 API 调用）
+  - **控制台检查**：无 JavaScript 错误
+  - **截图要求**：登录后页面状态（用于视觉验证）
+- **响应式测试**（如适用）：
+  - 桌面端：1920x1080
+  - 移动端：375x667
 - **预期结果**：用户成功登录，跳转到仪表盘页面
 
 ---
@@ -500,7 +507,7 @@ graph TD
 
 ## 与 Commands 的协作
 
-本 Skill 由 `/plan 001` 命令自动激活，执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
+本 Skill 由 `/plan` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
 
 ---
 

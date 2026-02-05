@@ -6,15 +6,15 @@
 
 Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。
 
-| 命令 | 职责 | 委托的 Skill |
-|------|------|-------------|
-| `/req` | 创建任务文档（自动生成任务编号和标题） | `req-executor` |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件） | - |
-| `/plan` | 任务规划（可选，适用于复杂任务） | `plan-executor` |
-| `/build` | 执行构建（可选，Plan-driven / Agent-driven） | `build-executor` |
-| `/review` | 审查交付 | `review-executor` |
-| `/remember` | 写入记忆（随时可用，无需依赖任务编号） | **lingxi-memory**（Subagent） |
-| `/init` | 初始化项目（首次使用，引导式收集并可选写入记忆） | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
+| 命令          | 职责                                                                           | 委托的 Skill                                                    |
+| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                  |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                           |
+| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                 |
+| `/build`      | 执行构建（可选，Plan-driven / Agent-driven）；taskId 可选，省略时使用最新任务  | `build-executor`                                                |
+| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                               |
+| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                   |
+| `/init`       | 初始化项目（首次使用，引导式收集并可选写入记忆）                               | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
 
 ### Skills（执行逻辑）
 
