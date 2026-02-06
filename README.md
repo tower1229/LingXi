@@ -118,4 +118,4 @@ npm run memory-sync
 
 ## 相关文档
 
-- [核心组件架构](./docs/design/architecture.md)
+- [核心组件架构](.cursor/skills/about-lingxi/references/architecture.md)

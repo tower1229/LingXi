@@ -4,32 +4,21 @@
 
 灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
 
-## What（实现）
-
-灵犀通过以下方式实现核心价值：
-
-- **可伸缩工作流**：可任意组合的开发流程，兼顾工程严谨与轻便快捷，是工作流，也是工具包
-- **质量资产化**：过程产物、实践经验自动沉淀，让 AI 不止聪明，还懂你
-- **知识整合**：基于自然语言理解实现质量资产主动治理，让知识始终保鲜
-- **人工门控**：关键决策始终遵从创造者的指引，相信你拥有真正的判断力、品味和责任感
-- **上下文运营**：让模型聚焦关键信息，提高输出质量
-- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中落地 LingXi Workflow
-
 ## 核心组件
 
 ### Commands（命令入口）
 
 Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 req、plan、build、review 等命令，除 `/req` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
-| 命令          | 职责                                                                                   | 委托的 Skill                                                                                              |
-| ------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/req`        | 创建任务文档（自动生成任务编号和标题）                                                 | `req-executor`                                                                                            |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）                                          | -                                                                                                         |
-| `/plan`       | 任务规划（可选，适用于复杂任务）                                                       | `plan-executor`                                                                                           |
-| `/build`      | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式）                            | `build-executor`                                                                                          |
-| `/review`     | 审查交付（核心审查和按需审查，测试执行）                                               | `review-executor`                                                                                         |
-| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                                 | **lingxi-memory**（Subagent）                                                                             |
-| `/init`       | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；写入时通过**显式调用** **lingxi-memory** 子代理（`/lingxi-memory` 或自然语言提及） |
+| 命令          | 职责                                                                           | 委托的 Skill                                                    |
+| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                  |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                           |
+| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                 |
+| `/build`      | 执行构建（可选，Plan-driven / Agent-driven）；taskId 可选，省略时使用最新任务  | `build-executor`                                                |
+| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                               |
+| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                   |
+| `/init`       | 初始化项目（首次使用，引导式收集并可选写入记忆）                               | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
 
@@ -139,9 +128,3 @@ Skills 承载详细的工作流指导，按职责分为：
 2. 主 Agent 通过**显式调用**（在提示中使用 `/lingxi-memory mode=remember input=...` 或 `/lingxi-memory mode=auto input=...`，或自然语言「使用 lingxi-memory 子代理…」）将任务交给 **lingxi-memory** 子代理
 3. 子代理在独立上下文中：产候选 → 治理（TopK）→ 门控（如需）→ 直接读写 `memory/notes/` 与 `memory/INDEX.md`
 4. 主对话仅收一句结果或静默
-
-## 参考
-
-- **核心组件架构**：`docs/design/architecture.md`
-- **2.0 重构方案**：`docs/prd/lingxi-2.0-refactor.md`
-- **工作流生命周期**：`.cursor/.lingxi/memory/notes/MEM-workflow-lifecycle.md`
