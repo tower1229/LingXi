@@ -32,6 +32,7 @@ Skills 承载详细的工作流指导，按职责分为：
 #### Executor Skills（执行核心工作流）
 
 - `req-executor`：需求分析、提纯、放大和任务文档生成
+- `review-req-executor`：对 req 文档进行多维度审查，辅助提升任务文档质量
 - `plan-executor`：任务规划、测试设计和计划文档文档及测试用例文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
@@ -45,8 +46,6 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 工具类 Skills（提供辅助能力）
 
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-- `write-doc`：文档编写和风格一致性保证
-- `style-fusion`：风格画像提取和融合
 
 #### 审查类 Skills（Review 阶段专用）
 
@@ -78,6 +77,7 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── skills/                # 执行逻辑
 │   ├── req-executor/
+│   ├── review-req-executor/
 │   ├── plan-executor/
 │   ├── build-executor/
 │   ├── review-executor/
@@ -100,7 +100,6 @@ Skills 承载详细的工作流指导，按职责分为：
 │   ├── INDEX.md           # 统一索引（SSoT）
 │   ├── notes/             # 扁平记忆文件（语义检索的主搜索面）
 │   └── references/        # 模板与规范
-├── style-fusion/          # 风格融合数据
 └── workspace/             # 工作空间
     └── processed-sessions.json  # 会话去重记录
 ```

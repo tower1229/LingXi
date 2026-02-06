@@ -115,8 +115,6 @@
 **工具类 Skills**：
 
 - `about-lingxi`：快速了解灵犀的背景知识
-- `write-doc`：文档编写和风格一致性保证
-- `style-fusion`：风格画像提取和融合
 
 **审查类 Skills**：
 
