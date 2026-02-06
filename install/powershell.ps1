@@ -231,6 +231,32 @@ foreach ($dir in $Manifest.workflowDirectories) {
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
+# 为 share 目录创建 .gitkeep 文件（确保空目录被 git 跟踪）
+$ShareDir = ".cursor\.lingxi\memory\notes\share"
+if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
+    @"
+# Share Directory
+# 
+# 此目录用于存放可跨项目复用的团队级记忆（推荐作为 git submodule）
+# 
+# 使用方式：
+# 1. 添加 share 仓库（submodule）：
+#    git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
+# 
+# 2. 更新 share 仓库：
+#    git submodule update --remote --merge
+# 
+# 3. 同步记忆索引（新增共享经验后执行）：
+#    npm run memory-sync
+# 
+# 推荐约定：
+# - 团队级质量标准：Audience=team，Portability=cross-project
+# - 团队级常见需求标准方案：Audience=team，Portability=cross-project
+# - 前后端/运维默认约定：Audience=team，Portability=cross-project
+# - 项目内特殊备忘：Audience=project，Portability=project-only（不放入 share）
+"@ | Out-File -FilePath "$ShareDir\.gitkeep" -Encoding UTF8 -NoNewline
+}
+
 # workspace 目录会在首次使用时自动创建，无需初始化文件
 
 # 下载 INDEX.md 文件

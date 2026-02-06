@@ -60,6 +60,12 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`
 2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=...` 或 `mode=auto input=...`，或自然语言提及子代理）将任务交给子代理；子代理产候选 → 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
+3. **记忆共享机制**（跨项目复用）：
+   - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
+   - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
+   - **写入**：`lingxi-memory` 子代理支持写入到 `share/` 目录；写入位置由用户门控时决定，或根据 `Portability` 字段提示用户
+   - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义搜索会自动包含共享记忆
+   - **索引同步**：`memory-sync` 脚本（`npm run memory-sync`）递归扫描 `notes/**` 并更新 `INDEX.md`，支持 project 覆盖 share 的冲突优先级规则
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
@@ -99,7 +105,8 @@ Skills 承载详细的工作流指导，按职责分为：
 ├── memory/                # 统一记忆系统
 │   ├── INDEX.md           # 统一索引（SSoT）
 │   ├── notes/             # 扁平记忆文件（语义检索的主搜索面）
-│   └── references/        # 模板与规范
+│   │   └── share/          # 共享记忆目录（推荐作为 git submodule，跨项目复用）
+│   └── references/         # 模板与规范
 └── workspace/             # 工作空间
     └── processed-sessions.json  # 会话去重记录
 ```
