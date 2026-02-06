@@ -4,38 +4,26 @@
 
 灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
 
-## What（实现）
-
-灵犀通过以下方式实现核心价值：
-
-- **可伸缩工作流**：可任意组合的开发流程，兼顾工程严谨与轻便快捷，是工作流，也是工具包
-- **质量资产化**：过程产物、实践经验自动沉淀，让 AI 不止聪明，还懂你
-- **知识整合**：基于自然语言理解实现质量资产主动治理，让知识始终保鲜
-- **人工门控**：关键决策始终遵从创造者的指引，相信你拥有真正的判断力、品味和责任感
-- **上下文运营**：让模型聚焦关键信息，提高输出质量
-- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中落地 LingXi Workflow
-
 ## 核心组件
 
 ### Commands（命令入口）
 
 Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 req、plan、build、review 等命令，除 `/req` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
-| 命令          | 职责                                                                                   | 委托的 Skill                                                                                              |
-| ------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/req`        | 创建任务文档（自动生成任务编号和标题）                                                 | `req-executor`                                                                                            |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）                                          | -                                                                                                         |
-| `/plan`       | 任务规划（可选，适用于复杂任务）                                                       | `plan-executor`                                                                                           |
-| `/build`      | 执行构建（可选，支持 Plan-driven 和 Agent-driven 两种模式）                            | `build-executor`                                                                                          |
-| `/review`     | 审查交付（核心审查和按需审查，测试执行）                                               | `review-executor`                                                                                         |
-| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                                 | **lingxi-memory**（Subagent）                                                                             |
-| `/init`       | 初始化项目（首次使用，引导式收集项目信息并生成连续编号的记忆候选清单，需用户门控写入） | `init-executor`（主）；写入时通过**显式调用** **lingxi-memory** 子代理（`/lingxi-memory` 或自然语言提及） |
+| 命令          | 职责                                                                           | 委托的 Skill                                                    |
+| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                  |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                           |
+| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                 |
+| `/build`      | 执行构建（可选，Plan-driven / Agent-driven）；taskId 可选，省略时使用最新任务  | `build-executor`                                                |
+| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                               |
+| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                   |
+| `/init`       | 初始化项目（首次使用，引导式收集并可选写入记忆）                               | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
 
 - 多入口设计：所有命令独立执行，不依赖前一阶段完成
 - 流程解耦：所有环节可跳过，按需执行
-- 手动指定任务编号：除 `/req` 外所有命令必须手动指定任务编号（001, 002, ...）
 
 ### Skills（执行逻辑）
 
@@ -43,8 +31,9 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### Executor Skills（执行核心工作流）
 
-- `req-executor`：需求分析、提纯、放大和文档生成
-- `plan-executor`：任务规划、测试设计和文档生成
+- `req-executor`：需求分析、提纯、放大和任务文档生成
+- `review-req-executor`：对 req 文档进行多维度审查，辅助提升任务文档质量
+- `plan-executor`：任务规划、测试设计和计划文档文档及测试用例文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
 - `init-executor`：项目初始化（分类型收集清单 → 连续编号候选清单 → 用户门控后可选写入）
@@ -57,8 +46,6 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 工具类 Skills（提供辅助能力）
 
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-- `write-doc`：文档编写和风格一致性保证
-- `style-fusion`：风格画像提取和融合
 
 #### 审查类 Skills（Review 阶段专用）
 
@@ -73,6 +60,12 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`
 2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=...` 或 `mode=auto input=...`，或自然语言提及子代理）将任务交给子代理；子代理产候选 → 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果
+3. **记忆共享机制**（跨项目复用）：
+   - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
+   - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
+   - **写入**：`lingxi-memory` 子代理支持写入到 `share/` 目录；写入位置由用户门控时决定，或根据 `Portability` 字段提示用户
+   - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义搜索会自动包含共享记忆
+   - **索引同步**：`memory-sync` 脚本（`npm run memory-sync`）递归扫描 `notes/**` 并更新 `INDEX.md`，支持 project 覆盖 share 的冲突优先级规则
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
@@ -90,6 +83,7 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── skills/                # 执行逻辑
 │   ├── req-executor/
+│   ├── review-req-executor/
 │   ├── plan-executor/
 │   ├── build-executor/
 │   ├── review-executor/
@@ -111,8 +105,8 @@ Skills 承载详细的工作流指导，按职责分为：
 ├── memory/                # 统一记忆系统
 │   ├── INDEX.md           # 统一索引（SSoT）
 │   ├── notes/             # 扁平记忆文件（语义检索的主搜索面）
-│   └── references/        # 模板与规范
-├── style-fusion/          # 风格融合数据
+│   │   └── share/          # 共享记忆目录（推荐作为 git submodule，跨项目复用）
+│   └── references/         # 模板与规范
 └── workspace/             # 工作空间
     └── processed-sessions.json  # 会话去重记录
 ```
@@ -139,9 +133,3 @@ Skills 承载详细的工作流指导，按职责分为：
 2. 主 Agent 通过**显式调用**（在提示中使用 `/lingxi-memory mode=remember input=...` 或 `/lingxi-memory mode=auto input=...`，或自然语言「使用 lingxi-memory 子代理…」）将任务交给 **lingxi-memory** 子代理
 3. 子代理在独立上下文中：产候选 → 治理（TopK）→ 门控（如需）→ 直接读写 `memory/notes/` 与 `memory/INDEX.md`
 4. 主对话仅收一句结果或静默
-
-## 参考
-
-- **核心组件架构**：`docs/design/architecture.md`
-- **2.0 重构方案**：`docs/prd/lingxi-2.0-refactor.md`
-- **工作流生命周期**：`.cursor/.lingxi/memory/notes/MEM-workflow-lifecycle.md`
