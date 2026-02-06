@@ -40,13 +40,13 @@
 
 #### 新项目
 
-如果您要创建新项目，推荐基于 LíngXī 模板 [创建 GitHub 仓库 ⇗](https://github.com/new?template_name=LingXi&template_owner=tower1229)。
+如果您要创建新项目，推荐基于 LíngXī 模板 [创建 GitHub 仓库](https://github.com/new?template_name=LingXi&template_owner=tower1229)；
 
 或者，直接到 [LingXi repository](https://github.com/tower1229/LingXi) 下载源码作为本地开发目录。
 
 #### 现有项目
 
-如果您要在现有项目中集成 LíngXī，可以使用安装脚本。
+如果您要在现有项目中集成 LíngXī，可以使用脚本一键安装：
 
 **Linux/macOS/Git Bash**
 
@@ -57,13 +57,6 @@ curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.
 **Windows PowerShell**
 
 ```powershell
-irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
-```
-
-如果 PowerShell 执行失败（执行策略限制），请先运行：
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
