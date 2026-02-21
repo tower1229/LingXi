@@ -35,10 +35,9 @@ description: 文档一致性审查专家，检查代码与文档是否一致。�
 - 具体问题描述和位置
 - 建议修复方向
 
-### 5. 静默返回结果
+### 5. 输出与静默
 
-- 不干扰主流程
-- 返回结构化审查结果
+遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果。
 
 ### 6. 降级处理
 

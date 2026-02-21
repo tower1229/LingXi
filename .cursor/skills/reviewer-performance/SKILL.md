@@ -37,10 +37,9 @@ description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险�
 - 具体问题描述和代码位置
 - 性能影响评估和优化建议
 
-### 5. 静默返回结果
+### 5. 输出与静默
 
-- 不干扰主流程
-- 返回结构化审查结果
+遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果。
 
 ### 6. 降级处理
 

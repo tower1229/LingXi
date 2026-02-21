@@ -90,7 +90,7 @@ description: 此 Skill 用于编写/修改项目文档，确保文档的语言�
 ### 6. 输出文档
 
 - 直接写入目标文件
-- 遵循"静默成功"原则：写入成功不输出确认信息，失败才输出错误
+- 输出遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)（写入成功不输出确认信息，失败才输出错误）
 
 ## 使用场景
 
@@ -182,4 +182,4 @@ if (promptResult.status === 'ok') {
 2. **自动风格匹配**：使用 `generatePrompt` 自动生成风格 prompt，确保文档风格与项目风格画像一致
 3. **直接使用 prompt**：生成的 prompt 已包含所有风格指导，无需任何转换或额外处理
 4. **错误处理**：如果风格画像不存在，提示用户先使用 style-fusion 生成风格画像
-5. **静默成功**：文档写入成功时不输出确认信息
+5. **输出与静默**：遵循 design-principles §4–4.1

@@ -77,6 +77,4 @@ args:
 
 ## 输出要求
 
-- **调用阶段**：静默完成显式调用，不要输出“委派给 lingxi-memory 进行治理和写入”等过程性描述。
-- **主对话**：仅根据 Subagent 返回展示一句结果（如「已记下：…」）或完全静默；需用户确认时由 Subagent 在其对话内展示，主对话可提示「需在记忆库对话中确认」。
-- **静默成功**：写入成功时完全静默；只有需要用户确认或出现失败时才输出。
+遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)：调用阶段静默完成；主对话仅一句结果或静默；写入成功可完全静默。

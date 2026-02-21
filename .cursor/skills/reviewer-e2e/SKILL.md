@@ -139,11 +139,9 @@ e. **验证结果**：
   - 标记剩余场景需要继续测试
   - 在结果中标注"部分完成"
 
-### 7. 静默返回结果
+### 7. 输出与静默
 
-- 不干扰主流程
-- 返回结构化审查结果
-- 格式与其他 reviewer skills 一致（Blockers/High/Medium/Low）
+遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。
 
 **测试执行风格说明**：
 - 优先使用官方风格的 `@browser` + 自然语言描述

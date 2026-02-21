@@ -268,6 +268,7 @@
 
 - **记忆检索约定**：由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入约定，要求每轮在回答前执行 `memory-retrieve`；不使用 Rules 作为该触发器
 - **系统级约束**：Rules 可用于补充关键的提示级约束（要求极精炼，使用指针，不复制长文）
+- **工作流输出与静默**：仅在灵犀 Command/Skill 执行时生效，通过引用 [design-principles.md](.cursor/skills/about-lingxi/references/design-principles.md) §4–4.1 实现，不使用全局 Rules
 
 ## 参考
 

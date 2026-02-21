@@ -45,7 +45,7 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 
 - `.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（审查总结报告，**不存档**）
 
-**输出规则（静默成功原则 + 下一步建议）**：
+**输出**：遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)（静默成功 + 有产物时末尾下一步建议）。
 
 - 审查完成（无论是否写入 review 报告）：**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 review-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。可不输出报告全文，但不可省略下一步建议。
 - 文件写入失败：输出错误信息

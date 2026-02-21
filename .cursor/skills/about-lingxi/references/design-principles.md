@@ -94,6 +94,18 @@
 - 固定菜单选项：必须保留，用户需要完整的判断选项
 - 候选展示：必须完整展示，用户需要了解足够的候选信息才能做出判断
 
+#### 4.1 工作流执行时的输出与静默
+
+**适用**：仅当执行灵犀工作流命令（/init、/req、/plan、/build、/review、/review-req、/remember）或对应 executor Skill 时；由各命令/技能文档引用本节，不通过全局 Rules 注入。
+
+**总原则**：整体遵循静默原则；仅在便于用户理解或做决策时做解释性输出（如菜单选项、审查结论、错误原因、下一步建议）。
+
+**正例**：直接给出结果/清单/选项；成功时静默或一句状态；失败时只说明错误与建议。
+
+**反例**：不输出「开始执行…」「正在收集…」等过程旁白；不输出命令用途类说明（除非用户问）；不罗列内部组件名（如 req-executor、memory-retrieve）。
+
+灵犀各 Command 与 executor Skill 通过引用本节统一约束，不在各自文件中重复列举。
+
 ### 5. 上下文组织原则
 
 **核心思想**：让模型聚焦关键信息，提高输出质量。
@@ -146,3 +158,4 @@
 - **AI Native 设计原则**：`.cursor/.lingxi/memory/notes/MEM-ai-native-design.md`
 - **静默成功原则**：`.cursor/.lingxi/memory/notes/MEM-silent-success.md`
 - **核心价值指引**：`references/core-values.md`
+- **工作流输出约束**：各 Command 与 executor Skill 引用本节 §4–4.1，不重复列举。
