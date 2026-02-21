@@ -70,6 +70,7 @@ Skills 承载详细的工作流指导，按职责分为：
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
 - **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定；其他审计/门控为可选
+- **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀依赖主 Agent 判断后显式调用 lingxi-memory（或用户 `/remember`），而非在每次 stop 时追加系统提示
 
 ## 目录结构
 
