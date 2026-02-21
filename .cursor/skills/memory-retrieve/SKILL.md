@@ -5,6 +5,10 @@ description: 以用户 prompt 为参数检索记忆库并最小注入。调用�
 
 # Memory Retrieve
 
+## 本 Skill 会用到的能力
+
+语义检索 `.cursor/.lingxi/memory/notes/`，按需读取候选文件，不做文件写入。
+
 ## 调用形式
 
 - **/memory-retrieve** \<用户本轮的 prompt\>

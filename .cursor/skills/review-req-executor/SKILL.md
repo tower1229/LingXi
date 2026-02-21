@@ -5,6 +5,10 @@ description: 当执行 /review-req 命令时自动激活，负责对 req 文档�
 
 # Review Req Executor
 
+## Quick Start
+
+- **目标**：对 req 文档做多维度审查并输出改进建议。步骤：读 req 文件 → 解析元数据并确定审查维度 → 执行各维度检查 → 有产物时输出下一步建议。
+
 ## Instructions
 
 ### 1. 读取 req 文件
