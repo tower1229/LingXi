@@ -15,6 +15,7 @@ description: 按项目类型（A-H）引导式初始化：基于收集清单生�
 
 - 类型化收集清单（SSoT）：`references/init-checklists.md`
 - 记忆模板：`.cursor/.lingxi/memory/references/memory-note-template.md`
+- Workflow 骨架（SSoT）：`references/workflow-skeleton.json`；模板与 INDEX 默认内容：`references/memory-note-template.default.md`、`references/INDEX.default.md`
 
 ## 输出与交互原则（必须）
 
@@ -24,6 +25,17 @@ description: 按项目类型（A-H）引导式初始化：基于收集清单生�
 - **AI Native**：不要用关键词/正则/复杂 if-else 识别类型；用菜单 + 自然语言补充来判断
 
 ## 执行流程（按需）
+
+### Step 0) 确保 workflow 骨架存在（优先执行）
+
+在执行后续步骤前，必须先保证当前工作区内 `.cursor/.lingxi/` 骨架存在：
+
+1. **读取** `references/workflow-skeleton.json`，获取 `workflowDirectories`、`workflowTemplateFiles`、`workflowIndexFiles`。
+2. **创建目录**：若工作区根下 `.cursor/.lingxi/` 或任一 `workflowDirectories` 中的目录不存在，则按顺序创建（相对于工作区根，递归创建父目录）。
+3. **写入模板文件**：若 `workflowTemplateFiles` 中某路径对应的文件不存在，则将该内容写入该路径；其中 `.cursor/.lingxi/memory/references/memory-note-template.md` 使用 `references/memory-note-template.default.md` 的内容。
+4. **写入 INDEX 占位**：若 `workflowIndexFiles` 中某路径对应的文件不存在，则将 `references/INDEX.default.md` 的内容写入该路径（如 `.cursor/.lingxi/memory/INDEX.md`）。
+
+上述操作均相对于**当前工作区根**；默认内容来自本 Skill 的 `references/` 下对应 .default 文件。执行时静默完成，不向用户输出步骤细节。
 
 ### 0) 项目类型选择（A-H，可多选）
 

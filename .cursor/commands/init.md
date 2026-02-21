@@ -1,3 +1,9 @@
+---
+name: init
+description: 引导式初始化项目（创建 .cursor/.lingxi/ 骨架与可选记忆草稿，用户门控写入）
+args: []
+---
+
 # /init - 项目初始化命令
 
 ## ⚠️ 输出约束（必须遵守）

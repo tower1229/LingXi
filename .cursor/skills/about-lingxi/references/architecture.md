@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。灵犀以 **Cursor 官方插件**形式分发：从 Cursor 插件市场安装后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
 
 ## 核心组件
 
@@ -18,7 +18,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/build`      | 执行构建（可选，Plan-driven / Agent-driven）；taskId 可选，省略时使用最新任务  | `build-executor`                                                |
 | `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                               |
 | `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                   |
-| `/init`       | 初始化项目（首次使用，引导式收集并可选写入记忆）                               | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
+| `/init`       | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆） | `init-executor`（主）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
 
@@ -36,7 +36,7 @@ Skills 承载详细的工作流指导，按职责分为：
 - `plan-executor`：任务规划、测试设计和计划文档文档及测试用例文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
-- `init-executor`：项目初始化（分类型收集清单 → 连续编号候选清单 → 用户门控后可选写入）
+- `init-executor`：项目初始化（若 .cursor/.lingxi/ 不存在则先创建骨架；分类型收集清单 → 连续编号候选清单 → 用户门控后可选写入）
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
 
