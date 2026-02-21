@@ -30,7 +30,7 @@
 - **持久化记忆库**：在项目中学习你的判断力、品味和责任感，并应用于每轮新对话
 - **人工门控**：关键决策始终遵从你的指引，可以不来，绝不胡来
 - **上下文运营**：优化上下文，让模型聚焦关键信息
-- **开箱即用**：跨平台一键安装，使用 `/init` 迅速在现有项目中初始化 LingXi Workflow
+- **开箱即用**：从 Cursor 插件市场安装后，使用 `/init` 迅速在现有项目中初始化 LingXi Workflow
 
 ---
 
@@ -38,31 +38,15 @@
 
 ### 安装
 
-#### 新项目
+在 Cursor 中从**插件市场**安装灵犀（搜索 “LingXi” 或 “灵犀”）。安装后，灵犀的 commands、skills、agents 与 hooks 将随插件加载，在任意打开的工作区中可用。
 
-如果您要创建新项目，推荐基于 LíngXī 模板 [创建 GitHub 仓库](https://github.com/new?template_name=LingXi&template_owner=tower1229)；
-
-或者，直接到 [LingXi repository](https://github.com/tower1229/LingXi) 下载源码作为本地开发目录。
-
-#### 现有项目
-
-如果您要在现有项目中集成 LíngXī，可以使用脚本一键安装：
-
-**Linux/macOS/Git Bash**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
-```
-
-**Windows PowerShell**
-
-```powershell
-irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
-```
+- **首次使用**：建议在项目中运行一次 `/init`，以初始化工作区目录（`.cursor/.lingxi/`）与可选记忆草稿。
 
 ---
 
 ### 快速开始
+
+**首次建议运行 `/init` 初始化项目**（创建 `.cursor/.lingxi/` 骨架与模板）；之后即可使用下方命令。
 
 #### 核心工作流命令
 

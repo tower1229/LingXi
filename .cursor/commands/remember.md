@@ -1,3 +1,12 @@
+---
+name: remember
+description: 从用户输入或对话上下文中提取记忆并写入记忆库（memory/notes/），写入前做语义近邻治理
+args:
+  - name: input
+    required: false
+    description: 记忆描述或提取指引（可直接记忆表达、禁止/约束、历史提取指引）
+---
+
 # /remember - 即时记忆写入入口
 
 ## 命令用途

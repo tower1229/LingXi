@@ -166,6 +166,7 @@
 ### 在灵犀中的应用
 
 - **sessionStart**（`session-init.mjs`）：在会话开始时注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）；其他审计/门控为可选
+- **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由主 Agent 在合适时机显式调用 lingxi-memory（或用户 `/remember`）完成，不在每次 stop 时追加提示
 
 ## Subagents 指南
 
