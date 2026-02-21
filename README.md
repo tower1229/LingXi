@@ -1,3 +1,5 @@
+[English](./README_EN.md)
+
 # LíngXī（灵犀）
 
 基于 Cursor 的 Development Workflow

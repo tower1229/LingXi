@@ -1,7 +1,7 @@
 {
   "name": "lingxi",
   "version": "1.0.0",
-  "description": "为创造者打造的 AI 工作流与记忆系统：可伸缩任务流（req/plan/build/review）、持久化记忆与检索、开箱即用。",
+  "description": "AI workflow and memory: req/plan/build/review, persistent memory, ready to use.",
   "author": {
     "name": "tower1229"
   },
