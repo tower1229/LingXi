@@ -40,7 +40,7 @@ args:
 
 **不产出文件**，仅输出审查结果和建议到对话中。
 
-**输出**：遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；审查完成后末尾输出下一步建议（见 review-req-executor）。
+**输出**：遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；审查完成后末尾输出下一步建议（见 review-req-executor）。
 
 - 审查完成后：**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 review-req-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。
 

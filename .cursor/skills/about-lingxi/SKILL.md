@@ -190,10 +190,10 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - AI Native 设计原则
 - 心有灵犀的实现方式
 - 称心如意的体验要求
-- 静默成功原则（含 §4.1 工作流执行时的输出与静默）
+- 静默成功原则（工作流输出与静默详见 `references/workflow-output-principles.md`）
 - 上下文组织原则
 
-工作流输出约束详见 design-principles §4.1，各 Command/Skill 通过引用该处统一约束。
+工作流输出约束见 `references/workflow-output-principles.md`，各 Command/Skill 通过引用该文档统一约束。
 
 **何时加载**：场景 2（设计新功能或改动时）
 

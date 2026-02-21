@@ -39,7 +39,7 @@ description: 安全审查专家，主动检查安全漏洞、注入风险、敏�
 
 ### 5. 输出与静默
 
-遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果。
 
 ### 6. 降级处理
 

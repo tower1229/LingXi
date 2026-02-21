@@ -116,7 +116,7 @@ description: 当执行 /plan 命令时自动激活（taskId 可选，省略时�
 
 如有澄清性问题，先输出问题列表，等待用户回答后再继续任务拆解。
 
-输出遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)。若 req 已足够清晰（简单需求），可静默跳过此步骤。
+输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。若 req 已足够清晰（简单需求），可静默跳过此步骤。
 
 ### 6. 外部知识放大（推荐）
 
@@ -502,7 +502,7 @@ graph TD
 ## 注意事项
 
 1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
-2. **输出与静默**：遵循 design-principles §4–4.1；简单需求可静默跳过部分步骤，复杂需求必须执行所有步骤
+2. **输出与静默**：遵循 workflow-output-principles；简单需求可静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **测试设计**：必须从需求中提取可测试行为，不发明未明确说明的行为
 4. **文档质量**：生成的 plan 和 testcase 文档必须完整、准确
 

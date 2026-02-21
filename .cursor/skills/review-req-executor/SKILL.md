@@ -203,7 +203,7 @@ description: 当执行 /review-req 命令时自动激活，负责对 req 文档�
 
 ### 6. 输出与静默
 
-遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)。无问题时简要总结即可；有问题时详细列出问题清单和改进建议。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。无问题时简要总结即可；有问题时详细列出问题清单和改进建议。
 
 ### 7. 下一步建议（有产物时必须输出）
 
@@ -288,7 +288,7 @@ req 文档是「集设计灵感、产品构思、实现途径于一体的任务�
 
 1. **审查深度与 req 定位匹配**：不要审查超出 req 职责范围的内容
 2. **按复杂度裁剪检查项**：简单需求只检查必要项，避免过度审查
-3. **输出与静默**：遵循 design-principles §4–4.1
+3. **输出与静默**：遵循 workflow-output-principles
 4. **明确边界**：实现细节、性能优化、安全实现等属于下游阶段
 
 ---

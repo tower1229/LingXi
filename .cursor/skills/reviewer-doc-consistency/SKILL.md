@@ -37,7 +37,7 @@ description: 文档一致性审查专家，检查代码与文档是否一致。�
 
 ### 5. 输出与静默
 
-遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果。
 
 ### 6. 降级处理
 

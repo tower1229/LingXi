@@ -77,4 +77,4 @@ args:
 
 ## 输出要求
 
-遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)：调用阶段静默完成；主对话仅一句结果或静默；写入成功可完全静默。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)：调用阶段静默完成；主对话仅一句结果或静默；写入成功可完全静默。

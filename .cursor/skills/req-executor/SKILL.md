@@ -80,7 +80,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 - 询问用户"以上理解是否正确？"
 - 等待用户确认后再继续后续分析
 
-输出遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)。需求已非常清晰时可静默跳过部分提纯步骤，但必须确保核心信息（What/Why）已明确。
+输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。需求已非常清晰时可静默跳过部分提纯步骤，但必须确保核心信息（What/Why）已明确。
 
 ### 4. 类型识别与复杂度评估
 
@@ -481,7 +481,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 ## 注意事项
 
 1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
-2. **输出与静默**：遵循 design-principles §4–4.1；简单需求可静默跳过部分步骤，复杂需求必须执行所有步骤
+2. **输出与静默**：遵循 workflow-output-principles；简单需求可静默跳过部分步骤，复杂需求必须执行所有步骤
 3. **Fail Fast**：必要信息缺失时必须询问，不猜测
 4. **文档质量**：生成的 req 文档应该结构清晰、内容完整，符合需求分析的设计目标
 

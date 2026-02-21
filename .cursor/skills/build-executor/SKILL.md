@@ -102,7 +102,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
    - 服务器无法启动：输出环境配置建议，标记为需要环境准备
    - 工具调用次数限制：记录已完成场景，标记"部分完成"
 
-**设计原则**：可选性、快速性、非阻塞性；输出遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)（通过时静默，失败时输出详情）。
+**设计原则**：可选性、快速性、非阻塞性；输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)（通过时静默，失败时输出详情）。
 
 ### 3. Agent-driven 模式执行逻辑（无 plan 时）
 
@@ -196,7 +196,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
    - 服务器无法启动：输出环境配置建议，标记为需要环境准备
    - 工具调用次数限制：记录已完成场景，标记"部分完成"
 
-**设计原则**：可选性、快速性、非阻塞性；输出遵循 design-principles §4–4.1（通过时静默，失败时输出详情）。
+**设计原则**：可选性、快速性、非阻塞性；输出遵循 workflow-output-principles（通过时静默，失败时输出详情）。
 
 ### 4. 降级方案
 

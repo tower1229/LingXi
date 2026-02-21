@@ -6,7 +6,7 @@ args: []
 
 # /init - 项目初始化命令
 
-执行本命令时遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md) 中的输出与静默原则。
+执行本命令时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md) 中的输出与静默原则。
 
 ## 命令用途
 

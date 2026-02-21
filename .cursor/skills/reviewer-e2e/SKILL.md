@@ -141,7 +141,7 @@ e. **验证结果**：
 
 ### 7. 输出与静默
 
-遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。
 
 **测试执行风格说明**：
 - 优先使用官方风格的 `@browser` + 自然语言描述

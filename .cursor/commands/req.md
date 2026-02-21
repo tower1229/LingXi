@@ -27,7 +27,7 @@ args:
 
 - `.cursor/.lingxi/tasks/001.req.<标题>.md`（任务文档）
 
-**输出**：遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)（静默成功 + 有产物时末尾下一步建议）。
+**输出**：遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)（静默成功 + 有产物时末尾下一步建议）。
 
 - 文件写入成功：可不输出文件内容摘要，但**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 req-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。
 - 文件写入失败：输出错误信息

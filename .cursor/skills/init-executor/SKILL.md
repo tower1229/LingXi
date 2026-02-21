@@ -19,7 +19,7 @@ description: Agent 静默推断项目类型，按收集清单生成“初始化�
 
 ## 输出与交互原则（必须）
 
-- 执行时遵循 [design-principles §4–4.1](.cursor/skills/about-lingxi/references/design-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
+- 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
 - **写入门控不可侵犯**：除非用户在 Q2 明确选择写入，否则只展示候选清单，不写入磁盘。
 - **AI Native**：类型识别基于工作区根目录与关键文件做语义推断，优先自动识别类型；收集阶段用自然语言与用户补充，避免硬编码关键词/复杂 if-else。
 
