@@ -9,3 +9,4 @@
 
 | Id  | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
 | --- | ---- | ----- | ------------ | ------ | -------- | ----- | ---------- | --------- | --------- | ------ | ------- | ---- |
+| MEM-001 | principle | 以问题/目标为导向设计 Agent 指令 | 编写/评审 Agent 指令（Skill、Command、规则）时；希望提升执行效果或节省 prompt 时 | active | validated | broad | | 2026-02-21T00:00:00.000Z | 2026-02-21T00:00:00.000Z | user | - | memory/notes/MEM-001.md |
