@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "memory-sync": "node scripts/validate-memory-index.js --update",
-    "memory-check": "node scripts/validate-memory-index.js --check"
+    "memory-check": "node scripts/validate-memory-index.js --check",
+    "validate-plugin": "node scripts/validate-template.mjs"
   }
 }
 
