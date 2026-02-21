@@ -22,14 +22,19 @@
 ### Must
 
 - **common.goal**：一句话说明“这个项目解决什么问题”，并列出 1-3 条**非目标**（明确不做什么）。
+  - **可抽取来源建议**：README（Why/What）、价值或原则类文档、req 的「目标与非目标」。
   - **Draft targets**：`MEM-project-goals-and-nongoals` (business)
 - **common.users**：核心用户/角色是谁？每个角色最关键的 1 个诉求是什么？
+  - **可抽取来源建议**：README 受众、架构/角色描述、命令或功能说明的受众。
   - **Draft targets**：`MEM-domain-glossary-and-core-entities` (business)
 - **common.flows**：写出 1-3 条“关键链路”（按步骤），并注明每条链路的失败兜底。
+  - **可抽取来源建议**：README 流程/命令表、架构文档、req/plan 中的关键步骤与兜底。
   - **Draft targets**：`MEM-critical-user-flows` (business)
 - **common.risks**：风险优先级排序（安全/稳定性/成本/性能/合规），并说明“最不可接受的失败”。
+  - **可抽取来源建议**：设计原则、评价准则、req 中的风险与约束。
   - **Draft targets**：`MEM-project-goals-and-nongoals` (business)
 - **common.releaseEnv**：有哪些环境（dev/staging/prod）？发布方式与回滚方式是什么？
+  - **可抽取来源建议**：README 安装/发布、架构中的部署与分发、req 中的环境与回滚。
   - **Draft targets**：`MEM-release-and-environment-contract` (tech)
 
 ### Should
