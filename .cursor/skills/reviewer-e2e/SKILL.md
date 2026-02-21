@@ -5,6 +5,10 @@ description: 端到端测试审查专家，使用 Cursor Agent Browser 工具验
 
 # Reviewer E2E
 
+## 本 Skill 会用到的能力
+
+本审查会使用 Cursor Agent Browser 工具验证完整用户流程（导航、点击、输入、验证点等）。
+
 ## Instructions
 
 此 Skill 由 `review-executor` 显式调用，负责执行 E2E 测试审查。可以访问 review-executor 的上下文，包括 req 文档、testcase 文档等。

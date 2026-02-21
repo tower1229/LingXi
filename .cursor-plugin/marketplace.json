@@ -1,0 +1,12 @@
+{
+  "name": "lingxi",
+  "owner": {
+    "name": "tower1229"
+  },
+  "plugins": [
+    {
+      "name": "lingxi",
+      "source": "."
+    }
+  ]
+}

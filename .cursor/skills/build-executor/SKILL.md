@@ -5,6 +5,15 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 # Build Executor
 
+## 本 Skill 会用到的能力
+
+读 req/plan、读编辑代码；语义搜索实现与测试；Run shell 执行测试；必要时向用户提问。
+
+## Quick Start
+
+- **目标**：按 req（及可选 plan）实现并跑通测试。
+- 模式检测 → Plan-driven/Agent-driven 执行 → 测试循环 → 有产物时输出下一步建议。
+
 ## Instructions
 
 ### 1. 模式检测（自动）

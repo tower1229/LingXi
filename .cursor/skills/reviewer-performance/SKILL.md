@@ -5,6 +5,10 @@ description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险�
 
 # Reviewer Performance
 
+## 本 Skill 会用到的能力
+
+读 req 与变更代码；语义搜索性能相关实现（循环、查询、异步、缓存等），识别瓶颈与泄漏风险。
+
 ## Instructions
 
 此 Skill 由 `review-executor` 显式调用，负责执行性能审查。可以访问 review-executor 的上下文，包括 req 文档、变更代码文件列表等。

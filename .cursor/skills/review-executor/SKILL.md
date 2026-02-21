@@ -5,6 +5,15 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 # Review Executor
 
+## 本 Skill 会用到的能力
+
+读 req/plan/testcase 与变更代码；语义搜索；Run shell 执行测试；显式调用 reviewer-* 时由各 reviewer 使用对应工具（如 Browser 用于 E2E）。
+
+## Quick Start
+
+- **目标**：多维度审查并产出 review 报告。
+- 读输入 → 审查维度启用 → 测试文档/脚本/执行 → 核心/可选维度审查 → 汇总分级 TODO → 写入 review 文档（见 references）→ 下一步建议。
+
 ## Instructions
 
 ### 1. 读取输入
@@ -250,129 +259,7 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 ### 8. Review 文档写入
 
-#### Review 文档模板
-
-```markdown
-# 001.review.<标题>
-
-## 总结（3-6 行）
-
-[简要总结审查结果：是否通过、主要问题、改进建议]
-
-## 测试覆盖报告
-
-### 测试执行结果
-
-| 类型       | 通过 | 失败 | 跳过 |
-| ---------- | ---- | ---- | ---- |
-| 单元测试   | X    | 0    | 0    |
-| 集成测试   | X    | 0    | 0    |
-| 端到端测试 | X    | 0    | 0    |
-
-### 行为覆盖情况
-
-| 行为ID | 行为描述 | 测试状态                    |
-| ------ | -------- | --------------------------- |
-| B1     | ...      | ✅ 已覆盖                   |
-| B2     | ...      | ✅ 已覆盖                   |
-| B3     | ...      | ⚠️ 部分覆盖（缺少边界条件） |
-
-### 测试质量评估
-
-- 隔离性：✅ / ⚠️ / ❌
-- 可维护性：✅ / ⚠️ / ❌
-- 断言质量：✅ / ⚠️ / ❌
-
-## 多维度审查结果
-
-### 1. 功能审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 2. 测试覆盖审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 3. 安全审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 4. 性能审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 5. 架构审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 6. 可维护性审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 7. 回归风险审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 8. 文档一致性审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-### 9. E2E 测试审查
-
-- Blockers:
-- High:
-- Medium:
-- Low:
-
-**E2E 测试执行结果**：
-
-| 测试场景              | 状态    | 备注                      |
-| --------------------- | ------- | ------------------------- |
-| E2E-001: 用户登录流程 | ✅ 通过 | -                         |
-| E2E-002: 数据提交流程 | ❌ 失败 | 步骤 3 点击提交按钮无响应 |
-
-## 汇总：分级 TODO
-
-### Blockers
-
-[列出必须修复的问题]
-
-### High
-
-[列出高优先级问题]
-
-### Medium
-
-[列出中优先级问题]
-
-### Low
-
-[列出低优先级问题]
-```
+生成 Review 文档时**按步骤**查阅 [references/review-report-template.md](references/review-report-template.md)，不要求在 SKILL 内复述模板全文。
 
 #### 文档命名约定
 

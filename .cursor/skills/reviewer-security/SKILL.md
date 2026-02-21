@@ -5,6 +5,10 @@ description: 安全审查专家，主动检查安全漏洞、注入风险、敏�
 
 # Reviewer Security
 
+## 本 Skill 会用到的能力
+
+读 req 与变更代码；语义搜索安全相关实现（认证、输入处理、敏感信息等），识别漏洞与风险。
+
 ## Instructions
 
 此 Skill 由 `review-executor` 显式调用，负责执行安全审查。可以访问 review-executor 的上下文，包括 req 文档、变更代码文件列表等。
