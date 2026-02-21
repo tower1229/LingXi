@@ -51,7 +51,7 @@ args: []
 
 ## 交互契约（同屏双问）
 
-> 说明：具体“按类型收集清单（A-H）→ 生成草稿 → 门控写入”的详细执行逻辑，见 `.cursor/skills/init-executor/SKILL.md` 与其依赖 `skills/init-executor/references/init-checklists.md`。
+> 说明：具体“Agent 推断项目类型（A-H）、用户确认或修正 → 按类型收集清单 → 生成草稿 → 门控写入”的详细执行逻辑，见 `.cursor/skills/init-executor/SKILL.md` 与其依赖 `skills/init-executor/references/init-checklists.md`。
 
 ```markdown
 ## 请确认并做两项选择（互不影响）
