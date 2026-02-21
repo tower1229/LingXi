@@ -40,6 +40,10 @@ args:
 
 **不产出文件**，仅输出审查结果和建议到对话中。
 
+**输出规则（下一步建议）**：
+
+- 审查完成后：**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 review-req-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。
+
 ## 执行逻辑
 
 本命令将执行逻辑委托给 `review-req-executor` Skill。详细执行流程请参考 `review-req-executor` Skill 文档（`.cursor/skills/review-req-executor/SKILL.md`）。
