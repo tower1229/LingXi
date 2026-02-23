@@ -7,7 +7,7 @@
 本版本采用 **扁平化记忆库**：
 
 - `memory/INDEX.md`：统一索引（SSoT，最小元数据）
-- `memory/notes/`：扁平记忆文件（语义搜索的主搜索面）
+- `memory/notes/`：扁平记忆文件（语义 + 关键词混合检索的主搜索面）
 - `memory/references/`：模板与规范（按需加载）
 
 ## 每轮参与
@@ -37,6 +37,8 @@
 
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定）
 - 执行 Skill：`memory-retrieve`
+
+**检索机制**：memory-retrieve 采用**语义 + 关键词双路径**混合检索（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及可选 INDEX 做技术词/错误码等文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。
 
 **最小注入**：
 

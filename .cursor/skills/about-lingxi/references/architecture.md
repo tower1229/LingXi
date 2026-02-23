@@ -41,7 +41,7 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 记忆系统（实现"心有灵犀"的核心能力）
 
 - **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
-- `memory-retrieve`（Skill）：每轮回答前检索 `memory/notes/` 并最小注入（由 sessionStart hook 注入的约定触发）
+- `memory-retrieve`（Skill）：每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–3 最小注入（由 sessionStart hook 注入的约定触发）
 
 #### 工具类 Skills（提供辅助能力）
 
@@ -64,7 +64,7 @@ Skills 承载详细的工作流指导，按职责分为：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
    - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
    - **写入**：`lingxi-memory` 子代理支持写入到 `share/` 目录；写入位置由用户门控时决定，或根据 `Portability` 字段提示用户
-   - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义搜索会自动包含共享记忆
+   - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义+关键词混合检索会自动包含共享记忆；语义不可用时降级为仅关键词路径，仍无匹配则静默
    - **索引同步**：`memory-sync` 脚本（`npm run memory-sync`）递归扫描 `notes/**` 并更新 `INDEX.md`，支持 project 覆盖 share 的冲突优先级规则
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
@@ -105,7 +105,7 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── memory/                # 统一记忆系统
 │   ├── INDEX.md           # 统一索引（SSoT）
-│   ├── notes/             # 扁平记忆文件（语义检索的主搜索面）
+│   ├── notes/             # 扁平记忆文件（语义+关键词混合检索的主搜索面）
 │   │   └── share/          # 共享记忆目录（推荐作为 git submodule，跨项目复用）
 │   └── references/         # 模板与规范
 └── workspace/             # 工作空间
