@@ -12,7 +12,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 ## Quick Start
 
 - **目标**：按 req（及可选 plan）实现并通过测试。
-- 模式检测 → Plan-driven/Agent-driven 执行 → 测试循环 → 有产物时输出下一步建议。
+- 模式检测 → Plan-driven/Req-driven 执行 → 测试循环 → 有产物时输出下一步建议。
 
 ## Instructions
 
@@ -30,7 +30,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 3. **模式判断**：
    - **存在 plan 文件** → Plan-driven 模式
-   - **不存在 plan 文件** → Agent-driven 模式
+   - **不存在 plan 文件** → Req-driven 模式
 
 4. **模式提示**：
    - 静默检测，在开始执行时输出当前模式（如："检测到 plan 文档，进入 Plan-driven 模式"）
@@ -115,7 +115,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 **设计原则**：可选性、快速性、非阻塞性；输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)（通过时静默，失败时输出详情）。
 
-### 3. Agent-driven 模式执行逻辑（无 plan 时）
+### 3. Req-driven 模式执行逻辑（无 plan 时）
 
 #### 3.1 读取输入
 
@@ -220,21 +220,21 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 - 如果测试框架无法执行：输出手动测试清单（基于 testcase 文档）
 - 如果文档同步无法执行：输出文档更新清单（基于 plan 清单）
 
-**Agent-driven 模式降级**：
+**Req-driven 模式降级**：
 
 - 如果测试框架无法执行：输出手动测试清单（基于 req 验收标准）
 - 如果文档同步无法执行：输出文档更新清单（Agent 识别的文档列表）
 
 ### 5. 模式选择建议
 
-| 场景                         | 推荐模式     | 理由                         |
-| ---------------------------- | ------------ | ---------------------------- |
-| 复杂任务（多模块、多依赖）   | Plan-driven  | 需要明确的任务拆解和依赖管理 |
-| 简单任务（单一功能、无依赖） | Agent-driven | Agent 可直接判断和执行       |
-| 需要明确的测试策略           | Plan-driven  | 有 testcase 文档指导         |
-| 需要文档同步计划             | Plan-driven  | 有明确的文档清单             |
-| 快速原型开发                 | Agent-driven | 无需详细规划，快速迭代       |
-| 生产环境功能                 | Plan-driven  | 需要更严格的计划和验证       |
+| 场景                         | 推荐模式    | 理由                         |
+| ---------------------------- | ----------- | ---------------------------- |
+| 复杂任务（多模块、多依赖）   | Plan-driven | 需要明确的任务拆解和依赖管理 |
+| 简单任务（单一功能、无依赖） | Req-driven  | Agent 可直接判断和执行       |
+| 需要明确的测试策略           | Plan-driven | 有 testcase 文档指导         |
+| 需要文档同步计划             | Plan-driven | 有明确的文档清单             |
+| 快速原型开发                 | Req-driven  | 无需详细规划，快速迭代       |
+| 生产环境功能                 | Plan-driven | 需要更严格的计划和验证       |
 
 ### 6. 执行质量保证
 
@@ -325,7 +325,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 执行流程：
 
-1. 模式检测：未检测到 plan 文件，进入 Agent-driven 模式
+1. 模式检测：未检测到 plan 文件，进入 Req-driven 模式
 2. 读取输入（仅 req）
 3. Agent 自行拆解任务
 4. 测试框架检测与安装（如需要）

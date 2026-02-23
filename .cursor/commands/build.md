@@ -1,6 +1,6 @@
 ---
 name: build
-description: 执行构建（双模式：Plan-driven 或 Agent-driven）
+description: 执行构建（双模式：Plan-driven 或 Req-driven）
 args:
   - name: taskId
     required: false
@@ -14,7 +14,7 @@ args:
 用于按 req 文档实现功能，支持两种执行模式：
 
 - **Plan-driven 模式**：有 plan 文档时，按计划结构化执行（推荐）
-- **Agent-driven 模式**：无 plan 文档时，Agent 基于 req 自行决策执行
+- **Req-driven 模式**：无 plan 文档时，Agent 基于 req 自行决策执行
 
 **定位**：该步骤虽然理论上不可跳过，但是创造者可以选择不调用 build 命令而自行基于 req 文档和可选的 plan 文档进行开发工作，因此从流程上将该步骤仍然可以跳过。
 
