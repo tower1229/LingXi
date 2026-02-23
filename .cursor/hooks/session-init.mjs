@@ -6,10 +6,10 @@
  */
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 
-const BASE_CONTEXT = `【记忆库提取约定】每轮在回答前，先执行 \`/memory-retrieve <当前用户消息>\`，按 \`.cursor/skills/memory-retrieve/SKILL.md\` 执行后再回答；有依据记忆做判断时在回复中自然提及来源。
+const BASE_CONTEXT = `【记忆库提取约定】每轮在回答前，先执行 \`/memory-retrieve <当前用户消息>\`，按 \`.cursor/skills/memory-retrieve/SKILL.md\` 执行后再回答；并根据【记忆沉淀约定】判断本轮是否含可沉淀内容，若含则显式调用 lingxi-memory。有依据记忆做判断时在回复中自然提及来源。
 【沟通约定】对用户描述时用自然语言说明正在做的事（如「正在整理需求」「正在跑测试」），不要罗列内部组件名（如 req-executor、memory-retrieve 等）。`;
 
-const PRECIPITATE_CONTEXT = `【记忆沉淀约定】当发生以下情况时，应显式调用 lingxi-memory 子代理写入记忆（\`/lingxi-memory mode=auto input=<本轮要点>\` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）：任务完成或关键决策出现；需求固化、范围调整、优先级变更；目标纠正、方案选择、约束添加；边界明确、验收调整、风险确认；用户拒绝、纠正、排除（如不要/别用/改成…）时也识别并传入。原则：宁可多候选再门控，对「是否可沉淀」的判断宜放宽，交由子代理与用户门控做最终筛选。`;
+const PRECIPITATE_CONTEXT = `【记忆沉淀约定】每轮必须根据「可沉淀情形」判断本轮用户消息与对话是否含可沉淀内容；若含，必须在当轮显式调用 lingxi-memory 子代理（\`/lingxi-memory mode=auto input=<本轮要点>\` 或自然语言委派），不可仅口头回应而不写入记忆库。可沉淀情形包括：任务完成或关键决策出现；需求固化、范围调整、优先级变更；目标纠正、方案选择、约束添加；边界明确、验收调整、风险确认；用户拒绝、纠正、排除（如不要/别用/改成…）；用户明确表示需要记住、请记住、写入记忆。原则：宁可多候选再门控，判断宜放宽，交由子代理与用户门控做最终筛选。`;
 
 async function main() {
   const input = await readStdinJson();
