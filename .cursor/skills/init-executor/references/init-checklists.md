@@ -43,7 +43,7 @@
   - **Draft targets**：`MEM-domain-glossary-and-core-entities` (business)
 - **common.arch**：用 5-10 行描述“请求/任务如何流经系统”（入口 → 边界 → 依赖 → 数据源）。
   - **Draft targets**：`MEM-architecture-overview` (tech)
-- **common.localDev**：本地开发需要跑哪些进程/端口/代理/构建产物？
+- **common.localDev**：本地开发需要运行哪些进程/端口/代理/构建产物？
   - **Draft targets**：`MEM-local-dev-mental-model` (tech)
 
 ### Optional
@@ -144,7 +144,7 @@
   - **Draft targets**：`MEM-sdk-compatibility-support-policy` (tech)
 - **sdk.versioning**：版本策略（SemVer）、breaking 变更流程、迁移指南要求。
   - **Draft targets**：`MEM-sdk-versioning-and-migration-policy` (tech)
-- **sdk.tests**：测试矩阵与发布门槛（兼容性回归怎么跑）。
+- **sdk.tests**：测试矩阵与发布门槛（兼容性回归如何执行）。
   - **Draft targets**：`MEM-sdk-test-matrix` (tech)
 
 ---

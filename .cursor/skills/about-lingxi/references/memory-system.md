@@ -7,7 +7,7 @@
 本版本采用 **扁平化记忆库**：
 
 - `memory/INDEX.md`：统一索引（SSoT，最小元数据）
-- `memory/notes/`：扁平记忆文件（语义搜索的主搜索面）
+- `memory/notes/`：扁平记忆文件（语义 + 关键词混合检索的主搜索面）
 - `memory/references/`：模板与规范（按需加载）
 
 ## 每轮参与
@@ -22,27 +22,31 @@
 
 **执行模型**：捕获、治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。
 
+**双入口与生效方式**：灵犀支持**自动沉淀**（主 Agent 判断后调用 mode=auto）与**主动沉淀**（用户执行 `/remember` 或 `/init` 选择写入）。为使自动沉淀稳定生效，「何时可沉淀、如何调用」的约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）在会话开始时注入【记忆沉淀约定】，主 Agent 在本会话内始终可见该约定，**安装灵犀插件后即生效**，不依赖是否加载其他文档。
+
 - **双入口**：
-- **auto**：主 Agent 判断本轮存在可沉淀时，通过**显式调用**（在提示中使用 `/lingxi-memory mode=auto input=<本轮消息与上下文摘要>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **auto**（自动沉淀）：主 Agent 判断本轮存在可沉淀时，通过**显式调用**（在提示中使用 `/lingxi-memory mode=auto input=<本轮消息与上下文摘要>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理；子代理产候选 → 治理 → 门控 → 写入。触发场景与原则由 sessionStart 注入的【记忆沉淀约定】定义。
 - 用户**拒绝、纠正、排除**（如「不要这样」「别用 X」「这里不能用 Y」「改成 Z」）也视为可沉淀；主 Agent 应将本轮中此类表述（或要点）传入 lingxi-memory mode=auto，由子代理产候选并门控。
 - 原则：**宁可多候选再门控，不少漏**；主 Agent 对「是否可沉淀」的判断宜放宽，交由子代理与用户门控做最终筛选。
-- **remember**：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **remember**（主动沉淀）：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
-- **门控**：merge/replace 时在 Subagent 对话内展示「治理方案（待确认）」与 A/B/C/D，用户确认后再执行；主对话不展示过程。
+- **门控**：merge/replace 时在 Subagent 对话内展示「治理方案（待确认）」与 A/B/C/D，用户确认后再执行；主对话不展示过程。**半静默仅限新建（new）**：对 new 路径按可靠性分流（高可靠性静默写、低可靠性显性门控）；可靠性判定含**可验证性**维度（可被后续客观验证→倾向高可靠；需主观解释或易歧义→倾向低可靠）；**删除与替换仍须确认**，不适用半静默。
 - **治理策略**：语义近邻 TopK（create/update/delete/skip），门控原则不变（delete 与 replace 须用户确认）。
 
 ### 3) 提取/注入（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入：
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入；同时注入【记忆沉淀约定】，使主 Agent 具备「何时调用 lingxi-memory mode=auto」的约定，自动沉淀与主动沉淀（/remember）均可用。
 
-- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定）
+- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定、以及【记忆沉淀约定】）
 - 执行 Skill：`memory-retrieve`
+
+**检索机制**：memory-retrieve 采用**语义 + 关键词双路径**混合检索（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及可选 INDEX 做技术词/错误码等文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。
 
 **最小注入**：
 
 - 无匹配：静默
 - 有匹配：最多 Top 0-3 条，每条 1-2 句可执行提醒 + 文件指针
-- 不把原文贴进对话，除非用户明确要求查看
+- 不把原文展示在对话中，除非用户明确要求查看
 
 ## 统一索引（INDEX.md）
 
@@ -99,7 +103,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 1. **写入是为了更好的提取**：不追求“分类完美”，追求“下次能检索到并帮你做对”
 2. **空状态引导**：可提示用户「先写几条你最在意的约束或『不要』，后续检索会自动参考」，降低冷启动时的表达门槛。
-3. **用户门控不可侵犯**：涉及删除或替换必须确认
+3. **用户门控不可侵犯**：涉及删除或替换必须确认；半静默仅限新建（高可靠性静默写、低可靠性显性门控），删除与替换仍须确认
 4. **静默成功**：无匹配/成功/非决策输出尽量静默
 5. **SSoT**：索引是唯一权威清单，内容以 notes 为准
 6. **基本操作模型**：所有操作简化为 create/update/delete 三个基本操作，统一操作模型
@@ -108,4 +112,4 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 - **记忆写入**：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）
 - **记忆检索与注入**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
-- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）
+- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——注入记忆检索约定与【记忆沉淀约定】，安装插件后自动沉淀与主动沉淀均生效

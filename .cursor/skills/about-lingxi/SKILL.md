@@ -171,7 +171,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **内容**：
 
-- 记忆写入由 **Subagent lingxi-memory** 在独立上下文中执行（双入口、直接文件写入）
+- 记忆写入由 **Subagent lingxi-memory** 在独立上下文中执行（双入口、直接文件写入）；**自动沉淀**（mode=auto）与**主动沉淀**（/remember）均由 sessionStart 注入的【记忆沉淀约定】保证，安装插件即生效
 - 每轮检索与最小注入（sessionStart hook 注入约定 + memory-retrieve）
 - 统一索引格式（INDEX.md + notes/ 扁平结构）
 
@@ -258,6 +258,14 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - 灵犀开发中的使用建议（技术边界检查、能力选型、安全与审批）
 
 **何时加载**：场景 6（技术边界检查）；设计 Skills/Commands 或实现功能时，需了解 Agent 可用工具、做能力选型或规避冲突时
+
+### 10. Cursor 官方课程总结
+
+**文件**：`references/cursor-learn-courses-summary.md`
+
+**内容**：基于 Cursor 官方学习路径提炼——AI 模型原理与幻觉、Token 与上下文、工具调用与代理、与代理协作、理解代码库、开发功能、调试、审查测试、自定义 Agent、综合运用；含灵犀开发与优化对照表。
+
+**何时加载**：需要从 Cursor 官方最佳实践角度理解 Agent 行为、上下文与工具时；做 workflow 或体验优化、与官方心智模型对齐时。
 
 ## 工作流程
 
@@ -388,6 +396,7 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 - `references/engineering-practices.md`：工程实践准则（核心原则、设计模式、质量评估框架）
 - `references/optimization-checklist.md`：调优检查清单（价值对齐、技术边界、工程实践）
 - `references/cursor-agent-tools.md`：Cursor Agent 工具参考（内置工具一览、灵犀开发使用建议）
+- `references/cursor-learn-courses-summary.md`：Cursor 官方课程提炼总结（模型原理、上下文、工具与代理、协作与自定义；灵犀开发与优化对照）
 
 ### 外部参考
 

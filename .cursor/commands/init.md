@@ -6,8 +6,6 @@ args: []
 
 # /init - 项目初始化命令
 
-执行本命令时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md) 中的输出与静默原则。
-
 ## 命令用途
 
 初始化 workflow 到项目，建立项目上下文（技术栈、目录结构、关键模块、业务链路与约束）；文档齐全时优先从现有内容整理，仅对缺失项提问。生成一份**连续编号**的“记忆候选清单”（包含草稿项与可选候选项，默认不写入，需用户门控）。
@@ -31,7 +29,7 @@ args: []
 ## 写入门控（关键规则）
 
 > - 本命令会生成“记忆候选清单”，**默认不写入磁盘**。
-> - 只有当你在 Q2 明确选择写入（`All` / `1,3`）时，才会落盘到 `.cursor/.lingxi/memory/notes/` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
+> - 只有当你在 Q2 明确选择写入（`All` / `1,3`）时，才会写入 `.cursor/.lingxi/memory/notes/` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
 > - 你只回复 `A`（不含 `; ...`）时，等价于 `A; S`（默认跳过写入）。
 > - 写入通过**显式调用** lingxi-memory 子代理完成（在提示中使用 `/lingxi-memory mode=remember input=...` 或自然语言提及「使用 lingxi-memory 子代理将选中的候选写入记忆库」），主对话不展示写入过程。
 
@@ -71,5 +69,5 @@ args: []
 
 - Q1 必选；Q2 可选（缺省默认为 `S`）
 - 用户只回复 `A` 等价 `A; S`
-- 若用户只回答 Q2（如 `All`），只追问补齐 Q1（不重复贴大段内容）
+- 若用户只回答 Q2（如 `All`），只追问补齐 Q1（不重复展示大段内容）
 - 若用户选择 `B` 但未提供模块名，只追问模块名；若选择 `D` 但未提供修正点，只追问修正点
