@@ -207,6 +207,7 @@
 
 ### 在灵犀中的应用
 
+- **选型与成本**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
 - **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用——在提示中使用 `/lingxi-memory` 语法（例如 `/lingxi-memory mode=remember input=<内容>`）或自然语言提及「lingxi-memory 子代理」来调用；当用户执行 `/remember` 或主 Agent 判断存在可沉淀并决定写入时，主 Agent 以此方式将任务交给子代理；子代理在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果，减少对主对话的干扰。
 - 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
 
