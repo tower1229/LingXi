@@ -27,29 +27,12 @@ args:
 
 - `.cursor/.lingxi/tasks/001.req.<标题>.md`（任务文档）
 
-**输出**：遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)（静默成功 + 有产物时末尾下一步建议）。
-
-- 文件写入成功：可不输出文件内容摘要，但**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 req-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。
-- 文件写入失败：输出错误信息
-- 若本步未写入任何 req 文档（如仅做了澄清未写入）：可不包含下一步建议
+有产物时在回复末尾给出下一步建议（格式与逻辑见 req-executor Skill）。
 
 ## 执行逻辑
 
 本命令将执行逻辑委托给 `req-executor` Skill。详细执行流程请参考 `req-executor` Skill 文档（`.cursor/skills/req-executor/SKILL.md`）。
 
-## 记忆捕获
+## 记忆
 
-记忆写入由 **lingxi-memory** 子代理在独立上下文中执行；主对话在需要时通过**显式调用**（`/lingxi-memory mode=auto input=...` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理，本命令不包含捕获与写入逻辑。
-
-**激活机制**：
-
-- 任务完成或关键决策出现时，主 Agent 可使用**显式调用**：`/lingxi-memory mode=auto input=<本轮要点>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」
-- 候选在会话中展示，用户可选择沉淀
-
-**触发场景**：当发生以下情况时，可**显式调用** lingxi-memory 子代理写入记忆：用户拒绝、纠正、排除（如不要/别用/改成…）时也识别并传入记忆候选。
-
-- 需求固化、范围调整、优先级变更
-- 目标纠正、方案选择、约束添加
-- 边界明确、验收调整、风险确认
-
-Subagent 定义见 `.cursor/agents/lingxi-memory.md`。
+记忆写入与沉淀约定由 sessionStart 注入，不在此重复；子代理定义见 `.cursor/agents/lingxi-memory.md`。

@@ -40,39 +40,8 @@ args:
 
 **不产出文件**，仅输出审查结果和建议到对话中。
 
-**输出**：遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；审查完成后末尾输出下一步建议（见 review-req-executor）。
-
-- 审查完成后：**必须在当轮回复末尾**输出「**下一步可尝试（选一项）**」及 A/B/C/D 四项（格式与允许集合见 review-req-executor Skill）；用户可通过回复 A/B/C/D 快速选择下一动作。
+有产物时在回复末尾给出下一步建议（格式与逻辑见 review-req-executor Skill）。
 
 ## 执行逻辑
 
-本命令将执行逻辑委托给 `review-req-executor` Skill。详细执行流程请参考 `review-req-executor` Skill 文档（`.cursor/skills/review-req-executor/SKILL.md`）。
-
-### 审查维度概览
-
-| 维度          | 审查焦点                             | 适用场景    |
-| ------------- | ------------------------------------ | ----------- |
-| D1 需求完整性 | 目标、边界、用户故事、非目标是否清晰 | 通用必选    |
-| D2 可验证性   | 成功标准和验收标准是否可验证         | 通用必选    |
-| D3 方案合理性 | 技术选型和架构思路是否合理           | 中等+复杂度 |
-| D4 规范完整性 | UI/API/数据模型等规范章节是否完整    | 按类型触发  |
-| D5 风险识别   | 技术难点、外部依赖、风险是否识别     | 中等+复杂度 |
-
-审查维度会根据 req 文档的**需求类型**和**复杂度**自动适配。
-
-### 审查边界
-
-**在审查范围内**：
-
-- 需求的目标、边界、用户故事
-- 成功标准和验收标准的可验证性
-- 技术选型和架构思路的合理性
-- UI/API/数据模型规范的完整性
-- 技术风险和外部依赖的识别
-
-**不在审查范围内**（属于下游阶段）：
-
-- 具体实现代码/函数签名
-- 详细性能调优/安全防护实现
-- 测试用例设计
-- 部署配置/运维脚本
+本命令将执行逻辑委托给 `review-req-executor` Skill。详细执行流程请参考 `review-req-executor` Skill 文档（`.cursor/skills/review-req-executor/SKILL.md`）。审查维度与边界详见该 Skill。

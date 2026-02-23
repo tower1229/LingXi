@@ -6,8 +6,6 @@ args: []
 
 # /init - 项目初始化命令
 
-执行本命令时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md) 中的输出与静默原则。
-
 ## 命令用途
 
 初始化 workflow 到项目，建立项目上下文（技术栈、目录结构、关键模块、业务链路与约束）；文档齐全时优先从现有内容整理，仅对缺失项提问。生成一份**连续编号**的“记忆候选清单”（包含草稿项与可选候选项，默认不写入，需用户门控）。
