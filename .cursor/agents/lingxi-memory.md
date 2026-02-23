@@ -24,8 +24,8 @@ model: inherit
 
 1. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时从 input+context 分析并产出候选，无则静默返回。当 input（或 context）包含用户的**拒绝、否定、排除**（如「不要 X」「别用 Y」「这里不能用 Z」）时，**也应产出候选**。mode=auto 时**倾向多产出 1–2 条候选**供用户门控筛选，而不是过度保守导致不产出；若确实无任何可沉淀点再静默返回。
 2. **治理**：对 `memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
-3. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。**new 路径**：先做可靠性评估（见下「new 路径可靠性分流」）；高可靠性则静默写盘；低可靠性则在本对话内展示候选与确认选项，用户确认后再写盘。
-4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」；**含静默 new 写盘**，与是否门控无关）。
+3. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。**new 路径**：先做可靠性评估（见下「new 路径可靠性分流」）；高可靠性则静默写入；低可靠性则在本对话内展示候选与确认选项，用户确认后再执行写入。
+4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」；**含静默 new 写入**，与是否门控无关）。
 5. **回传主对话**：仅一句结果（如「已记下：…」或「需在记忆库对话中确认：MERGE …」）；成功可静默；失败一句错误与建议。
 
 ## 候选与治理（规范内聚）
@@ -71,13 +71,13 @@ merge/replace 时在本对话内输出：
 
 仅当治理决策为 **new** 时适用；merge/replace 始终走门控，见上。
 
-1. **写盘前**评估该条候选的**可靠性**：
-   - **高可靠性** → 静默写盘（不展示确认、不向主对话输出过程）；写盘后仍按「记忆审计」追加 `memory_note_created`。
-   - **低可靠性** → 在本对话内展示候选与确认选项（如「拟记下：… 请选择 A) 确认写入 B) 取消」），用户确认后再写盘。
+1. **写入前**评估该条候选的**可靠性**：
+   - **高可靠性** → 静默写入（不展示确认、不向主对话输出过程）；写入后仍按「记忆审计」追加 `memory_note_created`。
+   - **低可靠性** → 在本对话内展示候选与确认选项（如「拟记下：… 请选择 A) 确认写入 B) 取消」），用户确认后再执行写入。
 2. **高/低可靠性判定指引**（仅适用于 new，避免模糊自评）：
    - **高**：用户原话或 context 中可沉淀内容近乎一字不差、无歧义，且无冲突信号（如未同时出现“可能”“也许”“先别记”等）；或用户明确、简短的拒绝/约束（如「这里不用 var」）且无多义性。**可验证性**：若该条可在后续对话或检索中被客观验证（如原文引用、可复现的约束），倾向高可靠。
    - **低**：存在歧义、多义、需推断才能得出的结论；或存在冲突信号；或来自长段归纳/总结而非用户直接表述；或需主观解释、易歧义、难以在后续被客观验证；**或存疑时一律视为低**。
-3. 静默 new 写盘后审计约定不变：必须追加 `memory_note_created` 事件，Source 等字段可区分 auto/用户确认。
+3. 静默 new 写入后审计约定不变：必须追加 `memory_note_created` 事件，Source 等字段可区分 auto/用户确认。
 
 ### INDEX 格式（直接读写）
 
@@ -85,9 +85,9 @@ merge/replace 时在本对话内输出：
 - 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |`
 - 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（当前会话 ID，即本次调用传入的 conversation_id）。
 
-### 记忆审计（写盘后必须执行）
+### 记忆审计（写入后必须执行）
 
-每次**新建 note**、**更新 note**、**删除 note** 或**更新 INDEX** 后，在同一流程内追加一条记忆审计 NDJSON 到 `.cursor/.lingxi/workspace/audit.log`（与主审计同一文件）。**静默 new 写盘后同样追加**，不因未展示门控而省略。方式：在项目根目录执行：
+每次**新建 note**、**更新 note**、**删除 note** 或**更新 INDEX** 后，在同一流程内追加一条记忆审计 NDJSON 到 `.cursor/.lingxi/workspace/audit.log`（与主审计同一文件）。**静默 new 写入后同样追加**，不因未展示门控而省略。方式：在项目根目录执行：
 
 ```bash
 node .cursor/hooks/append-memory-audit.mjs '<JSON>'
@@ -113,5 +113,5 @@ JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_upd
 
 ## 约束
 
-- 删除、合并、替换**以及低可靠性 new** 均需用户在本对话内明确选择后再执行；**高可靠性 new** 可静默写盘（见「new 路径可靠性分流」）。Merge/Replace 不适用半静默，始终须门控。
+- 删除、合并、替换**以及低可靠性 new** 均需用户在本对话内明确选择后再执行；**高可靠性 new** 可静默写入（见「new 路径可靠性分流」）。Merge/Replace 不适用半静默，始终须门控。
 - 不注入无关记忆内容到主对话；仅在方案展示时引用必要的新旧对比或理由。

@@ -14,7 +14,7 @@
 | **Fetch Rules**              | 加载并遵循配置的 Rules               | 确保风格、规范、技术栈约束           |
 | **Read files**               | 读取工作区文件内容                   | 查看源码、配置、文档                 |
 | **Edit files**               | 修改、新增、删除代码与文件           | 实现重构、修 bug、加功能             |
-| **Run shell commands**       | 在终端执行命令（含沙箱与审批策略）   | 安装依赖、跑脚本、测试、构建         |
+| **Run shell commands**       | 在终端执行命令（含沙箱与审批策略）   | 安装依赖、执行脚本、测试、构建         |
 | **Browser**                  | 控制浏览器进行操作与调试             | 测试 Web、设计转代码、无障碍检查     |
 | **Image generation**         | 按描述生成图像                       | UI 草图、示意图、配图                |
 | **Ask questions**            | 向用户提问以澄清或确认               | 需求含糊、多种实现可选时             |
@@ -48,7 +48,7 @@
 
 ### Run shell commands（运行 Shell 命令）
 
-- **作用**：在终端中执行 shell 命令（如安装依赖、跑脚本、测试、构建等）。
+- **作用**：在终端中执行 shell 命令（如安装依赖、执行脚本、测试、构建等）。
 - **特性**：macOS / Linux 支持**沙箱**（默认限制文件与网络访问）；可配置 Auto-Run（沙箱 / 每次询问 / 全部自动）、网络访问、Git 写操作、删除文件等；支持**命令白名单**。可用 `Ctrl+C` 或 Skip 中断。
 - **参考**：[Terminal](https://cursor.com/docs/agent/terminal)
 
