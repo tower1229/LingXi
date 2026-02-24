@@ -1,13 +1,13 @@
 ---
 name: init-executor
-description: Agent 静默推断项目类型，按收集清单生成“初始化记忆笔记草稿”，并在用户确认后可选写入记忆库（默认不写入）。类型不向用户展示、无需确认或修正。
+description: 当执行 /init 命令时自动激活，负责项目初始化上下文收集与记忆候选清单生成，并在用户门控后可选写入记忆库（默认不写入）。
 ---
 
 # Init Executor
 
 ## Quick Start
 
-- **目标**：建立项目最小上下文并生成记忆候选清单，仅用户门控时写入。步骤：确保 workflow 骨架存在 → 静默推断项目类型 → common Must 五项理解 → 展示供确认 → 生成候选清单 → 用户 Q2 门控写入。
+- **目标**：建立项目最小上下文并生成记忆候选清单，仅用户门控时写入。步骤：确保 workflow 骨架存在 → 静默推断项目类型 → common Must 五项理解 → 展示供确认 → 交互式补齐缺失项 → 生成候选清单 → 写入门控（默认跳过）。
 
 ## 目标
 
@@ -24,14 +24,23 @@ description: Agent 静默推断项目类型，按收集清单生成“初始化�
 ## 输出与交互原则（必须）
 
 - 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
-- **写入门控不可侵犯**：除非用户在 Q2 明确选择写入，否则只展示候选清单，不写入磁盘。
+- **写入门控不可侵犯**：除非用户在写入策略步骤明确选择写入，否则只展示候选清单，不写入磁盘。
 - **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项向用户补充提问，避免硬编码关键词/复杂 if-else。
 
 ## 执行流程（按需）
 
 ### Step 0) 确保 workflow 骨架存在（优先执行）
 
-在执行后续步骤前，必须先保证当前工作区内 `.cursor/.lingxi/` 骨架存在：
+在执行后续步骤前，必须先保证当前工作区内 `.cursor/.lingxi/` 骨架存在。该步骤是原子流程块，输入与输出固定，要求可重复执行且幂等：
+
+- **输入（SSoT）**：
+  - `references/workflow-skeleton.json`
+  - `references/memory-note-template.default.md`
+  - `references/INDEX.default.md`
+- **输出（工作区）**：
+  - `workflowDirectories` 对应目录存在
+  - `workflowTemplateFiles` 对应模板文件存在
+  - `workflowIndexFiles` 对应索引文件存在
 
 1. **读取** `references/workflow-skeleton.json`，获取 `workflowDirectories`、`workflowTemplateFiles`、`workflowIndexFiles`。
 2. **创建目录**：若工作区根下 `.cursor/.lingxi/` 或任一 `workflowDirectories` 中的目录不存在，则按顺序创建（相对于工作区根，递归创建父目录）。
@@ -68,7 +77,7 @@ description: Agent 静默推断项目类型，按收集清单生成“初始化�
 
 **5 个问题**（与 init-checklists 的 common Must 对应）：(1) 项目解决什么问题、不做什么（goal + 非目标）；(2) 核心用户/角色与关键诉求（users）；(3) 1–3 条关键链路及失败兜底（flows）；(4) 风险优先级与最不可接受的失败（risks）；(5) 环境、发布与回滚方式（releaseEnv）。
 
-**行为契约**：仅对草稿中**未找到或明显不确定**的项向用户提问；若五项均已填满且置信度足够，**不要先问这五个问题**，直接进入 Step 2，将“项目结构/技术栈/规范/业务模块”整理成一段供用户确认（可标注「根据项目文档整理，请确认或修正」）。用户确认或补充完 Must 后，再按需进入 Should；Optional 默认不追问，除非用户选择 Q1=C。从 `references/init-checklists.md` 读取通用骨架与**推断出的类型**的 Must → Should；类型不向用户询问。每个问题尽量让用户用“1-3 行”回答。
+**行为契约**：仅对草稿中**未找到或明显不确定**的项向用户提问；若五项均已填满且置信度足够，**不要先问这五个问题**，直接进入 Step 2，将“项目结构/技术栈/规范/业务模块”整理成一段供用户确认（可标注「根据项目文档整理，请确认或修正」）。用户确认或补充完 Must 后，再按需进入 Should；Optional 默认不追问，除非用户在交互步骤中选择 `deep_dive`。从 `references/init-checklists.md` 读取通用骨架与**推断出的类型**的 Must → Should；类型不向用户询问。每个问题尽量让用户用“1-3 行”回答。
 
 ### 2) 展示“项目结构/技术栈/规范/业务模块”供确认
 
@@ -103,33 +112,93 @@ description: Agent 静默推断项目类型，按收集清单生成“初始化�
 - `Audience=project`、`Portability=project-only`（除非用户明确说要团队共享）
 - 每条候选建议标注 `Type=draft|candidate`（仅用于阅读，不进入 Id）
 
-### 4) 同屏双问（Q1 + Q2）
+### 4) 交互式推进（questions-first）
 
-按 `/init` Command 的同屏双问格式输出，并解析用户输入：
+本 Skill 是 `/init` 交互与解析规则的单一事实源（SSoT）。使用分步交互替代同屏双问：先确认是否继续，再按需补齐，最后再做写入门控。
 
-- **Q1（必选）**：A/B/C/D
-- **Q2（可选，缺省 S）**：S / All / 1,3
+#### 4.1 Q1：确认是否继续生成候选清单（必答）
 
-解析规则：
+优先使用 questions 工具发起交互（单选）：
 
-- 用户只回复 `A` 视为 `A; S`
-- 用户只回复 `All` 之类的 Q2 选项时，必须追问补齐 Q1（不重复展示大段内容）
+```json
+{
+  "tool": "questions",
+  "parameters": {
+    "question": "已整理项目结构与上下文，下一步如何继续？",
+    "options": [
+      { "label": "直接生成记忆候选清单", "value": "confirm" },
+      { "label": "先补充或修正信息", "value": "supplement" },
+      { "label": "继续深入调查（含 Should 项）", "value": "deep_dive" }
+    ]
+  }
+}
+```
 
-### 5) 可选写入（仅当 Q2 明确选择写入）
+若当前运行环境不支持 questions UI，则以自然语言提供等价选项（`confirm` / `supplement` / `deep_dive`）并解析用户回复。
 
-当且仅当 Q2 为 `All` / `1,3` 时：
+#### 4.2 缺失项交互补齐（仅在 supplement 或 deep_dive 触发）
 
-- 从“记忆候选清单”中确定要写入的条目（`All` 为全部；`1,3` 为所选编号）
-- 将待写入的候选通过**显式调用**交给 lingxi-memory 子代理：在提示中使用 `/lingxi-memory mode=remember input=<选中的条目或编号>`（或 `mode=init`，必要时在 input 或后续消息中传 `context`），或自然语言如「使用 lingxi-memory 子代理将选中的候选写入记忆库：<条目摘要或编号>」
-- 子代理在独立上下文中完成治理与写入（合并优先、冲突否决；涉及删除/取代须用户在其对话内确认），直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`
+- `supplement`：只追问 common Must 中未找到或不确定的字段（goal、users、flows、risks、releaseEnv）。
+- `deep_dive`：在 Must 完整后，继续按类型化清单补齐 Should（Optional 默认不主动追问）。
+- 追问策略：一次只问一个缺失项，每次输出 1-3 行上下文；禁止重复展示整段菜单。
 
-主对话根据子代理返回展示一句结果或静默；写入失败时输出明确错误与解决方案。
+#### 4.3 兼容输入与异常处理
 
-### 6) 初始化报告（最小高信号）
+- 兼容旧输入：若用户输入 `A/B/C/D`，分别映射为 `confirm/supplement/deep_dive/supplement`（`D` 视为补充修正）。
+- 对无法解析的回复，给出一次简短澄清并再次展示最小选项，不回放长段说明。
+
+### 5) 写入策略门控（默认跳过）
+
+候选清单生成后，再单独询问写入策略（与 Q1 解耦）：
+
+```json
+{
+  "tool": "questions",
+  "parameters": {
+    "question": "是否将候选条目写入记忆库？",
+    "options": [
+      { "label": "跳过写入（默认）", "value": "skip" },
+      { "label": "写入全部候选", "value": "all" },
+      { "label": "选择部分候选写入", "value": "partial" }
+    ]
+  }
+}
+```
+
+- `skip` 或未明确回答写入策略：仅展示候选清单，不写入磁盘。
+- `all`：全量写入候选清单。
+- `partial`：继续请求编号（优先使用 questions 多选，或自然语言 `1,3,5`）。
+
+编号解析规则（`partial`）：
+
+- 仅接受当前候选清单中的有效编号；去重后保序。
+- 编号为空、越界、或无法解析时，只追问编号本身，不重复其他内容。
+- 支持 `1,3`、`1 3`、`1-3`（展开为 `1,2,3`）；`all/全部` 等价 `all`。
+
+### 6) 可选写入执行（仅 all 或 partial）
+
+当且仅当写入策略为 `all` 或 `partial` 时，执行写入：
+
+- 从“记忆候选清单”确定待写入条目。
+- 将条目通过**显式调用**交给 lingxi-memory 子代理：`/lingxi-memory mode=remember input=<选中的条目或编号>`，或等价自然语言委派。
+- 子代理在独立上下文完成治理与写入，直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
+
+主对话仅展示一句结果或静默；失败时输出明确错误与解决建议。
+
+### 7) 初始化报告（最小高信号）
 
 输出 3-6 行摘要：
 
 - 生成的草稿列表
-- 若写入：写入的文件列表 + 是否更新 INDEX
+- 写入策略（skip/all/partial）
+- 若写入：写入文件列表 + 是否更新 INDEX
 
 （不展示推断的项目类型；类型仅用于内部收集与草稿生成。）
+
+### 8) 工作目录初始化能力抽象（后续 Phase B）
+
+本次先将 Step 0 保持为 `init-executor` 内原子流程块（Phase A），不额外拆分新 skill。后续仅在以下条件满足时落地独立复用能力（如 `workspace-bootstrap`）：
+
+- 至少 2 个执行 skill 出现同类目录初始化逻辑；
+- 目录骨架或默认模板更新频率高，维护成本上升；
+- 需要在 `/req`、`/plan`、`/build`、`/review` 中提供“目录缺失自愈”。
