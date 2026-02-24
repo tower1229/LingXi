@@ -41,7 +41,7 @@ args:
 
 ## 执行逻辑
 
-本命令不包含执行逻辑；**必须先经品味识别**产出 payload，再通过**显式调用**将 payload 交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。
+本命令不包含执行逻辑；**必须先经 taste-recognition skill** 产出 payload，再通过**显式调用**将 payload 交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。
 
 ## 执行流程
 
@@ -51,13 +51,13 @@ args:
 
 根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），确定要提取的记忆范围（当前轮用户输入或用户指定的对话范围）。
 
-### 2) 先调用品味识别 skills
+### 2) 先调用 taste-recognition skill
 
-**必须先**调用 taste-recognition Skill，将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 Skill 判断是否可沉淀并产出 §6.4 品味 payload（scene、principles、choice、evidence、source=remember、confidence、apply）。若品味识别静默（无可沉淀），则不调用 lingxi-memory，主对话可静默或提示「未识别到可沉淀记忆」。
+**必须先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 skill 判断是否可沉淀并产出 7 字段品味 payload（scene, principles, choice, evidence, source=remember, confidence, apply）。若 taste-recognition 静默（无可沉淀），则不调用 lingxi-memory，主对话可静默或提示「未识别到可沉淀记忆」。
 
 ### 3) 显式调用 lingxi-memory 子代理
 
-仅当品味识别产出 payload 时：
+仅当 taste-recognition 产出 payload 时：
 
 - 用该 **payload** 显式调用 lingxi-memory 子代理，并传入 **conversation_id**（及可选 generation_id）供审计。
 - **禁止**将原始用户消息、对话片段或任何非 payload 结构传给 lingxi-memory。

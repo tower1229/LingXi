@@ -79,9 +79,9 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 与环节品味嗅探的关系
 
-各环节（req/plan/build/review 等）在**情境驱动**时可能通过 questions-interaction 向用户提问并得到选择；该路径下产出的 payload 的 `source` 为 `choice`，仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件；本 Skill 负责从「自由输入 / remember 内容 / init 草稿 / 选择题反馈」中**统一**产出 §6.4 payload。
+各环节（req/plan/build/review 等）在**情境驱动**时可能通过 questions-interaction 向用户提问并得到选择；该路径下产出的 payload 的 `source` 为 `choice`，仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件；本 Skill 负责从「自由输入 / remember 内容 / init 草稿 / 选择题反馈」中**统一**产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply）。
 
 ## 引用与映射
 
-- Payload → note 的映射规则、TasteKey 生成、门控细节：见 `.cursor/.lingxi/tasks/008.iteration-outline.品味识别与沉淀.md` 的 §6.5、§7.2、§6.4.5。
+- Payload → note 的映射规则、TasteKey 生成、门控细节：见本 Skill 的 references 目录下 `payload-to-note-and-tastekey.md`。
 - 下游契约：`.cursor/agents/lingxi-memory.md`（仅接受本 payload，不产候选）。

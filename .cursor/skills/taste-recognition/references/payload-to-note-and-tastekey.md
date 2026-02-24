@@ -1,6 +1,6 @@
 # Payload → Note 映射、TasteKey 与门控（本 Skill 引用）
 
-> 本 Skill 产出 payload 后，下游 lingxi-memory 按本约定做映射、生成 TasteKey 与门控。内容从品味识别与沉淀设计固化而来，存于本 references 以便 skill 自洽、不依赖 tasks 目录。
+> 本 Skill 产出 payload 后，下游 lingxi-memory 按本约定做映射、生成 TasteKey 与门控。
 
 ---
 
@@ -36,5 +36,5 @@
 - **用途**：① 环节选择题「已沉淀则不再问」——提问前用该键查 INDEX，存在且 Status=active 则不再问；② 检索时 memory-retrieve 可对 INDEX 的 TasteKey、Title、When to load 做关键词匹配。
 - **生成规则**：
   - **环节嗅探（source=choice）**：由该条规则的**情境类型**与**原则维度**生成 `taste_key = normalize(情境类型) + "|" + normalize(原则维度)`。
-  - **品味识别（auto/remember/init）**：由 payload.scene 与 payload.choice 生成稳定 slug，拼成 `scene_slug|choice_slug`；若与某嗅探情境的 (情境类型, 原则维度) 语义等价，可共用同一 taste_key。
+  - **非嗅探路径（auto/remember/init）**：由 payload.scene 与 payload.choice 生成稳定 slug，拼成 `scene_slug|choice_slug`；若与某嗅探情境的 (情境类型, 原则维度) 语义等价，可共用同一 taste_key。
 - **存储**：note Meta 的 TasteKey 字段；INDEX 的 TasteKey 列。仅存于此，不重复写入 Tags。
