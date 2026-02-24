@@ -11,22 +11,37 @@ model: inherit
 ## 输入约定（父代理必须传入）
 
 - **mode**：`auto` 或 `remember`
-  - **auto**：父代理已判断本轮存在可沉淀；传入本轮用户消息（或要点）与必要上下文摘要。
+  - **auto**：父代理已判断本轮存在可沉淀；必须传入结构化 `input`（见下）与单值 `confidence`。
   - **remember**：用户执行 `/remember`；传入用户原始内容（或编号如 `1,3`、`全部`）与必要上下文。
-- **input**：用户 `/remember` 的原文、编号选择，或（mode=auto 时）本轮消息/要点。
+- **input**：
+  - **remember**：用户 `/remember` 的原文或编号选择。
+  - **auto**：结构化对象，最小字段如下：
+    - `user_input.text`：本轮用户自由输入原文
+    - `user_input.evidence_spans[]`：证据片段（如 `start/end/label`）
+    - `target_claim.id`：被确认/修正主张标识
+    - `target_claim.digest`：主张摘要（短文本，不传全文）
+- **confidence**（mode=auto 必填）：单值 0~1，表示主代理对本次自动沉淀输入的整体置信度。
 - **context**（按需）：项目/背景/相关记忆的简短摘要。你**仅根据本次调用收到的内容**工作，不访问主对话历史。
 - **conversation_id**（按需）：当前会话 ID，由父代理从 sessionStart 约定或上下文获取并传入，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
 - **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
+
+## 自动沉淀触发边界（严格）
+
+- mode=auto 时，候选来源必须是**本轮用户自由输入**中的偏好/约束/取舍。
+- 若 `input.user_input.text` 为空或 `input.user_input.evidence_spans` 为空，必须判定为证据不足，不得静默写入（应走门控或静默不写入）。
+- command 模板、系统注入文本、工具输出、代理自述推导，均不得作为沉淀目标或候选依据。
 
 ## 职责（单一）
 
 在给定 mode 与 input 下：
 
-1. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时从 input+context 分析并产出候选，无则静默返回。当 input（或 context）包含用户的**拒绝、否定、排除**（如「不要 X」「别用 Y」「这里不能用 Z」）时，**也应产出候选**。mode=auto 时**倾向多产出 1–2 条候选**供用户门控筛选，而不是过度保守导致不产出；若确实无任何可沉淀点再静默返回。
-2. **治理**：对 `memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
-3. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。**new 路径**：先做可靠性评估（见下「new 路径可靠性分流」）；高可靠性则静默写入；低可靠性则在本对话内展示候选与确认选项，用户确认后再执行写入。
-4. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」；**含静默 new 写入**，与是否门控无关）。
-5. **回传主对话**：仅一句结果（如「已记下：…」或「需在记忆库对话中确认：MERGE …」）；成功可静默；失败一句错误与建议。
+1. **输入完整性检查**：mode=auto 时先检查 `input.user_input.text`、`input.user_input.evidence_spans[]`、`input.target_claim.id`、`input.target_claim.digest`、`confidence`。若关键字段缺失或为空，禁止静默写入。
+2. **产候选**：mode=remember 时直接将 input 转化为 MEM-CANDIDATE(s)；mode=auto 时仅从 `user_input` 证据与必要上下文分析并产出候选，`target_claim` 仅用于补充语义，不可覆盖用户证据。当用户自由输入包含用户的**拒绝、否定、排除**（如「不要 X」「别用 Y」「这里不能用 Z」）时，**也应产出候选**。
+3. **上下文补全（字段完善）**：当候选不足以形成完整 note（如缺 `whenToLoad/decision/signals`）时，可主动只读理解项目上下文补齐字段；该步骤只用于完善 note 字段，不得凭空生成用户意图。
+4. **治理**：对 `memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
+5. **门控**：merge 或 replace 时在本对话内展示「治理方案（待确认）」与 A/B/C/D，等用户确认后再执行。**new 路径**：先做可靠性评估（见下「new 路径可靠性分流」）；高可靠性才可静默写入，低可靠性或高推断场景必须门控。
+6. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」；**含静默 new 写入**，与是否门控无关）。
+7. **回传主对话**：仅一句结果（如「已记下：…」或「需在记忆库对话中确认：MERGE …」）；成功可静默；失败一句错误与建议。
 
 ## 候选与治理（规范内聚）
 

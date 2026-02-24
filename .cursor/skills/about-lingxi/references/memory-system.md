@@ -25,8 +25,8 @@
 **双入口与生效方式**：灵犀支持**自动沉淀**（主 Agent 判断后调用 mode=auto）与**主动沉淀**（用户执行 `/remember` 或 `/init` 选择写入）。为使自动沉淀稳定生效，「何时可沉淀、如何调用」的约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）在会话开始时注入【记忆沉淀约定】，主 Agent 在本会话内始终可见该约定，**安装灵犀插件后即生效**，不依赖是否加载其他文档。
 
 - **双入口**：
-- **auto**（自动沉淀）：主 Agent 判断本轮存在可沉淀时，通过**显式调用**（在提示中使用 `/lingxi-memory mode=auto input=<本轮消息与上下文摘要>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理；子代理产候选 → 治理 → 门控 → 写入。触发场景与原则由 sessionStart 注入的【记忆沉淀约定】定义。
-- 用户**拒绝、纠正、排除**（如「不要这样」「别用 X」「这里不能用 Y」「改成 Z」）也视为可沉淀；主 Agent 应将本轮中此类表述（或要点）传入 lingxi-memory mode=auto，由子代理产候选并门控。
+- **auto**（自动沉淀）：主 Agent 判断本轮存在可沉淀时，通过**显式调用**将结构化输入交给子代理（`input.user_input.text`、`input.user_input.evidence_spans[]`、`input.target_claim.id`、`input.target_claim.digest` + 单值 `confidence`），或自然语言委派且包含同等结构化信息；子代理产候选 → 必要时上下文补全 → 治理 → 门控/写入。触发场景与原则由 sessionStart 注入的【记忆沉淀约定】定义。
+- 用户**拒绝、纠正、排除**（如「不要这样」「别用 X」「这里不能用 Y」「改成 Z」）也视为可沉淀；主 Agent 应将本轮中此类表述按结构化 `user_input + target_claim + confidence` 传入 lingxi-memory mode=auto，由子代理产候选并门控。
 - 原则：**宁可多候选再门控，不少漏**；主 Agent 对「是否可沉淀」的判断宜放宽，交由子代理与用户门控做最终筛选。
 - **remember**（主动沉淀）：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。

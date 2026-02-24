@@ -208,7 +208,7 @@
 ### 在灵犀中的应用
 
 - **选型与成本**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
-- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用——在提示中使用 `/lingxi-memory` 语法（例如 `/lingxi-memory mode=remember input=<内容>` 或 `mode=auto input=<本轮要点>`）或自然语言提及「lingxi-memory 子代理」来调用。**自动沉淀**（mode=auto）依赖 sessionStart 注入的【记忆沉淀约定】，主 Agent 在会话内据此在适当时机调用；**主动沉淀**（用户 `/remember`）随时可用。安装灵犀插件后两种沉淀方式均生效；子代理在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果，减少对主对话的干扰。
+- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用——在提示中使用 `/lingxi-memory` 语法（例如 `/lingxi-memory mode=remember input=<内容>` 或 `mode=auto input=<结构化 user_input+target_claim> confidence=<0~1>`）或自然语言提及「lingxi-memory 子代理」来调用。**自动沉淀**（mode=auto）依赖 sessionStart 注入的【记忆沉淀约定】，主 Agent 在会话内据此在适当时机调用；**主动沉淀**（用户 `/remember`）随时可用。安装灵犀插件后两种沉淀方式均生效；子代理在独立上下文中完成产候选（必要时上下文补全）、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果，减少对主对话的干扰。
 - 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
 
 ## 选择决策矩阵
