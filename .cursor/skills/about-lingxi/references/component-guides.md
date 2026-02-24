@@ -106,11 +106,11 @@
 **记忆系统**：
 
 - `memory-retrieve`（Skill）：每轮回答前检索并最小注入（由 sessionStart hook 注入的约定触发）
-- **lingxi-memory**（Subagent）：记忆写入通过**显式调用**（`/lingxi-memory` 或自然语言提及子代理）使用；双入口 auto/remember；在独立上下文中完成产候选、治理、门控与直接文件写入（notes + INDEX），主对话仅收一句结果
+- **lingxi-memory**（Subagent）：记忆写入通过**显式调用**使用；仅接受品味识别 Skill 产出的 §6.4 payload，不产候选；双入口（session 约定触发自动沉淀、/remember 或 /init 主动沉淀）；在独立上下文中完成校验→映射→治理→门控与直接文件写入（notes + INDEX），主对话仅收一句结果
 
 **Hooks（记忆注入约定）**：
 
-- sessionStart（`.cursor/hooks/session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（何时调用 lingxi-memory mode=auto、触发场景与原则），保证自动沉淀在每会话内生效，安装插件即生效；无匹配静默，失败可降级
+- sessionStart（`.cursor/hooks/session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（先调用品味识别 skills，有 payload 再调 lingxi-memory），保证自动沉淀在每会话内生效，安装插件即生效；无匹配静默，失败可降级
 
 **工具类 Skills**：
 
@@ -166,7 +166,7 @@
 
 ### 在灵犀中的应用
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）**以及【记忆沉淀约定】**，使主 Agent 在会话内具备「何时调用 lingxi-memory mode=auto」的约定，自动沉淀与 /remember 主动沉淀均可用，安装插件即生效；其他审计/门控为可选。
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）**以及【记忆沉淀约定】**（先调用品味识别 skills，有 payload 再调 lingxi-memory），自动沉淀与 /remember、/init 主动沉淀均可用，安装插件即生效；其他审计/门控为可选。
 - **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由主 Agent 在合适时机显式调用 lingxi-memory（或用户 `/remember`）完成，不在每次 stop 时追加提示
 
 ## Subagents 指南
@@ -209,7 +209,7 @@
 ### 在灵犀中的应用
 
 - **选型与成本**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
-- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用——remember/auto 均使用结构化 `input`；auto 额外必填 `confidence`（0~1）；交互式候选勾选通过 questions 多选写入 `selected_candidates[]`（不是手输编号）。可在提示中使用 `/lingxi-memory` 语法或自然语言提及「lingxi-memory 子代理」调用。**自动沉淀**（mode=auto）依赖 sessionStart 注入的【记忆沉淀约定】，主 Agent 在会话内据此在适当时机调用；**主动沉淀**（用户 `/remember`）随时可用。安装灵犀插件后两种沉淀方式均生效；子代理在独立上下文中完成产候选（必要时上下文补全）、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果，减少对主对话的干扰。
+- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入。通过**显式调用**使用；**仅接受**品味识别 Skill 产出的 §6.4 品味 payload（禁止传入原始对话或旧形态 input）。可在提示中使用 `/lingxi-memory` 语法或自然语言提及「lingxi-memory 子代理」并传入 payload。**自动沉淀**依赖 sessionStart 注入的【记忆沉淀约定】（先调用品味识别，有 payload 再调 lingxi-memory）；**主动沉淀**（用户 `/remember` 或 `/init` 写入）随时可用。安装灵犀插件后两种沉淀方式均生效；子代理在独立上下文中完成校验→映射→治理→门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
 - 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
 
 ## 选择决策矩阵

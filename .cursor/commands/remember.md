@@ -15,12 +15,6 @@ args:
 
 ---
 
-## 前置要求（必须）
-
-- **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
-
----
-
 ## 使用方式
 
 ```
@@ -47,7 +41,7 @@ args:
 
 ## 执行逻辑
 
-本命令不包含执行逻辑，仅通过**显式调用**将任务交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。具体调用方式与输出要求见下文。
+本命令不包含执行逻辑；**必须先经品味识别**产出 payload，再通过**显式调用**将 payload 交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。
 
 ## 执行流程
 
@@ -55,17 +49,20 @@ args:
 
 **用户输入不能为空**。如果用户只输入 `/remember` 而没有提供任何内容，应提示用户提供输入。
 
-根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），从对话或输入中提炼结构化要点，并构造与 auto 一致的 `input` 结构（`user_input`、`target_claim`、可选 `selected_candidates`、可选 `confidence`）。
+根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），确定要提取的记忆范围（当前轮用户输入或用户指定的对话范围）。
 
-当存在“交互式候选勾选”场景时，**必须**使用 questions 多选交互收集选择结果（交互协议优先复用：使用 `/questions-interaction skills`），再将选择结果写入结构化 `input.selected_candidates[]`；不再支持用户手输编号文本写入入口（例如 `/remember 1,3`）。
+### 2) 先调用品味识别 skills
 
-### 2) 显式调用 lingxi-memory 子代理
+**必须先**调用 taste-recognition Skill，将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 Skill 判断是否可沉淀并产出 §6.4 品味 payload（scene、principles、choice、evidence、source=remember、confidence、apply）。若品味识别静默（无可沉淀），则不调用 lingxi-memory，主对话可静默或提示「未识别到可沉淀记忆」。
 
-- **不**在主对话执行提取/治理/写入；**仅**通过显式调用将任务交给 lingxi-memory 子代理，并在主对话根据其返回展示一句结果或静默。
-- **调用方式**（二选一）：
-  - **`/lingxi-memory` 语法**：在提示中写 `/lingxi-memory mode=remember input=<结构化对象>`（必要时补充 confidence）。
-  - **自然语言**：在对话中明确提及子代理，例如「使用 lingxi-memory 子代理将以下内容写入记忆库：<内容>」。
-- 子代理在独立上下文中完成：产候选 → 治理（TopK）→ 门控（如需）→ 直接文件写入 → 向主对话返回一句结果。
+### 3) 显式调用 lingxi-memory 子代理
+
+仅当品味识别产出 payload 时：
+
+- 用该 **payload** 显式调用 lingxi-memory 子代理，并传入 **conversation_id**（及可选 generation_id）供审计。
+- **禁止**将原始用户消息、对话片段或任何非 payload 结构传给 lingxi-memory。
+- **调用方式**（二选一）：在提示中写 `/lingxi-memory` 并传入 payload，或自然语言「使用 lingxi-memory 子代理将以下 payload 写入记忆库：<payload>」。
+- 子代理在独立上下文中完成：校验 → 映射 → 评分卡 → 治理（TopK）→ 门控（如需）→ 直接文件写入 → 向主对话返回一句结果。
 
 ---
 

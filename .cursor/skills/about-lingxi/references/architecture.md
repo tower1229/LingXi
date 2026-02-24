@@ -40,7 +40,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
 
-- **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口 auto/remember）；在独立上下文中完成产候选、治理、门控与**直接文件写入**（notes + INDEX），主对话仅收一句结果。
+- **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：记忆写入（双入口：session 约定触发自动沉淀、/remember 或 /init 主动沉淀）；**仅接受**品味识别 Skill 产出的 §6.4 品味 payload，不产候选；在独立上下文中完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话仅收一句结果。
 - `memory-retrieve`（Skill）：每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–3 最小注入（由 sessionStart hook 注入的约定触发）
 
 #### 工具类 Skills（提供辅助能力）
@@ -59,8 +59,8 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入：
 
-1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`；同时注入【记忆沉淀约定】，使主 Agent 在会话内具备「何时调用 lingxi-memory mode=auto」的约定，**自动沉淀**（主 Agent 判断后调用）与 **/remember 主动沉淀** 均可用，安装插件即生效。
-2. **记忆写入**：由 **lingxi-memory** 子代理在独立上下文中执行；主 Agent 通过**显式调用**（remember/auto 均传结构化 `input`，auto 额外必填 `confidence`；交互式候选勾选通过 questions 多选写入 `selected_candidates[]`，不是手输编号）将任务交给子代理；子代理产候选（必要时上下文补全）→ 治理（TopK）→ 门控（或 new 路径可靠性分流）→ **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果。**半静默仅限新建（new）**；删除与替换须用户确认。
+1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`，再**按约定调用品味识别 skills**；若品味识别产出 payload，用该 payload 调用 lingxi-memory。**自动沉淀**（session 约定触发）与 **/remember、/init 主动沉淀** 均可用，安装插件即生效。
+2. **记忆写入**：所有写入路径**必须先经品味识别**产出 §6.4 payload；由 **lingxi-memory** 子代理在独立上下文中执行，**仅接受**该 payload（禁止传入原始对话或旧形态 input）。子代理：校验 → 映射生成 note → 评分卡（008）→ 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果。**半静默仅限 new 且 confidence=high**；删除与替换须用户确认。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
    - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
@@ -70,7 +70,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（何时调用 lingxi-memory mode=auto、触发场景与原则），保证自动沉淀与主动沉淀（/remember）在安装插件后即生效；其他审计/门控为可选。
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（先调用品味识别 skills，有 payload 再调 lingxi-memory），保证自动沉淀与主动沉淀（/remember、/init）在安装插件后即生效；其他审计/门控为可选。
 - **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀依赖主 Agent 判断后显式调用 lingxi-memory（或用户 `/remember`），而非在每次 stop 时追加系统提示
 
 ## 目录结构
@@ -133,5 +133,5 @@ Skills 承载详细的工作流指导，按职责分为：
 
 1. 用户执行 `/remember ...` 或 `/init` 后选择写入，或主 Agent 判断存在可沉淀并委派
 2. 主 Agent 通过**显式调用**（remember/auto 均传结构化 `input`；auto 额外必填 `confidence`，或自然语言「使用 lingxi-memory 子代理…」）将任务交给 **lingxi-memory** 子代理
-3. 子代理在独立上下文中：产候选（必要时上下文补全）→ 治理（TopK）→ 门控或 new 路径可靠性分流（半静默仅限 new，merge/replace 须确认）→ 直接读写 `memory/notes/` 与 `memory/INDEX.md`
+3. 子代理在独立上下文中：校验 payload → 映射生成 note → 评分卡（008）→ 治理（TopK）→ 门控（半静默仅限 new 且 confidence=high，merge/replace 须确认）→ 直接读写 `memory/notes/` 与 `memory/INDEX.md`
 4. 主对话仅收一句结果或静默

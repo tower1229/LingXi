@@ -197,9 +197,10 @@ description: 当执行 /init 命令时自动激活，负责项目初始化上下
 
 当且仅当写入策略为 `all` 或 `partial` 时，执行写入：
 
-- 从“记忆候选清单”确定待写入条目。
-- 将条目通过**显式调用**交给 lingxi-memory 子代理：`/lingxi-memory mode=remember input=<结构化对象（含 selected_candidates）>`，或等价自然语言委派。
-- 子代理在独立上下文完成治理与写入，直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
+- 从“记忆候选清单”确定待写入条目（用户确认后的草稿）。
+- **先**调用「品味识别」Skill（`.cursor/skills/taste-recognition/SKILL.md`），将每条确认后的草稿转为 §6.4 品味 payload（source=init；可按 init-checklists 类型化字段生成 scene、principles、choice 等）；每条草稿对应一条 payload，可产出多条。
+- 对每条 payload **显式调用** lingxi-memory 子代理（传入 payload 及 conversation_id、可选 generation_id）；禁止将草稿或 selected_candidates 等旧结构直接传给 lingxi-memory。
+- 子代理在独立上下文完成校验 → 映射 → 治理与门控 → 直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
 
 主对话仅展示一句结果或静默；失败时输出明确错误与解决建议。
 

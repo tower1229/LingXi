@@ -7,5 +7,5 @@
 
 ## Memories
 
-| Id  | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
-| --- | ---- | ----- | ------------ | ------ | -------- | ----- | ---------- | --------- | --------- | ------ | ------- | ---- |
+| Id  | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | TasteKey | File |
+| --- | ---- | ----- | ------------ | ------ | -------- | ----- | ---------- | --------- | --------- | ------ | ------- | -------- | ---- |
