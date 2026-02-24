@@ -28,7 +28,7 @@
 - **auto**（自动沉淀）：主 Agent 判断本轮存在可沉淀时，通过**显式调用**将结构化输入交给子代理（`input.user_input.text`、`input.user_input.evidence_spans[]`、`input.target_claim.id`、`input.target_claim.digest` + 单值 `confidence`），或自然语言委派且包含同等结构化信息；子代理产候选 → 必要时上下文补全 → 治理 → 门控/写入。触发场景与原则由 sessionStart 注入的【记忆沉淀约定】定义。
 - 用户**拒绝、纠正、排除**（如「不要这样」「别用 X」「这里不能用 Y」「改成 Z」）也视为可沉淀；主 Agent 应将本轮中此类表述按结构化 `user_input + target_claim + confidence` 传入 lingxi-memory mode=auto，由子代理产候选并门控。
 - 原则：**宁可多候选再门控，不少漏**；主 Agent 对「是否可沉淀」的判断宜放宽，交由子代理与用户门控做最终筛选。
-- **remember**（主动沉淀）：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **remember**（主动沉淀）：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**将结构化输入交给子代理（同 auto 结构：`user_input` + `target_claim`，交互式候选勾选通过 questions 多选写入 `selected_candidates[]`，不是手输编号；交互协议优先复用：使用 `/questions-interaction skills`）；子代理产候选 → 治理 → 门控 → 写入。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
 - **门控**：merge/replace 时在 Subagent 对话内展示「治理方案（待确认）」与 A/B/C/D，用户确认后再执行；主对话不展示过程。**半静默仅限新建（new）**：对 new 路径按可靠性分流（高可靠性静默写、低可靠性显性门控）；可靠性判定含**可验证性**维度（可被后续客观验证→倾向高可靠；需主观解释或易歧义→倾向低可靠）；**删除与替换仍须确认**，不适用半静默。
 - **治理策略**：语义近邻 TopK（create/update/delete/skip），门控原则不变（delete 与 replace 须用户确认）。

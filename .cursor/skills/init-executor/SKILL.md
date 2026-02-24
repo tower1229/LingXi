@@ -114,7 +114,7 @@ description: 当执行 /init 命令时自动激活，负责项目初始化上下
 
 ### 4) 交互式推进（questions-first）
 
-本 Skill 是 `/init` 交互与解析规则的单一事实源（SSoT）。使用分步交互替代同屏双问：先确认是否继续，再按需补齐，最后再做写入门控。
+本 Skill 是 `/init` 交互与解析规则的单一事实源（SSoT）。questions 交互协议优先复用：使用 `/questions-interaction skills`。使用分步交互替代同屏双问：先确认是否继续，再按需补齐，最后再做写入门控。
 
 #### 4.1 Q1：确认是否继续生成候选清单（必答）
 
@@ -167,20 +167,38 @@ description: 当执行 /init 命令时自动激活，负责项目初始化上下
 
 - `skip` 或未明确回答写入策略：仅展示候选清单，不写入磁盘。
 - `all`：全量写入候选清单。
-- `partial`：继续请求编号（优先使用 questions 多选，或自然语言 `1,3,5`）。
+- `partial`：继续使用 questions 多选收集待写入候选（不是手输编号）。
 
-编号解析规则（`partial`）：
+`partial` 规则（questions-only）：
 
-- 仅接受当前候选清单中的有效编号；去重后保序。
-- 编号为空、越界、或无法解析时，只追问编号本身，不重复其他内容。
-- 支持 `1,3`、`1 3`、`1-3`（展开为 `1,2,3`）；`all/全部` 等价 `all`。
+- 必须通过 questions 多选返回有效候选值，不再支持自然语言编号写入。
+- 若未选择任何候选、或返回值不在当前候选清单中，重新发起 questions 多选，仅追问选择本身。
+- 若当前运行环境不支持 questions 交互，提示用户改为 `all` 或 `skip`（不走编号文本兜底）。
+
+推荐使用以下 questions 多选格式收集 `selected_candidates`（协议细则见：使用 `/questions-interaction skills`）：
+
+```json
+{
+  "tool": "questions",
+  "parameters": {
+    "question": "请选择要写入记忆库的候选",
+    "options": [
+      { "label": "候选 1：<标题>", "value": "cand_1" },
+      { "label": "候选 2：<标题>", "value": "cand_2" }
+    ],
+    "allow_multiple": true
+  }
+}
+```
+
+- `value` 使用稳定候选标识（如 `cand_1`），避免将展示文本当作唯一主键。
 
 ### 6) 可选写入执行（仅 all 或 partial）
 
 当且仅当写入策略为 `all` 或 `partial` 时，执行写入：
 
 - 从“记忆候选清单”确定待写入条目。
-- 将条目通过**显式调用**交给 lingxi-memory 子代理：`/lingxi-memory mode=remember input=<选中的条目或编号>`，或等价自然语言委派。
+- 将条目通过**显式调用**交给 lingxi-memory 子代理：`/lingxi-memory mode=remember input=<结构化对象（含 selected_candidates）>`，或等价自然语言委派。
 - 子代理在独立上下文完成治理与写入，直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
 
 主对话仅展示一句结果或静默；失败时输出明确错误与解决建议。
