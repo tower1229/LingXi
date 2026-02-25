@@ -17,7 +17,7 @@ description: 灵犀内部统一可复用的交互式问询方法。在需要单�
 ## 交互契约（统一）
 
 1. 始终使用 `questions` 交互收集选择。
-2. **`options` 仅使用 `label` 展示选项**，选项内容在 `label` 中直接表达（如「确认」「取消」或「选项1」「选项2」）。
+2. **`options` 仅使用 `label` 展示选项**，选项内容在 `label` 中直接表达（如「选项1」「选项2」）。
 3. `question` 写提问语，不重复列举选项内容。
 4. 多选场景必须显式设置 `allow_multiple: true`。
 5. 无有效选择时只重试当前问题，不回放整段流程。
@@ -66,6 +66,29 @@ description: 灵犀内部统一可复用的交互式问询方法。在需要单�
   }
 }
 ```
+
+### 模板 D：连续多问
+
+需要依次问多个问题时，`parameters` 传**数组**，每项为单问结构（`question` + `options`），按顺序展示与收集：
+
+```json
+{
+  "tool": "questions",
+  "parameters": [
+    {
+      "question": "请选择第一个问题",
+      "options": [{ "label": "选项1-1" }, { "label": "选项1-2" }]
+    },
+    {
+      "question": "请选择第二个问题",
+      "options": [{ "label": "选项2-1" }, { "label": "选项2-2" }]
+    }
+  ]
+}
+```
+
+- 每项仍遵循单问契约：`options` 仅用 `label`；若某项需多选，可在该问中增加 `allow_multiple: true`。
+- 返回值为按顺序的答案列表（每问对应一个选中 label 或 label 列表），业务方按索引或顺序解析。
 
 ## 结果处理规范
 
