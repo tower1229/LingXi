@@ -102,7 +102,7 @@
 
 - INDEX.md 是经验的单一事实来源，其他文件引用而非复制
 - 经验索引作为经验的 SSoT，避免重复定义
-- 质量资产（Experience 系统）作为项目规范的 SSoT
+- 质量资产（记忆系统）作为项目规范的 SSoT
 
 ### 7. 关注点分离（SoC）
 
@@ -111,7 +111,7 @@
 **应用**：
 
 - Skills 负责特定领域的任务（req、plan、build、review 等）
-- Experience 系统负责质量资产（团队级标准/经验和项目级经验）
+- 记忆系统负责质量资产（团队级标准/经验和项目级经验）
 - Hooks 负责自动化流程
 - Subagents 负责独立任务
 
@@ -127,7 +127,5 @@
 
 ## 参考
 
-- **AI Native 设计原则**：`.cursor/.lingxi/memory/notes/MEM-ai-native-design.md`
-- **静默成功原则**：`.cursor/.lingxi/memory/notes/MEM-silent-success.md`
 - **核心价值指引**：`references/core-values.md`
-- **工作流输出约束**：`references/workflow-output-principles.md`
+- **静默成功与工作流输出约束**：`references/workflow-output-principles.md`
