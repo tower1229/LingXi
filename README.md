@@ -1,100 +1,100 @@
-[English](./README_EN.md)
+[中文](./README_ZH.md)
 
 # LíngXī（灵犀）
 
-基于 Cursor 的 Development Workflow
+Cursor workflow with persistent memory.
 
 ---
 
-## Why（远景）
+## Why (Vision)
 
-为创造者打造 AI 时代的专属法宝。
+Your go-to toolkit for creators in the AI era.
 
-## How（路径）
+## How (Approach)
 
-### 1) 心有灵犀
+### 1) In Sync With You
 
-持久化记忆，让 AI 按你的方式做事
+Persistent memory so the AI works the way you do.
 
 ### 2) AI Native
 
-尊重 AI 能力，预留进化空间
+Respect AI capabilities and leave room to evolve.
 
-### 3) 称心如意
+### 3) To Your Liking
 
-降低认知负担，提供友好体验
-
----
-
-## What（实现）
-
-- **可伸缩工作流**：可任意组合的开发流程，兼顾工程严谨与轻便快捷
-- **持久化记忆库**：在项目中学习你的判断力、品味和责任感，并应用于每轮新对话
-- **人工门控**：关键决策始终遵从你的指引，可以不来，绝不胡来
-- **上下文运营**：优化上下文，让模型聚焦关键信息
-- **开箱即用**：从 Cursor 插件市场安装后，使用 `/init` 迅速在现有项目中初始化 LingXi Workflow
+Lower cognitive load and a smooth, user-friendly experience.
 
 ---
 
-## 安装与快速开始
+## What (Implementation)
 
-### 安装
-
-在 Cursor 中从**插件市场**安装灵犀（搜索 “LingXi” 或 “灵犀”）。安装后，灵犀的 commands、skills、agents 与 hooks 将随插件加载，在任意打开的工作区中可用。
-
-- **首次使用**：建议在项目中运行一次 `/init`，以初始化工作区目录（`.cursor/.lingxi/`）与可选记忆草稿。
+- **Flexible workflow**: Compose your own flow—rigorous when needed, light when not
+- **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
+- **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
+- **Context curation**: Optimize context so the model focuses on what matters
+- **Ready to use**: Install from the Cursor plugin marketplace, then run `/init` to quickly set up LingXi in your project
 
 ---
 
-### 快速开始
+## Install & Quick Start
 
-**首次建议运行 `/init` 初始化项目**（创建 `.cursor/.lingxi/` 骨架与模板）；之后即可使用下方命令。
+### Install
 
-#### 核心工作流命令
+Install LingXi from the **Cursor plugin marketplace** (search for “LingXi” or “灵犀”). Once installed, its commands, skills, agents, and hooks load with the plugin and are available in any open workspace.
 
-按生命周期顺序使用以下命令完成开发任务：
+- **First time**: We recommend running `/init` once in your project to create the workspace layout (`.cursor/.lingxi/`) and optional memory drafts.
 
-| 命令          | 用法                                                                                                                               | 说明                                                                                                                                                                                                                                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/req`        | `/req <需求描述>`<br><br>**示例**：<br>`/req 添加用户登录功能，支持邮箱和手机号登录`<br>`/req 优化首页加载性能，目标首屏时间 < 1s` | **创建任务文档**<br><br>自动生成任务编号（001, 002...）和标题，创建任务文档：<br>`.cursor/.lingxi/tasks/001.req.<标题>.md`<br><br>这是整个流程的核心文档，包含需求提纯、技术方案等。                                                                                                 |
-| `/review-req` | `/review-req [taskId]`<br><br>**示例**：<br>`/review-req 001`<br>`/review-req`（使用最新任务）                                     | **审查 req 文档（可选）**<br><br>对 req 文档展开多维度审查，用于辅助提升 req 文档质量。可省略，也可以多次执行。<br><br>不产出文件，仅输出审查结果和建议到对话中。                                                                                                                    |
-| `/plan`       | `/plan [taskId]`<br><br>**示例**：<br>`/plan 001`<br>`/plan`（使用最新任务）                                                       | **任务规划（可选）**<br><br>基于 req 文档生成任务规划文档和测试用例文档。适用于复杂任务，简单任务可跳过。<br><br>**提示**：可以配合 Cursor 的 plan 模式使用。                                                                                                                        |
-| `/build`      | `/build [taskId]`<br><br>**示例**：<br>`/build 001`<br>`/build`（使用最新任务）                                                    | **执行构建（可选）**<br><br>支持两种模式：<br>- **Plan-driven**：有 plan 文档时，按计划结构化执行（推荐）<br>- **Req-driven**：无 plan 文档时，Agent 基于 req 自行决策执行 <br><br>**提示**：当使用 plan 模式时，也可以使用规划模式内置的 build 功能，从而跳过灵犀的 `/build` 命令。 |
-| `/review`     | `/review [taskId]`<br><br>**示例**：<br>`/review 001`<br>`/review`（使用最新任务）                                                 | **审查交付**<br><br>自动进行多维度审查，生成审查报告：<br><br>**核心审查**：功能、测试覆盖、架构、可维护性、回归风险<br><br>**按需审查**：文档一致性、安全性、性能、E2E 测试<br><br>**测试执行**：单元测试、集成测试、端到端测试（如适用）                                           |
+---
 
-#### 辅助工具
+### Quick Start
 
-| 命令        | 用法                                                                                                                      | 说明                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/remember` | `/remember <记忆描述>`<br><br>**示例**：<br>`/remember 吸取刚才这个 bug 的经验`<br>`/remember 始终使用 xxx 解决 yyy 问题` | **写入记忆（随时可用）**<br><br>无需依赖任务编号，可随时把“判断/取舍/排障路径/验证方式”写入记忆库（`memory/notes/`），用于后续每轮的检索注入。<br><br>**使用场景**：<br>- **直接记忆表达**：直接陈述原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
-| `/init`     | `/init`                                                                                                                   | **初始化项目（首次使用）**<br><br>引导式收集项目信息（技术栈、常用模式、开发规则等），生成并写入初始记忆（`memory/notes/`）。建议首次在现有项目中使用 LingXi 时运行。                                                                                                                                                    |
+**We recommend running `/init` first** to initialize the project (creates `.cursor/.lingxi/` skeleton and templates); then use the commands below.
 
-#### 经验共享（跨项目复用：share 目录 + git submodule）
+#### Core workflow commands
 
-灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
+Use these in lifecycle order:
 
-- 共享目录：`.cursor/.lingxi/memory/notes/share/`（建议作为 **git submodule**）
+| Command       | Usage                                                                                                                                    | Description                                                                                                                                                                                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/req`        | `/req <description>`<br><br>**Examples:**<br>`/req Add user login with email and phone`<br>`/req Improve homepage load, target LCP < 1s` | **Create task doc**<br><br>Auto task id (001, 002...) and title; creates:<br>`.cursor/.lingxi/tasks/001.req.<title>.md`<br><br>Core doc for the whole workflow: refined requirements, technical approach, and more.                                                              |
+| `/review-req` | `/review-req [taskId]`<br><br>**Examples:**<br>`/review-req 001`<br>`/review-req` (latest task)                                          | **Review req doc (optional)**<br><br>Multi-dimension review of the req doc to improve quality. Optional, can be run multiple times.<br><br>No file output; results and suggestions in chat only.                                                                                 |
+| `/plan`       | `/plan [taskId]`<br><br>**Examples:**<br>`/plan 001`<br>`/plan` (latest task)                                                            | **Task planning (optional)**<br><br>Generate plan and test-case docs from the req. For complex tasks; simple ones can skip.<br><br>**Tip:** Works with Cursor’s plan mode.                                                                                                       |
+| `/build`      | `/build [taskId]`<br><br>**Examples:**<br>`/build 001`<br>`/build` (latest task)                                                         | **Run build (optional)**<br><br>Two modes:<br>- **Plan-driven**: Follow plan when present (recommended)<br>- **Req-driven**: Agent decides from req when no plan<br><br>**Tip:** In plan mode you can use its built-in build and skip LingXi’s `/build`.                         |
+| `/review`     | `/review [taskId]`<br><br>**Examples:**<br>`/review 001`<br>`/review` (latest task)                                                      | **Review delivery**<br><br>Multi-dimension review and report:<br><br>**Core:** functionality, test coverage, architecture, maintainability, regression<br><br>**Optional:** doc consistency, security, performance, E2E<br><br>**Tests:** unit, integration, E2E when applicable |
 
-**1) 添加 share 仓库（submodule）**
+#### Helper commands
+
+| Command     | Usage                                                                                                                            | Description                                                                                                                                                                                                                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y` | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/notes/` for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content |
+| `/init`     | `/init`                                                                                                                          | **Initialize project (first use)**<br><br>Guided collection of project info (stack, patterns, rules), then optional write of initial memory to `memory/notes/`. Recommended when first using LingXi in a project.                                                                                                             |
+
+#### Sharing experience across projects (share dir + git submodule)
+
+LingXi uses a designated share directory for team knowledge that can be reused across projects:
+
+- Share directory: `.cursor/.lingxi/memory/notes/share/` (recommended as a **git submodule**)
+
+**1) Add share repo (submodule)**
 
 ```bash
 git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
 ```
 
-**2) 更新 share 仓库**
+**2) Update share repo**
 
 ```bash
 git submodule update --remote --merge
 ```
 
-**3) 同步记忆索引（新增共享经验后执行）**
+**3) Sync memory index (after adding shared notes)**
 
 ```bash
 npm run memory-sync
 ```
 
-> `memory-sync` 会递归扫描 `.cursor/.lingxi/memory/notes/**` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
+> `memory-sync` recursively scans `.cursor/.lingxi/memory/notes/**` and updates `.cursor/.lingxi/memory/INDEX.md`.
 
-## 相关文档
+## Related docs
 
-- [核心组件架构](.cursor/skills/about-lingxi/references/architecture.md)
+- [Core Architecture](.cursor/skills/about-lingxi/references/architecture.md)
