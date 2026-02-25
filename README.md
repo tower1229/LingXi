@@ -44,6 +44,19 @@ Install LingXi from the **Cursor plugin marketplace** (search for “LingXi” o
 
 - **First time**: We recommend running `/init` once in your project to create the workspace layout (`.cursor/.lingxi/`) and optional memory drafts.
 
+**Alternative: Remote install (script)** — If the plugin is not yet available in the marketplace, you can install LingXi into your project by running one of the following commands from your **project root**:
+
+- **Linux / macOS / Git Bash:**
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
+  ```
+- **Windows PowerShell:**
+  ```powershell
+  irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
+  ```
+
+After script install, open the project in Cursor and run `/init` as above.
+
 ---
 
 ### Quick Start
