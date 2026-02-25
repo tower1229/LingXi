@@ -33,7 +33,7 @@
     "skills/skill-creator/SKILL.md",
     "skills/taste-recognition/SKILL.md",
     "skills/workspace-bootstrap/SKILL.md",
-    "skills/questions-interaction/SKILL.md"
+    "skills/ask-questions/SKILL.md"
   ],
   "agents": {
     "files": [

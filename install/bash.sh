@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.1.0
+# Version: 1.2.0
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -107,6 +107,7 @@ convert_path_for_python() {
 }
 
 # 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/req.md）
+# 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
   local local_path="$2"
@@ -115,11 +116,22 @@ download_file() {
   dir="$(dirname "$local_path")"
   mkdir -p "$dir"
   info "下载: ${remote_path}"
-  if ! curl -fsSL -o "$local_path" -- "$url"; then
-    error "下载失败: $url"
-    return 1
-  fi
-  return 0
+  local max_retries=3
+  local retry=0
+  while [ $retry -lt $max_retries ]; do
+    if curl -fsSL -o "$local_path" -- "$url"; then
+      return 0
+    fi
+    retry=$((retry + 1))
+    if [ $retry -lt $max_retries ]; then
+      warning "下载失败，重试中 ($retry/$max_retries)..."
+      sleep 1
+    else
+      error "下载失败: $url (已重试 $max_retries 次)"
+      return 1
+    fi
+  done
+  return 1
 }
 
 # 读取安装清单（从 GitHub 下载）

@@ -26,7 +26,7 @@
 
 - **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
-- **门控**：merge/replace 时**必须** questions 确认；new 路径按 `payload.confidence` 分流：high 可静默写入，medium/low 须 questions。删除与替换须用户确认。
+- **门控**：merge/replace 时**必须** ask-questions 确认；new 路径按 `payload.confidence` 分流：high 可静默写入，medium/low 须 ask-questions。删除与替换须用户确认。
 - **治理策略**：语义近邻 TopK（merge/replace/veto/new）；合并/替换时更新 Supersedes，与 INDEX 同步。
 - **生命周期与升维判定**：Status 为 active / local / archive；记忆升维判定标准（低价值定义、五维评分、L0/L1 决策与书写模板、例外条件、生命周期、样例）见 `.cursor/agents/lingxi-memory.md` 内「记忆升维判定标准」一节。
 
