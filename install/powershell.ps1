@@ -50,7 +50,7 @@ function Download-FileFromUrl {
     [string]$LocalPath,
     [int]$MaxRetries = 3
   )
-  $url = "${BaseUrl}/${RemotePath}" -replace '\', '/'
+  $url = "${BaseUrl}/${RemotePath}" -replace '\\', '/'
   Write-Info "下载: $RemotePath"
 
   $dir = Split-Path -Parent $LocalPath
@@ -143,7 +143,7 @@ Write-Info "下载 commands..."
 $commandCount = 0
 foreach ($cmd in $Manifest.commands) {
   $remotePath = ".cursor/" + ($cmd -replace '\\', '/')
-  $localFile = ".cursor\" + ($cmd -replace '/', '\')
+  $localFile = ".cursor\" + ($cmd -replace '/', '\\')
   if (-not (Download-FileFromUrl $remotePath $localFile)) {
     Write-Err "安装失败"
     exit 1
@@ -157,7 +157,7 @@ Write-Info "下载 rules..."
 $ruleCount = 0
 foreach ($rule in $Manifest.rules) {
   $remotePath = ".cursor/" + ($rule -replace '\\', '/')
-  $localFile = ".cursor\" + ($rule -replace '/', '\')
+  $localFile = ".cursor\" + ($rule -replace '/', '\\')
   if (-not (Download-FileFromUrl $remotePath $localFile)) {
     Write-Err "安装失败"
     exit 1
@@ -171,7 +171,7 @@ Write-Info "下载 hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {
   $remotePath = ".cursor/" + ($hookFile -replace '\\', '/')
-  $localFile = ".cursor\" + ($hookFile -replace '/', '\')
+  $localFile = ".cursor\" + ($hookFile -replace '/', '\\')
   if (-not (Download-FileFromUrl $remotePath $localFile)) {
     Write-Err "安装失败"
     exit 1
@@ -185,7 +185,7 @@ Write-Info "下载 skills..."
 $skillCount = 0
 foreach ($skill in $Manifest.skills) {
   $remotePath = ".cursor/" + ($skill -replace '\\', '/')
-  $localFile = ".cursor\" + ($skill -replace '/', '\')
+  $localFile = ".cursor\" + ($skill -replace '/', '\\')
   if (-not (Download-FileFromUrl $remotePath $localFile)) {
     Write-Err "安装失败"
     exit 1
@@ -198,7 +198,7 @@ Write-Info "下载 agents..."
 $agentCount = 0
 foreach ($agentFile in $Manifest.agents.files) {
   $remotePath = ".cursor/" + ($agentFile -replace '\\', '/')
-  $localFile = ".cursor\" + ($agentFile -replace '/', '\')
+  $localFile = ".cursor\" + ($agentFile -replace '/', '\\')
   if (-not (Download-FileFromUrl $remotePath $localFile)) {
     Write-Err "安装失败"
     exit 1
@@ -212,7 +212,7 @@ $refCount = 0
 foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
   foreach ($refFile in $Manifest.references.$refKey) {
     $remotePath = ".cursor/" + ($refFile -replace '\\', '/')
-    $localFile = ".cursor\" + ($refFile -replace '/', '\')
+    $localFile = ".cursor\" + ($refFile -replace '/', '\\')
     if (-not (Download-FileFromUrl $remotePath $localFile)) {
       Write-Err "安装失败"
       exit 1
@@ -226,7 +226,7 @@ Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引
 # 创建 .cursor/.lingxi 目录结构
 Write-Info "创建 .cursor/.lingxi 目录结构..."
 foreach ($dir in $Manifest.workflowDirectories) {
-  $winPath = $dir -replace '/', '\'
+  $winPath = $dir -replace '/', '\\'
   New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
@@ -259,7 +259,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
 foreach ($indexFile in $Manifest.workflowIndexFiles) {
-  $winPath = $indexFile -replace '/', '\'
+  $winPath = $indexFile -replace '/', '\\'
   if (-not (Download-FileFromUrl $indexFile $winPath)) {
     Write-Err "安装失败"
     exit 1
@@ -271,7 +271,7 @@ Write-Success "已下载索引文件"
 Write-Info "下载模板文件..."
 $templateCount = 0
 foreach ($templateFile in $Manifest.workflowTemplateFiles) {
-  $winPath = $templateFile -replace '/', '\'
+  $winPath = $templateFile -replace '/', '\\'
   if (-not (Download-FileFromUrl $templateFile $winPath)) {
     Write-Err "安装失败"
     exit 1
