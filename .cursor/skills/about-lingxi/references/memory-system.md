@@ -20,27 +20,24 @@
 
 ### 1) 捕获与治理（Capture + Curate）：Subagent lingxi-memory
 
-**执行模型**：捕获、治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。
+**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply），再用该 payload 显式调用 lingxi-memory；lingxi-memory **仅接受**该 payload，不产候选、不从原始对话做识别。
 
-**双入口与生效方式**：灵犀支持**自动沉淀**（主 Agent 判断后调用 mode=auto）与**主动沉淀**（用户执行 `/remember` 或 `/init` 选择写入）。为使自动沉淀稳定生效，「何时可沉淀、如何调用」的约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）在会话开始时注入【记忆沉淀约定】，主 Agent 在本会话内始终可见该约定，**安装灵犀插件后即生效**，不依赖是否加载其他文档。
+**双入口与生效方式**：灵犀支持**自动沉淀**（session 约定触发：每轮先 memory-retrieve，再按约定调用 taste-recognition skill，有 payload 则调 lingxi-memory）与**主动沉淀**（用户 `/remember` 或 `/init` 选择写入时，先经 taste-recognition skill 将输入/草稿转为 payload，再调 lingxi-memory）。约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入【记忆沉淀约定】，安装灵犀插件后即生效。
 
-- **双入口**：
-- **auto**（自动沉淀）：主 Agent 判断本轮存在可沉淀时，通过**显式调用**（在提示中使用 `/lingxi-memory mode=auto input=<本轮消息与上下文摘要>` 或自然语言「使用 lingxi-memory 子代理将可沉淀内容写入记忆库」）交给子代理；子代理产候选 → 治理 → 门控 → 写入。触发场景与原则由 sessionStart 注入的【记忆沉淀约定】定义。
-- 用户**拒绝、纠正、排除**（如「不要这样」「别用 X」「这里不能用 Y」「改成 Z」）也视为可沉淀；主 Agent 应将本轮中此类表述（或要点）传入 lingxi-memory mode=auto，由子代理产候选并门控。
-- 原则：**宁可多候选再门控，不少漏**；主 Agent 对「是否可沉淀」的判断宜放宽，交由子代理与用户门控做最终筛选。
-- **remember**（主动沉淀）：用户执行 `/remember` 或 `/init` 选择写入时，主 Agent 通过**显式调用**（`/lingxi-memory mode=remember input=<用户输入或候选编号>` 或自然语言提及 lingxi-memory 子代理）交给子代理；子代理产候选 → 治理 → 门控 → 写入。
+- **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
-- **门控**：merge/replace 时在 Subagent 对话内展示「治理方案（待确认）」与 A/B/C/D，用户确认后再执行；主对话不展示过程。**半静默仅限新建（new）**：对 new 路径按可靠性分流（高可靠性静默写、低可靠性显性门控）；可靠性判定含**可验证性**维度（可被后续客观验证→倾向高可靠；需主观解释或易歧义→倾向低可靠）；**删除与替换仍须确认**，不适用半静默。
-- **治理策略**：语义近邻 TopK（create/update/delete/skip），门控原则不变（delete 与 replace 须用户确认）。
+- **门控**：merge/replace 时**必须** questions 确认；new 路径按 `payload.confidence` 分流：high 可静默写入，medium/low 须 questions。删除与替换须用户确认。
+- **治理策略**：语义近邻 TopK（merge/replace/veto/new）；合并/替换时更新 Supersedes，与 INDEX 同步。
+- **生命周期与升维判定**：Status 为 active / local / archive；记忆升维判定标准（低价值定义、五维评分、L0/L1 决策与书写模板、例外条件、生命周期、样例）见 `.cursor/agents/lingxi-memory.md` 内「记忆升维判定标准」一节。
 
 ### 3) 提取/注入（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入；同时注入【记忆沉淀约定】，使主 Agent 具备「何时调用 lingxi-memory mode=auto」的约定，自动沉淀与主动沉淀（/remember）均可用。
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入；同时注入【记忆沉淀约定】，使主 Agent 先调用 taste-recognition skill、有 payload 再调 lingxi-memory，自动沉淀与主动沉淀（/remember、/init）均可用。
 
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定、以及【记忆沉淀约定】）
 - 执行 Skill：`memory-retrieve`
 
-**检索机制**：memory-retrieve 采用**语义 + 关键词双路径**混合检索（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及可选 INDEX 做技术词/错误码等文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。
+**检索机制**：memory-retrieve 执行流程为**理解判断 → 提炼（语义摘要 + 关键词）→ 检索必要性判断 → 双路径检索**。当用户输入**无法独立理解、需结合上文理解**时，先结合最近对话推断完整含义再提炼；提炼后若无实质可检索（语义仅社交/元表达且关键词为空），则跳过检索以节省成本。双路径检索采用**语义 + 关键词**混合（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
 
 **最小注入**：
 
@@ -56,7 +53,7 @@
 
 | Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
 
-CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id），用于审计与治理关联。
+CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
 
 ## 记忆文件（notes/\*.md）
 
@@ -64,7 +61,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 每条记忆一个文件，小而清晰，建议结构：
 
-- Meta（Id/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags/CreatedAt/UpdatedAt/Session）
+- Meta（Id/Title/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags/Supersedes/CreatedAt/UpdatedAt/Session）
 - When to load（1-3 条）
 - One-liner（用于注入）
 - Context / Decision（decision + signals + alternatives + counter-signals）

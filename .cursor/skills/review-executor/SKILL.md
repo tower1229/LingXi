@@ -7,7 +7,7 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 ## 本 Skill 会用到的能力
 
-读 req/plan/testcase 与变更代码；语义搜索；Run shell 执行测试；显式调用 reviewer-* 时由各 reviewer 使用对应工具（如 Browser 用于 E2E）。
+读 req/plan/testcase 与变更代码；语义搜索；Run shell 执行测试；显式调用 reviewer-\* 时由各 reviewer 使用对应工具（如 Browser 用于 E2E）。
 
 ## Quick Start
 
@@ -347,11 +347,3 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 ## 与 Commands 的协作
 
 本 Skill 由 `/review` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
-
----
-
-## 参考
-
-- **原 review.md 命令**：`.cursor/commands/review.md`（备份在 `.cursor/commands-backup/review.md`）
-- **记忆写入**：`.cursor/agents/lingxi-memory.md`
-- **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

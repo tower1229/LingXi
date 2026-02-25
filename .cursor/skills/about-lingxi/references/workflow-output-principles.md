@@ -123,7 +123,7 @@ req/plan/build/review/review-req 在产生产物（写入文档或输出审查�
 **反例**：
 
 - 「开始初始化…」「正在收集项目信息…」—— 过程旁白。
-- 输出「执行 init-executor…」—— 罗列内部组件名。
+- 输出「执行 workspace-bootstrap…」「执行初始化…」—— 罗列内部组件名。
 
 ### /remember
 

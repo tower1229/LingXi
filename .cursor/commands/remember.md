@@ -15,12 +15,6 @@ args:
 
 ---
 
-## 前置要求（必须）
-
-- **Cursor Nightly**：本工作流依赖 Agent Skills（仅 Nightly 渠道可用）
-
----
-
 ## 使用方式
 
 ```
@@ -36,12 +30,6 @@ args:
 - **简短提示**：`/remember 钱包选择问题`（帮助 AI 定位对话历史中要提取的内容）
 - **关键词提示**：`/remember Apollo 配置`（帮助 AI 聚焦某个模块）
 
-也支持“候选编号写入”（当捕获阶段已展示候选列表时）：
-
-```
-/remember 1,3
-```
-
 ---
 
 ## 产物（必须写入）
@@ -53,7 +41,7 @@ args:
 
 ## 执行逻辑
 
-本命令不包含执行逻辑，仅通过**显式调用**将任务交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。具体调用方式与输出要求见下文。
+本命令不包含执行逻辑；**必须先经 taste-recognition skill** 产出 payload，再通过**显式调用**将 payload 交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。
 
 ## 执行流程
 
@@ -61,17 +49,20 @@ args:
 
 **用户输入不能为空**。如果用户只输入 `/remember` 而没有提供任何内容，应提示用户提供输入。
 
-**若用户输入是编号格式**（如 `1,3`、`1 3`、`全部`、`all`），则通过**显式调用**将任务交给 lingxi-memory 子代理：在提示中使用 `/lingxi-memory mode=remember input=<用户输入>`，或自然语言如「使用 lingxi-memory 子代理将编号 1,3 的候选写入记忆库」。
+根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），确定要提取的记忆范围（当前轮用户输入或用户指定的对话范围）。
 
-**若不是编号选择**，根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），从对话或输入中提取要点，然后通过**显式调用**：在提示中使用 `/lingxi-memory mode=remember input=<用户原始内容或你提炼的要点>`（必要时在 input 或后续消息中补充 context），或自然语言如「使用 lingxi-memory 子代理将以下内容写入记忆库：<要点>」。
+### 2) 先调用 taste-recognition skill
 
-### 2) 显式调用 lingxi-memory 子代理
+**必须先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 skill 判断是否可沉淀并产出 7 字段品味 payload（scene, principles, choice, evidence, source=remember, confidence, apply）。若 taste-recognition 静默（无可沉淀），则不调用 lingxi-memory，主对话可静默或提示「未识别到可沉淀记忆」。
 
-- **不**在主对话执行提取/治理/写入；**仅**通过显式调用将任务交给 lingxi-memory 子代理，并在主对话根据其返回展示一句结果或静默。
-- **调用方式**（二选一）：
-  - **`/lingxi-memory` 语法**：在提示中写 `/lingxi-memory mode=remember input=<内容或编号>`，必要时在同一句或后续消息中提供 context。
-  - **自然语言**：在对话中明确提及子代理，例如「使用 lingxi-memory 子代理将以下内容写入记忆库：<内容>」。
-- 子代理在独立上下文中完成：产候选 → 治理（TopK）→ 门控（如需）→ 直接文件写入 → 向主对话返回一句结果。
+### 3) 显式调用 lingxi-memory 子代理
+
+仅当 taste-recognition 产出 payload 时：
+
+- 用该 **payload** 显式调用 lingxi-memory 子代理，并传入 **conversation_id**（及可选 generation_id）供审计。
+- **禁止**将原始用户消息、对话片段或任何非 payload 结构传给 lingxi-memory。
+- **调用方式**（二选一）：在提示中写 `/lingxi-memory` 并传入 payload，或自然语言「使用 lingxi-memory 子代理将以下 payload 写入记忆库：<payload>」。
+- 子代理在独立上下文中完成：校验 → 映射 → 评分卡 → 治理（TopK）→ 门控（如需）→ 直接文件写入 → 向主对话返回一句结果。
 
 ---
 

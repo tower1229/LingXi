@@ -4,8 +4,10 @@
 
 灵犀以 Cursor 官方插件形式安装后，`hooks.json` 中的 `command` 使用相对路径，例如：
 
-- `node .cursor/hooks/session-init.mjs`
-- `node .cursor/hooks/lingxi-audit.mjs`
+- `node .cursor/hooks/session-init.mjs`（sessionStart：注入记忆检索与沉淀约定）
+- `node .cursor/hooks/lingxi-audit.mjs`（审计：8 类 Hook 事件）
+
+灵犀还配置了多种**审计 hooks**（`lingxi-audit.mjs`），在 beforeSubmitPrompt、afterAgentResponse、postToolUse、postToolUseFailure、subagentStart、subagentStop、sessionEnd、stop 等 8 类事件触发时写入 `.cursor/.lingxi/workspace/audit.log`，用于审计追溯。具体配置见 `hooks.json`。
 
 ## 工作目录说明
 

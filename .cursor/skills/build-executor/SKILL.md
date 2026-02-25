@@ -210,11 +210,3 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 ## 与 Commands 的协作
 
 本 Skill 由 `/build` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
-
----
-
-## 参考
-
-- **原 build.md 命令**：`.cursor/commands/build.md`（备份在 `.cursor/commands-backup/build.md`）
-- **记忆写入**：`.cursor/agents/lingxi-memory.md`
-- **记忆注入**：`.cursor/skills/memory-retrieve/SKILL.md`

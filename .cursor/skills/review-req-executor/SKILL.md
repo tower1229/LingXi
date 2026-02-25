@@ -339,10 +339,3 @@ req 文档是「集设计灵感、产品构思、实现途径于一体的任务�
 ## 与 Commands 的协作
 
 本 Skill 由 `/review-req` 命令自动激活（taskId 可选），执行逻辑完全由本 Skill 负责。Commands 只负责参数解析和产物说明。
-
----
-
-## 参考
-
-- **req 生成逻辑**：`.cursor/skills/req-executor/SKILL.md`
-- **记忆写入**：`.cursor/agents/lingxi-memory.md`
