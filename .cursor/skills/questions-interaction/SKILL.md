@@ -18,10 +18,11 @@ description: Standardizes questions-based interactive selection for workflows li
 ## 交互契约（统一）
 
 1. 始终使用 `questions` 交互收集选择。
-2. `options[].value` 必须是稳定标识，不使用自然语言句子或序号文本作为主键。
-3. 多选场景必须显式设置 `allow_multiple: true`。
-4. 无有效选择时只重试当前问题，不回放整段流程。
-5. 取消语义由业务方定义，但必须有明确 `cancel` 值。
+2. **`options[].label` 使用 A/B/C/D 等序号字母**，不使用自然语言描述；question 仅写提问语，不重复列举选项内容。
+3. `options[].value` 必须是稳定标识，不使用自然语言句子或序号文本作为主键。
+4. 多选场景必须显式设置 `allow_multiple: true`。
+5. 无有效选择时只重试当前问题，不回放整段流程。
+6. 取消语义由业务方定义，但必须有明确 `cancel` 值。
 
 ## 标准值命名
 
@@ -38,8 +39,8 @@ description: Standardizes questions-based interactive selection for workflows li
   "parameters": {
     "question": "请选择下一步",
     "options": [
-      { "label": "确认执行", "value": "confirm" },
-      { "label": "取消", "value": "cancel" }
+      { "label": "A", "value": "confirm" },
+      { "label": "B", "value": "cancel" }
     ]
   }
 }
@@ -51,10 +52,10 @@ description: Standardizes questions-based interactive selection for workflows li
 {
   "tool": "questions",
   "parameters": {
-    "question": "请选择候选项",
+    "question": "请选择候选项（可多选）",
     "options": [
-      { "label": "候选 1：<标题>", "value": "cand_1" },
-      { "label": "候选 2：<标题>", "value": "cand_2" }
+      { "label": "A", "value": "cand_1" },
+      { "label": "B", "value": "cand_2" }
     ],
     "allow_multiple": true
   }
@@ -69,10 +70,10 @@ description: Standardizes questions-based interactive selection for workflows li
   "parameters": {
     "question": "治理方案待确认：是否执行？",
     "options": [
-      { "label": "确认执行", "value": "confirm" },
-      { "label": "取消", "value": "cancel" },
-      { "label": "改为新增", "value": "new_instead" },
-      { "label": "查看对比", "value": "show_diff" }
+      { "label": "A", "value": "confirm" },
+      { "label": "B", "value": "cancel" },
+      { "label": "C", "value": "new_instead" },
+      { "label": "D", "value": "show_diff" }
     ]
   }
 }

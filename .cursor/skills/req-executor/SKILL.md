@@ -58,7 +58,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 - 若需求描述清晰完整，静默跳过此步骤
 - 若需澄清：使用 `questions` 交互（遵循 [questions-interaction](.cursor/skills/questions-interaction/SKILL.md) 契约）提升体验：
-  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options 含 what/why/who/where/when/how，value 用稳定标识如 `dim_what`）；可提供「全部跳过」选项
+  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options 的 label 用 A/B/C… 序号、value 用稳定标识如 `dim_what`）；可提供「全部跳过」选项
   - 对每个需澄清的维度，尽量提供选项（如 Who：终端用户/内部管理员/双方/其他需描述）；无法选项化时再开放文本
   - 含 cancel 选项，遵循 value 稳定、无有效选择时重试的契约
 
@@ -202,7 +202,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 在写入前，将收集的信息汇总为可执行决策。**先执行 Fail Fast 检查**，必要信息齐全后再汇总。
 
-- **Fail Fast**：若必要信息缺失（功能目标、目标用户（前端需求）、核心场景（前端需求）），一次性列出并给出 2-3 个选项，使用 `questions` 交互（遵循 [questions-interaction](.cursor/skills/questions-interaction/SKILL.md) 契约）等待用户选择后再写入；options 的 value 用稳定标识（如 `opt_1`、`opt_2`），含 cancel 选项；无有效选择时重试当前问题。重要信息（成功标准、优先级、特殊约束）模糊时建议澄清。
+- **Fail Fast**：若必要信息缺失（功能目标、目标用户（前端需求）、核心场景（前端需求）），一次性列出并给出 2-3 个选项，使用 `questions` 交互（遵循 [questions-interaction](.cursor/skills/questions-interaction/SKILL.md) 契约）等待用户选择后再写入；options 的 label 用 A/B/C 等序号、value 用稳定标识（如 `opt_1`、`opt_2`），含 cancel 选项；无有效选择时重试当前问题。重要信息（成功标准、优先级、特殊约束）模糊时建议澄清。
 - **需求澄清结论**：目标/范围/成功标准的最终表述
 - **关键决策点**（中等+）：备选方案、推荐方案、理由
 - **风险与对策**（复杂）：按影响排序，给出缓解措施
