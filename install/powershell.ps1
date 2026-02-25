@@ -1,6 +1,6 @@
 # LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.1.0
+# Version: 1.2.0
 
 # 配置
 $RepoOwner = "tower1229"
@@ -31,26 +31,27 @@ function Write-Success {
   Write-Host $Message
 }
 
-function Write-Warn {
+function Write-Warning {
   param([string]$Message)
   Write-Host "⚠ " -NoNewline -ForegroundColor Yellow
   Write-Host $Message
 }
 
-function Write-Err {
+function Write-Error {
   param([string]$Message)
   Write-Host "✗ " -NoNewline -ForegroundColor Red
   Write-Host $Message
 }
 
-# 下载文件函数（带重试机制）
-function Download-FileFromUrl {
+# 下载文件函数（带重试机制，与旧版 8879793 一致命名）
+function Download-File {
   param(
     [string]$RemotePath,
     [string]$LocalPath,
     [int]$MaxRetries = 3
   )
-  $url = "${BaseUrl}/${RemotePath}" -replace '\\', '/'
+  # 旧版写法：URL 直接拼接，不在此处 -replace（避免正则 \ 报错）；调用方保证 RemotePath 仅含 /
+  $url = "${BaseUrl}/${RemotePath}"
   Write-Info "下载: $RemotePath"
 
   $dir = Split-Path -Parent $LocalPath
@@ -66,11 +67,11 @@ function Download-FileFromUrl {
     } catch {
       $retryCount++
       if ($retryCount -lt $MaxRetries) {
-        Write-Warn "下载失败，重试中 ($retryCount/$MaxRetries)..."
+        Write-Warning "下载失败，重试中 ($retryCount/$MaxRetries)..."
         Start-Sleep -Seconds 1
       } else {
-        Write-Err "下载失败: $url (已重试 $MaxRetries 次)"
-        Write-Err $_.Exception.Message
+        Write-Error "下载失败: $url (已重试 $MaxRetries 次)"
+        Write-Error $_.Exception.Message
         return $false
       }
     }
@@ -87,8 +88,8 @@ function Load-Manifest {
     $manifestContent = Invoke-WebRequest -Uri $manifestUrl -UseBasicParsing -ErrorAction Stop | Select-Object -ExpandProperty Content
     return $manifestContent | ConvertFrom-Json
   } catch {
-    Write-Err "下载安装清单失败: $manifestUrl"
-    Write-Err $_.Exception.Message
+    Write-Error "下载安装清单失败: $manifestUrl"
+    Write-Error $_.Exception.Message
     exit 1
   }
 }
@@ -104,11 +105,11 @@ $CursorExists = Test-Path ".cursor"
 $LingxiExists = Test-Path ".cursor\.lingxi"
 
 if ($CursorExists) {
-  Write-Warn ".cursor 目录已存在"
+  Write-Warning ".cursor 目录已存在"
 }
 
 if ($LingxiExists) {
-  Write-Warn ".cursor\.lingxi 目录已存在"
+  Write-Warning ".cursor\.lingxi 目录已存在"
 }
 
 # 询问是否继续（合并安装模式）
@@ -138,14 +139,14 @@ New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\agents" | Out-Null
 
-# 下载 commands（清单路径相对 .cursor/，远程用 .cursor/，本地用 .cursor\）
+# 下载 commands（清单路径用 /；远程路径传 .cursor/xxx，本地用 .Replace 转 \，避免 -replace 正则报错）
 Write-Info "下载 commands..."
 $commandCount = 0
 foreach ($cmd in $Manifest.commands) {
-  $remotePath = ".cursor/" + ($cmd -replace '\\', '/')
-  $localFile = ".cursor\" + ($cmd -replace '/', '\\')
-  if (-not (Download-FileFromUrl $remotePath $localFile)) {
-    Write-Err "安装失败"
+  $remotePath = ".cursor/" + $cmd.Replace('\', '/')
+  $localFile = ".cursor\" + $cmd.Replace('/', '\')
+  if (-not (Download-File $remotePath $localFile)) {
+    Write-Error "安装失败"
     exit 1
   }
   $commandCount++
@@ -156,10 +157,10 @@ Write-Success "已下载 commands ($commandCount 个文件)"
 Write-Info "下载 rules..."
 $ruleCount = 0
 foreach ($rule in $Manifest.rules) {
-  $remotePath = ".cursor/" + ($rule -replace '\\', '/')
-  $localFile = ".cursor\" + ($rule -replace '/', '\\')
-  if (-not (Download-FileFromUrl $remotePath $localFile)) {
-    Write-Err "安装失败"
+  $remotePath = ".cursor/" + $rule.Replace('\', '/')
+  $localFile = ".cursor\" + $rule.Replace('/', '\')
+  if (-not (Download-File $remotePath $localFile)) {
+    Write-Error "安装失败"
     exit 1
   }
   $ruleCount++
@@ -170,10 +171,10 @@ Write-Success "已下载 rules ($ruleCount 个文件)"
 Write-Info "下载 hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {
-  $remotePath = ".cursor/" + ($hookFile -replace '\\', '/')
-  $localFile = ".cursor\" + ($hookFile -replace '/', '\\')
-  if (-not (Download-FileFromUrl $remotePath $localFile)) {
-    Write-Err "安装失败"
+  $remotePath = ".cursor/" + $hookFile.Replace('\', '/')
+  $localFile = ".cursor\" + $hookFile.Replace('/', '\')
+  if (-not (Download-File $remotePath $localFile)) {
+    Write-Error "安装失败"
     exit 1
   }
   $hookCount++
@@ -184,10 +185,10 @@ Write-Success "已下载 hooks ($hookCount 个文件)"
 Write-Info "下载 skills..."
 $skillCount = 0
 foreach ($skill in $Manifest.skills) {
-  $remotePath = ".cursor/" + ($skill -replace '\\', '/')
-  $localFile = ".cursor\" + ($skill -replace '/', '\\')
-  if (-not (Download-FileFromUrl $remotePath $localFile)) {
-    Write-Err "安装失败"
+  $remotePath = ".cursor/" + $skill.Replace('\', '/')
+  $localFile = ".cursor\" + $skill.Replace('/', '\')
+  if (-not (Download-File $remotePath $localFile)) {
+    Write-Error "安装失败"
     exit 1
   }
   $skillCount++
@@ -197,10 +198,10 @@ foreach ($skill in $Manifest.skills) {
 Write-Info "下载 agents..."
 $agentCount = 0
 foreach ($agentFile in $Manifest.agents.files) {
-  $remotePath = ".cursor/" + ($agentFile -replace '\\', '/')
-  $localFile = ".cursor\" + ($agentFile -replace '/', '\\')
-  if (-not (Download-FileFromUrl $remotePath $localFile)) {
-    Write-Err "安装失败"
+  $remotePath = ".cursor/" + $agentFile.Replace('\', '/')
+  $localFile = ".cursor\" + $agentFile.Replace('/', '\')
+  if (-not (Download-File $remotePath $localFile)) {
+    Write-Error "安装失败"
     exit 1
   }
   $agentCount++
@@ -211,10 +212,10 @@ Write-Success "已下载 agents ($agentCount 个文件)"
 $refCount = 0
 foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
   foreach ($refFile in $Manifest.references.$refKey) {
-    $remotePath = ".cursor/" + ($refFile -replace '\\', '/')
-    $localFile = ".cursor\" + ($refFile -replace '/', '\\')
-    if (-not (Download-FileFromUrl $remotePath $localFile)) {
-      Write-Err "安装失败"
+    $remotePath = ".cursor/" + $refFile.Replace('\', '/')
+    $localFile = ".cursor\" + $refFile.Replace('/', '\')
+    if (-not (Download-File $remotePath $localFile)) {
+      Write-Error "安装失败"
       exit 1
     }
     $refCount++
@@ -226,7 +227,7 @@ Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引
 # 创建 .cursor/.lingxi 目录结构
 Write-Info "创建 .cursor/.lingxi 目录结构..."
 foreach ($dir in $Manifest.workflowDirectories) {
-  $winPath = $dir -replace '/', '\\'
+  $winPath = $dir.Replace('/', '\')
   New-Item -ItemType Directory -Force -Path $winPath | Out-Null
 }
 
@@ -259,9 +260,9 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 # 下载 INDEX.md 文件
 Write-Info "下载索引文件..."
 foreach ($indexFile in $Manifest.workflowIndexFiles) {
-  $winPath = $indexFile -replace '/', '\\'
-  if (-not (Download-FileFromUrl $indexFile $winPath)) {
-    Write-Err "安装失败"
+  $winPath = $indexFile.Replace('/', '\')
+  if (-not (Download-File $indexFile $winPath)) {
+    Write-Error "安装失败"
     exit 1
   }
 }
@@ -271,9 +272,9 @@ Write-Success "已下载索引文件"
 Write-Info "下载模板文件..."
 $templateCount = 0
 foreach ($templateFile in $Manifest.workflowTemplateFiles) {
-  $winPath = $templateFile -replace '/', '\\'
-  if (-not (Download-FileFromUrl $templateFile $winPath)) {
-    Write-Err "安装失败"
+  $winPath = $templateFile.Replace('/', '\')
+  if (-not (Download-File $templateFile $winPath)) {
+    Write-Error "安装失败"
     exit 1
   }
   $templateCount++
