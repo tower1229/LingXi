@@ -1,6 +1,6 @@
 {
   "name": "lingxi",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI workflow and memory: req/plan/build/review, persistent memory, ready to use.",
   "author": {
     "name": "tower1229"
@@ -9,11 +9,7 @@
     "workflow",
     "memory",
     "task",
-    "review",
-    "req",
-    "plan",
-    "build",
-    "cursor"
+    "lingxi"
   ],
   "license": "MIT",
   "homepage": "https://github.com/tower1229/LingXi",
