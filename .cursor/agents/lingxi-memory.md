@@ -31,7 +31,7 @@ model: inherit
 2. **映射与补全**：由 payload 按下文「映射规则」生成 note 各字段（Title、Kind、Status、Strength、Scope、Audience、Portability、Source、Tags、Supersedes、When to load、One-liner、Decision、Alternatives、Counter-signals、Pointers 等）。缺项时仅对缺失部分做**只读**上下文补全，不产候选、不覆盖 payload 已有信息。
 3. **评分卡**：在映射生成候选 note 之后、写入之前，按下文「记忆升维判定标准」执行（5 维评分、总分 T 判定写/不写、L0/L1/双层，含例外条件）。
 4. **治理**：对 `.cursor/.lingxi/memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
-5. **门控**：merge 或 replace 时**必须**使用 questions 交互收集用户选择并在确认后执行。**new 路径**：按 `payload.confidence` 分流——`high` 可静默写入，`medium` / `low` 必须通过 questions 门控后再写入。
+5. **门控**：merge 或 replace 时**必须**使用 ask-questions 交互收集用户选择并在确认后执行。**new 路径**：按 `payload.confidence` 分流——`high` 可静默写入，`medium` / `low` 必须通过 ask-questions 门控后再写入。
 6. **写入**：**直接读写文件**——新建/更新 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，读取并更新 `.cursor/.lingxi/memory/INDEX.md`；删除时删 note 并从 INDEX 移除该行。新建/更新/删除 note 或更新 INDEX 后，**必须**向审计日志追加一条记忆审计行（见下「记忆审计」；**含静默 new 写入**）。
 7. **回传主对话**：仅一句结果（如「已记下：…」或「需在记忆库对话中确认：MERGE …」）；成功可静默；失败一句错误与建议。
 
@@ -75,15 +75,15 @@ model: inherit
   - **veto**：conflict 但无法判断更优且用户未给决定性变量 → 不写入，提示补齐或让用户选择保留哪一个。
   - **new**：与 TopK 均不构成 merge/replace → 新建 note 与 INDEX 行。
 
-## 用户门控格式（必须，questions）
+## 用户门控格式（必须，ask-questions）
 
-questions 交互协议优先复用：使用 `/questions-interaction skills`（label 约定、重试规则、取消语义），以下为治理确认最小模板：
+ask-questions 交互协议优先复用：使用 `/ask-questions skills`（label 约定、重试规则、取消语义），以下为治理确认最小模板：
 
-merge/replace 时必须通过 questions 发起交互：
+merge/replace 时必须通过 ask-questions 发起交互：
 
 ```json
 {
-  "tool": "questions",
+  "tool": "ask-questions",
   "parameters": {
     "question": "治理方案（待确认）：MERGE/REPLACE，是否执行？",
     "options": [
@@ -96,12 +96,12 @@ merge/replace 时必须通过 questions 发起交互：
 }
 ```
 
-**仅在用户选择确认后**执行写入或删除。**Merge/Replace 不适用半静默**：均须 questions 门控，不得静默执行。
+**仅在用户选择确认后**执行写入或删除。**Merge/Replace 不适用半静默**：均须 ask-questions 门控，不得静默执行。
 
 ## new 路径门控（仅治理决策为 new）
 
 - **payload.confidence === "high"**：可静默写入；写入后仍按「记忆审计」追加 `memory_note_created`。
-- **payload.confidence === "medium" 或 "low"**：必须通过 questions 发起确认（如「确认写入/取消」）后再执行写入。
+- **payload.confidence === "medium" 或 "low"**：必须通过 ask-questions 发起确认（如「确认写入/取消」）后再执行写入。
 
 ## INDEX 格式（直接读写）
 
@@ -130,7 +130,7 @@ JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_upd
 ## 输出原则
 
 - 校验失败：向主对话返回一句错误与建议，不写入。
-- 需门控（merge/replace 或 new 且 confidence 非 high）：通过 questions 交互收集选择，不自动执行。
+- 需门控（merge/replace 或 new 且 confidence 非 high）：通过 ask-questions 交互收集选择，不自动执行。
 - 用户已确认并执行：成功时向主对话仅返回一句（或静默）；失败时一句错误与解决建议。
 - 不向主对话输出过程性描述、工具调用次数或实现细节。
 

@@ -24,7 +24,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 | **1. Session 约定（每轮）** | 主 Agent 按 session 约定调用 | 本轮用户自由输入；**当用户输入无法独立理解、需结合上文理解**时（如指代、省略、延续性指令、纯确认等），**必须**结合最近 1～2 轮对话片段理解，否则无法推断用户认可或选择的具体内容。**仅当存在用户自由输入时**才调用。 | `auto` | 由证据强度判定 low/medium/high |
 | **2. /remember** | 用户执行 /remember 后，主 Agent 显式调用 | 当前轮用户输入，或用户指定的「要记住的内容/对话范围」 | `remember` | 通常 medium 或 high；用户明确指定原文时可设 high |
 | **3. /init 写入** | init command 在用户确认写入时调用 | /init 流程中用户确认后的草稿（类型化收集结果等）；可按「一条记忆一个 payload」拆成多条 | `init` | 用户已确认的草稿建议 high |
-| **4. 环节选择题** | 各环节嗅探规则命中时，经 questions-interaction 收集用户选择后 | 用户对某条品味选择题的选项或自由补充理由 | `choice` | 用户明确选择通常为 high；从理由推断可为 medium |
+| **4. 环节选择题** | 各环节嗅探规则命中时，经 ask-questions 收集用户选择后 | 用户对某条品味选择题的选项或自由补充理由 | `choice` | 用户明确选择通常为 high；从理由推断可为 medium |
 
 **约定**：无可沉淀时**静默**（不产出、不调用 lingxi-memory）。有可沉淀时产出**且仅产出**下述 7 字段 payload，由主 Agent 用该 payload 调用 lingxi-memory。
 
@@ -81,7 +81,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 与环节品味嗅探的关系
 
-各环节（req/plan/build/review 等）在**情境驱动**时可能通过 questions-interaction 向用户提问并得到选择；该路径下产出的 payload 的 `source` 为 `choice`，仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件；本 Skill 负责从「自由输入 / remember 内容 / init 草稿 / 选择题反馈」中**统一**产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply）。
+各环节（req/plan/build/review 等）在**情境驱动**时可能通过 ask-questions 向用户提问并得到选择；该路径下产出的 payload 的 `source` 为 `choice`，仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件；本 Skill 负责从「自由输入 / remember 内容 / init 草稿 / 选择题反馈」中**统一**产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply）。
 
 ## 引用与映射
 

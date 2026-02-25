@@ -18,14 +18,14 @@ args: []
 /init
 ```
 
-命令无需参数。当项目已有较完整文档（如 README、架构说明、任务文档）时，agent 会**优先从现有内容中整理**项目目标、用户、关键流程、风险与发布方式，仅对无法推断或不确定的部分通过 **questions 交互**（`/questions-interaction` skill）向你收集选择或补充；你可直接点选或修正后进入候选清单与写入门控。新项目或文档较少时仍通过对话式引导收集，所有“选哪一项/选哪些项”的环节均使用 questions 协议。
+命令无需参数。当项目已有较完整文档（如 README、架构说明、任务文档）时，agent 会**优先从现有内容中整理**项目目标、用户、关键流程、风险与发布方式，仅对无法推断或不确定的部分通过 **ask-questions 交互**（`/ask-questions` skill）向你收集选择或补充；你可直接点选或修正后进入候选清单与写入门控。新项目或文档较少时仍通过对话式引导收集，所有“选哪一项/选哪些项”的环节均使用 ask-questions 协议。
 
 ## 执行逻辑
 
 1. **优先**：在项目根执行 `node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs`，确保 `.cursor/.lingxi/` 骨架存在。
 2. **随后**：按以下 Step 0.5–8 执行。
 
-执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/questions-interaction` skill 发起**（使用 questions 工具或遵循其 option label 约定）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
+执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（使用 ask-questions 工具或遵循其 option label 约定）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
 
 ---
 
@@ -40,9 +40,9 @@ args: []
 ## 输出与交互原则（必须）
 
 - 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
-- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/questions-interaction` skill 发起**，使用 questions 工具与 label 约定，不采用自然语言菜单或手输编号。
+- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/ask-questions` skill 发起**，使用 ask-questions 工具与 label 约定，不采用自然语言菜单或手输编号。
 - **写入门控不可侵犯**：除非用户在写入策略步骤明确选择写入，否则只展示候选清单，不写入磁盘。
-- **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项通过 questions 多选 + 逐项补充收集，避免硬编码关键词/复杂 if-else。
+- **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项通过 ask-questions 多选 + 逐项补充收集，避免硬编码关键词/复杂 if-else。
 
 ---
 
@@ -76,7 +76,7 @@ args: []
 
 **5 个问题**（与附录 init-checklists 的 common Must 对应）：(1) 项目解决什么问题、不做什么（goal + 非目标）；(2) 核心用户/角色与关键诉求（users）；(3) 1–3 条关键链路及失败兜底（flows）；(4) 风险优先级与最不可接受的失败（risks）；(5) 环境、发布与回滚方式（releaseEnv）。
 
-**行为契约**：仅对草稿中**未找到或明显不确定**的项在后续 Step 4.2 中通过 **questions 多选**让用户选择要补充的项，再逐项请求 1-3 行内容；若五项均已填满且置信度足够，**不要先问这五个问题**，直接进入 Step 2，将"项目结构/技术栈/规范/业务模块"整理成一段供用户确认（可标注「根据项目文档整理，请确认或修正」）。用户确认或补充完 Must 后，再按需进入 Should；Optional 默认不追问，除非用户在 Step 4.1 选择 `deep_dive` 并在 Step 4.2 中通过 questions 多选勾选要补齐的项。从附录 init-checklists 读取通用骨架与**推断出的类型**的 Must → Should；类型不向用户询问。**所有“选哪一项/选哪些项”的环节均使用 `/questions-interaction` skill 的 questions 协议，不采用自然语言菜单或手输编号。**
+**行为契约**：仅对草稿中**未找到或明显不确定**的项在后续 Step 4.2 中通过 **ask-questions 多选**让用户选择要补充的项，再逐项请求 1-3 行内容；若五项均已填满且置信度足够，**不要先问这五个问题**，直接进入 Step 2，将"项目结构/技术栈/规范/业务模块"整理成一段供用户确认（可标注「根据项目文档整理，请确认或修正」）。用户确认或补充完 Must 后，再按需进入 Should；Optional 默认不追问，除非用户在 Step 4.1 选择 `deep_dive` 并在 Step 4.2 中通过 ask-questions 多选勾选要补齐的项。从附录 init-checklists 读取通用骨架与**推断出的类型**的 Must → Should；类型不向用户询问。**所有“选哪一项/选哪些项”的环节均使用 `/ask-questions` skill 的 ask-questions 协议，不采用自然语言菜单或手输编号。**
 
 ### Step 2) 展示"项目结构/技术栈/规范/业务模块"供确认
 
@@ -108,17 +108,17 @@ args: []
 - **连续编号**：从 1 开始递增（例如 1-10）
 - **每条候选**：标题 + 简短描述或要点，便于用户理解与选择；写入时经 taste-recognition 转为 payload 后由 lingxi-memory 按 note 模板生成
 
-### Step 4) 交互式推进（questions-first，统一走 questions skill）
+### Step 4) 交互式推进（ask-questions-first，统一走 ask-questions 工具）
 
-所有需用户选择的环节**统一通过 `/questions-interaction` skill** 发起（参见 `.cursor/skills/questions-interaction/SKILL.md`），使用 questions 工具与 label 约定；分步交互替代同屏多问：先确认是否继续，再按需用 questions 多选补齐项，最后再做写入门控。
+所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`），使用 ask-questions 工具与 label 约定；分步交互替代同屏多问：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
 
 #### 4.1 Q1：确认是否继续生成候选清单（必答）
 
-**必须**通过 questions 工具发起单选（若环境不支持 questions UI，则给出等价选项与 label 说明，并解析用户回复）：
+**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，则给出等价选项与 label 说明，并解析用户回复）：
 
 ```json
 {
-  "tool": "questions",
+  "tool": "ask-questions",
   "parameters": {
     "question": "已整理项目结构与上下文，下一步如何继续？",
     "options": [
@@ -130,13 +130,13 @@ args: []
 }
 ```
 
-#### 4.2 缺失项交互补齐（仅在 supplement 或 deep_dive 时，均用 questions 驱动）
+#### 4.2 缺失项交互补齐（仅在 supplement 或 deep_dive 时，均用 ask-questions 驱动）
 
-- **supplement**：先通过 **questions 多选**让用户选择要补充的 common Must 项（**仅列出当前未找到或不确定的项**），再逐项请求 1-3 行内容。示例（选项需按实际缺失项动态生成）：
+- **supplement**：先通过 **ask-questions 多选**让用户选择要补充的 common Must 项（**仅列出当前未找到或不确定的项**），再逐项请求 1-3 行内容。示例（选项需按实际缺失项动态生成）：
 
 ```json
 {
-  "tool": "questions",
+  "tool": "ask-questions",
   "parameters": {
     "question": "请选择需要补充的项（可多选）",
     "options": [
@@ -153,23 +153,23 @@ args: []
 
   根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
 
-- **deep_dive**：Must 完整后，通过 **questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，label 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
+- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，label 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
 
 - 追问策略：一次只问一个缺失项；禁止重复展示整段菜单。
 
-#### 4.3 兼容输入与异常处理（对齐 questions-interaction）
+#### 4.3 兼容输入与异常处理（对齐 ask-questions）
 
 - 兼容旧输入：若用户输入为选项序号或部分 label 文本，可映射为对应选项。
-- **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 questions**，不回放长段说明（遵循 questions-interaction 的“只重试当前问题”）。
-- 若当前运行环境不支持 questions UI，则给出等价选项与 label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
+- **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 ask-questions**，不回放长段说明（遵循 ask-questions 的“只重试当前问题”）。
+- 若当前运行环境不支持 ask-questions UI，则给出等价选项与 label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
 
-### Step 5) 写入策略门控（默认跳过，必须用 questions 发起）
+### Step 5) 写入策略门控（默认跳过，必须用 ask-questions 发起）
 
-候选清单生成后，**必须**通过 questions 工具单独询问写入策略（与 Q1 解耦）：
+候选清单生成后，**必须**通过 ask-questions 工具单独询问写入策略（与 Q1 解耦）：
 
 ```json
 {
-  "tool": "questions",
+  "tool": "ask-questions",
   "parameters": {
     "question": "是否将候选条目写入记忆库？",
     "options": [
@@ -183,19 +183,19 @@ args: []
 
 - 选择「跳过，不写入」或未明确回答写入策略：仅展示候选清单，不写入磁盘。
 - 选择「全部写入」：全量写入候选清单。
-- 选择「部分写入」：**必须**再次通过 questions 多选收集待写入候选（禁止手输编号）。
+- 选择「部分写入」：**必须**再次通过 ask-questions 多选收集待写入候选（禁止手输编号）。
 
-`partial` 规则（questions-only）：
+`partial` 规则（ask-questions-only）：
 
-- **必须**通过 questions 多选返回有效候选（参见 `/questions-interaction` skill 模板 B）；不再支持自然语言编号写入。
-- 若未选择任何候选、或返回值不在当前候选的 label 列表中，**重新发起同一 questions 多选**，仅追问选择本身。
-- 若当前运行环境不支持 questions 交互，提示用户改为「全部写入」或「跳过，不写入」（不走编号文本兜底）。
+- **必须**通过 ask-questions 多选返回有效候选（参见 `/ask-questions` skill 模板 B）；不再支持自然语言编号写入。
+- 若未选择任何候选、或返回值不在当前候选的 label 列表中，**重新发起同一 ask-questions 多选**，仅追问选择本身。
+- 若当前运行环境不支持 ask-questions 交互，提示用户改为「全部写入」或「跳过，不写入」（不走编号文本兜底）。
 
-推荐使用以下 questions 多选格式收集 `selected_candidates`（协议细则见 `/questions-interaction` skill）：
+推荐使用以下 ask-questions 多选格式收集 `selected_candidates`（协议细则见 `/ask-questions` skill）：
 
 ```json
 {
-  "tool": "questions",
+  "tool": "ask-questions",
   "parameters": {
     "question": "请选择要写入记忆库的候选（可多选）",
     "options": [
