@@ -2,7 +2,7 @@
 
 # LíngXī（灵犀）
 
-基于 Cursor 的 Development Workflow
+基于 Cursor 的 持久记忆工作流
 
 ---
 
