@@ -83,5 +83,5 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 引用与映射
 
-- Payload → note 的映射规则、TasteKey 生成、门控细节：见本 Skill 的 references 目录下 `payload-to-note-and-tastekey.md`。
+- Payload → note 的映射规则、门控细节：见本 Skill 的 references 目录下 `payload-to-note.md`。
 - 下游契约：`.cursor/agents/lingxi-memory.md`（仅接受本 payload，不产候选）。

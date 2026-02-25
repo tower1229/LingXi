@@ -7,18 +7,18 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 ## 本 Skill 会用到的能力
 
-读项目文件（package.json、README、目录结构）；语义搜索代码库；WebSearch / context7 做最佳实践调研；必要时用 Ask questions 澄清需求。
+读项目文件（package.json、README、目录结构）；语义搜索代码库；WebSearch / context7 做最佳实践调研；Ask questions 澄清需求（遵循 questions-interaction 契约）。
 
 ## Quick Start
 
 - **目标**：产出一份符合模板的 req 文档。
-- 项目上下文分析 → 任务编号/标题生成 → 需求提纯 → 类型与复杂度评估 → 需求放大 → 记忆融入 → 按需求类型选模板 → 信息汇总 → 生成文档（见 references）→ 有产物时输出下一步建议。
+- 项目上下文分析 → 任务编号/标题生成 → 需求提纯 → 类型与复杂度评估 → 需求放大 → 记忆融入 → 按需求类型选模板 → 信息汇总 → 生成文档（见 references）→ 输出下一步建议。
 
 ## Instructions
 
 ### 1. 项目上下文分析（执行前）
 
-在理解需求前，先获取项目背景：
+在理解需求前，先了解代码库：
 
 - 查看 `package.json`、`README.md` 等，了解技术栈
 - 浏览项目目录结构，识别与需求相关的现有模块
@@ -28,11 +28,9 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **任务编号生成规则**：
 
-1. 扫描 `.cursor/.lingxi/tasks/` 目录
-2. 提取所有 `*.req.*.md` 文件的编号（使用正则 `^(\d{3})\.req\..*\.md$`）
-3. 取最大编号 +1，格式化为三位数（001, 002, ...）
-4. 如果目录为空或不存在，从 001 开始
-5. 编号上限为 999，超出时提示用户归档旧任务
+1. 执行 `node .cursor/skills/req-executor/scripts/next-task-id.mjs` 获取下一个三位数编号；从项目根目录执行
+2. 脚本输出即为编号（如 `009`），直接使用
+3. 若脚本退出码非 0（如已达 999 上限），提示用户归档旧任务
 
 **标题生成规则**：
 
@@ -58,9 +56,11 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **执行方式**：
 
-- 如果需求描述清晰完整，静默跳过此步骤
-- 如果需求描述模糊或缺失关键信息，主动提出结构化问题
-- 一次性列出所有需要澄清的问题，等待用户回答后再继续
+- 若需求描述清晰完整，静默跳过此步骤
+- 若需澄清：使用 `questions` 交互（遵循 [questions-interaction](.cursor/skills/questions-interaction/SKILL.md) 契约）提升体验：
+  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options 含 what/why/who/where/when/how，value 用稳定标识如 `dim_what`）；可提供「全部跳过」选项
+  - 对每个需澄清的维度，尽量提供选项（如 Who：终端用户/内部管理员/双方/其他需描述）；无法选项化时再开放文本
+  - 含 cancel 选项，遵循 value 稳定、无有效选择时重试的契约
 
 #### 3.2 隐含意图挖掘
 
@@ -72,7 +72,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **执行方式**：
 
-- 将识别到的隐含意图以建议形式呈现给用户确认
+- 将识别到的隐含意图以建议形式呈现，用 `questions` 交互确认（options：确认采纳/部分采纳/拒绝，value 如 `confirm`/`partial`/`reject`）
 - 避免过度推断，只提出高置信度的隐含需求
 
 #### 3.3 用户真实意图确认
@@ -86,8 +86,8 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 **执行方式**：
 
 - 输出需求理解总结
-- 询问用户"以上理解是否正确？"
-- 等待用户确认后再继续后续分析
+- 用 `questions` 交互确认（options：确认/需修改/取消，value 如 `confirm`/`supplement`/`cancel`）
+- 遵循 questions-interaction 契约
 
 输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。需求已非常清晰时可静默跳过部分提纯步骤，但必须确保核心信息（What/Why）已明确。
 
@@ -135,7 +135,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **调研内容**（req 阶段做广度调研，深度留给 plan）：
 
-- 该领域的主流技术方案
+- 该领域的成熟技术方案
 - 常见的实现模式
 - 已知的典型坑点
 - 最新的最佳实践和趋势
@@ -148,6 +148,8 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 - 对比各方案的优劣（性能、复杂度、维护成本等）
 - 基于项目上下文推荐最优方案
 - 将对比结果融入文档的相应章节
+
+**品味嗅探**：若两个方案质量、效果接近，差异主要在「品味」偏好（如设计理念、开发原则、体验 vs 成本取舍等），用 `questions` 构建选择题向用户提问，嗅探其偏好；拟提问前调用 memory-retrieve，传入 Agent 构建的决策点描述，若检索到相关记忆则不再问；用户选择后若可沉淀为品味，经 taste-recognition 产出 payload 后交 lingxi-memory 写入。
 
 #### 5.3 最佳实践融入
 

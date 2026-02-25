@@ -1,6 +1,6 @@
-# Payload → Note 映射、TasteKey 与门控（本 Skill 引用）
+# Payload → Note 映射与门控（本 Skill 引用）
 
-> 本 Skill 产出 payload 后，下游 lingxi-memory 按本约定做映射、生成 TasteKey 与门控。
+> 本 Skill 产出 payload 后，下游 lingxi-memory 按本约定做映射与门控。
 
 ---
 
@@ -22,19 +22,8 @@
 
 ## 2. Payload → Note 映射要点（下游执行）
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply、用户表述规则；Audience/Portability 来自 apply；Source 来自 payload.source；**TasteKey** 由 payload 按「记忆键」规则生成，仅存 Meta 不写入 Tags；Supersedes 治理时填写。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply、用户表述规则；Audience/Portability 来自 apply；Source 来自 payload.source；Supersedes 治理时填写。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；与 One-liner 分工（One-liner 偏「做什么」）。
 - **One-liner**：在 scene 下优先 choice 或避免非 choice 项；公式如 `在 [scene] 下优先 [choice]`。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。
 - **L0/L1**：由下游 008 评分卡决定是否写 L0、L1 或双层；payload 含足够信息即可生成二者。
-
----
-
-## 3. 记忆键（TasteKey）设计
-
-- **键名**：`taste_key`。**键值格式**：`<情境类型>|<原则维度>`，即 `context|dimension`，归一化存储（小写、连字符、无空格）。
-- **用途**：① 环节选择题「已沉淀则不再问」——提问前用该键查 INDEX，存在且 Status=active 则不再问；② 检索时 memory-retrieve 可对 INDEX 的 TasteKey、Title、When to load 做关键词匹配。
-- **生成规则**：
-  - **环节嗅探（source=choice）**：由该条规则的**情境类型**与**原则维度**生成 `taste_key = normalize(情境类型) + "|" + normalize(原则维度)`。
-  - **非嗅探路径（auto/remember/init）**：由 payload.scene 与 payload.choice 生成稳定 slug，拼成 `scene_slug|choice_slug`；若与某嗅探情境的 (情境类型, 原则维度) 语义等价，可共用同一 taste_key。
-- **存储**：note Meta 的 TasteKey 字段；INDEX 的 TasteKey 列。仅存于此，不重复写入 Tags。

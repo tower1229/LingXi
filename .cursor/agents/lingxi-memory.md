@@ -21,14 +21,14 @@ model: inherit
 - **conversation_id**（按需）：当前会话 ID，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
 - **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
 
-**约定**：父代理必须先调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`）；仅当该 skill 产出 payload 时，用该 payload 调用本子代理。**禁止**将原始用户消息、对话片段或草稿直接传入本子代理。**禁止**传入旧形态输入（如 `user_input`、`target_claim`、`selected_candidates`、`context` 等）；本子代理仅接受上述 payload 结构，映射与补全严格按下文「映射规则」（含 Title、TasteKey、Supersedes）。
+**约定**：父代理必须先调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`）；仅当该 skill 产出 payload 时，用该 payload 调用本子代理。**禁止**将原始用户消息、对话片段或草稿直接传入本子代理。本子代理仅接受上述 payload 结构，映射与补全严格按下文「映射规则」（含 Title、Supersedes）。
 
 ## 职责（单一）
 
 在给定 payload 与可选 conversation_id、generation_id 下：
 
 1. **输入校验**：检查 payload 的 scene、principles、choice、source、confidence 存在且合法（source 与 confidence 为上述枚举值）；evidence、apply 可选。若必填缺失或类型/枚举不符，拒收并向主对话返回一句错误与建议，不执行后续步骤。
-2. **映射与补全**：由 payload 按下文「映射规则」生成 note 各字段（Title、Kind、Status、Strength、Scope、Audience、Portability、Source、TasteKey、Tags、Supersedes、When to load、One-liner、Decision、Alternatives、Counter-signals、Pointers 等）。缺项时仅对缺失部分做**只读**上下文补全，不产候选、不覆盖 payload 已有信息。
+2. **映射与补全**：由 payload 按下文「映射规则」生成 note 各字段（Title、Kind、Status、Strength、Scope、Audience、Portability、Source、Tags、Supersedes、When to load、One-liner、Decision、Alternatives、Counter-signals、Pointers 等）。缺项时仅对缺失部分做**只读**上下文补全，不产候选、不覆盖 payload 已有信息。
 3. **评分卡**：在映射生成候选 note 之后、写入之前，按下文「记忆升维判定标准」执行（5 维评分、总分 T 判定写/不写、L0/L1/双层，含例外条件）。
 4. **治理**：对 `.cursor/.lingxi/memory/notes/` 做语义近邻 TopK（见下），决策 merge / replace / veto / new。
 5. **门控**：merge 或 replace 时**必须**使用 questions 交互收集用户选择并在确认后执行。**new 路径**：按 `payload.confidence` 分流——`high` 可静默写入，`medium` / `low` 必须通过 questions 门控后再写入。
@@ -37,14 +37,12 @@ model: inherit
 
 ## 映射规则（Payload → note）
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply 与用户表述；Audience/Portability 来自 apply；Source 来自 payload.source；TasteKey 按下条生成，仅存 Meta 不写入 Tags；Supersedes 在治理合并/替换时填写。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply 与用户表述；Audience/Portability 来自 apply；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；One-liner 偏「做什么」，如 `在 [scene] 下优先 [choice]`。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。
 - **L0/L1**：按评分卡判定写 L0、L1 或双层；L0 模板：在 [具体场景] 下发生了 [可验证事实/操作]，导致 [结果]；L1 模板：在 [场景族] 中优先 [策略]，避免 [反策略]，因为 [目标/风险]。
 
-**TasteKey 生成**：(a) 若 payload 来自环节嗅探（source=choice）且含 context|dimension，则直接使用；(b) 否则由 payload.scene 与 payload.choice 做稳定 slug（小写、连字符、无空格），拼成 `scene_slug|choice_slug`。写入 note Meta 与 INDEX 时，有则写该值，无则留空。
-
-**Note 模板**：`.cursor/.lingxi/memory/references/memory-note-template.md`（含 Title、TasteKey、Supersedes、Status 含 local/archive 等）。
+**Note 模板**：`.cursor/.lingxi/memory/references/memory-note-template.md`。
 
 反例/拒绝类：payload 中 choice 或 evidence 表达约束/禁止时，One-liner 或 Decision 可表述为「在 [scene] 下避免 X」；Counter-signals 或 When to load 中体现「何时不适用」。
 
@@ -108,8 +106,8 @@ merge/replace 时必须通过 questions 发起交互：
 ## INDEX 格式（直接读写）
 
 - 路径：`.cursor/.lingxi/memory/INDEX.md`
-- 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | TasteKey | File |`
-- 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（即本次调用传入的 conversation_id）、TasteKey（由 payload 按上文 TasteKey 生成规则填写，可选列）。
+- 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |`
+- 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（即本次调用传入的 conversation_id）。
 
 ## 记忆审计（写入后必须执行）
 

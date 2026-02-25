@@ -37,7 +37,7 @@
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定、以及【记忆沉淀约定】）
 - 执行 Skill：`memory-retrieve`
 
-**检索机制**：memory-retrieve 采用**语义 + 关键词双路径**混合检索（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及可选 INDEX 做技术词/错误码等文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。
+**检索机制**：memory-retrieve 采用**语义 + 关键词双路径**混合检索（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–3。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
 
 **最小注入**：
 
@@ -51,9 +51,9 @@
 
 建议字段：
 
-| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | TasteKey | File |
+| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
 
-CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id）；TasteKey 为可选，格式 `context|dimension` 或 `scene_slug|choice_slug`，用于「不再问」与检索命中。
+CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
 
 ## 记忆文件（notes/\*.md）
 
@@ -61,7 +61,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 每条记忆一个文件，小而清晰，建议结构：
 
-- Meta（Id/Title/Kind/Status/Strength/Scope/Audience/Portability/Source/TasteKey/Tags/Supersedes/CreatedAt/UpdatedAt/Session）
+- Meta（Id/Title/Kind/Status/Strength/Scope/Audience/Portability/Source/Tags/Supersedes/CreatedAt/UpdatedAt/Session）
 - When to load（1-3 条）
 - One-liner（用于注入）
 - Context / Decision（decision + signals + alternatives + counter-signals）

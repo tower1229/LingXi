@@ -16,8 +16,7 @@
 - **Audience**: team / project / personal
 - **Portability**: cross-project / project-only
 - **Source**: <packName>@<version> / manual / init / user / auto
-- **TasteKey**: 可选；格式 `context|dimension` 或 `scene_slug|choice_slug`，用于「不再问」与检索命中；**仅存于此字段，不重复写入 Tags**
-- **Tags**: 可选；自由关键词，不包含 TasteKey 内容
+- **Tags**: 可选；自由关键词
 - **Supersedes**: 可选；当本条由 merge/replace 取代其他条目时，填被取代的 MEM-xxx，与 INDEX 同步
 - **CreatedAt**: ISO 8601 时间，创建时间
 - **UpdatedAt**: ISO 8601 时间，最后更新时间
