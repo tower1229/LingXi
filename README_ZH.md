@@ -1,4 +1,4 @@
-[English](./README_EN.md)
+[English](./README.md)
 
 # LíngXī（灵犀）
 
@@ -18,7 +18,7 @@
 
 ### 2) AI Native
 
-尊重 AI 能力，预留进化空间
+尊重 AI 能力，在能力释放与工程可控之间取得平衡。
 
 ### 3) 称心如意
 
@@ -43,6 +43,19 @@
 在 Cursor 中从**插件市场**安装灵犀（搜索 “LingXi” 或 “灵犀”）。安装后，灵犀的 commands、skills、agents 与 hooks 将随插件加载，在任意打开的工作区中可用。
 
 - **首次使用**：建议在项目中运行一次 `/init`，以初始化工作区目录（`.cursor/.lingxi/`）与可选记忆草稿。
+
+**另一种方式：远程安装（脚本）** — 若插件尚未上架，可在**项目根目录**执行以下命令之一，将灵犀安装到当前项目：
+
+- **Linux / macOS / Git Bash：**
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
+  ```
+- **Windows PowerShell：**
+  ```powershell
+  irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
+  ```
+
+脚本安装完成后，在 Cursor 中打开项目并同样建议运行 `/init`。
 
 ---
 

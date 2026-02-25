@@ -1,0 +1,114 @@
+{
+  "commands": [
+    "commands/req.md",
+    "commands/review-req.md",
+    "commands/plan.md",
+    "commands/build.md",
+    "commands/review.md",
+    "commands/init.md",
+    "commands/remember.md",
+    "commands/start-tuning.md"
+  ],
+  "rules": [],
+  "hooks": {
+    "files": [
+      "hooks.json",
+      "hooks/session-init.mjs",
+      "hooks/_hook-utils.mjs",
+      "hooks/append-memory-audit.mjs",
+      "hooks/lingxi-audit.mjs"
+    ]
+  },
+  "skills": [
+    "skills/about-lingxi/SKILL.md",
+    "skills/build-executor/SKILL.md",
+    "skills/memory-retrieve/SKILL.md",
+    "skills/plan-executor/SKILL.md",
+    "skills/req-executor/SKILL.md",
+    "skills/review-executor/SKILL.md",
+    "skills/review-req-executor/SKILL.md",
+    "skills/reviewer-doc-consistency/SKILL.md",
+    "skills/reviewer-e2e/SKILL.md",
+    "skills/reviewer-performance/SKILL.md",
+    "skills/reviewer-security/SKILL.md",
+    "skills/skill-creator/SKILL.md",
+    "skills/style-fusion/SKILL.md",
+    "skills/taste-recognition/SKILL.md",
+    "skills/workspace-bootstrap/SKILL.md",
+    "skills/write-doc/SKILL.md",
+    "skills/questions-interaction/SKILL.md"
+  ],
+  "agents": {
+    "files": [
+      "agents/lingxi-memory.md"
+    ]
+  },
+  "references": {
+    "about-lingxi": [
+      "skills/about-lingxi/references/architecture.md",
+      "skills/about-lingxi/references/component-guides.md",
+      "skills/about-lingxi/references/core-values.md",
+      "skills/about-lingxi/references/cursor-agent-tools.md",
+      "skills/about-lingxi/references/cursor-learn-courses-summary.md",
+      "skills/about-lingxi/references/design-principles.md",
+      "skills/about-lingxi/references/engineering-practices.md",
+      "skills/about-lingxi/references/evaluation-criteria.md",
+      "skills/about-lingxi/references/memory-system.md",
+      "skills/about-lingxi/references/optimization-checklist.md",
+      "skills/about-lingxi/references/plugin-hooks.md",
+      "skills/about-lingxi/references/rules-guide.md",
+      "skills/about-lingxi/references/workflow-output-principles.md"
+    ],
+    "workspace-bootstrap": [
+      "skills/workspace-bootstrap/references/workflow-skeleton.json",
+      "skills/workspace-bootstrap/references/INDEX.default.md",
+      "skills/workspace-bootstrap/references/memory-note-template.default.md",
+      "skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs"
+    ],
+    "taste-recognition": [
+      "skills/taste-recognition/references/payload-to-note.md",
+      "skills/taste-recognition/references/payload-and-downstream.md"
+    ],
+    "plan-executor": [
+      "skills/plan-executor/references/taste-sniff-rules.md",
+      "skills/plan-executor/references/testcase-doc-template.md",
+      "skills/plan-executor/references/plan-doc-template.md"
+    ],
+    "req-executor": [
+      "skills/req-executor/references/taste-sniff-rules.md",
+      "skills/req-executor/references/req-doc-template-full.md",
+      "skills/req-executor/references/req-doc-template-simple.md",
+      "skills/req-executor/scripts/next-task-id.mjs"
+    ],
+    "review-executor": [
+      "skills/review-executor/references/taste-sniff-rules.md",
+      "skills/review-executor/references/review-report-template.md"
+    ],
+    "build-executor": [
+      "skills/build-executor/references/taste-sniff-rules.md"
+    ],
+    "style-fusion": [
+      "skills/style-fusion/references/style-extractor-prompt.md",
+      "skills/style-fusion/references/profile-schema.md",
+      "skills/style-fusion/scripts/style-fusion-engine.js"
+    ]
+  },
+  "workflowDirectories": [
+    ".cursor/.lingxi/tasks",
+    ".cursor/.lingxi/memory",
+    ".cursor/.lingxi/memory/notes",
+    ".cursor/.lingxi/memory/notes/share",
+    ".cursor/.lingxi/memory/references",
+    ".cursor/.lingxi/workspace"
+  ],
+  "workflowTemplateFiles": [
+    ".cursor/.lingxi/memory/references/memory-note-template.md"
+  ],
+  "workflowIndexFiles": [
+    ".cursor/.lingxi/memory/INDEX.md"
+  ],
+  "gitignoreEntries": [
+    "# Local workspace for temp code clones, generated artifacts, etc.",
+    ".cursor/.lingxi/workspace/"
+  ]
+}
