@@ -25,7 +25,7 @@ args: []
 1. **优先**：在项目根执行 `node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs`，确保 `.cursor/.lingxi/` 骨架存在。
 2. **随后**：按以下 Step 0.5–8 执行。
 
-执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/questions-interaction` skill 发起**（使用 questions 工具或遵循其 option value 约定）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
+执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/questions-interaction` skill 发起**（使用 questions 工具或遵循其 option label 约定）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
 
 ---
 
@@ -40,7 +40,7 @@ args: []
 ## 输出与交互原则（必须）
 
 - 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
-- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/questions-interaction` skill 发起**，使用 questions 工具与稳定 value 约定，不采用自然语言菜单或手输编号。
+- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/questions-interaction` skill 发起**，使用 questions 工具与 label 约定，不采用自然语言菜单或手输编号。
 - **写入门控不可侵犯**：除非用户在写入策略步骤明确选择写入，否则只展示候选清单，不写入磁盘。
 - **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项通过 questions 多选 + 逐项补充收集，避免硬编码关键词/复杂 if-else。
 
@@ -110,11 +110,11 @@ args: []
 
 ### Step 4) 交互式推进（questions-first，统一走 questions skill）
 
-所有需用户选择的环节**统一通过 `/questions-interaction` skill** 发起（参见 `.cursor/skills/questions-interaction/SKILL.md`），使用 questions 工具与稳定 `value` 约定；分步交互替代同屏多问：先确认是否继续，再按需用 questions 多选补齐项，最后再做写入门控。
+所有需用户选择的环节**统一通过 `/questions-interaction` skill** 发起（参见 `.cursor/skills/questions-interaction/SKILL.md`），使用 questions 工具与 label 约定；分步交互替代同屏多问：先确认是否继续，再按需用 questions 多选补齐项，最后再做写入门控。
 
 #### 4.1 Q1：确认是否继续生成候选清单（必答）
 
-**必须**通过 questions 工具发起单选（若环境不支持 questions UI，则给出等价选项与 value 说明，并解析用户回复）：
+**必须**通过 questions 工具发起单选（若环境不支持 questions UI，则给出等价选项与 label 说明，并解析用户回复）：
 
 ```json
 {
@@ -122,9 +122,9 @@ args: []
   "parameters": {
     "question": "已整理项目结构与上下文，下一步如何继续？",
     "options": [
-      { "label": "A", "value": "confirm" },
-      { "label": "B", "value": "supplement" },
-      { "label": "C", "value": "deep_dive" }
+      { "label": "确认，生成候选清单" },
+      { "label": "先补充缺失项" },
+      { "label": "深入补齐 Should 项" }
     ]
   }
 }
@@ -140,11 +140,11 @@ args: []
   "parameters": {
     "question": "请选择需要补充的项（可多选）",
     "options": [
-      { "label": "A", "value": "supplement_goal" },
-      { "label": "B", "value": "supplement_users" },
-      { "label": "C", "value": "supplement_flows" },
-      { "label": "D", "value": "supplement_risks" },
-      { "label": "E", "value": "supplement_releaseEnv" }
+      { "label": "补充项目目标" },
+      { "label": "补充核心用户" },
+      { "label": "补充关键流程" },
+      { "label": "补充风险与优先级" },
+      { "label": "补充发布与环境" }
     ],
     "allow_multiple": true
   }
@@ -153,15 +153,15 @@ args: []
 
   根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
 
-- **deep_dive**：Must 完整后，通过 **questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，value 使用稳定标识如 `should_glossary`、`should_arch`、`should_localDev`），再逐项收集。Optional 不主动列入选项，除非业务需要。
+- **deep_dive**：Must 完整后，通过 **questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，label 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
 
 - 追问策略：一次只问一个缺失项；禁止重复展示整段菜单。
 
 #### 4.3 兼容输入与异常处理（对齐 questions-interaction）
 
-- 兼容旧输入：若用户输入 `A/B/C/D`，分别映射为 `confirm/supplement/deep_dive/supplement`（`D` 视为补充修正）。
+- 兼容旧输入：若用户输入为选项序号或部分 label 文本，可映射为对应选项。
 - **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 questions**，不回放长段说明（遵循 questions-interaction 的“只重试当前问题”）。
-- 若当前运行环境不支持 questions UI，则给出等价选项与 value 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
+- 若当前运行环境不支持 questions UI，则给出等价选项与 label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
 
 ### Step 5) 写入策略门控（默认跳过，必须用 questions 发起）
 
@@ -173,23 +173,23 @@ args: []
   "parameters": {
     "question": "是否将候选条目写入记忆库？",
     "options": [
-      { "label": "A", "value": "skip" },
-      { "label": "B", "value": "all" },
-      { "label": "C", "value": "partial" }
+      { "label": "跳过，不写入" },
+      { "label": "全部写入" },
+      { "label": "部分写入" }
     ]
   }
 }
 ```
 
-- `skip` 或未明确回答写入策略：仅展示候选清单，不写入磁盘。
-- `all`：全量写入候选清单。
-- `partial`：**必须**再次通过 questions 多选收集待写入候选（禁止手输编号）。
+- 选择「跳过，不写入」或未明确回答写入策略：仅展示候选清单，不写入磁盘。
+- 选择「全部写入」：全量写入候选清单。
+- 选择「部分写入」：**必须**再次通过 questions 多选收集待写入候选（禁止手输编号）。
 
 `partial` 规则（questions-only）：
 
-- **必须**通过 questions 多选返回有效候选值（参见 `/questions-interaction` skill 模板 B）；不再支持自然语言编号写入。
-- 若未选择任何候选、或返回值不在当前候选清单中，**重新发起同一 questions 多选**，仅追问选择本身。
-- 若当前运行环境不支持 questions 交互，提示用户改为 `all` 或 `skip`（不走编号文本兜底）。
+- **必须**通过 questions 多选返回有效候选（参见 `/questions-interaction` skill 模板 B）；不再支持自然语言编号写入。
+- 若未选择任何候选、或返回值不在当前候选的 label 列表中，**重新发起同一 questions 多选**，仅追问选择本身。
+- 若当前运行环境不支持 questions 交互，提示用户改为「全部写入」或「跳过，不写入」（不走编号文本兜底）。
 
 推荐使用以下 questions 多选格式收集 `selected_candidates`（协议细则见 `/questions-interaction` skill）：
 
@@ -199,19 +199,19 @@ args: []
   "parameters": {
     "question": "请选择要写入记忆库的候选（可多选）",
     "options": [
-      { "label": "A", "value": "cand_1" },
-      { "label": "B", "value": "cand_2" }
+      { "label": "候选1：项目目标与非目标" },
+      { "label": "候选2：领域术语与核心实体" }
     ],
     "allow_multiple": true
   }
 }
 ```
 
-- `value` 使用稳定候选标识（如 `cand_1`），避免将展示文本当作唯一主键。
+- `options[].label` 与候选清单条目对应，返回值即用户选中的 label（或 label 列表），用于确定待写入条目。
 
-### Step 6) 可选写入执行（仅 all 或 partial）
+### Step 6) 可选写入执行（仅当用户选择「全部写入」或「部分写入」时）
 
-当且仅当写入策略为 `all` 或 `partial` 时，执行写入：
+当且仅当用户在写入策略中选择「全部写入」或「部分写入」时，执行写入：
 
 - 从"记忆候选清单"确定待写入条目（用户确认后的草稿）。
 - **先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将每条确认后的草稿转为 7 字段品味 payload（source=init；可按附录 init-checklists 类型化字段生成 scene、principles、choice 等）；每条草稿对应一条 payload，可产出多条。
@@ -225,7 +225,7 @@ args: []
 输出 3-6 行摘要：
 
 - 生成的草稿列表
-- 写入策略（skip/all/partial）
+- 写入策略（跳过不写入 / 全部写入 / 部分写入）
 - 若写入：写入文件列表 + 是否更新 INDEX
 
 （不展示推断的项目类型；类型仅用于内部收集与草稿生成。）

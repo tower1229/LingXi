@@ -77,7 +77,7 @@ model: inherit
 
 ## 用户门控格式（必须，questions）
 
-questions 交互协议优先复用：使用 `/questions-interaction skills`（稳定 value、重试规则、取消语义），以下为治理确认最小模板：
+questions 交互协议优先复用：使用 `/questions-interaction skills`（label 约定、重试规则、取消语义），以下为治理确认最小模板：
 
 merge/replace 时必须通过 questions 发起交互：
 
@@ -87,10 +87,10 @@ merge/replace 时必须通过 questions 发起交互：
   "parameters": {
     "question": "治理方案（待确认）：MERGE/REPLACE，是否执行？",
     "options": [
-      { "label": "A", "value": "confirm" },
-      { "label": "B", "value": "cancel" },
-      { "label": "C", "value": "new_instead" },
-      { "label": "D", "value": "show_diff" }
+      { "label": "确认执行" },
+      { "label": "取消" },
+      { "label": "新建替代" },
+      { "label": "查看对比" }
     ]
   }
 }
