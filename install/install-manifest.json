@@ -6,8 +6,7 @@
     "commands/build.md",
     "commands/review.md",
     "commands/init.md",
-    "commands/remember.md",
-    "commands/start-tuning.md"
+    "commands/remember.md"
   ],
   "rules": [],
   "hooks": {
@@ -32,10 +31,8 @@
     "skills/reviewer-performance/SKILL.md",
     "skills/reviewer-security/SKILL.md",
     "skills/skill-creator/SKILL.md",
-    "skills/style-fusion/SKILL.md",
     "skills/taste-recognition/SKILL.md",
     "skills/workspace-bootstrap/SKILL.md",
-    "skills/write-doc/SKILL.md",
     "skills/questions-interaction/SKILL.md"
   ],
   "agents": {
@@ -86,11 +83,6 @@
     ],
     "build-executor": [
       "skills/build-executor/references/taste-sniff-rules.md"
-    ],
-    "style-fusion": [
-      "skills/style-fusion/references/style-extractor-prompt.md",
-      "skills/style-fusion/references/profile-schema.md",
-      "skills/style-fusion/scripts/style-fusion-engine.js"
     ]
   },
   "workflowDirectories": [
