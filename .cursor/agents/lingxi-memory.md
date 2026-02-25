@@ -87,10 +87,10 @@ merge/replace 时必须通过 questions 发起交互：
   "parameters": {
     "question": "治理方案（待确认）：MERGE/REPLACE，是否执行？",
     "options": [
-      { "label": "确认执行", "value": "confirm" },
-      { "label": "取消", "value": "cancel" },
-      { "label": "改为新增", "value": "new_instead" },
-      { "label": "查看对比", "value": "show_diff" }
+      { "label": "A", "value": "confirm" },
+      { "label": "B", "value": "cancel" },
+      { "label": "C", "value": "new_instead" },
+      { "label": "D", "value": "show_diff" }
     ]
   }
 }

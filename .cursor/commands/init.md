@@ -122,9 +122,9 @@ args: []
   "parameters": {
     "question": "已整理项目结构与上下文，下一步如何继续？",
     "options": [
-      { "label": "直接生成记忆候选清单", "value": "confirm" },
-      { "label": "先补充或修正信息", "value": "supplement" },
-      { "label": "继续深入调查（含 Should 项）", "value": "deep_dive" }
+      { "label": "A", "value": "confirm" },
+      { "label": "B", "value": "supplement" },
+      { "label": "C", "value": "deep_dive" }
     ]
   }
 }
@@ -140,11 +140,11 @@ args: []
   "parameters": {
     "question": "请选择需要补充的项（可多选）",
     "options": [
-      { "label": "项目目标与非目标", "value": "supplement_goal" },
-      { "label": "核心用户与诉求", "value": "supplement_users" },
-      { "label": "关键链路与兜底", "value": "supplement_flows" },
-      { "label": "风险与最不可接受失败", "value": "supplement_risks" },
-      { "label": "环境、发布与回滚", "value": "supplement_releaseEnv" }
+      { "label": "A", "value": "supplement_goal" },
+      { "label": "B", "value": "supplement_users" },
+      { "label": "C", "value": "supplement_flows" },
+      { "label": "D", "value": "supplement_risks" },
+      { "label": "E", "value": "supplement_releaseEnv" }
     ],
     "allow_multiple": true
   }
@@ -173,9 +173,9 @@ args: []
   "parameters": {
     "question": "是否将候选条目写入记忆库？",
     "options": [
-      { "label": "跳过写入（默认）", "value": "skip" },
-      { "label": "写入全部候选", "value": "all" },
-      { "label": "选择部分候选写入", "value": "partial" }
+      { "label": "A", "value": "skip" },
+      { "label": "B", "value": "all" },
+      { "label": "C", "value": "partial" }
     ]
   }
 }
@@ -197,10 +197,10 @@ args: []
 {
   "tool": "questions",
   "parameters": {
-    "question": "请选择要写入记忆库的候选",
+    "question": "请选择要写入记忆库的候选（可多选）",
     "options": [
-      { "label": "候选 1：<标题>", "value": "cand_1" },
-      { "label": "候选 2：<标题>", "value": "cand_2" }
+      { "label": "A", "value": "cand_1" },
+      { "label": "B", "value": "cand_2" }
     ],
     "allow_multiple": true
   }
