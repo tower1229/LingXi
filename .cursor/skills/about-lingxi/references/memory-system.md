@@ -22,7 +22,7 @@
 
 **执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply），再用该 payload 显式调用 lingxi-memory；lingxi-memory **仅接受**该 payload，不产候选、不从原始对话做识别。
 
-**双入口与生效方式**：灵犀支持**自动沉淀**（session 约定触发：每轮先 memory-retrieve，再按约定调用 taste-recognition skill，有 payload 则调 lingxi-memory）与**主动沉淀**（用户 `/remember` 或 `/init` 选择写入时，先经 taste-recognition skill 将输入/草稿转为 payload，再调 lingxi-memory）。约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入【记忆沉淀约定】，安装灵犀插件后即生效。
+**双入口与生效方式**：灵犀支持**自动沉淀**（session 约定触发：每轮先 memory-retrieve，再按约定调用 taste-recognition skill，有 payload 则调 lingxi-memory）与**主动沉淀**（用户 `/remember` 或 `/init` 选择写入时，先经 taste-recognition skill 将输入/草稿转为 payload，再调 lingxi-memory）。约定由 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入【记忆沉淀约定】，安装后即生效。
 
 - **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
@@ -109,4 +109,4 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 - **记忆写入**：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）
 - **记忆检索与注入**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
-- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——注入记忆检索约定与【记忆沉淀约定】，安装插件后自动沉淀与主动沉淀均生效
+- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——注入记忆检索约定与【记忆沉淀约定】，安装后自动沉淀与主动沉淀均生效

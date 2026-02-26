@@ -32,7 +32,7 @@ Lower cognitive load and a smooth, user-friendly experience.
 - **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
 - **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
 - **Context curation**: Optimize context so the model focuses on what matters
-- **Ready to use**: Install from the Cursor plugin marketplace, then run `/init` to quickly set up LingXi in your project
+- **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to quickly set up LingXi in your project
 
 ---
 
@@ -40,11 +40,7 @@ Lower cognitive load and a smooth, user-friendly experience.
 
 ### Install
 
-Install LingXi from the **Cursor plugin marketplace** (search for “LingXi” or “灵犀”). Once installed, its commands, skills, agents, and hooks load with the plugin and are available in any open workspace.
-
-- **First time**: We recommend running `/init` once in your project to create the workspace layout (`.cursor/.lingxi/`) and optional memory drafts.
-
-**Alternative: Remote install (script)** — If the plugin is not yet available in the marketplace, you can install LingXi into your project by running one of the following commands from your **project root**:
+Run one of the following commands from your **project root** to install LingXi into your project:
 
 - **Linux / macOS / Git Bash:**
   ```bash
@@ -55,7 +51,7 @@ Install LingXi from the **Cursor plugin marketplace** (search for “LingXi” o
   irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
   ```
 
-After script install, open the project in Cursor and run `/init` as above.
+After install, open the project in Cursor and run `/init` once to create the workspace layout (`.cursor/.lingxi/`) and optional memory drafts.
 
 ---
 
