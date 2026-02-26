@@ -46,7 +46,7 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 工具类 Skills（提供辅助能力）
 
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-- `ask-questions`：统一 ask-questions 交互协议与结果校验，供 remember/init/记忆治理等高频交互场景复用
+- `ask-questions`：统一 ask-questions 交互协议与结果校验（`question_id + option id`，返回 option id 列表），供 remember/init/记忆治理等高频交互场景复用
 
 #### 审查类 Skills（Review 阶段专用）
 

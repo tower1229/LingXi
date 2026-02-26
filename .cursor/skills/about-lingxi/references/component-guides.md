@@ -115,7 +115,7 @@
 **工具类 Skills**：
 
 - `about-lingxi`：快速了解灵犀的背景知识
-- `ask-questions`：统一 ask-questions 交互协议（单选/多选模板、label 约定、重试与取消语义）
+- `ask-questions`：统一 ask-questions 交互协议（`question_id + option id` 模板、重试与取消语义；label 仅展示）
 
 **审查类 Skills**：
 
