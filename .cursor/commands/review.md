@@ -50,7 +50,3 @@ Review 是工作流的关键质量保证环节，通过多维度审查确保交�
 ## 执行逻辑
 
 本命令将执行逻辑委托给 `review-executor` Skill。详细执行流程请参考 `review-executor` Skill 文档（`.cursor/skills/review-executor/SKILL.md`）。
-
-## 记忆
-
-记忆写入与沉淀约定由 sessionStart 注入，不在此重复；子代理定义见 `.cursor/agents/lingxi-memory.md`。

@@ -1,6 +1,6 @@
 ---
 name: init
-description: 引导式初始化项目（创建 .cursor/.lingxi/ 骨架与可选记忆草稿，用户门控写入）
+description: 引导式初始化灵犀工作流（创建 .cursor/.lingxi/ 骨架与可选记忆草稿，用户门控写入）
 args: []
 ---
 
@@ -8,7 +8,7 @@ args: []
 
 ## 命令用途
 
-初始化 workflow 到项目，建立项目上下文（技术栈、目录结构、关键模块、业务链路与约束）；文档齐全时优先从现有内容整理，仅对缺失项提问。生成一份"记忆候选清单"（包含草稿项与可选候选项，默认不写入，需用户门控）。
+初始化 workflow 到项目，建立项目上下文（技术栈、目录结构、关键模块、业务链路与约束）；文档齐全时优先从现有内容整理，仅对缺失项提问。生成一份"记忆候选清单"（默认不写入，需用户门控）。
 
 ---
 
@@ -25,7 +25,7 @@ args: []
 1. **优先**：在项目根执行 `node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs`，确保 `.cursor/.lingxi/` 骨架存在。
 2. **随后**：按以下 Step 0.5–8 执行。
 
-执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（使用 ask-questions 工具或遵循其 option label 约定）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
+执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（遵循 `question_id + options[{id,label}]` 协议，业务判断只看 option id）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
 
 ---
 
@@ -40,7 +40,7 @@ args: []
 ## 输出与交互原则（必须）
 
 - 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
-- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/ask-questions` skill 发起**，使用 ask-questions 工具与 label 约定，不采用自然语言菜单或手输编号。
+- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/ask-questions` skill 发起**，使用 ask-questions 工具的 `question_id + option id` 协议，不采用自然语言菜单或手输编号。
 - **写入门控不可侵犯**：除非用户在写入策略步骤明确选择写入，否则只展示候选清单，不写入磁盘。
 - **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项通过 ask-questions 多选 + 逐项补充收集，避免硬编码关键词/复杂 if-else。
 
@@ -110,23 +110,25 @@ args: []
 
 ### Step 4) 交互式推进（ask-questions-first，统一走 ask-questions 工具）
 
-所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`），使用 ask-questions 工具与 label 约定；分步交互替代同屏多问：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
+所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`），使用 ask-questions 工具与 option id 约定；分步交互替代同屏多问：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
 
 #### 4.1 Q1：确认是否继续生成候选清单（必答）
 
-**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，则给出等价选项与 label 说明，并解析用户回复）：
+**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，则给出等价选项的 id+label 说明，并解析用户回复）：
 
 ```json
 {
-  "tool": "ask-questions",
-  "parameters": {
-    "question": "已整理项目结构与上下文，下一步如何继续？",
-    "options": [
-      { "label": "确认，生成候选清单" },
-      { "label": "先补充缺失项" },
-      { "label": "深入补齐 Should 项" }
-    ]
-  }
+  "questions": [
+    {
+      "question_id": "next_action",
+      "question": "已整理项目结构与上下文，下一步如何继续？",
+      "options": [
+        { "id": "generate_candidates", "label": "确认，生成候选清单" },
+        { "id": "supplement_missing", "label": "先补充缺失项" },
+        { "id": "deep_dive_should", "label": "深入补齐 Should 项" }
+      ]
+    }
+  ]
 }
 ```
 
@@ -136,32 +138,34 @@ args: []
 
 ```json
 {
-  "tool": "ask-questions",
-  "parameters": {
-    "question": "请选择需要补充的项（可多选）",
-    "options": [
-      { "label": "补充项目目标" },
-      { "label": "补充核心用户" },
-      { "label": "补充关键流程" },
-      { "label": "补充风险与优先级" },
-      { "label": "补充发布与环境" }
-    ],
-    "allow_multiple": true
-  }
+  "questions": [
+    {
+      "question_id": "supplement_fields",
+      "question": "请选择需要补充的项（可多选）",
+      "allow_multiple": true,
+      "options": [
+        { "id": "goal", "label": "补充项目目标" },
+        { "id": "users", "label": "补充核心用户" },
+        { "id": "flows", "label": "补充关键流程" },
+        { "id": "risks", "label": "补充风险与优先级" },
+        { "id": "release_env", "label": "补充发布与环境" }
+      ]
+    }
+  ]
 }
 ```
 
-  根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
+根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
 
-- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，label 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
+- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，`id` 稳定、`label` 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
 
 - 追问策略：一次只问一个缺失项；禁止重复展示整段菜单。
 
 #### 4.3 兼容输入与异常处理（对齐 ask-questions）
 
-- 兼容旧输入：若用户输入为选项序号或部分 label 文本，可映射为对应选项。
+- 兼容旧输入：若用户输入为选项序号、option id 或部分 label 文本，可映射为对应选项 id。
 - **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 ask-questions**，不回放长段说明（遵循 ask-questions 的“只重试当前问题”）。
-- 若当前运行环境不支持 ask-questions UI，则给出等价选项与 label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
+- 若当前运行环境不支持 ask-questions UI，则给出等价选项的 id+label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
 
 ### Step 5) 写入策略门控（默认跳过，必须用 ask-questions 发起）
 
@@ -169,15 +173,17 @@ args: []
 
 ```json
 {
-  "tool": "ask-questions",
-  "parameters": {
-    "question": "是否将候选条目写入记忆库？",
-    "options": [
-      { "label": "跳过，不写入" },
-      { "label": "全部写入" },
-      { "label": "部分写入" }
-    ]
-  }
+  "questions": [
+    {
+      "question_id": "write_strategy",
+      "question": "是否将候选条目写入记忆库？",
+      "options": [
+        { "id": "skip", "label": "跳过，不写入" },
+        { "id": "write_all", "label": "全部写入" },
+        { "id": "write_partial", "label": "部分写入" }
+      ]
+    }
+  ]
 }
 ```
 
@@ -188,26 +194,28 @@ args: []
 `partial` 规则（ask-questions-only）：
 
 - **必须**通过 ask-questions 多选返回有效候选（参见 `/ask-questions` skill 模板 B）；不再支持自然语言编号写入。
-- 若未选择任何候选、或返回值不在当前候选的 label 列表中，**重新发起同一 ask-questions 多选**，仅追问选择本身。
+- 若未选择任何候选、或返回值不在当前候选的 option id 列表中，**重新发起同一 ask-questions 多选**，仅追问选择本身。
 - 若当前运行环境不支持 ask-questions 交互，提示用户改为「全部写入」或「跳过，不写入」（不走编号文本兜底）。
 
 推荐使用以下 ask-questions 多选格式收集 `selected_candidates`（协议细则见 `/ask-questions` skill）：
 
 ```json
 {
-  "tool": "ask-questions",
-  "parameters": {
-    "question": "请选择要写入记忆库的候选（可多选）",
-    "options": [
-      { "label": "候选1：项目目标与非目标" },
-      { "label": "候选2：领域术语与核心实体" }
-    ],
-    "allow_multiple": true
-  }
+  "questions": [
+    {
+      "question_id": "selected_candidates",
+      "question": "请选择要写入记忆库的候选（可多选）",
+      "allow_multiple": true,
+      "options": [
+        { "id": "candidate_1", "label": "候选1：项目目标与非目标" },
+        { "id": "candidate_2", "label": "候选2：领域术语与核心实体" }
+      ]
+    }
+  ]
 }
 ```
 
-- `options[].label` 与候选清单条目对应，返回值即用户选中的 label（或 label 列表），用于确定待写入条目。
+- `options[].id` 与候选清单条目建立稳定映射，返回值即用户选中的 option id（或 id 列表），用于确定待写入条目。
 
 ### Step 6) 可选写入执行（仅当用户选择「全部写入」或「部分写入」时）
 
