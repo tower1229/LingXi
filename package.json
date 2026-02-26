@@ -4,7 +4,9 @@
   "scripts": {
     "memory-sync": "node scripts/validate-memory-index.js --update",
     "memory-check": "node scripts/validate-memory-index.js --check",
-    "validate-plugin": "node scripts/validate-template.mjs"
+    "validate-plugin": "node scripts/validate-template.mjs",
+    "test": "node scripts/__tests__/validate-memory-index.test.js",
+    "quality-check": "yarn validate-plugin && yarn memory-check && yarn test"
   }
 }
 

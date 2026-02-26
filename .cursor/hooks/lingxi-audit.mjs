@@ -10,6 +10,7 @@ import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
@@ -90,7 +91,33 @@ function getAllowOutput(hookName) {
 /**
  * 轮转审计日志文件：当文件超过大小限制时，删除总条数一半的旧日志
  */
+function acquireRotateLock(lockPath) {
+  try {
+    return fs.openSync(lockPath, "wx");
+  } catch (err) {
+    if (err?.code === "EEXIST") return null;
+    throw err;
+  }
+}
+
+function releaseRotateLock(lockFd, lockPath) {
+  if (typeof lockFd === "number") {
+    try {
+      fs.closeSync(lockFd);
+    } catch {}
+  }
+  try {
+    fs.unlinkSync(lockPath);
+  } catch {}
+}
+
 function rotateAuditFile(auditPath) {
+  const lockPath = `${auditPath}${ROTATE_LOCK_SUFFIX}`;
+  const lockFd = acquireRotateLock(lockPath);
+  if (lockFd === null) {
+    return;
+  }
+
   try {
     const stats = fs.statSync(auditPath, { throwIfNoEntry: false });
     if (!stats || stats.size < MAX_FILE_SIZE) {
@@ -114,13 +141,17 @@ function rotateAuditFile(auditPath) {
     const linesToKeep = lines.slice(-keepLines);
     const newContent = linesToKeep.join("\n") + "\n";
 
-    // 写回文件（使用临时文件确保原子性）
-    const tempPath = auditPath + ".tmp";
+    // 写回文件（使用唯一临时文件避免并发覆盖）
+    const tempPath = `${auditPath}.${process.pid}.${Date.now()}.${Math.random()
+      .toString(16)
+      .slice(2)}.tmp`;
     fs.writeFileSync(tempPath, newContent, { encoding: "utf8" });
     fs.renameSync(tempPath, auditPath);
   } catch (err) {
     // 轮转失败不影响主流程，静默降级
     console.error("[lingxi-audit] Rotation failed:", err.message);
+  } finally {
+    releaseRotateLock(lockFd, lockPath);
   }
 }
 
