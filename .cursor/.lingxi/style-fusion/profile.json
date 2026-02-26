@@ -1,51 +1,24 @@
 {
   "style_vector": {
-    "sentence_length": {
-      "short": 0.2187,
-      "medium": 0.5938,
-      "long": 0.1876
-    },
-    "logic_pattern": {
-      "deductive": 0.5751,
-      "inductive": 0.1,
-      "contrast": 0.225,
-      "narrative": 0.0999
-    },
-    "emotion_intensity": 0.2287,
+    "sentence_length": { "short": 0.2188, "medium": 0.5889, "long": 0.1923 },
+    "logic_pattern": { "deductive": 0.5645, "inductive": 0.1, "contrast": 0.2311, "narrative": 0.1044 },
+    "emotion_intensity": 0.2322,
     "vocabulary_level": "professional",
     "structure_preference": "hierarchical",
     "opening_style": "direct",
     "closing_style": "open",
     "tone_and_voice": {
-      "formality": 0.5687,
-      "person_usage": {
-        "first_person": 0.3313,
-        "second_person": 0.1937,
-        "third_person": 0.275,
-        "neutral": 0.2
-      },
+      "formality": 0.5677,
+      "person_usage": { "first_person": 0.331, "second_person": 0.2033, "third_person": 0.2689, "neutral": 0.1967 },
       "voice_preference": "active"
     },
-    "information_density": {
-      "density_level": 0.6375,
-      "detail_level": "moderate"
-    },
+    "information_density": { "density_level": 0.6356, "detail_level": "moderate" },
     "interactivity": {
-      "interaction_style": {
-        "question": 0.1937,
-        "directive": 0.3563,
-        "narrative": 0.3313,
-        "dialogue": 0.1187
-      },
-      "supporting_elements": {
-        "examples": 0.3813,
-        "code": 0.2938,
-        "diagrams": 0.2062,
-        "none": 0.1187
-      }
+      "interaction_style": { "question": 0.1966, "directive": 0.3476, "narrative": 0.33, "dialogue": 0.1256 },
+      "supporting_elements": { "examples": 0.3699, "code": 0.2745, "diagrams": 0.1921, "none": 0.1634 }
     }
   },
-  "sample_count": 8,
-  "last_updated": "2026-01-19T06:45:15.235Z",
-  "confidence": 0.5506
+  "sample_count": 9,
+  "last_updated": "2026-02-26T00:00:00.000Z",
+  "confidence": 0.5934
 }
