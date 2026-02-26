@@ -57,10 +57,10 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 **执行方式**：
 
 - 若需求描述清晰完整，静默跳过此步骤
-- 若需澄清：使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）提升体验：
-  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options 仅用 label 展示选项，如「补充 What」「补充 Who」「全部跳过」）；可提供「全部跳过」选项
+- 若需澄清：使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）：
+  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options: `{id,label}`，可提供「全部跳过」）
   - 对每个需澄清的维度，尽量提供选项（如 Who：终端用户/内部管理员/双方/其他需描述）；无法选项化时再开放文本
-  - 含取消选项（label 如「取消」），遵循无有效选择时重试的契约
+  - 含取消选项（如 `id=cancel`，label 为「取消」），遵循无有效选择时重试的契约
 
 #### 3.2 隐含意图挖掘
 
@@ -72,7 +72,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **执行方式**：
 
-- 将识别到的隐含意图以建议形式呈现，用 `ask-questions` 交互确认（options 仅用 label，如「确认采纳」「部分采纳」「拒绝」）
+- 将识别到的隐含意图以建议形式呈现，用 `ask-questions` 交互确认（options: `{id,label}`）
 - 避免过度推断，只提出高置信度的隐含需求
 
 #### 3.3 用户真实意图确认
@@ -86,7 +86,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 **执行方式**：
 
 - 输出需求理解总结
-- 用 `ask-questions` 交互确认（options 仅用 label，如「确认」「需修改」「取消」）
+- 用 `ask-questions` 交互确认（options: `{id,label}`）
 - 遵循 ask-questions 契约
 
 输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。需求已非常清晰时可静默跳过部分提纯步骤，但必须确保核心信息（What/Why）已明确。
@@ -202,7 +202,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 在写入前，将收集的信息汇总为可执行决策。**先执行 Fail Fast 检查**，必要信息齐全后再汇总。
 
-- **Fail Fast**：若必要信息缺失（功能目标、目标用户（前端需求）、核心场景（前端需求）），一次性列出并给出 2-3 个选项，使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）等待用户选择后再写入；options 仅用 label 展示选项（如「选项1」「选项2」），含取消选项；无有效选择时重试当前问题。重要信息（成功标准、优先级、特殊约束）模糊时建议澄清。
+- **Fail Fast**：若必要信息缺失（功能目标、目标用户（前端需求）、核心场景（前端需求）），一次性列出并给出 2-3 个选项，使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）等待用户选择后再写入；options 使用 `{id,label}`（如「选项1」「选项2」），含取消选项（如 `id=cancel`）；无有效选择时重试当前问题。重要信息（成功标准、优先级、特殊约束）模糊时建议澄清。
 - **需求澄清结论**：目标/范围/成功标准的最终表述
 - **关键决策点**（中等+）：备选方案、推荐方案、理由
 - **风险与对策**（复杂）：按影响排序，给出缓解措施

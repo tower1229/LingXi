@@ -1,6 +1,6 @@
 ---
 name: remember
-description: 从用户输入或对话上下文中提取记忆并写入记忆库（memory/notes/），写入前做语义近邻治理
+description: 从用户输入(可结合对话上下文理解)提取记忆并写入记忆库
 args:
   - name: input
     required: false
@@ -11,7 +11,7 @@ args:
 
 ## 命令用途
 
-从用户输入或对话上下文中提取**记忆**并写入持久化记忆库（`memory/notes/`），并在写入前自动进行语义近邻治理（create/update/delete），用于提升后续每轮的检索注入质量。
+从用户输入(可结合对话上下文理解)中提取**记忆**，并调用 lingxi-memory subagent 写入持久化记忆库。
 
 ---
 
@@ -39,10 +39,6 @@ args:
 
 ---
 
-## 执行逻辑
-
-本命令不包含执行逻辑；**必须先经 taste-recognition skill** 产出 payload，再通过**显式调用**将 payload 交给 **lingxi-memory** 子代理；子代理定义见 `.cursor/agents/lingxi-memory.md`。
-
 ## 执行流程
 
 ### 1) 解析用户输入
@@ -51,16 +47,15 @@ args:
 
 根据用户输入理解意图（直接记忆表达 / 历史提取指引 / 提示词定位 / 混合），确定要提取的记忆范围（当前轮用户输入或用户指定的对话范围）。
 
-### 2) 先调用 taste-recognition skill
+### 2) 调用 taste-recognition skill
 
-**必须先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 skill 判断是否可沉淀并产出 7 字段品味 payload（scene, principles, choice, evidence, source=remember, confidence, apply）。若 taste-recognition 静默（无可沉淀），则不调用 lingxi-memory，主对话可静默或提示「未识别到可沉淀记忆」。
+调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将当前轮用户输入或用户指定的「要记住的内容/对话范围」作为输入，由该 skill 判断是否可沉淀并产出 7 字段品味 payload（scene, principles, choice, evidence, source=remember, confidence, apply）。若 taste-recognition 静默（无可沉淀），则不调用 lingxi-memory，提示「未识别到可沉淀记忆」。
 
-### 3) 显式调用 lingxi-memory 子代理
+### 3) 调用 lingxi-memory 子代理
 
-仅当 taste-recognition 产出 payload 时：
+当 taste-recognition 产出 payload 时：
 
 - 用该 **payload** 显式调用 lingxi-memory 子代理，并传入 **conversation_id**（及可选 generation_id）供审计。
-- **禁止**将原始用户消息、对话片段或任何非 payload 结构传给 lingxi-memory。
 - **调用方式**（二选一）：在提示中写 `/lingxi-memory` 并传入 payload，或自然语言「使用 lingxi-memory 子代理将以下 payload 写入记忆库：<payload>」。
 - 子代理在独立上下文中完成：校验 → 映射 → 评分卡 → 治理（TopK）→ 门控（如需）→ 直接文件写入 → 向主对话返回一句结果。
 
@@ -68,4 +63,4 @@ args:
 
 ## 输出要求
 
-调用阶段静默完成；主对话仅一句结果或静默；写入成功可完全静默。
+调用阶段静默完成；主对话仅一句结果或静默。

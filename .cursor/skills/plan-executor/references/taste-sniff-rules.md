@@ -13,8 +13,8 @@
 | **情境描述** | Agent 给出推荐方案 A，用户明确选择 B 或其它非推荐项。 |
 | **可命名的原则/策略** | 由用户理由归纳为 principles 与 choice；规则中预定义常见维度：可维护性/性能/工期/风险偏好等，或从用户表述归纳。 |
 | **是否提问** | 主动用 questions 问选择理由。 |
-| **问什么** | 「请简短说明您选择该方案的主要考虑。」选项可与常见原则维度对齐。 |
-| **如何提取** | 从理由映射到预定义或归纳 principles/choice、evidence；填 payload，source=choice。 |
+| **问什么** | 「请简短说明您选择该方案的主要考虑。」选项可与常见原则维度对齐（每个选项配置稳定 option id）。 |
+| **如何提取** | 从理由或 option id 映射到预定义或归纳 principles/choice、evidence；填 payload，source=choice。 |
 
 ---
 
@@ -25,8 +25,8 @@
 | **情境描述** | 方案讨论中出现「先简单」「预留扩展」「一步到位」等。 |
 | **可命名的原则/策略** | principles：`先简单实现` / `预留扩展点`；choice 取其一。 |
 | **是否提问** | 可静默从对话抽取或 ask-questions 确认。 |
-| **问什么** | 「您更倾向于先简单实现再迭代，还是预留扩展点？」 |
-| **如何提取** | 映射到预定义 principles/choice，填 payload；source=choice。 |
+| **问什么** | 「您更倾向于先简单实现再迭代，还是预留扩展点？」（选项配置稳定 option id） |
+| **如何提取** | 先按 option id 映射到预定义 principles/choice，再填 payload；source=choice。 |
 
 ---
 

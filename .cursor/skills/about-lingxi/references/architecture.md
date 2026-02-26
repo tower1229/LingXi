@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。灵犀以 **Cursor 官方插件**形式分发：从 Cursor 插件市场安装后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。通过远程安装脚本将灵犀加入项目后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
 
 ## 核心组件
 
@@ -10,14 +10,14 @@
 
 Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 req、plan、build、review 等命令，除 `/req` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
-| 命令          | 职责                                                                           | 委托的 Skill                                                    |
-| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                  |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                           |
-| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                 |
-| `/build`      | 执行构建（可选，Plan-driven / Req-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                |
-| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                               |
-| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                   |
+| 命令          | 职责                                                                           | 委托的 Skill                                                                                     |
+| ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                                                   |
+| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                                                            |
+| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                                                  |
+| `/build`      | 执行构建（可选，Plan-driven / Req-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                                                 |
+| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                                                                |
+| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                                                    |
 | `/init`       | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆）   | `workspace-bootstrap`（Step 0）；init command（0.5–8）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
@@ -46,7 +46,7 @@ Skills 承载详细的工作流指导，按职责分为：
 #### 工具类 Skills（提供辅助能力）
 
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
-- `ask-questions`：统一 ask-questions 交互协议与结果校验，供 remember/init/记忆治理等高频交互场景复用
+- `ask-questions`：统一 ask-questions 交互协议与结果校验（`question_id + option id`，返回 option id 列表），供 remember/init/记忆治理等高频交互场景复用
 
 #### 审查类 Skills（Review 阶段专用）
 
@@ -59,7 +59,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入：
 
-1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`，再**按约定调用 taste-recognition skill**；若 taste-recognition 产出 payload，用该 payload 调用 lingxi-memory。**自动沉淀**（session 约定触发）与 **/remember、/init 主动沉淀** 均可用，安装插件即生效。
+1. **注入约定**：通过 sessionStart hook（`.cursor/hooks/session-init.mjs`）在会话开始时注入约定，要求每轮在回答前先执行 `memory-retrieve`，再**按约定调用 taste-recognition skill**；若 taste-recognition 产出 payload，用该 payload 调用 lingxi-memory。**自动沉淀**（session 约定触发）与 **/remember、/init 主动沉淀** 均可用，安装后即生效。
 2. **记忆写入**：所有写入路径**必须先经 taste-recognition skill** 产出 7 字段品味 payload；由 **lingxi-memory** 子代理在独立上下文中执行，**仅接受**该 payload（禁止传入原始对话或旧形态 input）。子代理：校验 → 映射生成 note → 评分卡（5 维）→ 治理（TopK）→ 门控 → **直接读写** `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果。**半静默仅限 new 且 confidence=high**；删除与替换须用户确认。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
@@ -70,7 +70,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（先调用 taste-recognition skill，有 payload 再调 lingxi-memory），保证自动沉淀与主动沉淀（/remember、/init）在安装插件后即生效；其他审计/门控为可选。
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（先调用 taste-recognition skill，有 payload 再调 lingxi-memory），保证自动沉淀与主动沉淀（/remember、/init）在安装后即生效；其他审计/门控为可选。
 - **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀依赖主 Agent 判断后显式调用 lingxi-memory（或用户 `/remember`），而非在每次 stop 时追加系统提示
 
 ## 目录结构
@@ -97,20 +97,19 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── agents/                # Subagents（独立上下文）
 │   └── lingxi-memory.md   # 记忆写入
-└── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
-
-.cursor/.lingxi/
-├── tasks/                 # 任务文档（统一目录）
-│   ├── 001.req.<标题>.md
-│   ├── 001.plan.<标题>.md
-│   └── ...
-├── memory/                # 统一记忆系统
-│   ├── INDEX.md           # 统一索引（SSoT）
-│   ├── notes/             # 扁平记忆文件（语义+关键词混合检索的主搜索面）
-│   │   └── share/          # 共享记忆目录（推荐作为 git submodule，跨项目复用）
-│   └── references/         # 模板与规范
-└── workspace/             # 工作空间
-    └── processed-sessions.json  # 会话去重记录
+├── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
+├──.lingxi/
+        ├── tasks/                 # 任务文档（统一目录）
+        │   ├── 001.req.<标题>.md
+        │   ├── 001.plan.<标题>.md
+        │   └── ...
+        ├── memory/                # 统一记忆系统
+        │   ├── INDEX.md           # 统一索引（SSoT）
+        │   ├── notes/             # 扁平记忆文件（语义+关键词混合检索的主搜索面）
+        │   │   └── share/          # 共享记忆目录（推荐作为 git submodule，跨项目复用）
+        │   └── references/         # 模板与规范
+        └── workspace/             # 工作空间
+            └── audit.log           # 审计日志
 ```
 
 ## 工作流生命周期

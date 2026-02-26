@@ -77,26 +77,28 @@ model: inherit
 
 ## 用户门控格式（必须，ask-questions）
 
-ask-questions 交互协议优先复用：使用 `/ask-questions skills`（label 约定、重试规则、取消语义），以下为治理确认最小模板：
+ask-questions 交互协议优先复用：使用 `/ask-questions skills`，以下为治理确认最小模板：
 
 merge/replace 时必须通过 ask-questions 发起交互：
 
 ```json
 {
-  "tool": "ask-questions",
-  "parameters": {
-    "question": "治理方案（待确认）：MERGE/REPLACE，是否执行？",
-    "options": [
-      { "label": "确认执行" },
-      { "label": "取消" },
-      { "label": "新建替代" },
-      { "label": "查看对比" }
-    ]
-  }
+  "questions": [
+    {
+      "question_id": "governance_confirm",
+      "question": "治理方案（待确认）：MERGE/REPLACE，是否执行？",
+      "options": [
+        { "id": "a", "label": "确认执行" },
+        { "id": "b", "label": "取消" },
+        { "id": "c", "label": "新建替代" },
+        { "id": "d", "label": "查看对比" }
+      ]
+    }
+  ]
 }
 ```
 
-**仅在用户选择确认后**执行写入或删除。**Merge/Replace 不适用半静默**：均须 ask-questions 门控，不得静默执行。
+**仅在用户返回 `a` 时**执行写入或删除。**Merge/Replace 不适用半静默**：均须 ask-questions 门控，不得静默执行。
 
 ## new 路径门控（仅治理决策为 new）
 
