@@ -171,8 +171,9 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **内容**：
 
-- 记忆写入由 **Subagent lingxi-memory** 在独立上下文中执行（双入口、直接文件写入）；**自动沉淀**（mode=auto）与**主动沉淀**（/remember）均由 sessionStart 注入的【记忆沉淀约定】保证，安装后即生效
-- 每轮检索与最小注入（sessionStart hook 注入约定 + memory-retrieve）
+- 记忆系统分为四部分：**自动沉淀**、**手动记忆**、**记忆写入**、**记忆提取**；前三部分共同组成**记忆沉淀**
+- **记忆沉淀**：自动沉淀（session 约定触发）、手动记忆（/remember、/init）、记忆写入（Subagent lingxi-memory 在独立上下文中执行，直接文件写入）；由 sessionStart 注入【记忆沉淀约定】，安装后即生效
+- **记忆提取**：每轮检索与最小注入（sessionStart hook 注入约定 + memory-retrieve）
 - 统一索引格式（INDEX.md + notes/ 扁平结构）
 
 **何时加载**：场景 1、场景 2（涉及记忆系统改动时）
