@@ -84,9 +84,45 @@ function parseRow(line) {
   const [id, title, status, currentPhase, nextAction, blockers, links] = parts;
 
   // 验证 ID 格式
-  if (!/^REQ-\d{3,}$/.test(id)) return null;
+  if (!/^(REQ-\d{3,}|\d{3,})$/.test(id)) return null;
 
   return { id, title, status, currentPhase, nextAction, blockers, links };
+}
+
+/**
+ * 按链接分隔符拆分 Links 字段。
+ * 约定分隔符是 " / "（两侧至少一侧有空白），避免切碎路径本身的 "/"
+ */
+function splitLinkParts(links) {
+  return links
+    .replace(/`/g, "")
+    .trim()
+    .split(/\s+\/\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function deriveTaskPrefixFromFile(fileName, fallbackId) {
+  const reqStyle = fileName.match(/^([^.]+)\.req\./);
+  if (reqStyle) return reqStyle[1];
+
+  const legacyStyle = fileName.match(/^([^.]+)\.md$/);
+  if (legacyStyle) return legacyStyle[1];
+
+  return fallbackId;
+}
+
+function inferProjectRootFromIndexPath(indexPath) {
+  const resolved = path.resolve(indexPath);
+  const marker = `${path.sep}.cursor${path.sep}.lingxi${path.sep}tasks${path.sep}`;
+  const markerIndex = resolved.indexOf(marker);
+
+  if (markerIndex !== -1) {
+    const root = resolved.slice(0, markerIndex);
+    return root || path.parse(resolved).root;
+  }
+
+  return path.resolve(path.dirname(resolved), "../../..");
 }
 
 /**
@@ -133,20 +169,14 @@ function validateRow(row, projectRoot) {
   }
 
   // 解析 Links 字段，提取文件路径
-  // Links 格式示例：`.cursor/.lingxi/tasks/completed/REQ-001.md` / `.plan.md` / `.review.md`
-  // 或：`.cursor/.lingxi/tasks/in-progress/REQ-002.md` / `.plan.md`
+  // Links 格式示例：
+  // - `.cursor/.lingxi/tasks/completed/REQ-001.md` / `.plan.md` / `.review.md`
+  // - `.cursor/.lingxi/tasks/in-progress/001.req.标题.md` / `001.plan.标题.md`
   const filePaths = [];
-
-  // 移除反引号
-  const cleanLinks = row.links.replace(/`/g, "").trim();
-
-  // 按 '/' 分割，但保留完整路径
-  const parts = cleanLinks
-    .split(/\s*\/\s*/)
-    .map((s) => s.trim())
-    .filter((s) => s);
+  const parts = splitLinkParts(row.links);
 
   let baseDir = null;
+  let basePrefix = row.id;
 
   parts.forEach((part) => {
     // 如果是完整路径（包含 .cursor/.lingxi/tasks/）
@@ -155,36 +185,29 @@ function validateRow(row, projectRoot) {
       const fullPath = path.join(projectRoot, part);
       filePaths.push(fullPath);
 
-      // 提取基础目录（用于后续相对路径）
-      const match = part.match(
-        /\.cursor\/\.lingxi\/tasks\/(in-progress|completed)\//,
-      );
-      if (match) {
-        baseDir = path.join(projectRoot, ".cursor/.lingxi/tasks", match[1]);
-      }
+      // 提取基础目录与任务前缀（用于后续相对路径）
+      baseDir = path.dirname(fullPath);
+      basePrefix = deriveTaskPrefixFromFile(path.basename(fullPath), row.id);
     } else if (
-      part.endsWith(".md") ||
-      part.endsWith(".plan.md") ||
-      part.endsWith(".review.md")
+      part.endsWith(".md")
     ) {
-      // 相对路径（如 `.plan.md`），需要基于 baseDir
+      // 相对路径（如 `.plan.md`）或文件名（如 `001.plan.xxx.md`）
       if (baseDir) {
-        // 从 baseDir 构建完整路径
-        // 例如：baseDir = .../completed, part = `.plan.md` -> .../completed/REQ-001.plan.md
-        const reqId = row.id;
-        const fileName = part.replace(/^\./, `${reqId}.`);
-        filePaths.push(path.join(baseDir, fileName));
-      } else {
-        // 如果没有 baseDir，尝试直接解析
         if (part.startsWith(".")) {
-          // 相对路径，需要找到对应的 REQ 文件
-          const reqId = row.id;
-          const fileName = part.replace(/^\./, `${reqId}.`);
-          // 根据 status 判断目录
-          const dir = row.status === "completed" ? "completed" : "in-progress";
-          filePaths.push(
-            path.join(projectRoot, ".cursor/.lingxi/tasks", dir, fileName),
-          );
+          // 例如：`.plan.md` -> `<prefix>.plan.md`
+          const fileName = part.replace(/^\./, `${basePrefix}.`);
+          filePaths.push(path.join(baseDir, fileName));
+        } else {
+          filePaths.push(path.join(baseDir, part));
+        }
+      } else {
+        // 没有 baseDir 时，按状态目录做兜底解析
+        const dir = row.status === "completed" ? "completed" : "in-progress";
+        if (part.startsWith(".")) {
+          const fileName = part.replace(/^\./, `${row.id}.`);
+          filePaths.push(path.join(projectRoot, ".cursor/.lingxi/tasks", dir, fileName));
+        } else {
+          filePaths.push(path.join(projectRoot, ".cursor/.lingxi/tasks", dir, part));
         }
       }
     }
@@ -229,7 +252,7 @@ function main() {
   const indexPath =
     process.argv[2] ||
     path.join(process.cwd(), ".cursor/.lingxi/tasks/INDEX.md");
-  const projectRoot = path.dirname(path.dirname(path.dirname(indexPath)));
+  const projectRoot = inferProjectRootFromIndexPath(indexPath);
 
   // 检查文件是否存在
   if (!fs.existsSync(indexPath)) {
@@ -274,6 +297,10 @@ function main() {
   }
 
   // 输出结果
+  if (!header) {
+    errors.push("未找到表头（应包含 `| ID |`）");
+  }
+
   if (errors.length === 0) {
     success(`验证通过：${rows.length} 行数据全部正确`);
     process.exit(0);
@@ -289,4 +316,11 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { parseHeader, parseRow, validateHeader, validateRow };
+module.exports = {
+  parseHeader,
+  parseRow,
+  validateHeader,
+  validateRow,
+  splitLinkParts,
+  inferProjectRootFromIndexPath,
+};
