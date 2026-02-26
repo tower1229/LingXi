@@ -25,7 +25,7 @@ args: []
 1. **优先**：在项目根执行 `node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs`，确保 `.cursor/.lingxi/` 骨架存在。
 2. **随后**：按以下 Step 0.5–8 执行。
 
-执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（遵循 `question_id + options[{id,label}]` 协议，业务判断只看 option id）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
+执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（`questions[]`，`question_id` 使用语义化 id，`options[{id,label}]` 的 `id` 使用 `a/b/c/d...`）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
 
 ---
 
@@ -110,11 +110,11 @@ args: []
 
 ### Step 4) 交互式推进（ask-questions-first，统一走 ask-questions 工具）
 
-所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`），使用 ask-questions 工具与 option id 约定；分步交互替代同屏多问：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
+所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`）：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
 
 #### 4.1 Q1：确认是否继续生成候选清单（必答）
 
-**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，则给出等价选项的 id+label 说明，并解析用户回复）：
+**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，按 `/ask-questions` skill 的文本兜底模板执行）：
 
 ```json
 {
@@ -123,9 +123,9 @@ args: []
       "question_id": "next_action",
       "question": "已整理项目结构与上下文，下一步如何继续？",
       "options": [
-        { "id": "generate_candidates", "label": "确认，生成候选清单" },
-        { "id": "supplement_missing", "label": "先补充缺失项" },
-        { "id": "deep_dive_should", "label": "深入补齐 Should 项" }
+        { "id": "a", "label": "确认，生成候选清单" },
+        { "id": "b", "label": "先补充缺失项" },
+        { "id": "c", "label": "深入补齐 Should 项" }
       ]
     }
   ]
@@ -144,11 +144,11 @@ args: []
       "question": "请选择需要补充的项（可多选）",
       "allow_multiple": true,
       "options": [
-        { "id": "goal", "label": "补充项目目标" },
-        { "id": "users", "label": "补充核心用户" },
-        { "id": "flows", "label": "补充关键流程" },
-        { "id": "risks", "label": "补充风险与优先级" },
-        { "id": "release_env", "label": "补充发布与环境" }
+        { "id": "a", "label": "补充项目目标" },
+        { "id": "b", "label": "补充核心用户" },
+        { "id": "c", "label": "补充关键流程" },
+        { "id": "d", "label": "补充风险与优先级" },
+        { "id": "e", "label": "补充发布与环境" }
       ]
     }
   ]
@@ -157,7 +157,7 @@ args: []
 
 根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
 
-- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，`id` 稳定、`label` 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
+- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，`label` 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
 
 - 追问策略：一次只问一个缺失项；禁止重复展示整段菜单。
 
@@ -165,7 +165,7 @@ args: []
 
 - 兼容旧输入：若用户输入为选项序号、option id 或部分 label 文本，可映射为对应选项 id。
 - **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 ask-questions**，不回放长段说明（遵循 ask-questions 的“只重试当前问题”）。
-- 若当前运行环境不支持 ask-questions UI，则给出等价选项的 id+label 说明，并解析用户回复；不采用手输编号等非结构化兜底，除非业务明确允许。
+- 若当前运行环境不支持 ask-questions UI，按 `/ask-questions` skill 的文本兜底模板执行；不采用手输编号等非结构化兜底，除非业务明确允许。
 
 ### Step 5) 写入策略门控（默认跳过，必须用 ask-questions 发起）
 
@@ -178,9 +178,9 @@ args: []
       "question_id": "write_strategy",
       "question": "是否将候选条目写入记忆库？",
       "options": [
-        { "id": "skip", "label": "跳过，不写入" },
-        { "id": "write_all", "label": "全部写入" },
-        { "id": "write_partial", "label": "部分写入" }
+        { "id": "a", "label": "跳过，不写入" },
+        { "id": "b", "label": "全部写入" },
+        { "id": "c", "label": "部分写入" }
       ]
     }
   ]
@@ -207,8 +207,8 @@ args: []
       "question": "请选择要写入记忆库的候选（可多选）",
       "allow_multiple": true,
       "options": [
-        { "id": "candidate_1", "label": "候选1：项目目标与非目标" },
-        { "id": "candidate_2", "label": "候选2：领域术语与核心实体" }
+        { "id": "a", "label": "候选1：项目目标与非目标" },
+        { "id": "b", "label": "候选2：领域术语与核心实体" }
       ]
     }
   ]

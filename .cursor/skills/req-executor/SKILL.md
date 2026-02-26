@@ -57,8 +57,8 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 **执行方式**：
 
 - 若需求描述清晰完整，静默跳过此步骤
-- 若需澄清：使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）提升体验：
-  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options 使用 `{id,label}`，如「补充 What」「补充 Who」「全部跳过」）；可提供「全部跳过」选项
+- 若需澄清：使用 `ask-questions` 交互（遵循 [ask-questions](.cursor/skills/ask-questions/SKILL.md) 契约）：
+  - 先识别缺失的 5W1H 维度，用多选问「哪些维度需要补充？」（options: `{id,label}`，可提供「全部跳过」）
   - 对每个需澄清的维度，尽量提供选项（如 Who：终端用户/内部管理员/双方/其他需描述）；无法选项化时再开放文本
   - 含取消选项（如 `id=cancel`，label 为「取消」），遵循无有效选择时重试的契约
 
@@ -72,7 +72,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 
 **执行方式**：
 
-- 将识别到的隐含意图以建议形式呈现，用 `ask-questions` 交互确认（options 使用 `{id,label}`，如「确认采纳」「部分采纳」「拒绝」）
+- 将识别到的隐含意图以建议形式呈现，用 `ask-questions` 交互确认（options: `{id,label}`）
 - 避免过度推断，只提出高置信度的隐含需求
 
 #### 3.3 用户真实意图确认
@@ -86,7 +86,7 @@ description: 当执行 /req 命令时自动激活，负责需求分析、提纯�
 **执行方式**：
 
 - 输出需求理解总结
-- 用 `ask-questions` 交互确认（options 使用 `{id,label}`，如「确认」「需修改」「取消」）
+- 用 `ask-questions` 交互确认（options: `{id,label}`）
 - 遵循 ask-questions 契约
 
 输出遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)。需求已非常清晰时可静默跳过部分提纯步骤，但必须确保核心信息（What/Why）已明确。
