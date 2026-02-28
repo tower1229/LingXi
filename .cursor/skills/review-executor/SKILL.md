@@ -5,14 +5,18 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 # Review Executor
 
+## 定位
+
+Review 为**独立验收审计**：基于 req 的验收标准复核实现与证据，按需求编号（F1, F2, ...）给出 Pass/Fail 与证据引用。**不在 review 阶段新增需求或改范围**；缺口与问题回退至 build 修复。
+
 ## 本 Skill 会用到的能力
 
 读 req/plan/testcase 与变更代码；语义搜索；Run shell 执行测试；显式调用 reviewer-\* 时由各 reviewer 使用对应工具（如 Browser 用于 E2E）。
 
 ## Quick Start
 
-- **目标**：多维度审查并产出 review 报告。
-- 读输入 → 审查维度启用 → 测试文档/脚本/执行 → 核心/可选维度审查 → 汇总分级 TODO → 写入 review 文档（见 references）→ 下一步建议。
+- **目标**：独立验收审计并产出 review 报告（含按 F 的验收结果）。
+- 读输入 → 审查维度启用 → 测试文档/脚本/执行 → **按需求编号输出审计结果**（F→Pass/Fail→证据）→ 核心/可选维度审查 → 汇总分级 TODO → 写入 review 文档（见 references）→ 下一步建议。
 
 ## Instructions
 
@@ -107,7 +111,7 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 如果存在 `testcase` 文档：
 
 - 读取 `<taskId>.testcase.*.md`
-- 基于 req 审查测试用例文档
+- 基于 req 审查测试用例文档；**覆盖审计规则与 testcase-designer 一致**（按相同 F→TC 映射与验证方式），避免与 plan/build 口径不一致
 - 检查覆盖完整性、准确性
 - 如不完整或不合格，补充或修改测试用例文档
 
@@ -151,6 +155,16 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 - 输出手动测试清单（基于 plan 的测试用例文档或 req 的验收标准）
 - 提供测试步骤和预期结果
 - 标记需要手动验证
+
+### 5.5 按需求编号输出审计结果（必须执行）
+
+在写入 review 文档前，对 **req 中每个功能需求 F**（F1, F2, ...）独立复核：
+
+- 依据 req 该 F 的验收标准与验证方式（unit/integration/e2e/manual/rubric），判定 **Pass** 或 **Fail**
+- 填写**证据引用**：测试日志（如某测试通过）、Browser 记录（如 E2E 用例）、手工记录、评审打分等，与 req 中该 F 的「证据形式」一致
+- 将结果写入 review 报告的「按需求编号的验收结果」表（见 [references/review-report-template.md](references/review-report-template.md)）
+
+**不做**：在 review 阶段新增需求、修改范围或变更验收标准；缺口与问题列入分级 TODO，回退至 build 修复。
 
 ### 6. 依次执行核心维度（必须执行）
 
@@ -261,7 +275,7 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 ### 8. Review 文档写入
 
-生成 Review 文档时**按步骤**查阅 [references/review-report-template.md](references/review-report-template.md)，不要求在 SKILL 内复述模板全文。
+生成 Review 文档时**按步骤**查阅 [references/review-report-template.md](references/review-report-template.md)，不要求在 SKILL 内复述模板全文。**必须包含**步骤 5.5 产出的「按需求编号的验收结果」表（F→Pass/Fail→证据形式→证据引用/说明）。
 
 #### 文档命名约定
 
