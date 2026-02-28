@@ -1,13 +1,13 @@
 ---
 name: testcase-designer
-description: 由 plan-executor（主产出）、build-executor（缺 testcase 时兜底）、review-executor（覆盖审计）显式调用，从 req 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
+description: 由 plan-executor（主产出）、build-executor（Req-driven 且无 testcase 时）、review-executor（覆盖审计）显式调用，从 req 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
 ---
 
 # Testcase Designer
 
 ## 触发与输入输出
 
-- **触发**：本 Skill 由 **plan-executor**（生成 testcase 主产出）、**build-executor**（Req-driven 且无 testcase 时兜底）、**review-executor**（按相同规则做覆盖审计）显式调用，不自动激活。
+- **触发**：本 Skill 由 **plan-executor**（生成 testcase）、**build-executor**（Req-driven 且无 testcase 时调用）、**review-executor**（按相同规则做覆盖审计）显式调用，不自动激活。
 - **输入**：req 文档路径（如 `.cursor/.lingxi/tasks/<taskId>.req.<标题>.md`）或 req 文档正文。
 - **输出**：结构化 testcase 文档，与 [references/testcase-doc-template.md](references/testcase-doc-template.md) 同构，包含单元/集成/E2E/手工验证与评审区块；命名约定与 plan 一致：`<taskId>.testcase.<标题>.md`。
 
@@ -42,18 +42,18 @@ description: 由 plan-executor（主产出）、build-executor（缺 testcase �
 
 ### 5. 与 plan/build/review 的约定
 
-- plan-executor 调用本 Skill 作为 testcase 主产出，或按同一模板与约束自行生成。
-- build-executor 在 Req-driven 且无 testcase 时调用本 Skill 生成最小 testcase 再继续实施。
+- plan-executor 调用本 Skill 产出 testcase。
+- build-executor 在 Req-driven 且无 testcase 时调用本 Skill 生成 testcase 再继续实施。
 - review-executor 按相同 F→TC 映射与验证方式做覆盖审计，与 plan/build 口径一致。
 
 ## 注意事项
 
 1. 不发明 req 中未出现的需求或验收标准。
 2. 边界/异常从 req 的「边界/异常」列或验收标准推导，不随意扩展。
-3. 模板以本 Skill 的 references 为 SSoT；plan-executor 的 testcase 模板与此对齐或引用此处。
+3. 模板以本 Skill 的 references 为 SSoT。
 
 ---
 
 ## 与 Commands 的协作
 
-本 Skill 不被任何命令直接激活，仅由 plan-executor、build-executor、review-executor 显式调用。
+由 plan-executor、build-executor、review-executor 显式调用。

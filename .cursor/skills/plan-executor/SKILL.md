@@ -204,7 +204,7 @@ description: 当执行 /plan 命令时自动激活（taskId 可选，省略时�
 
 #### 8.3 Testcase 文档写入
 
-**仅通过调用 testcase-designer skill 产出 testcase**：输入为当前 req 文档（路径或内容），输出为 testcase-designer 定义的结构化 testcase 文档（模板与约束见 [testcase-designer](.cursor/skills/testcase-designer/SKILL.md) 及其 references）。命名：`001.testcase.<标题>.md`（标题 10 字以内，从 req 标题提取）。不维护本 skill 内的 testcase 模板；若 testcase-designer 不可用，则按 testcase-designer 的约定与约束（覆盖所有验证方式非空之 F、每 TC 关联至少一个 F、manual/rubric 含步骤与记录模板）自行生成同构文档并写入。
+**调用 testcase-designer skill 产出 testcase**：输入为当前 req 文档（路径或内容），输出为 testcase-designer 定义的结构化 testcase 文档（模板与约束见 [testcase-designer](.cursor/skills/testcase-designer/SKILL.md) 及其 references）。命名：`001.testcase.<标题>.md`（标题 10 字以内，从 req 标题提取）。
 
 #### 8.4 写入后自检
 
