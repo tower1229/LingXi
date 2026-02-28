@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">LingXi Monochrome LX Mark</title>
+  <desc id="desc">Monochrome character-based mark with larger visual occupancy.</desc>
+
+  <text
+    x="114"
+    y="192"
+    text-anchor="middle"
+    font-family="Avenir Next, Montserrat, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    font-size="180"
+    font-weight="900"
+    letter-spacing="-10"
+    fill="currentColor">LX</text>
+</svg>

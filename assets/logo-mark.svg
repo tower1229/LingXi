@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">LingXi LX Mark</title>
+  <desc id="desc">Character-based monogram mark with white-dominant palette.</desc>
+
+  <text
+    x="120"
+    y="194"
+    text-anchor="middle"
+    font-family="Avenir Next, Montserrat, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    font-size="182"
+    font-weight="900"
+    letter-spacing="-12"
+    fill="#FFFFFF"
+    stroke="#111111"
+    stroke-width="9"
+    paint-order="stroke fill">LX</text>
+
+  <circle cx="213" cy="64" r="8" fill="#D90429"/>
+</svg>
