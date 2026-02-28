@@ -26,6 +26,7 @@
     "skills/req-executor/SKILL.md",
     "skills/review-executor/SKILL.md",
     "skills/review-req-executor/SKILL.md",
+    "skills/testcase-designer/SKILL.md",
     "skills/reviewer-doc-consistency/SKILL.md",
     "skills/reviewer-e2e/SKILL.md",
     "skills/reviewer-performance/SKILL.md",
@@ -81,6 +82,9 @@
       "skills/review-executor/references/taste-sniff-rules.md",
       "skills/review-executor/references/review-report-template.md"
     ],
+    "testcase-designer": [
+      "skills/testcase-designer/references/testcase-doc-template.md"
+    ],
     "build-executor": [
       "skills/build-executor/references/taste-sniff-rules.md"
     ]
@@ -92,12 +96,6 @@
     ".cursor/.lingxi/memory/notes/share",
     ".cursor/.lingxi/memory/references",
     ".cursor/.lingxi/workspace"
-  ],
-  "workflowTemplateFiles": [
-    ".cursor/.lingxi/memory/references/memory-note-template.md"
-  ],
-  "workflowIndexFiles": [
-    ".cursor/.lingxi/memory/INDEX.md"
   ],
   "gitignoreEntries": [
     "# Local workspace for temp code clones, generated artifacts, etc.",

@@ -405,13 +405,31 @@ fi
 
 success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
 
-# 创建 .cursor/.lingxi 目录结构
-info "创建 .cursor/.lingxi 目录结构..."
-while IFS= read -r dir; do
-  [ -z "$dir" ] && continue
-  dir="${dir//$'\r'/}"
-  mkdir -p "$dir"
-done < <(get_json_array "workflowDirectories")
+# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
+info "初始化工作区骨架（.cursor/.lingxi/）..."
+if command -v node &>/dev/null; then
+  if node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
+    success "已通过 workspace-bootstrap 创建目录与模板"
+  else
+    error "workspace-bootstrap 执行失败"
+    exit 1
+  fi
+else
+  info "未检测到 Node.js，从清单创建目录并从模板复制..."
+  while IFS= read -r dir; do
+    [ -z "$dir" ] && continue
+    dir="${dir//$'\r'/}"
+    mkdir -p "$dir"
+  done < <(get_json_array "workflowDirectories")
+  if [ -f ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
+    cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".cursor/.lingxi/memory/INDEX.md"
+    cp ".cursor/skills/workspace-bootstrap/references/memory-note-template.default.md" ".cursor/.lingxi/memory/references/memory-note-template.md"
+    success "已创建目录与模板（无 Node.js 模式）"
+  else
+    error "模板文件不存在，请确保 skills 已完整下载"
+    exit 1
+  fi
+fi
 
 # 为 share 目录创建 .gitkeep 文件（确保空目录被 git 跟踪）
 SHARE_DIR=".cursor/.lingxi/memory/notes/share"
@@ -437,34 +455,6 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 # - 前后端/运维默认约定：Audience=team，Portability=cross-project
 # - 项目内特殊备忘：Audience=project，Portability=project-only（不放入 share）
 EOF
-fi
-
-# 下载 INDEX.md 文件
-info "下载索引文件..."
-while IFS= read -r index_file; do
-  [ -z "$index_file" ] && continue
-  index_file="${index_file//$'\r'/}"
-  if ! download_file "$index_file" "$index_file"; then
-    error "安装失败"
-    exit 1
-  fi
-done < <(get_json_array "workflowIndexFiles")
-success "已下载索引文件"
-
-# 下载模板文件
-info "下载模板文件..."
-template_count=0
-while IFS= read -r template_file; do
-  [ -z "$template_file" ] && continue
-  template_file="${template_file//$'\r'/}"
-  if ! download_file "$template_file" "$template_file"; then
-    error "安装失败"
-    exit 1
-  fi
-  template_count=$((template_count + 1))
-done < <(get_json_array "workflowTemplateFiles")
-if [ $template_count -gt 0 ]; then
-  success "已下载模板文件 ($template_count 个)"
 fi
 
 # 更新 .gitignore
