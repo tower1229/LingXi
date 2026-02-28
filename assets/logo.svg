@@ -1,5 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <title>LingXi</title>
-  <rect width="128" height="128" rx="24" fill="#1a1a2e"/>
-  <text x="64" y="82" font-family="system-ui, sans-serif" font-size="40" font-weight="600" fill="#eaeaea" text-anchor="middle">LingXi</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">LingXi LX Logo</title>
+  <desc id="desc">Default icon using a white-first palette, black structure, and minimal red accent.</desc>
+
+  <rect x="6" y="6" width="244" height="244" rx="52" fill="#FFFFFF" stroke="#0F0F0F" stroke-width="6"/>
+
+  <text
+    x="118"
+    y="194"
+    text-anchor="middle"
+    font-family="Avenir Next, Montserrat, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    font-size="170"
+    font-weight="820"
+    letter-spacing="-10"
+    fill="#FFFFFF"
+    stroke="#101010"
+    stroke-width="9"
+    paint-order="stroke fill">LX</text>
+
+  <circle cx="204" cy="64" r="8" fill="#D90429"/>
 </svg>
