@@ -224,11 +224,37 @@ foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
 
 Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
 
-# 创建 .cursor/.lingxi 目录结构
-Write-Info "创建 .cursor/.lingxi 目录结构..."
-foreach ($dir in $Manifest.workflowDirectories) {
-  $winPath = $dir.Replace('/', '\')
-  New-Item -ItemType Directory -Force -Path $winPath | Out-Null
+# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
+Write-Info "初始化工作区骨架（.cursor/.lingxi/）..."
+$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+if ($nodeCmd) {
+  $bootstrapScript = ".cursor\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
+  & node $bootstrapScript
+  if ($LASTEXITCODE -ne 0) {
+    Write-Error "workspace-bootstrap 执行失败"
+    exit 1
+  }
+  Write-Success "已通过 workspace-bootstrap 创建目录与模板"
+} else {
+  Write-Info "未检测到 Node.js，从清单创建目录并从模板复制..."
+  foreach ($dir in $Manifest.workflowDirectories) {
+    $winPath = $dir.Replace('/', '\')
+    New-Item -ItemType Directory -Force -Path $winPath | Out-Null
+  }
+  $indexDefault = ".cursor\skills\workspace-bootstrap\references\INDEX.default.md"
+  if (Test-Path $indexDefault) {
+    $indexTarget = ".cursor\.lingxi\memory\INDEX.md"
+    $templateDefault = ".cursor\skills\workspace-bootstrap\references\memory-note-template.default.md"
+    $templateTarget = ".cursor\.lingxi\memory\references\memory-note-template.md"
+    New-Item -ItemType Directory -Force -Path (Split-Path $indexTarget) | Out-Null
+    New-Item -ItemType Directory -Force -Path (Split-Path $templateTarget) | Out-Null
+    Copy-Item -Path $indexDefault -Destination $indexTarget -Force
+    Copy-Item -Path $templateDefault -Destination $templateTarget -Force
+    Write-Success "已创建目录与模板（无 Node.js 模式）"
+  } else {
+    Write-Error "模板文件不存在，请确保 skills 已完整下载"
+    exit 1
+  }
 }
 
 # 为 share 目录创建 .gitkeep 文件
@@ -255,32 +281,6 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 # - 前后端/运维默认约定：Audience=team，Portability=cross-project
 # - 项目内特殊备忘：Audience=project，Portability=project-only（不放入 share）
 "@ | Out-File -FilePath "$ShareDir\.gitkeep" -Encoding UTF8 -NoNewline
-}
-
-# 下载 INDEX.md 文件
-Write-Info "下载索引文件..."
-foreach ($indexFile in $Manifest.workflowIndexFiles) {
-  $winPath = $indexFile.Replace('/', '\')
-  if (-not (Download-File $indexFile $winPath)) {
-    Write-Error "安装失败"
-    exit 1
-  }
-}
-Write-Success "已下载索引文件"
-
-# 下载模板文件
-Write-Info "下载模板文件..."
-$templateCount = 0
-foreach ($templateFile in $Manifest.workflowTemplateFiles) {
-  $winPath = $templateFile.Replace('/', '\')
-  if (-not (Download-File $templateFile $winPath)) {
-    Write-Error "安装失败"
-    exit 1
-  }
-  $templateCount++
-}
-if ($templateCount -gt 0) {
-  Write-Success "已下载模板文件 ($templateCount 个)"
 }
 
 # 更新 .gitignore
