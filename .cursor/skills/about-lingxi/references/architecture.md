@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离与 `references/core-values.md` 中的设计原则（含 AI Native：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障）。通过远程安装脚本将灵犀加入项目后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离与 `references/core-values.md` 中的设计原则（含 AI Native：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障）。目前推荐通过**远程安装脚本**将灵犀加入项目（见 README 安装章节）；安装后在任意工作区可用，项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建。
 
 ## 核心组件
 
@@ -46,7 +46,7 @@ Skills 承载详细的工作流指导，按职责分为：
   - **自动沉淀**：由 session 约定触发，主 Agent 每轮先 memory-retrieve、再按约定调用 taste-recognition skill，若产出 payload 则调用 lingxi-memory。  
   - **手动记忆**：用户通过 `/remember` 或 `/init` 主动发起，经 taste-recognition 转为 payload 后交由 lingxi-memory。  
   - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply），不产候选；完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话仅收一句结果。  
-- **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–3 最小注入（由 sessionStart hook 注入的约定触发）。
+- **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–2 最小注入（由 sessionStart hook 注入的约定触发）。
 
 #### 工具类 Skills（提供辅助能力）
 
