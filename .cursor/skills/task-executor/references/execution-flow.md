@@ -198,7 +198,7 @@
 
 ### 8. Requirement 文档生成
 
-根据汇总结果与选择的模板生成 req 文档。生成时**按需求类型**查阅 references 中的模板，不要求在 SKILL 内复述模板全文。
+根据汇总结果与选择的模板生成 task 文档。生成时**按需求类型**查阅 references 中的模板，不要求在 SKILL 内复述模板全文。
 
 - **全栈或复杂需求**：使用 [task-doc-template-full.md](task-doc-template-full.md)。
 - **简单功能**或**其他**：使用 [task-doc-template-simple.md](task-doc-template-simple.md)；主类型为「其他」时按需选章节。
@@ -247,10 +247,10 @@
 ## 注意事项
 
 1. **记忆写入**：记忆写入通过**显式调用** lingxi-memory 子代理处理（`/lingxi-memory` 或自然语言提及），本 Skill 不包含捕获与写入逻辑
-2. **无冻结状态**：不引入「需求冻结」或 Approved/Locked 等硬门禁；是否进入 plan/build 由用户决定，不在 req 文档或流程中做硬阻断
+2. **无冻结状态**：不引入「需求冻结」或 Approved/Locked 等硬门禁；是否进入 plan/build 由用户决定，不在 task 文档或流程中做硬阻断
 3. **输出与静默**：遵循 workflow-output-principles；简单需求可静默跳过部分步骤，复杂需求必须执行所有步骤
 4. **Fail Fast**：信息汇总时若必要信息缺失必须询问，不猜测；各前置步骤发现缺失时应立即提问
-5. **文档质量**：生成的 req 文档应该结构清晰、内容完整，每条 F 具备验证方式、验收标准、证据形式、边界/异常，符合需求分析的设计目标
+5. **文档质量**：生成的 task 文档应该结构清晰、内容完整，每条 F 具备验证方式、验收标准、证据形式、边界/异常，符合需求分析的设计目标
 
 ---
 

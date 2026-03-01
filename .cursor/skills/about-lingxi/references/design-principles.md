@@ -102,7 +102,7 @@
 
 **应用**：
 
-- Skills 负责特定领域的任务（req、plan、build、review 等）
+- Skills 负责特定领域的任务（task、plan、build、review 等）
 - 记忆系统负责质量资产（团队级标准/经验和项目级经验）
 - Hooks 负责自动化流程
 - Subagents 负责独立任务

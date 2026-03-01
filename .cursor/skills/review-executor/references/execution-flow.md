@@ -4,7 +4,7 @@
 
 ## 定位
 
-Review 为**独立验收审计**：基于 req 验收标准复核实现与证据，按 F1,F2,... 给出 Pass/Fail 与证据引用。不在 review 阶段新增需求或改范围；缺口与问题回退至 build 修复。
+Review 为**独立验收审计**：基于 task 验收标准复核实现与证据，按 F1,F2,... 给出 Pass/Fail 与证据引用。不在 review 阶段新增需求或改范围；缺口与问题回退至 build 修复。
 
 ## Instructions
 
@@ -17,15 +17,15 @@ Review 为**独立验收审计**：基于 req 验收标准复核实现与证据�
 可验证目标前置（推荐）：审查前执行或说明测试/类型检查/lint 状态。
 
 - **文档一致性**：始终启用，显式调用 `reviewer-doc-consistency`。
-- **安全**：语义分析 req（功能需求、API 规范、技术方案）与变更代码（SQL、用户输入、权限、文件操作等）；有安全相关特征则启用 `reviewer-security`，否则跳过。依赖 LLM 语义理解，不关键词匹配。
-- **性能**：语义分析 req（批量/实时/高并发、成功标准中的性能指标、缓存/异步）与变更代码；有性能敏感特征则启用 `reviewer-performance`，否则跳过。
-- **E2E**：语义分析 req（前端交互、关键流程、多页面）与变更代码（UI、路由、表单等）；有 E2E 特征则启用 `reviewer-e2e`，否则跳过。
+- **安全**：语义分析 task（功能需求、API 规范、技术方案）与变更代码（SQL、用户输入、权限、文件操作等）；有安全相关特征则启用 `reviewer-security`，否则跳过。依赖 LLM 语义理解，不关键词匹配。
+- **性能**：语义分析 task（批量/实时/高并发、成功标准中的性能指标、缓存/异步）与变更代码；有性能敏感特征则启用 `reviewer-performance`，否则跳过。
+- **E2E**：语义分析 task（前端交互、关键流程、多页面）与变更代码（UI、路由、表单等）；有 E2E 特征则启用 `reviewer-e2e`，否则跳过。
 
 记录启用决策汇总（文档一致性✅，安全/性能/E2E ✅或❌）。
 
 ### 3. 测试用例文档审查
 
-若存在 testcase：读取并基于 req 审查；覆盖审计规则与 testcase-designer 一致（F→TC 映射与验证方式）；不完整则补充或修改。
+若存在 testcase：读取并基于 task 审查；覆盖审计规则与 testcase-designer 一致（F→TC 映射与验证方式）；不完整则补充或修改。
 
 ### 4. 测试脚本质量检查（执行测试前）
 
@@ -33,11 +33,11 @@ Review 为**独立验收审计**：基于 req 验收标准复核实现与证据�
 
 ### 5. 测试执行
 
-执行单元/集成测试（yarn test / npm test）；记录通过/失败/跳过。无法执行时降级：输出手动测试清单（基于 testcase 或 req）。
+执行单元/集成测试（yarn test / npm test）；记录通过/失败/跳过。无法执行时降级：输出手动测试清单（基于 testcase 或 task）。
 
 ### 5.5 按需求编号输出审计结果（必须执行）
 
-在写入 review 文档前，对 req 中每个 F 独立复核：按该 F 的验收标准与验证方式判定 Pass/Fail；填写证据引用（测试日志、Browser 记录、手工记录、评审打分等）。结果写入 review 报告的「按需求编号的验收结果」表。不新增需求、不修改范围或验收标准；缺口列入分级 TODO，回退 build 修复。
+在写入 review 文档前，对 task 中每个 F 独立复核：按该 F 的验收标准与验证方式判定 Pass/Fail；填写证据引用（测试日志、Browser 记录、手工记录、评审打分等）。结果写入 review 报告的「按需求编号的验收结果」表。不新增需求、不修改范围或验收标准；缺口列入分级 TODO，回退 build 修复。
 
 ### 6. 依次执行核心维度（必须执行）
 
@@ -45,7 +45,7 @@ Review 为**独立验收审计**：基于 req 验收标准复核实现与证据�
 
 ### 7. 并行执行可选维度（显式调用 reviewer skills）
 
-按步骤 2 启用决策：显式调用 reviewer-doc-consistency（始终）、reviewer-security、reviewer-performance、reviewer-e2e（按需）；传入 req、变更文件列表等；等待完成并汇总为统一分级格式。某 skill 失败时记录降级原因，可回退主流程依次执行该维度。
+按步骤 2 启用决策：显式调用 reviewer-doc-consistency（始终）、reviewer-security、reviewer-performance、reviewer-e2e（按需）；传入 task、变更文件列表等；等待完成并汇总为统一分级格式。某 skill 失败时记录降级原因，可回退主流程依次执行该维度。
 
 ### 8. Review 文档写入
 

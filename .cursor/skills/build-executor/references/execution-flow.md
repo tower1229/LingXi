@@ -5,7 +5,7 @@
 ## 1. 模式检测（自动）
 
 - **taskId**：指定则用该编号；省略则取 `.cursor/.lingxi/tasks/` 下 `*.task.*.md` 最大编号。
-- **检测 plan**：查找 `<taskId>.plan.*.md`。存在 → Plan-driven；不存在 → Req-driven。
+- **检测 plan**：查找 `<taskId>.plan.*.md`。存在 → Plan-driven；不存在 → Task-driven。
 
 ## 2. 执行逻辑（统一流程）
 
@@ -13,12 +13,12 @@
 
 - 必读：`<taskId>.task.<标题>.md`
 - Plan-driven：另读 plan、testcase。
-- Req-driven：若有 testcase 则读；若无则调用 testcase-designer 生成并写入后再继续。
+- Task-driven：若有 testcase 则读；若无则调用 testcase-designer 生成并写入后再继续。
 
 ### 2.2 任务与单元顺序、测试框架
 
 - Plan-driven：任务与顺序来自 plan；测试框架沿用 plan 阶段结果。
-- Req-driven：Agent 基于 req 拆解子任务（≥3 或明显依赖时用结构化任务列表并标注依赖）；检测测试框架，无则可选安装 vitest（同 plan 阶段）。
+- Task-driven：Agent 基于 task 拆解子任务（≥3 或明显依赖时用结构化任务列表并标注依赖）；检测测试框架，无则可选安装 vitest（同 plan 阶段）。
 
 ### 2.3 先测再实现（TDD）
 
@@ -30,7 +30,7 @@
 
 ### 2.5 文档同步
 
-Plan-driven：按 plan 文档同步清单更新相关文档。Req-driven：Agent 识别受影响文档（docs/、design/、architecture/ 等）并更新。
+Plan-driven：按 plan 文档同步清单更新相关文档。Task-driven：Agent 识别受影响文档（docs/、design/、architecture/ 等）并更新。
 
 ### 2.6 快速 E2E 冒烟（可选）
 
@@ -38,11 +38,11 @@ Plan-driven：按 plan 文档同步清单更新相关文档。Req-driven：Agent
 
 ## 3. 降级方案
 
-测试框架无法执行 → 输出手动测试清单（基于 testcase 或 req）。文档同步无法执行 → 输出文档更新清单。
+测试框架无法执行 → 输出手动测试清单（基于 testcase 或 task）。文档同步无法执行 → 输出文档更新清单。
 
 ## 4. 模式选择建议
 
-复杂任务/需明确测试策略/需文档同步计划/生产功能 → Plan-driven。简单任务/快速原型 → Req-driven。
+复杂任务/需明确测试策略/需文档同步计划/生产功能 → Plan-driven。简单任务/快速原型 → Task-driven。
 
 ## 5. 执行质量保证
 
@@ -64,8 +64,8 @@ Plan-driven：按 plan 文档同步清单更新相关文档。Req-driven：Agent
 
 ## 使用场景
 
-- **Plan-driven**：`/build 001`（存在 plan）→ 读 req+plan+testcase → 按 plan 任务与顺序 → TDD 循环 → 文档同步（plan 清单）→ E2E 冒烟可选。
-- **Req-driven**：`/build 001`（无 plan）→ 读 req → Agent 拆解任务 + 测试框架检测 → TDD 循环 → 文档同步（Agent 识别）→ E2E 冒烟可选。
+- **Plan-driven**：`/build 001`（存在 plan）→ 读 task+plan+testcase → 按 plan 任务与顺序 → TDD 循环 → 文档同步（plan 清单）→ E2E 冒烟可选。
+- **Task-driven**：`/build 001`（无 plan）→ 读 task → Agent 拆解任务 + 测试框架检测 → TDD 循环 → 文档同步（Agent 识别）→ E2E 冒烟可选。
 
 ---
 

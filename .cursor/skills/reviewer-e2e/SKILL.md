@@ -5,14 +5,14 @@ description: 端到端测试审查专家，使用 Cursor Agent Browser 工具验
 
 # Reviewer E2E
 
-由 review-executor 显式调用，可访问其上下文（req、testcase、应用启动配置等）。使用 Cursor Agent Browser（@browser + 自然语言）验证完整用户流程。
+由 review-executor 显式调用，可访问其上下文（task、testcase、应用启动配置等）。使用 Cursor Agent Browser（@browser + 自然语言）验证完整用户流程。
 
 ## Instructions
 
 ### 1. 读取输入
 
 从 review-executor 的上下文中获取：
-- req 文档路径（了解需要验证的用户流程）
+- task 文档路径（了解需要验证的用户流程）
 - testcase 文档路径（获取 E2E 测试用例，如存在）
 - 应用启动配置（端口、启动命令等）
 

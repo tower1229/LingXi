@@ -25,7 +25,7 @@
 
 ## 与环节品味嗅探的关系
 
-各环节（req/plan/build/review 等）在情境驱动时可能通过 ask-questions 向用户提问；该路径下先将返回的 option id 映射为原则与实际选择，再产出 payload（source=choice），仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件。
+各环节（task/plan/build/review 等）在情境驱动时可能通过 ask-questions 向用户提问；该路径下先将返回的 option id 映射为原则与实际选择，再产出 payload（source=choice），仍由本 Skill 的 payload 规范统一，经主 Agent 交 lingxi-memory 写入。环节嗅探规则见各环节 references 中的品味嗅探规则文件。
 
 ## 引用与映射
 

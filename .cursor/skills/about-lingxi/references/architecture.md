@@ -15,7 +15,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/task`       | 创建任务文档（自动生成任务编号和标题）                                         | `task-executor`                                                                                   |
 | `/vet`        | 审查 task 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `vet-executor`                                                                            |
 | `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                                                  |
-| `/build`      | 执行构建（可选，Plan-driven / Req-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                                                 |
+| `/build`      | 执行构建（可选，Plan-driven / Task-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                                                 |
 | `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                                                                |
 | `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                                                    |
 | `/init`       | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆）   | `workspace-bootstrap`（Step 0）；init command（0.5–8）；写入时委派 **lingxi-memory**（Subagent） |
@@ -126,7 +126,7 @@ Skills 承载详细的工作流指导，按职责分为：
 1. `/task <描述>`：创建任务文档（自动生成任务编号和标题，产出：`001.task.<标题>.md`）
 2. `/vet 001`（可选）：审查 task 文档（可多次执行，不产出文件，仅输出审查结果和建议到对话中）
 3. `/plan 001`（可选）：任务规划（基于 task 文档生成任务规划文档和测试用例文档，适用于复杂任务，简单任务可跳过）
-4. `/build 001`（可选）：执行构建（支持两种模式：Plan-driven 有 plan 文档时按计划结构化执行，Req-driven 无 plan 文档时 Agent 基于 task 自行决策执行）
+4. `/build 001`（可选）：执行构建（支持两种模式：Plan-driven 有 plan 文档时按计划结构化执行，Task-driven 无 plan 文档时 Agent 基于 task 自行决策执行）
 5. `/review 001`：审查交付（自动进行多维度审查，生成审查报告，包含核心审查和按需审查）
 
 **特性**：
