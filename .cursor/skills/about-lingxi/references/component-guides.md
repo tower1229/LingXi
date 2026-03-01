@@ -92,7 +92,6 @@
 - 需要明确的 description 以便 Agent 匹配
 - 不应过长（保持精炼）
 - 与主 Agent 共享上下文窗口
-- 需要 Nightly 版本支持
 
 ### 在灵犀中的应用
 
