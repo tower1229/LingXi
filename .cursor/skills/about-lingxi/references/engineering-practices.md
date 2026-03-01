@@ -38,7 +38,7 @@
 
 **在 workflow 中的应用**：
 
-- Skills 负责特定领域的任务（req、plan、build、review 等）
+- Skills 负责特定领域的任务（task、plan、build、review 等）
 - 记忆系统负责质量资产（团队级标准/经验和项目级经验）
 - Hooks 负责自动化流程
 - Subagents 负责独立任务
@@ -294,7 +294,7 @@
 
 **在 workflow 中的应用**：
 
-- 文件命名约定（001.req.<标题>.md、001.plan.<标题>.md）
+- 文件命名约定（001.task.<标题>.md、001.plan.<标题>.md）
 - 目录结构约定（.cursor/.lingxi/tasks/、.cursor/skills/）
 - 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
 
@@ -310,7 +310,7 @@
 
 **在 workflow 中的应用**：
 
-- 基础工作流（req → plan → work → review）
+- 基础工作流（task → plan → work → review）
 - 逐步增加能力（audit、archive、experience）
 - 保持向后兼容
 
@@ -387,5 +387,5 @@
 ## 参考
 
 - **项目设计原则**：`docs/01-concepts/key-principles.md`
-- **核心价值指引**：`references/workflow-vision.md`
+- **核心价值指引**：`references/core-values.md`
 - **技术能力边界**：各组件指南（Commands、Rules、Skills、Hooks、Subagents）

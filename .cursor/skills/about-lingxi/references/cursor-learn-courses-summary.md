@@ -20,7 +20,7 @@
 - **原因**：基于模式预测下一 token，在「不知道」时仍可能生成「最像」的内容；受 knowledge cutoff 限制。
 - **应对**：对模型建议保持怀疑、独立验证；用编辑器/环境即时反馈（如错误 import）并反馈给模型。
 
-**灵犀参考**：记忆沉淀、req/plan 等产出需可验证、可修正；门控与半静默（高可靠性静默、低可靠性显性确认）是在「信任」与「纠错」之间的权衡。
+**灵犀参考**：记忆沉淀、task/plan 等产出需可验证、可修正；门控与半静默（高可靠性静默、低可靠性显性确认）是在「信任」与「纠错」之间的权衡。
 
 ### 1.3 Token 与定价
 
@@ -52,7 +52,7 @@
 - **优势**：任务管理者而非执行者；可多 Agent 并行处理不同部分。
 - **局限**：目标清晰、模式成熟的任务表现好；复杂调试、像素级还原、新库等易遇困难；易遗忘、易陷入循环；token 消耗大，需监督与验证。
 
-**灵犀参考**：灵犀的 Commands（/req、/plan、/build、/review 等）本质是「带 harness 的 Agent 流程」；子代理（lingxi-memory、explore）承担专门任务并返回精简结果，以保护主对话上下文与成本。**选型**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
+**灵犀参考**：灵犀的 Commands（/task、/plan、/build、/review 等）本质是「带 harness 的 Agent 流程」；子代理（lingxi-memory、explore）承担专门任务并返回精简结果，以保护主对话上下文与成本。**选型**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
 
 ---
 
@@ -69,7 +69,7 @@
 - **避免模糊**：如「加一个用户设置页」缺少布局、组件、存储等约束。
 - **推荐**：引用现有文件与模式、明确范围与验收点（如「用 xxx 的 Form，遵循 xxx 的 API 模式」）。
 
-**灵犀参考**：req/plan 产出的任务文档即「结构化 prompt + 范围」，供 build/review 使用；Skill 的 description 与步骤相当于「可复用的指令集」。
+**灵犀参考**：task/plan 产出的任务文档即「结构化 prompt + 范围」，供 build/review 使用；Skill 的 description 与步骤相当于「可复用的指令集」。
 
 ### 2.3 管理上下文
 
@@ -132,7 +132,7 @@
 - **可验证目标**：Tests、Type checking、Linting 越完善，越可放心委派。
 - **Cloud agents**：远程沙盒、分支、PR、通知，适合修 bug、补测试、更文档等「可搁置」任务。
 
-**灵犀参考**：review-executor 与 review-req 对应「代码/需求审查」；文档一致性、E2E、性能、安全等 reviewer 是不同维度的可验证目标。
+**灵犀参考**：文档一致性、E2E、性能、安全等 reviewer 是不同维度的可验证目标。
 
 ---
 
@@ -144,7 +144,7 @@
 - **MCP**：连接 Slack、Datadog、Sentry、数据库、Figma 等；Agent 也可用 gh、aws、kubectl 等 CLI。
 - **避免**：规则过多、过度设计；偶尔需要的放 Skill 而非 Rule。
 
-**灵犀参考**：灵犀以 Skills 为主（req/plan/build/review、memory-retrieve、about-lingxi 等），Rules 作补充；about-lingxi 的「按需加载 references」与「渐进式披露」与 Cursor 的 Rules/Skills 取舍一致。
+**灵犀参考**：灵犀以 Skills 为主（task/plan/build/review、memory-retrieve、about-lingxi 等），Rules 作补充；about-lingxi 的「按需加载 references」与「渐进式披露」与 Cursor 的 Rules/Skills 取舍一致。
 
 ---
 
@@ -152,7 +152,7 @@
 
 课程示例：为结账加折扣码——**先探索流程与定价** → **Plan Mode 出方案与任务** → **Build** → **测试失败时用调试模式找根因** → **推送前自我审查 / Agent Review** → **把学到的定价规则写成 Rule 沉淀**。
 
-**灵犀对应**：req（需求与范围）→ plan（方案与任务）→ build（实现与测试）→ review（审查与可验证目标）→ 记忆/规则（沉淀约定与模式）。
+**灵犀对应**：task（需求与范围）→ plan（方案与任务）→ build（实现与测试）→ review（审查与可验证目标）→ 记忆/规则（沉淀约定与模式）。
 
 ---
 
@@ -166,17 +166,17 @@
 
 ## 10. 灵犀开发与优化对照表
 
-| 课程要点           | 灵犀对应点 |
-| ------------------ | ---------- |
-| 概率性、不保证同输出 | 门控、审计、半静默（高可靠静默 / 低可靠确认） |
-| 幻觉、需验证       | 记忆/req/plan 可修正、可观测；用户保留最终判断 |
-| Token/上下文管理    | memory-retrieve 最小注入；子代理独立上下文；按需加载 references |
-| 工具在循环、Agent  | Commands + Skills 构成 harness；子代理专责、结果精简 |
-| 高效 prompt、范围  | req/plan 产出结构化任务与验收点；避免需求膨胀 |
-| 先理解再改、可验证 | 先探索再修改；测试/类型/lint/浏览器/E2E 等 reviewer |
-| Rules 常驻、Skills 按需 | 灵犀以 Skills + 引用式 references 为主，Rules 为辅 |
-| 规划 → 实现 → 验证 → 沉淀 | req → plan → build → review；记忆与规则沉淀 |
-| 子代理 token 成本、选型 | 子代理适合独立/多步/隔离任务；可一次性完成优先用 Skill，避免不必要子代理 |
+| 课程要点                  | 灵犀对应点                                                               |
+| ------------------------- | ------------------------------------------------------------------------ |
+| 概率性、不保证同输出      | 门控、审计、半静默（高可靠静默 / 低可靠确认）                            |
+| 幻觉、需验证              | 记忆/task/plan 可修正、可观测；用户保留最终判断                          |
+| Token/上下文管理          | memory-retrieve 最小注入；子代理独立上下文；按需加载 references          |
+| 工具在循环、Agent         | Commands + Skills 构成 harness；子代理专责、结果精简                     |
+| 高效 prompt、范围         | task/plan 产出结构化任务与验收点；避免需求膨胀                            |
+| 先理解再改、可验证        | 先探索再修改；测试/类型/lint/浏览器/E2E 等 reviewer                      |
+| Rules 常驻、Skills 按需   | 灵犀以 Skills + 引用式 references 为主，Rules 为辅                       |
+| 规划 → 实现 → 验证 → 沉淀 | task → plan → build → review；记忆与规则沉淀                              |
+| 子代理 token 成本、选型   | 子代理适合独立/多步/隔离任务；可一次性完成优先用 Skill，避免不必要子代理 |
 
 ---
 

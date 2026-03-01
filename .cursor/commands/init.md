@@ -4,49 +4,22 @@ description: 引导式初始化灵犀工作流（创建 .cursor/.lingxi/ 骨架�
 args: []
 ---
 
-# /init - 项目初始化命令
+# /init - 项目初始化
 
-## 命令用途
-
-初始化 workflow 到项目，建立项目上下文（技术栈、目录结构、关键模块、业务链路与约束）；文档齐全时优先从现有内容整理，仅对缺失项提问。生成一份"记忆候选清单"（默认不写入，需用户门控）。
+**用途**：初始化灵犀工作流到项目（创建 `.cursor/.lingxi/` 骨架），建立项目上下文并生成记忆候选清单；默认不写入，需用户在交互中选择写入。
 
 ---
 
-## 使用方式
+**用法**：`/init`（无参数）。优先从现有文档整理，仅对缺失或不确定项通过 ask-questions 收集；所有选择环节均用 ask-questions 协议。写入经 taste-recognition、lingxi-memory 完成。
 
-```
-/init
-```
 
-命令无需参数。当项目已有较完整文档（如 README、架构说明、任务文档）时，agent 会**优先从现有内容中整理**项目目标、用户、关键流程、风险与发布方式，仅对无法推断或不确定的部分通过 **ask-questions 交互**（`/ask-questions` skill）向你收集选择或补充；你可直接点选或修正后进入候选清单与写入门控。新项目或文档较少时仍通过对话式引导收集，所有“选哪一项/选哪些项”的环节均使用 ask-questions 协议。
+**关键约定**：写入门控不可侵犯（仅当用户明确选择写入时才写盘）；用户选择均通过 ask-questions skill；执行遵循 workflow-output-principles（最小高信号）。
 
-## 执行逻辑
-
-1. **优先**：在项目根执行 `node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs`，确保 `.cursor/.lingxi/` 骨架存在。
-2. **随后**：按以下 Step 0.5–8 执行。
-
-执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；**所有需要用户选择的环节均通过 `/ask-questions` skill 发起**（`questions[]`，`question_id` 使用语义化 id，`options[{id,label}]` 的 `id` 使用 `a/b/c/d...`）；写入时使用 `taste-recognition` skill 与 `lingxi-memory` 子代理。
+**委托**：先执行 workspace-bootstrap 确保骨架存在，再按 Step 0.5–8 执行；完整步骤与 init-checklists 见下方附录。
 
 ---
 
-## 写入门控（关键规则）
-
-> - 本命令会生成"记忆候选清单"，**默认不写入磁盘**。
-> - 只有当你在交互步骤中明确选择写入时，才会写入 `.cursor/.lingxi/memory/notes/` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
-> - 写入通过**显式调用** lingxi-memory 子代理完成，主对话不展示写入过程。
-
----
-
-## 输出与交互原则（必须）
-
-- 执行时遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；只输出供用户决策/校对的内容（最小高信号）。
-- **所有需要用户选择的环节**（是否继续、补充哪些项、写入策略、勾选候选）**均通过 `/ask-questions` skill 发起**，使用 ask-questions 工具的 `question_id + option id` 协议，不采用自然语言菜单或手输编号。
-- **写入门控不可侵犯**：除非用户在写入策略步骤明确选择写入，否则只展示候选清单，不写入磁盘。
-- **AI Native**：类型与 common 信息均优先从工作区推断或抽取；仅对无法推断/抽取或不确定的项通过 ask-questions 多选 + 逐项补充收集，避免硬编码关键词/复杂 if-else。
-
----
-
-## 执行流程（Step 0.5–8）
+## 附录：完整执行流程与 init-checklists
 
 ### Step 0.5) Agent 静默推断项目类型（不展示、不确认、不修正）
 
@@ -264,19 +237,19 @@ args: []
 ### Must
 
 - **common.goal**：一句话说明"这个项目解决什么问题"，并列出 1-3 条**非目标**（明确不做什么）。
-  - **可抽取来源建议**：README（Why/What）、价值或原则类文档、req 的「目标与非目标」。
+  - **可抽取来源建议**：README（Why/What）、价值或原则类文档、task 的「目标与非目标」。
   - **Draft targets**：`MEM-project-goals-and-nongoals` (business)
 - **common.users**：核心用户/角色是谁？每个角色最关键的 1 个诉求是什么？
   - **可抽取来源建议**：README 受众、架构/角色描述、命令或功能说明的受众。
   - **Draft targets**：`MEM-domain-glossary-and-core-entities` (business)
 - **common.flows**：写出 1-3 条"关键链路"（按步骤），并注明每条链路的失败兜底。
-  - **可抽取来源建议**：README 流程/命令表、架构文档、req/plan 中的关键步骤与兜底。
+  - **可抽取来源建议**：README 流程/命令表、架构文档、task/plan 中的关键步骤与兜底。
   - **Draft targets**：`MEM-critical-user-flows` (business)
 - **common.risks**：风险优先级排序（安全/稳定性/成本/性能/合规），并说明"最不可接受的失败"。
-  - **可抽取来源建议**：设计原则、评价准则、req 中的风险与约束。
+  - **可抽取来源建议**：设计原则、评价准则、task 中的风险与约束。
   - **Draft targets**：`MEM-project-goals-and-nongoals` (business)
 - **common.releaseEnv**：有哪些环境（dev/staging/prod）？发布方式与回滚方式是什么？
-  - **可抽取来源建议**：README 安装/发布、架构中的部署与分发、req 中的环境与回滚。
+  - **可抽取来源建议**：README 安装/发布、架构中的部署与分发、task 中的环境与回滚。
   - **Draft targets**：`MEM-release-and-environment-contract` (tech)
 
 ### Should

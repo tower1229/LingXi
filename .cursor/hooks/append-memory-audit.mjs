@@ -2,7 +2,7 @@
 /**
  * 记忆审计追加脚本：从命令行参数或 stdin JSON 读 event、note_id、operation、source、file、conversation_id、generation_id，
  * 写一条 NDJSON 到与主审计同一的 audit.log。供 lingxi-memory 子代理在写 note/INDEX 后调用。
- * 参考：001.req.灵犀审计系统.md §8.2 记忆审计。
+ * 参考：001.task.灵犀审计系统.md §8.2 记忆审计。
  */
 import fs from "node:fs";
 import path from "node:path";

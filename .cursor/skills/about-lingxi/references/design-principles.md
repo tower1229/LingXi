@@ -8,6 +8,8 @@
 
 ### 1. AI Native - 尊重能力，同时保持可控
 
+与 `references/core-values.md` 中 AI Native 一致：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障。以下为实现与设计原则展开。
+
 **核心思想**：AI Native 不是"把所有事情都交给模型"，也不是"用规则替代模型"。应把 AI 用在高语义、高歧义、需要权衡的环节，把确定性机制用在可标准化、可验证、可审计的环节。
 
 **实现方式**：
@@ -100,7 +102,7 @@
 
 **应用**：
 
-- Skills 负责特定领域的任务（req、plan、build、review 等）
+- Skills 负责特定领域的任务（task、plan、build、review 等）
 - 记忆系统负责质量资产（团队级标准/经验和项目级经验）
 - Hooks 负责自动化流程
 - Subagents 负责独立任务
@@ -111,7 +113,7 @@
 
 **应用**：
 
-- 文件命名约定（`001.req.<标题>.md`、`001.plan.<标题>.md`）
+- 文件命名约定（`001.task.<标题>.md`、`001.plan.<标题>.md`）
 - 目录结构约定（`.cursor/.lingxi/tasks/`、`.cursor/skills/`）
 - 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
 
