@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含用户触发的写入入口（/remember、/init、/refine-memory）与 lingxi-memory 的写入执行。
+**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含**主动记忆捕获**（/remember、/refine-memory）与 lingxi-memory 的写入执行；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -14,7 +14,7 @@
 
 ## 每轮参与
 
-检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 Command（/remember、/init、/refine-memory）在需要时触发，新输入与后续轮次自然带来纠错与更新机会。
+检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 Command 在需要时触发：**主动记忆捕获**为 /remember、/refine-memory；/init 在初始化时可将确认草稿可选写入，属初始化额外产物。新输入与后续轮次自然带来纠错与更新机会。
 
 **「何时写入、何时纠错」由「每轮触发检索 + 按需写入」的机制覆盖，无需额外“记忆可错/纠错”规则。**
 
@@ -22,7 +22,7 @@
 
 ### 1) 触发方式
 
-由用户通过 **/remember**、**/init** 或 **/refine-memory** 等 Command 触发；主 Agent 在用户执行上述命令时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。
+由用户通过 **/remember** 或 **/refine-memory** 主动触发记忆捕获；主 Agent 在用户执行上述命令时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
@@ -36,7 +36,7 @@
 
 ## 记忆提取（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；沉淀由用户通过 /remember、/init、/refine-memory 触发。
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember、/refine-memory 触发；/init 在初始化时可选写入，为初始化额外产物。
 
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
 - 执行 Skill：`memory-retrieve`
@@ -111,6 +111,6 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 ## 参考
 
-- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；用户通过 /remember、/init、/refine-memory 触发，经 taste-recognition 产出 payload 后以 **payloads 数组**调用 lingxi-memory。
+- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；**主动记忆捕获**由用户通过 /remember、/refine-memory 触发；/init 在初始化时可将确认草稿可选写入，为初始化额外产物。经 taste-recognition 产出 payload 后以 **payloads 数组**调用 lingxi-memory。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定
