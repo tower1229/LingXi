@@ -18,7 +18,7 @@ Persistent memory so the AI works the way you do.
 
 ### 2) AI Native
 
-Balance capability release with engineering control.
+Respect AI capability and leave room for evolution.
 
 ### 3) To Your Liking
 

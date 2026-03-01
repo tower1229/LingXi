@@ -5,13 +5,9 @@ description: 端到端测试审查专家，使用 Cursor Agent Browser 工具验
 
 # Reviewer E2E
 
-## 本 Skill 会用到的能力
-
-本审查会使用 Cursor Agent Browser 工具验证完整用户流程（导航、点击、输入、验证点等）。
+由 review-executor 显式调用，可访问其上下文（req、testcase、应用启动配置等）。使用 Cursor Agent Browser（@browser + 自然语言）验证完整用户流程。
 
 ## Instructions
-
-此 Skill 由 `review-executor` 显式调用，负责执行 E2E 测试审查。可以访问 review-executor 的上下文，包括 req 文档、testcase 文档等。
 
 ### 1. 读取输入
 
@@ -144,11 +140,4 @@ e. **验证结果**：
 
 ### 7. 输出与静默
 
-遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。
-
-**测试执行风格说明**：
-- 优先使用官方风格的 `@browser` + 自然语言描述
-- 让 Agent 自动解析和执行测试步骤
-- 不显式调用底层工具方法（如 `click()`, `type()`）
-- 利用 Agent 的智能理解能力，而非硬编码测试脚本
-- 充分利用截图和控制台监控功能，以便识别问题
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。优先使用 `@browser` + 自然语言描述，让 Agent 解析执行；不显式调用底层工具方法；利用截图与控制台监控识别问题。

@@ -387,5 +387,5 @@
 ## 参考
 
 - **项目设计原则**：`docs/01-concepts/key-principles.md`
-- **核心价值指引**：`references/workflow-vision.md`
+- **核心价值指引**：`references/core-values.md`
 - **技术能力边界**：各组件指南（Commands、Rules、Skills、Hooks、Subagents）

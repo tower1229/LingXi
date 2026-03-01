@@ -5,15 +5,9 @@ description: 文档一致性审查专家，检查代码与文档是否一致。�
 
 # Reviewer Doc Consistency
 
-## 本 Skill 会用到的能力
-
-读 req/plan/testcase 与变更代码；语义搜索与逐文件对比，检查代码与文档是否一致。
+由 review-executor 显式调用，可访问其上下文（req、变更代码列表、plan/testcase 等）。能力：读 req/plan/testcase 与变更代码；语义搜索与逐文件对比。
 
 ## Instructions
-
-此 Skill 由 `review-executor` 显式调用，负责执行文档一致性审查。可以访问 review-executor 的上下文，包括 req 文档、变更代码文件列表、plan/testcase 文档等。
-
-### 1. 读取输入
 
 从 review-executor 的上下文中获取：
 - req 文档路径

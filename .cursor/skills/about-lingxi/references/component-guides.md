@@ -214,7 +214,7 @@
 
 ## 选择决策矩阵
 
-> 说明：本节提供基于 Cursor 官方定义的能力边界。若要评估"在灵犀项目中该如何取舍"（成本、稳定性、门控、降级等），请结合 `references/evaluation-criteria.md` 中的"灵犀实践判据（项目版）"。
+> 说明：本节提供基于 Cursor 官方定义的能力边界。若要评估"在灵犀项目中该如何取舍"（成本、稳定性、门控、降级等），请结合 `references/evaluation-criteria.md` 中的灵犀实践判据；价值对齐见 `references/core-values.md`。
 
 ### 需求类型 → 推荐组件
 

@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离和 AI Native 设计原则。通过远程安装脚本将灵犀加入项目后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离与 `references/core-values.md` 中的设计原则（含 AI Native：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障）。通过远程安装脚本将灵犀加入项目后，在任意工作区可用；项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建，无需单独安装脚本。
 
 ## 核心组件
 
