@@ -58,7 +58,7 @@
 - `/build`：代码实现
 - `/review`：审查交付
 - `/remember`：记忆写入
-- `/refine-memory`：对当前会话或指定时间范围的会话做可沉淀内容提炼并写入记忆库
+- `/extract`：从当前会话或指定时间范围的会话中提取可沉淀内容并写入记忆库
 - `/init`：项目初始化（init command 承载主逻辑，Step 0 委托 `workspace-bootstrap`；init-checklists 作为 command 附录）
 
 ## Skills 指南
@@ -105,7 +105,7 @@
 
 **记忆系统**（记忆沉淀由用户触发 + 记忆写入 + 记忆提取）：
 
-- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember`、`/refine-memory` 触发；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→映射→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
+- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember`、`/extract` 触发；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→映射→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
 - **记忆提取**：`memory-retrieve`（Skill）——每轮回答前检索并最小注入（由 sessionStart hook 注入的约定触发）。
 
 **Hooks（记忆注入约定）**：
@@ -166,8 +166,8 @@
 
 ### 在灵犀中的应用
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时**仅**注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）及 conversation_id 传入约定；**不注入**记忆沉淀约定。**主动记忆捕获**由用户通过 /remember、/refine-memory 触发；/init 在初始化时可选写入，为初始化额外产物；其他审计/门控为可选。
-- **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由用户通过 Command（/remember、/refine-memory）显式触发，不在每次 stop 时追加提示
+- **sessionStart**（`session-init.mjs`）：在会话开始时**仅**注入记忆检索约定（每轮先执行 `/memory-retrieve <当前用户消息>`）及 conversation_id 传入约定；**不注入**记忆沉淀约定。**主动记忆捕获**由用户通过 /remember、/extract 触发；/init 在初始化时可选写入，为初始化额外产物；其他审计/门控为可选。
+- **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由用户通过 Command（/remember、/extract）显式触发，不在每次 stop 时追加提示
 
 ## Subagents 指南
 
@@ -209,7 +209,7 @@
 ### 在灵犀中的应用
 
 - **选型与成本**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
-- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（7 字段品味：scene, principles, choice, evidence, source, confidence, apply）。**主动记忆捕获**由用户通过 `/remember` 或 `/refine-memory` 触发；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory。子代理在独立上下文中完成校验→映射→治理→门控与**直接文件写入**（notes + INDEX），主对话收简报。
+- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（7 字段品味：scene, principles, choice, evidence, source, confidence, apply）。**主动记忆捕获**由用户通过 `/remember` 或 `/extract` 触发；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory。子代理在独立上下文中完成校验→映射→治理→门控与**直接文件写入**（notes + INDEX），主对话收简报。
 - 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
 
 ## 选择决策矩阵

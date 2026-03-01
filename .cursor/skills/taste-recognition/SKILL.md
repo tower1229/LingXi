@@ -7,7 +7,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 意图
 
-从用户自由输入、/remember 指定内容、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则产出**唯一合法**的 7 字段 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀时静默。本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
+从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则产出**唯一合法**的 7 字段 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀时静默。本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
 
 **品味**（可操作定义）：在给定场景下，在一组可能适用甚至冲突的原则中，用户实际采用的选择与权衡（含显式或可推断的理由）。识别目标：抽出「场景 + 原则候选 + 实际选择」→ 可写入记忆的 payload。
 
@@ -21,7 +21,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 | `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达在哪些候选中做了选择。 |
 | `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述。 |
 | `evidence` | string | 否 | 一句用户原文或引用；无则省略。 |
-| `source` | enum | 是 | `auto` \| `remember` \| `choice` \| `init`，写入路径，供审计与分流。 |
+| `source` | enum | 是 | `auto` \| `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `personal` \| `project` \| `team`；缺省时下游可默认 project。 |
 

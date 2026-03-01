@@ -11,7 +11,7 @@ model: inherit
 ## 输入约定（父代理必须传入）
 
 - **payloads**（必填，数组）：一组或多组品味 payload，每项为**唯一合法**的 7 字段结构（scene, principles, choice, evidence, source, confidence, apply）。单条时父代理传入仅含一元素的数组。任一项必填缺失或类型/枚举非法时拒收并返回原因。
-  - 每项字段：`scene`（string，必填）、`principles`（string[]，必填）、`choice`（string，必填）、`evidence`（string，可选）、`source`（enum，必填：`auto` | `remember` | `choice` | `init`）、`confidence`（enum，必填：`low` | `medium` | `high`）、`apply`（enum，可选：`personal` | `project` | `team`，缺省按 project）。
+  - 每项字段：`scene`（string，必填）、`principles`（string[]，必填）、`choice`（string，必填）、`evidence`（string，可选）、`source`（enum，必填：`auto` | `remember` | `extract` | `choice` | `init`）、`confidence`（enum，必填：`low` | `medium` | `high`）、`apply`（enum，可选：`personal` | `project` | `team`，缺省按 project）。
 - **conversation_id**（按需）：当前会话 ID，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
 - **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
 
@@ -113,7 +113,7 @@ merge/replace 时必须通过 ask-questions 发起交互：
 node .cursor/hooks/append-memory-audit.mjs '<JSON>'
 ```
 
-JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_updated` | `memory_note_deleted` | `memory_index_updated`）、`ts`（由脚本自动生成）、`conversation_id`、`generation_id`（本次调用传入）、`note_id`、`operation`（如 create/update/delete）、`source`（来自 payload.source，如 auto/remember/init）、`file`（note 相对路径）。memory_index_updated 可不含 note_id，可选 `reason`。
+JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_updated` | `memory_note_deleted` | `memory_index_updated`）、`ts`（由脚本自动生成）、`conversation_id`、`generation_id`（本次调用传入）、`note_id`、`operation`（如 create/update/delete）、`source`（来自 payload.source，如 auto/remember/extract/init）、`file`（note 相对路径）。memory_index_updated 可不含 note_id，可选 `reason`。
 
 ## 写入实现（直接文件操作）
 
