@@ -1,6 +1,9 @@
 {
   "name": "lingxi-workflow",
   "private": true,
+  "author": "tower1229@gmail.com",
+  "version": "1.0.0",
+  "license": "MIT",
   "scripts": {
     "memory-sync": "node scripts/validate-memory-index.js --update",
     "memory-check": "node scripts/validate-memory-index.js --check",
@@ -9,4 +12,3 @@
     "quality-check": "yarn validate-plugin && yarn memory-check && yarn test"
   }
 }
-
