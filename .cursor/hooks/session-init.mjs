@@ -6,12 +6,11 @@
  */
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 
-const BASE_CONTEXT = `【记忆库提取/沉淀约定】每轮在回答前，如果存在用户自由输入时先执行记忆提取 skills \`/memory-retrieve <当前用户消息>\` 做记忆提取，
+const BASE_CONTEXT = `【记忆提取约定】每轮在回答前，如果存在用户自由输入（非仅command调用或skills调用）时，需执行记忆提取 skills \`/memory-retrieve <当前用户消息>\` 做记忆提取，
 若有依据记忆做判断时在回复中自然提及来源。
-再调用品味沉淀 skills \`/taste-recognition <当前用户消息>\` 做可沉淀偏好识别；
-若本轮仅执行 command 且无额外自然语言输入，则不得触发。
-若 taste-recognition 产出品味 payload，则用该 payload 显式调用 lingxi-memory 子代理，并传入 conversation_id（及可选 generation_id）。
-无可沉淀时 taste-recognition 静默，不调用 lingxi-memory。
+【记忆沉淀约定】每轮在回答前，如果存在用户自由输入时，需调用品味沉淀 skills \`/taste-recognition <当前用户消息>\` 做可沉淀偏好识别；
+若 taste-recognition skills 产出品味 payload，则用该 payload 调用 lingxi-memory 子代理，并传入 conversation_id（及可选 generation_id）。
+无可沉淀时 taste-recognition 静默，则不调用 lingxi-memory。
 `;
 
 async function main() {
