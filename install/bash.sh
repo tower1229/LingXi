@@ -106,7 +106,7 @@ convert_path_for_python() {
   fi
 }
 
-# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/req.md）
+# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/task.md）
 # 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
@@ -514,7 +514,7 @@ echo ""
 info "下一步："
 echo " 1. 在 Cursor 中打开项目"
 echo " 2. 运行 /init 初始化项目（推荐）"
-echo " 3. 运行 /req <需求描述> 创建第一个需求"
+echo " 3. 运行 /task <需求描述> 创建第一个任务"
 echo " 4. 查看 README.md 了解完整工作流"
 echo ""
 info "经验共享（可选，跨项目复用）："

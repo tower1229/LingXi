@@ -113,7 +113,7 @@
 
 **应用**：
 
-- 文件命名约定（`001.req.<标题>.md`、`001.plan.<标题>.md`）
+- 文件命名约定（`001.task.<标题>.md`、`001.plan.<标题>.md`）
 - 目录结构约定（`.cursor/.lingxi/tasks/`、`.cursor/skills/`）
 - 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
 

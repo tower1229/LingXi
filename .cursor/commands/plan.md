@@ -9,9 +9,9 @@ args:
 
 # /plan - 任务规划
 
-**用途**：基于 req 文档做任务规划与测试设计；可选环节，复杂任务建议在 build 前执行。
+**用途**：基于 task 文档做任务规划与测试设计；可选环节，复杂任务建议在 build 前执行。
 
-**用法**：`/plan [taskId]`。省略 taskId 时使用最新任务。依据 `.cursor/.lingxi/tasks/<taskId>.req.*.md`。
+**用法**：`/plan [taskId]`。省略 taskId 时使用最新任务。依据 `.cursor/.lingxi/tasks/<taskId>.task.*.md`。
 
 **产物**：`001.plan.<标题>.md`、`001.testcase.<标题>.md`。有产物时在回复末尾给出下一步建议（格式见 plan-executor Skill）。
 

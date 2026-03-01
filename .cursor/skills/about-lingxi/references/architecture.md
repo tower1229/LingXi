@@ -8,12 +8,12 @@
 
 ### Commands（命令入口）
 
-Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 req、plan、build、review 等命令，除 `/req` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
+Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 task、vet、plan、build、review 等命令，除 `/task` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
 | 命令          | 职责                                                                           | 委托的 Skill                                                                                     |
 | ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `/req`        | 创建任务文档（自动生成任务编号和标题）                                         | `req-executor`                                                                                   |
-| `/review-req` | 审查 req 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `review-req-executor`                                                                            |
+| `/task`       | 创建任务文档（自动生成任务编号和标题）                                         | `task-executor`                                                                                   |
+| `/vet`        | 审查 task 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `vet-executor`                                                                            |
 | `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                                                  |
 | `/build`      | 执行构建（可选，Plan-driven / Req-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                                                 |
 | `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                                                                |
@@ -31,8 +31,8 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### Executor Skills（执行核心工作流）
 
-- `req-executor`：需求分析、提纯、放大和任务文档生成
-- `review-req-executor`：对 req 文档进行多维度审查，辅助提升任务文档质量
+- `task-executor`：需求分析、提纯、放大和任务文档生成
+- `vet-executor`：对 task 文档进行多维度审查，辅助提升任务文档质量
 - `plan-executor`：任务规划、测试设计和计划文档文档及测试用例文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
@@ -85,14 +85,14 @@ Skills 承载详细的工作流指导，按职责分为：
 ```
 .cursor/
 ├── commands/              # 命令入口
-│   ├── req.md
+│   ├── task.md
 │   ├── plan.md
 │   ├── build.md
 │   ├── review.md
 │   └── ...
 ├── skills/                # 执行逻辑
-│   ├── req-executor/
-│   ├── review-req-executor/
+│   ├── task-executor/
+│   ├── vet-executor/
 │   ├── plan-executor/
 │   ├── build-executor/
 │   ├── review-executor/
@@ -107,7 +107,7 @@ Skills 承载详细的工作流指导，按职责分为：
 ├── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
 ├──.lingxi/
         ├── tasks/                 # 任务文档（统一目录）
-        │   ├── 001.req.<标题>.md
+        │   ├── 001.task.<标题>.md
         │   ├── 001.plan.<标题>.md
         │   └── ...
         ├── memory/                # 统一记忆系统
@@ -123,10 +123,10 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 需求推进流程
 
-1. `/req <描述>`：创建任务文档（自动生成任务编号和标题，产出：`001.req.<标题>.md`）
-2. `/review-req 001`（可选）：审查 req 文档（可多次执行，不产出文件，仅输出审查结果和建议到对话中）
-3. `/plan 001`（可选）：任务规划（基于 req 文档生成任务规划文档和测试用例文档，适用于复杂任务，简单任务可跳过）
-4. `/build 001`（可选）：执行构建（支持两种模式：Plan-driven 有 plan 文档时按计划结构化执行，Req-driven 无 plan 文档时 Agent 基于 req 自行决策执行）
+1. `/task <描述>`：创建任务文档（自动生成任务编号和标题，产出：`001.task.<标题>.md`）
+2. `/vet 001`（可选）：审查 task 文档（可多次执行，不产出文件，仅输出审查结果和建议到对话中）
+3. `/plan 001`（可选）：任务规划（基于 task 文档生成任务规划文档和测试用例文档，适用于复杂任务，简单任务可跳过）
+4. `/build 001`（可选）：执行构建（支持两种模式：Plan-driven 有 plan 文档时按计划结构化执行，Req-driven 无 plan 文档时 Agent 基于 task 自行决策执行）
 5. `/review 001`：审查交付（自动进行多维度审查，生成审查报告，包含核心审查和按需审查）
 
 **特性**：

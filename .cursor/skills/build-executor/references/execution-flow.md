@@ -4,14 +4,14 @@
 
 ## 1. 模式检测（自动）
 
-- **taskId**：指定则用该编号；省略则取 `.cursor/.lingxi/tasks/` 下 `*.req.*.md` 最大编号。
+- **taskId**：指定则用该编号；省略则取 `.cursor/.lingxi/tasks/` 下 `*.task.*.md` 最大编号。
 - **检测 plan**：查找 `<taskId>.plan.*.md`。存在 → Plan-driven；不存在 → Req-driven。
 
 ## 2. 执行逻辑（统一流程）
 
 ### 2.1 读取输入
 
-- 必读：`<taskId>.req.<标题>.md`
+- 必读：`<taskId>.task.<标题>.md`
 - Plan-driven：另读 plan、testcase。
 - Req-driven：若有 testcase 则读；若无则调用 testcase-designer 生成并写入后再继续。
 
@@ -22,7 +22,7 @@
 
 ### 2.3 先测再实现（TDD）
 
-仅用于验证方式为 `unit` 或 `integration` 的可测单元。四步：1）仅编写该单元测试（基于 testcase/req 输入/输出/边界）；2）运行测试，确认失败或基线；3）只通过修改实现使测试通过，不改测试；4）通过后再进入下一单元。不为尚不存在的功能写 mock。e2e 需求在 2.6 或 review 阶段用 Browser 验证；manual/rubric 产出可执行清单与证据占位。
+仅用于验证方式为 `unit` 或 `integration` 的可测单元。四步：1）仅编写该单元测试（基于 testcase/task 文档输入/输出/边界）；2）运行测试，确认失败或基线；3）只通过修改实现使测试通过，不改测试；4）通过后再进入下一单元。不为尚不存在的功能写 mock。e2e 需求在 2.6 或 review 阶段用 Browser 验证；manual/rubric 产出可执行清单与证据占位。
 
 ### 2.4 按单元循环：代码实现与测试
 
@@ -55,7 +55,7 @@ Plan-driven：按 plan 文档同步清单更新相关文档。Req-driven：Agent
 ## 6. 测试执行规范
 
 - **时机**：任务开始前运行现有测试；编写完当前单元测试后运行该单元测试；每完成一实现任务后运行相关测试；进入 review 前运行全部测试。
-- **编写规范**：先测再实现、隔离测试（Mock 外部依赖）、一行为一测试、AAA、只测 plan/testcase/req 中定义的行为。
+- **编写规范**：先测再实现、隔离测试（Mock 外部依赖）、一行为一测试、AAA、只测 plan/testcase/task 文档中定义的行为。
 - **结果**：通过静默；失败输出详情并循环修复直到通过。
 
 记忆写入通过显式调用 lingxi-memory；本 Skill 不包含写入逻辑。

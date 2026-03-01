@@ -1,7 +1,7 @@
 {
   "name": "lingxi",
   "version": "1.1.0",
-  "description": "AI workflow and memory: req/plan/build/review, persistent memory, ready to use.",
+  "description": "AI workflow and memory: task/vet/plan/build/review, persistent memory, ready to use.",
   "author": {
     "name": "tower1229"
   },

@@ -11,7 +11,7 @@ description: 当执行 /plan 命令时自动激活（taskId 可选，省略时�
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 req；省略则取 `.cursor/.lingxi/tasks/` 下 `*.req.*.md` 最大编号。
+- **taskId**：指定则用该编号的 task；省略则取 `.cursor/.lingxi/tasks/` 下 `*.task.*.md` 最大编号。
 - **F→T 映射**：任务清单中每任务必须标注关联需求（F 编号）；文件变更清单含测试文件与实现文件，对应 Txa/Txb。
 - **先测再实现**：可单元测试的单元拆成 Txa（编写该单元测试）、Txb（实现该单元），Txb 依赖 Txa，顺序上先 Txa 再 Txb。
 - **testcase**：调用 testcase-designer skill 产出；命名 `001.testcase.<标题>.md`；每条 F（验证方式不为空）均需 TC 或手工/rubric 覆盖。

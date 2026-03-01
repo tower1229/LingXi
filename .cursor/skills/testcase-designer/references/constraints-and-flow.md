@@ -4,7 +4,7 @@
 
 ## 输入输出
 
-- **输入**：req 文档路径（如 `.cursor/.lingxi/tasks/<taskId>.req.<标题>.md`）或 req 文档正文。
+- **输入**：task 文档路径（如 `.cursor/.lingxi/tasks/<taskId>.task.<标题>.md`）或 task 文档正文。
 - **输出**：结构化 testcase 文档，与 [testcase-doc-template.md](testcase-doc-template.md) 同构；命名 `<taskId>.testcase.<标题>.md`（标题 10 字以内）。
 
 ## 步骤概要

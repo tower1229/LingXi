@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 主审计脚本：被 8 类 Hook 调用，从 stdin 读入参，写一条 NDJSON 到 audit.log，返回放行 JSON。
- * 参考：001.req.灵犀审计系统.md §8.2；Cursor Hooks 文档。
+ * 参考：001.task.灵犀审计系统.md §8.2；Cursor Hooks 文档。
  */
 import fs from "node:fs";
 import path from "node:path";
