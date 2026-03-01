@@ -14,18 +14,11 @@ const BASE_CONTEXT = `【记忆库提取/沉淀约定】每轮在回答前，如
 无可沉淀时 taste-recognition 静默，不调用 lingxi-memory。
 `;
 
-
 async function main() {
-  const input = await readStdinJson();
-  const sessionId = input.session_id ?? input.conversation_id ?? "";
-  const auditContext =
-    sessionId === ""
-      ? "【审计约定】当前会话 ID 由运行时提供；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），以便记忆审计与主审计按会话关联。"
-      : `【审计约定】当前会话 ID：${sessionId}；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），以便记忆审计与主审计按会话关联。`;
-  const ADDITIONAL_CONTEXT = `${BASE_CONTEXT}\n${auditContext}`;
+  await readStdinJson();
   writeStdoutJson({
     continue: true,
-    additional_context: ADDITIONAL_CONTEXT,
+    additional_context: BASE_CONTEXT,
   });
 }
 

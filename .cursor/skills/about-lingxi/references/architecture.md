@@ -33,7 +33,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 - `task-executor`：需求分析、提纯、放大和任务文档生成
 - `vet-executor`：对 task 文档进行多维度审查，辅助提升任务文档质量
-- `plan-executor`：任务规划、测试设计和计划文档文档及测试用例文档生成
+- `plan-executor`：任务规划、测试设计及计划文档与测试用例文档生成
 - `build-executor`：代码实现、测试编写和执行
 - `review-executor`：多维度审查和交付质量保证
 - `workspace-bootstrap`：检测并创建缺失的灵犀目录结构和文件（若 .cursor/.lingxi/ 不存在则创建骨架）
@@ -50,6 +50,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 工具类 Skills（提供辅助能力）
 
+- `testcase-designer`：由 plan-executor（主产出）、build-executor（Task-driven 且无 testcase 时）、review-executor（覆盖审计）显式调用，从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
 - `ask-questions`：统一 ask-questions 交互协议与结果校验（`question_id + option id`，返回 option id 列表），供 remember/init/记忆治理等高频交互场景复用
 
