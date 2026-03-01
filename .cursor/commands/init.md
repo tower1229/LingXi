@@ -196,7 +196,7 @@ args: []
 
 - 从"记忆候选清单"确定待写入条目（用户确认后的草稿）。
 - **先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将每条确认后的草稿转为 7 字段品味 payload（source=init；可按附录 init-checklists 类型化字段生成 scene、principles、choice 等）；每条草稿对应一条 payload，可产出多条。
-- 对每条 payload **显式调用** lingxi-memory 子代理（传入 payload 及 conversation_id、可选 generation_id）；禁止将草稿或 selected_candidates 等旧结构直接传给 lingxi-memory。
+- 将产出的全部 payload 组成 **payloads 数组**，与 conversation_id（及可选 generation_id）**单次**传入 lingxi-memory 子代理；禁止将草稿或 selected_candidates 等旧结构直接传给 lingxi-memory。
 - 子代理在独立上下文完成校验 → 映射 → 治理与门控 → 直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
 
 主对话仅展示一句结果或静默；失败时输出明确错误与解决建议。

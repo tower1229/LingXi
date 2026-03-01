@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为四部分**：**自动沉淀**、**手动记忆**、**记忆写入**、**记忆提取**。其中**自动沉淀**、**手动记忆**、**记忆写入**共同组成**记忆沉淀**。
+**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含用户触发的写入入口（/remember、/init、/refine-memory）与 lingxi-memory 的写入执行。
 
 本版本采用 **扁平化记忆库**：
 
@@ -14,23 +14,19 @@
 
 ## 每轮参与
 
-检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过双入口（auto/remember）在需要时触发，新输入与后续轮次自然带来纠错与更新机会。
+检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 Command（/remember、/init、/refine-memory）在需要时触发，新输入与后续轮次自然带来纠错与更新机会。
 
 **「何时写入、何时纠错」由「每轮触发检索 + 按需写入」的机制覆盖，无需额外“记忆可错/纠错”规则。**
 
-## 记忆沉淀（自动沉淀 + 手动记忆 + 记忆写入）
+## 记忆沉淀（用户触发 + 记忆写入）
 
-### 1) 自动沉淀
+### 1) 触发方式
 
-由 **sessionStart hook** 注入【记忆沉淀约定】：每轮先执行 memory-retrieve，再按约定调用 taste-recognition skill；若 taste-recognition 产出 7 字段品味 payload，则用该 payload 调用 lingxi-memory。主 Agent 判断存在可沉淀内容时显式调用 lingxi-memory，安装后即生效。
+由用户通过 **/remember**、**/init** 或 **/refine-memory** 等 Command 触发；主 Agent 在用户执行上述命令时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。
 
-### 2) 手动记忆
+### 2) 记忆写入（Subagent lingxi-memory）
 
-用户通过 **/remember** 或 **/init** 主动发起写入。先经 taste-recognition skill 将用户输入/草稿转为 7 字段品味 payload，再调用 lingxi-memory 完成写入。
-
-### 3) 记忆写入（Subagent lingxi-memory）
-
-**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收一句结果。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply），再用该 payload 显式调用 lingxi-memory；lingxi-memory **仅接受**该 payload，不产候选、不从原始对话做识别。
+**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收简报。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（单条或多条），将 payload 组成 **payloads 数组**传入 lingxi-memory；lingxi-memory **仅接受 payloads 数组**，不产候选、不从原始对话做识别。
 
 - **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
@@ -40,9 +36,9 @@
 
 ## 记忆提取（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入；同时注入【记忆沉淀约定】，使**记忆沉淀**（自动沉淀、手动记忆 + 记忆写入）与**记忆提取**在每轮协同生效。
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；沉淀由用户通过 /remember、/init、/refine-memory 触发。
 
-- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定、以及【记忆沉淀约定】）
+- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
 - 执行 Skill：`memory-retrieve`
 
 **检索机制**：memory-retrieve 执行流程为**理解判断 → 提炼（语义摘要 + 关键词）→ 检索必要性判断 → 双路径检索**。当用户输入**无法独立理解、需结合上文理解**时，先结合最近对话推断完整含义再提炼；提炼后若无实质可检索（语义仅社交/元表达且关键词为空），则跳过检索以节省成本。双路径检索采用**语义 + 关键词**混合（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–2。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
@@ -115,6 +111,6 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 ## 参考
 
-- **记忆沉淀**（自动沉淀 + 手动记忆 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；约定由 sessionStart 注入【记忆沉淀约定】，安装后自动沉淀与手动记忆（/remember、/init）均生效  
-- **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）  
-- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——注入记忆检索约定与【记忆沉淀约定】
+- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；用户通过 /remember、/init、/refine-memory 触发，经 taste-recognition 产出 payload 后以 **payloads 数组**调用 lingxi-memory。
+- **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
+- **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定

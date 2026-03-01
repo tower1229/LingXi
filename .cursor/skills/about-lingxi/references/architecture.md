@@ -10,15 +10,16 @@
 
 Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委托给 Skills。灵犀以**工具包**形式提供 task、vet、plan、build、review 等命令，除 `/task` 作为需求起点外，其余环节均可选；**选型责任在用户**，workflow 不规定何时使用哪条命令。
 
-| 命令          | 职责                                                                           | 委托的 Skill                                                                                     |
-| ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `/task`       | 创建任务文档（自动生成任务编号和标题）                                         | `task-executor`                                                                                   |
-| `/vet`        | 审查 task 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务 | `vet-executor`                                                                            |
-| `/plan`       | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务              | `plan-executor`                                                                                  |
-| `/build`      | 执行构建（可选，Plan-driven / Task-driven）；taskId 可选，省略时使用最新任务    | `build-executor`                                                                                 |
-| `/review`     | 审查交付；taskId 可选，省略时使用最新任务                                      | `review-executor`                                                                                |
-| `/remember`   | 写入记忆（随时可用，无需依赖任务编号）                                         | **lingxi-memory**（Subagent）                                                                    |
-| `/init`       | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆）   | `workspace-bootstrap`（Step 0）；init command（0.5–8）；写入时委派 **lingxi-memory**（Subagent） |
+| 命令             | 职责                                                                             | 委托的 Skill                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `/task`          | 创建任务文档（自动生成任务编号和标题）                                           | `task-executor`                                                                                  |
+| `/vet`           | 审查 task 文档（可选，可多次执行，不产出文件）；taskId 可选，省略时使用最新任务  | `vet-executor`                                                                                   |
+| `/plan`          | 任务规划（可选，适用于复杂任务）；taskId 可选，省略时使用最新任务                | `plan-executor`                                                                                  |
+| `/build`         | 执行构建（可选，Plan-driven / Task-driven）；taskId 可选，省略时使用最新任务     | `build-executor`                                                                                 |
+| `/review`        | 审查交付；taskId 可选，省略时使用最新任务                                        | `review-executor`                                                                                |
+| `/remember`      | 写入记忆（随时可用，无需依赖任务编号）                                           | **lingxi-memory**（Subagent）                                                                    |
+| `/refine-memory` | 对当前会话或指定时间范围的会话做可沉淀内容提炼并写入记忆库（可选参数：时间范围） | taste-recognition + **lingxi-memory**（Subagent，批量 payloads）                                 |
+| `/init`          | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆）     | `workspace-bootstrap`（Step 0）；init command（0.5–8）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
 
@@ -40,12 +41,12 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
 
-记忆系统分为四部分：**自动沉淀**、**手动记忆**、**记忆写入**、**记忆提取**。其中**自动沉淀**、**手动记忆**、**记忆写入**共同组成**记忆沉淀**。
+记忆系统分为四部分：**记忆沉淀**（用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀由用户通过 /remember、/init、/refine-memory 触发，经 taste-recognition 产出 payload 后交由 lingxi-memory 写入。
 
-- **记忆沉淀**（三部分）  
-  - **自动沉淀**：由 session 约定触发，主 Agent 每轮先 memory-retrieve、再按约定调用 taste-recognition skill，若产出 payload 则调用 lingxi-memory。  
-  - **手动记忆**：用户通过 `/remember` 或 `/init` 主动发起，经 taste-recognition 转为 payload 后交由 lingxi-memory。  
-  - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的 7 字段品味 payload（scene, principles, choice, evidence, source, confidence, apply），不产候选；完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话仅收一句结果。  
+- **记忆沉淀**（用户触发 + 记忆写入）
+  - **触发**：用户通过 `/remember`、`/init` 或 `/refine-memory` 主动发起；不再由 session 约定每轮触发。
+  - **手动记忆**：用户主动发起，经 taste-recognition 转为 payload 后以 **payloads 数组**交由 lingxi-memory。
+  - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的 7 字段品味 **payloads 数组**（scene, principles, choice, evidence, source, confidence, apply），不产候选；完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话收简报。
 - **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–2 最小注入（由 sessionStart hook 注入的约定触发）。
 
 #### 工具类 Skills（提供辅助能力）
@@ -63,12 +64,12 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 记忆库机制（Memory-first）
 
-灵犀的核心能力是自动捕获与治理记忆，并在每一轮对话前进行最小注入。记忆系统分为四部分：**自动沉淀**、**手动记忆**、**记忆写入**、**记忆提取**；其中**自动沉淀**、**手动记忆**、**记忆写入**共同组成**记忆沉淀**。
+灵犀的核心能力是捕获与治理记忆，并在每一轮对话前进行最小注入。记忆系统分为四部分：**记忆沉淀**（用户触发）、**记忆写入**、**记忆提取**。
 
-1. **记忆沉淀**（自动沉淀 + 手动记忆 + 记忆写入）
-   - **触发**：**自动沉淀**由 session 约定触发——每轮先执行 memory-retrieve，再按约定调用 taste-recognition skill，若产出 7 字段 payload 则调用 lingxi-memory；**手动记忆**由用户执行 `/remember` 或 `/init` 后选择写入。上述约定由 sessionStart hook（`.cursor/hooks/session-init.mjs`）注入，安装后即生效。
-   - **写入**：所有写入**必须先经 taste-recognition** 产出 7 字段品味 payload；**lingxi-memory** 子代理**仅接受**该 payload（禁止原始对话或旧形态 input），在独立上下文中执行：校验 → 映射生成 note → 评分卡（5 维）→ 治理（TopK）→ 门控 → 直接读写 `memory/notes/` 与 `memory/INDEX.md`，主对话仅收一句结果或静默。门控：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。  
-2. **记忆提取**：每轮在回答前执行 `memory-retrieve`（由 sessionStart 约定触发），对 `memory/notes/` 做语义+关键词双路径检索与最小注入。  
+1. **记忆沉淀**（用户触发 + 记忆写入）
+   - **触发**：由用户执行 `/remember`、`/init` 或 `/refine-memory` 后发起；不再由 session 约定每轮触发。sessionStart hook 仅注入记忆提取约定及 conversation_id 传入约定。
+   - **写入**：所有写入**必须先经 taste-recognition** 产出 7 字段品味 payload；**lingxi-memory** 子代理**仅接受 payloads 数组**（禁止原始对话或旧形态 input），在独立上下文中执行：校验 → 映射生成 note → 评分卡（5 维）→ 治理（TopK）→ 门控 → 直接读写 `memory/notes/` 与 `memory/INDEX.md`，主对话收简报。门控：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。
+2. **记忆提取**：每轮在回答前执行 `memory-retrieve`（由 sessionStart 约定触发），对 `memory/notes/` 做语义+关键词双路径检索与最小注入。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
    - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
@@ -78,8 +79,8 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定**以及【记忆沉淀约定】**（先调用 taste-recognition skill，有 payload 再调 lingxi-memory），保证**记忆沉淀**（自动沉淀与手动记忆 /remember、/init）在安装后即生效；其他审计/门控为可选。
-- **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀依赖主 Agent 判断后显式调用 lingxi-memory（或用户 `/remember`），而非在每次 stop 时追加系统提示
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定；
+- **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀由用户通过 Command 显式触发（/remember、/refine-memory），而非在每次 stop 时追加系统提示
 
 ## 目录结构
 
