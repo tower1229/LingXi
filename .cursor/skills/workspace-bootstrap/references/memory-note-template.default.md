@@ -13,8 +13,8 @@
 - **Status**: active / local / archive（生命周期治理用）
 - **Strength**: hypothesis / validated / enforced
 - **Scope**: narrow / medium / broad（场景粒度；与 Audience 配合，见 payload 映射规则）
-- **Audience**: team / project / personal
-- **Portability**: cross-project / project-only
+- **Audience**: project / team（项目级 / 团队级；项目级=notes/，团队级=notes/share/）
+- **Portability**: project-only / cross-project（与 Audience 一致：project→project-only，team→cross-project）
 - **Source**: remember / extract / choice / init（来自 payload.source）；或 manual / init / <packName>@<version>（其他来源，如初始化、团队包）
 - **Tags**: 可选；自由关键词
 - **Supersedes**: 可选；当本条由 merge/replace 取代其他条目时，填被取代的 MEM-xxx，与 INDEX 同步

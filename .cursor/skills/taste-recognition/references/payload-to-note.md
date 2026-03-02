@@ -14,7 +14,7 @@
 | `evidence` | string | 否 | 一句用户原文或引用，用于可验证性及 L0 事实层；无则省略。 |
 | `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。`choice` = 环节选择题反馈。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
-| `apply` | enum | 否 | `personal` \| `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、可跨项目共享。 |
+| `apply` | enum | 否 | `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、写入 notes/share/（跨项目复用）。 |
 
 **门控（下游 lingxi-memory）**：merge/replace 一律 questions，与 confidence 无关。new：`confidence === "high"` 可静默写入；`medium` / `low` 必须 questions。
 

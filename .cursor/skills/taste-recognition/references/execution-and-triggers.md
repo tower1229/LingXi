@@ -19,7 +19,7 @@
 2. 上下文增强：当用户输入无法独立理解时，必须结合最近 1～2 轮对话理解用户认可、选择或拒绝的具体内容。
 3. 判断是否可沉淀：仅依据用户自由输入/指定内容/确认草稿（含上下文推断出的实质）中的偏好、约束、取舍、决策或例外；不依据 command 模板、系统注入、工具输出。可沉淀情形包括任务完成或关键决策、需求固化、方案选择、用户拒绝或纠正、用户明确表示要记住、在若干原则间做出可命名的选择、用户对上一轮表示认可或延续（需从对话推断实质）等。
 4. 若无可沉淀：静默返回，不产出 payload，不调用 lingxi-memory。
-5. 若有可沉淀：从输入中抽取 scene、principles、choice 及可选的 evidence；填写 source、confidence（证据强度）、apply（可推断则填 personal/project/team，否则可省略由下游默认 project）。
+5. 若有可沉淀：从输入中抽取 scene、principles、choice 及可选的 evidence；填写 source、confidence（证据强度）、apply（可推断则填 project/team，否则可省略由下游默认 project）。
 6. 产出且仅产出符合 7 字段规范的 JSON；若同一轮有多条可沉淀可产出多个 payload，主 Agent 将全部 payload 以 **payloads** 数组单次传入 lingxi-memory。
 7. 主 Agent 将产出的 payload（单条或多条）组成 **payloads 数组**，与 conversation_id（及可选 generation_id）传入 lingxi-memory 子代理供审计。禁止将原始用户消息或对话片段作为 lingxi-memory 的输入。
 

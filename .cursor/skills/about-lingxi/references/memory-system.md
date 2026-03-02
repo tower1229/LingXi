@@ -93,18 +93,17 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
 
-- **Audience**：team / project / personal（决策权归属与适用范围）
-- **Portability**：cross-project / project-only（是否允许跨项目复用）
+- **Audience**：project / team（项目级 / 团队级）；**本质区别为是否写入 notes/share/**：团队级写入 `notes/share/`，项目级写入 `notes/`。
+- **Portability**：project-only / cross-project（与 Audience 一致：project→project-only，team→cross-project）
 - **Source**：来源（如 `<packName>@<version>` / manual / init），用于审计与回溯
 - **Tags**（可选）：主题标签，便于导出筛选与聚合
 
 推荐约定（用于筛选“应进入 share 仓库”的内容）：
 
-- 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated
+- 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated，**写入 notes/share/**
 - 团队级常见需求标准方案：Audience=team，Portability=cross-project，Kind=pattern/decision
 - 前后端/运维默认约定：Audience=team，Portability=cross-project，Kind=reference/tech
-- 项目内特殊备忘：Audience=project，Portability=project-only
-- 个人习惯：Audience=personal（默认不进入 share）
+- 项目内特殊备忘：Audience=project，Portability=project-only，**写入 notes/**
 
 ### 冲突优先级（稳定规则）
 

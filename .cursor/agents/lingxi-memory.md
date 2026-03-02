@@ -11,7 +11,7 @@ model: inherit
 ## 输入约定（父代理必须传入）
 
 - **payloads**（必填，数组）：一组或多组品味 payload，每项为**唯一合法**的 7 字段结构（scene, principles, choice, evidence, source, confidence, apply）。单条时父代理传入仅含一元素的数组。任一项必填缺失或类型/枚举非法时拒收并返回原因。
-  - 每项字段：`scene`（string，必填）、`principles`（string[]，必填）、`choice`（string，必填）、`evidence`（string，可选）、`source`（enum，必填：`remember` | `extract` | `choice` | `init`）、`confidence`（enum，必填：`low` | `medium` | `high`）、`apply`（enum，可选：`personal` | `project` | `team`，缺省按 project）。
+  - 每项字段：`scene`（string，必填）、`principles`（string[]，必填）、`choice`（string，必填）、`evidence`（string，可选）、`source`（enum，必填：`remember` | `extract` | `choice` | `init`）、`confidence`（enum，必填：`low` | `medium` | `high`）、`apply`（enum，可选：`project` | `team`，缺省按 project）。
 - **conversation_id**（按需）：当前会话 ID，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
 - **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
 
@@ -31,7 +31,7 @@ model: inherit
 
 ## 映射规则（Payload → note）
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply 与用户表述；Audience/Portability 来自 apply；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply 与用户表述；**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；One-liner 偏「做什么」，如 `在 [scene] 下优先 [choice]`。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。
 - **L0/L1**：按评分卡判定写 L0、L1 或双层；L0 模板：在 [具体场景] 下发生了 [可验证事实/操作]，导致 [结果]；L1 模板：在 [场景族] 中优先 [策略]，避免 [反策略]，因为 [目标/风险]。
@@ -103,7 +103,7 @@ merge/replace 时必须通过 ask-questions 发起交互：
 
 - 路径：`.cursor/.lingxi/memory/INDEX.md`
 - 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |`
-- 每行一条记忆；File 为相对路径如 `memory/notes/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（即本次调用传入的 conversation_id）。
+- 每行一条记忆；File 为相对路径：**项目级**（apply 非 team 或未填）为 `memory/notes/MEM-xxx.md`，**团队级**（apply=team）为 `memory/notes/share/MEM-xxx.md`。新建时追加行；删除/合并时移除对应行并视情况更新 Supersedes。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（即本次调用传入的 conversation_id）。
 
 ## 记忆审计（写入后必须执行）
 
@@ -118,7 +118,8 @@ JSON 字段：`event`（必填，取值 `memory_note_created` | `memory_note_upd
 ## 写入实现（直接文件操作）
 
 - **禁止**调用任何 memory-storage 脚本；使用 Cursor 提供的**读/写/编辑文件**能力。
-- 新建：写入 `.cursor/.lingxi/memory/notes/MEM-<id>.md`（内容符合模板与上文映射规则），在 INDEX 表后追加一行；然后调用 append-memory-audit.mjs 写入 `memory_note_created` 事件。
+- **写入路径（由 apply 决定）**：`apply === "team"`（团队级）→ 新建 note 写入 `.cursor/.lingxi/memory/notes/share/MEM-<id>.md`，INDEX 的 File 列为 `memory/notes/share/MEM-<id>.md`；否则（project 或未填，项目级）→ 新建 note 写入 `.cursor/.lingxi/memory/notes/MEM-<id>.md`，INDEX 的 File 列为 `memory/notes/MEM-<id>.md`。
+- 新建：按上条路径写入 note 文件（内容符合模板与上文映射规则），在 INDEX 表后追加一行；然后调用 append-memory-audit.mjs 写入 `memory_note_created` 事件。
 - 更新：读取目标 note，按 merge/replace 规则改内容后写回（更新 UpdatedAt、Session、Supersedes 等）；更新 INDEX 中对应行；然后调用 append-memory-audit.mjs 写入 `memory_note_updated` 事件。
 - 删除：删除 note 文件，从 INDEX 中移除该行；然后调用 append-memory-audit.mjs 写入 `memory_note_deleted` 事件。
 - Id 格式：`MEM-` + 稳定标识（如数字或短哈希），保证唯一。新建 id 按当前 INDEX 最大编号递增（读一次 INDEX 后本批内顺序分配 MEM-006、MEM-007、…），避免并行调用导致重复 id。

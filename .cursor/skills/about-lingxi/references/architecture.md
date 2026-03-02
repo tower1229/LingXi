@@ -72,8 +72,8 @@ Skills 承载详细的工作流指导，按职责分为：
 2. **记忆提取**：每轮在回答前执行 `memory-retrieve`（由 sessionStart 约定触发），对 `memory/notes/` 做语义+关键词双路径检索与最小注入。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
-   - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
-   - **写入**：`lingxi-memory` 子代理支持写入到 `share/` 目录；写入位置由用户门控时决定，或根据 `Portability` 字段提示用户
+   - **识别**：Audience 为 project（项目级）或 team（团队级）；**团队级=写入 notes/share/**，**项目级=写入 notes/**；Portability 为 project-only / cross-project。
+   - **写入**：lingxi-memory 根据 **payload.apply** 决定路径：`apply === "team"` 时写入 `notes/share/`，否则写入 `notes/`；门控可提示「项目级 / 团队级」选择。
    - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义+关键词混合检索会自动包含共享记忆；语义不可用时降级为仅关键词路径，仍无匹配则静默
    - **索引同步**：`memory-sync` 脚本（`npm run memory-sync`）递归扫描 `notes/**` 并更新 `INDEX.md`，支持 project 覆盖 share 的冲突优先级规则
 
