@@ -12,7 +12,6 @@ args: []
 
 **用法**：`/init`（无参数）。优先从现有文档整理，仅对缺失或不确定项通过 ask-questions 收集；所有选择环节均用 ask-questions 协议。写入经 taste-recognition、lingxi-memory 完成。
 
-
 **关键约定**：写入门控不可侵犯（仅当用户明确选择写入时才写盘）；用户选择均通过 ask-questions skill；执行遵循 workflow-output-principles（最小高信号）。
 
 **委托**：先执行 workspace-bootstrap 确保骨架存在，再按 Step 0.5–8 执行；完整步骤与 init-checklists 见下方附录。

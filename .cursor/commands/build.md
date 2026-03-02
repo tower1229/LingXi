@@ -1,6 +1,6 @@
 ---
 name: build
-description: 执行构建（双模式：Plan-driven 或 Req-driven）
+description: 执行构建（双模式：Plan-driven 或 Task-driven）
 args:
   - name: taskId
     required: false
@@ -9,7 +9,7 @@ args:
 
 # /build - 执行构建
 
-**用途**：按 task（及可选 plan）实现功能。Plan-driven：有 plan 时按计划执行；Req-driven：无 plan 时由 Agent 基于 task 自行决策。
+**用途**：按 task（及可选 plan）实现功能。Plan-driven：有 plan 时按计划执行；Task-driven：无 plan 时由 Agent 基于 task 自行决策。
 
 **用法**：`/build [taskId]`。省略 taskId 时使用最新任务。
 
