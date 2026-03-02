@@ -5,9 +5,17 @@
 灵犀安装后，`hooks.json` 中的 `command` 使用相对路径，例如：
 
 - `node .cursor/hooks/session-init.mjs`（sessionStart：注入记忆检索约定及 conversation_id 传入约定）
-- `node .cursor/hooks/lingxi-audit.mjs`（审计：8 类 Hook 事件）
+- `node .cursor/hooks/lingxi-audit.mjs`（审计：9 类 Hook 事件）
 
-灵犀还配置了多种**审计 hooks**（`lingxi-audit.mjs`），在 beforeSubmitPrompt、afterAgentResponse、postToolUse、postToolUseFailure、subagentStart、subagentStop、sessionEnd、stop 等 8 类事件触发时写入 `.cursor/.lingxi/workspace/audit.log`，用于审计追溯。具体配置见 `hooks.json`。
+灵犀还配置了多种**审计 hooks**（`lingxi-audit.mjs`），在 beforeSubmitPrompt、afterAgentResponse、preToolUse、postToolUse、postToolUseFailure、subagentStart、subagentStop、sessionEnd、stop 等 9 类事件触发时写入 `.cursor/.lingxi/workspace/audit.log`，用于审计追溯。其中 `preToolUse` 与 `postToolUse`/`postToolUseFailure` 通过 `tool_use_id` 关联，形成一次工具调用的完整链路。具体配置见 `hooks.json`。
+
+## 健康度指标口径（基于 audit.log）
+
+- `tool_attempt_total`：`event=pre_tool_use` 的总条数。
+- `tool_success_rate`：`count(post_tool_use) / count(pre_tool_use)`。
+- `tool_failure_rate`：`count(post_tool_use_failure) / count(pre_tool_use)`。
+- `tool_p95_latency_ms`：按 `post_tool_use.duration_ms` 计算 P95。
+- `tool_orphan_rate`：存在 `pre_tool_use` 但无同 `tool_use_id` 的 post 事件占比，用于发现中断/丢日志。
 
 ## 工作目录说明
 

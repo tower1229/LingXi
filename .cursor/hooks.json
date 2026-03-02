@@ -16,6 +16,11 @@
                 "command": "node .cursor/hooks/lingxi-audit.mjs"
             }
         ],
+        "preToolUse": [
+            {
+                "command": "node .cursor/hooks/lingxi-audit.mjs"
+            }
+        ],
         "postToolUse": [
             {
                 "command": "node .cursor/hooks/lingxi-audit.mjs"

@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
-安装完成后，建议在 Cursor 中打开项目并运行 `/init` 初始化工作区。
+安装完成后，建议在 Cursor 中打开项目并运行 `/init` 初始化项目上下文（并按需进行可选记忆写入）。
 
 ### 本地测试（开发用）
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 主审计脚本：被 8 类 Hook 调用，从 stdin 读入参，写一条 NDJSON 到 audit.log，返回放行 JSON。
+ * 主审计脚本：被 9 类 Hook 调用，从 stdin 读入参，写一条 NDJSON 到 audit.log，返回放行 JSON。
  * 参考：001.task.灵犀审计系统.md §8.2；Cursor Hooks 文档。
  */
 import fs from "node:fs";
@@ -10,11 +10,15 @@ import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const TAIL_BYTES = 200 * 1024; // 200KB，完整性检查优先读取的尾部大小
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
+const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie|session|credential)/i;
+const RETRIEVE_SUCCESS_EVENTS = new Set(["memory.retrieve.performed", "memory.retrieve.skipped"]);
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
   afterAgentResponse: "after_agent_response",
+  preToolUse: "pre_tool_use",
   postToolUse: "post_tool_use",
   postToolUseFailure: "post_tool_use_failure",
   subagentStart: "subagent_start",
@@ -26,6 +30,28 @@ const HOOK_TO_EVENT = {
 function truncate(s, max = MAX_PREVIEW) {
   if (typeof s !== "string") return undefined;
   return s.length <= max ? s : s.slice(0, max) + "...";
+}
+
+function redactSecrets(value) {
+  if (Array.isArray(value)) return value.map((item) => redactSecrets(item));
+  if (value && typeof value === "object") {
+    const next = {};
+    for (const [key, val] of Object.entries(value)) {
+      next[key] = SENSITIVE_KEY_RE.test(key) ? "[REDACTED]" : redactSecrets(val);
+    }
+    return next;
+  }
+  return value;
+}
+
+function buildToolInputPreview(toolInput) {
+  if (toolInput == null) return undefined;
+  try {
+    const sanitized = redactSecrets(toolInput);
+    return truncate(JSON.stringify(sanitized));
+  } catch {
+    return truncate(String(toolInput));
+  }
 }
 
 /**
@@ -54,10 +80,19 @@ function buildPayload(input) {
         reply_preview: truncate(input.text),
         duration_ms: input.duration_ms,
       };
+    case "pre_tool_use":
+      return {
+        ...base,
+        tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
+        cwd: input.cwd,
+        tool_input_preview: buildToolInputPreview(input.tool_input),
+      };
     case "post_tool_use":
       return {
         ...base,
         tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
         duration_ms: input.duration,
         result_preview: truncate(input.tool_output),
       };
@@ -65,6 +100,8 @@ function buildPayload(input) {
       return {
         ...base,
         tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
+        duration_ms: input.duration,
         error_preview: truncate(input.error_message),
       };
     case "subagent_start":
@@ -82,8 +119,125 @@ function buildPayload(input) {
   }
 }
 
+function safeJsonParse(line) {
+  try {
+    return JSON.parse(line);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 读取 audit 文件最后 TAIL_BYTES 字节，解析为完整行得到 rows；避免全量读大文件。
+ */
+function readAuditRowsTail(auditPath) {
+  const stats = fs.statSync(auditPath, { throwIfNoEntry: false });
+  if (!stats || stats.size === 0) return [];
+  const size = stats.size;
+  const toRead = Math.min(size, TAIL_BYTES);
+  const start = Math.max(0, size - toRead);
+  const fd = fs.openSync(auditPath, "r");
+  try {
+    const buffer = Buffer.alloc(toRead);
+    fs.readSync(fd, buffer, 0, toRead, start);
+    let str = buffer.toString("utf8");
+    if (start > 0 && str.includes("\n")) {
+      str = str.slice(str.indexOf("\n") + 1);
+    }
+    return str
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => safeJsonParse(line))
+      .filter(Boolean);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * 全量读取 audit 文件并解析为 rows（fallback）。
+ */
+function readAuditRowsFull(auditPath) {
+  const content = fs.readFileSync(auditPath, { encoding: "utf8" });
+  return content
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .map((line) => safeJsonParse(line))
+    .filter(Boolean);
+}
+
+function appendAuditLine(auditPath, payload) {
+  const line = JSON.stringify(payload) + "\n";
+  fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
+}
+
+function maybeAppendRetrieveIntegrityEvent(auditPath, input) {
+  if (input.hook_event_name !== "afterAgentResponse") return;
+  const conversation_id = input.conversation_id ?? "";
+  const generation_id = input.generation_id ?? "";
+  if (!conversation_id && !generation_id) return;
+
+  let rows = readAuditRowsTail(auditPath);
+  const matchTurn = (row) =>
+    (row.conversation_id ?? "") === conversation_id && (row.generation_id ?? "") === generation_id;
+  let turnRows = rows.filter(matchTurn);
+  if (turnRows.length === 0) {
+    rows = readAuditRowsFull(auditPath);
+    turnRows = rows.filter(matchTurn);
+  }
+  if (turnRows.length === 0) return;
+
+  const hasUserSubmit = turnRows.some((row) => row.event === "before_submit_prompt");
+  if (!hasUserSubmit) return;
+
+  const beforeSubmitRow = turnRows.find((row) => row.event === "before_submit_prompt");
+  const turnStartTs = beforeSubmitRow ? new Date(beforeSubmitRow.ts).getTime() : null;
+  const turnEndTs = Math.max(...turnRows.map((r) => new Date(r.ts).getTime()));
+  if (turnStartTs == null) return;
+
+  const hasRetrieveInWindow = (r) => {
+    if (!RETRIEVE_SUCCESS_EVENTS.has(r.event)) return false;
+    if ((r.conversation_id ?? "") !== conversation_id) return false;
+    const t = new Date(r.ts).getTime();
+    if (t < turnStartTs || t > turnEndTs) return false;
+    const rGen = r.generation_id ?? "";
+    return rGen === "" || rGen === generation_id;
+  };
+  const hasRetrieve = rows.some(hasRetrieveInWindow);
+  const alreadyMarkedMissing = turnRows.some((row) => row.event === "memory.retrieve.missing");
+  if (hasRetrieve || alreadyMarkedMissing) {
+    const hasGrepInTurn = rows.some(
+      (r) =>
+        r.event === "pre_tool_use" &&
+        r.tool_name === "Grep" &&
+        (r.conversation_id ?? "") === conversation_id &&
+        new Date(r.ts).getTime() >= turnStartTs &&
+        new Date(r.ts).getTime() <= turnEndTs &&
+        ((r.generation_id ?? "") === "" || r.generation_id === generation_id)
+    );
+    appendAuditLine(auditPath, {
+      ts: getSystemTimestamp(),
+      event: "memory.retrieve.keyword_path_verified",
+      conversation_id,
+      generation_id,
+      verified: hasGrepInTurn,
+    });
+    return;
+  }
+
+  appendAuditLine(auditPath, {
+    ts: getSystemTimestamp(),
+    event: "memory.retrieve.missing",
+    conversation_id,
+    generation_id,
+    reason: "No memory.retrieve.performed or memory.retrieve.skipped found for this turn",
+    expected_events: ["memory.retrieve.performed", "memory.retrieve.skipped"],
+  });
+}
+
 function getAllowOutput(hookName) {
   if (hookName === "beforeSubmitPrompt") return { continue: true };
+  if (hookName === "preToolUse") return { decision: "allow" };
   if (hookName === "subagentStart") return { decision: "allow" };
   return {};
 }
@@ -171,14 +325,9 @@ async function main() {
     rotateAuditFile(auditPath);
   }
 
-  // 构建 payload，确保 JSON.stringify 正确处理 Unicode
   const payload = buildPayload(input);
-  // JSON.stringify 默认会将非 ASCII 字符转义为 \uXXXX，这是 JSON 标准
-  // 如果需要保留原始字符，可以使用 JSON.stringify(payload, null, 0) 但输出会更大
-  const line = JSON.stringify(payload) + "\n";
-
-  // 使用 UTF-8 编码写入（明确指定，确保跨平台一致性）
-  fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
+  appendAuditLine(auditPath, payload);
+  maybeAppendRetrieveIntegrityEvent(auditPath, input);
 
   const out = getAllowOutput(input.hook_event_name);
   writeStdoutJson(out);

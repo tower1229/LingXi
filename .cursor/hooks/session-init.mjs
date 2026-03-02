@@ -11,7 +11,9 @@ const BASE_CONTEXT = `【记忆提取约定】每轮在回答前，如果存在�
 若命中记忆（top 0-2），必须先做一轮决策：\`adopt\`（采用）/\`reject\`（不采用，给出一句理由）/\`ask\`（需向用户确认）。
 对用户呈现要求：未采纳（reject）的命中不展示；已采纳（adopt）的命中仅允许一行极简提示，不展开过程，不罗列列表。
 若本轮回答依据某条记忆做方案选择，需在表述中自然引用记忆来源（如 \`[MEM-003]\`）；禁止只检索不决策。
-每轮记忆检索后，需写入一条审计（event=\`memory_retrieve\`，含 query、hits、adopted、rejected）。
+每轮记忆检索后，需写入一条审计：\`memory.retrieve.performed\`（执行检索）或 \`memory.retrieve.skipped\`（显式跳过）。
+其中 \`memory.retrieve.performed\` 必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision。
+每轮若未记录上述事件，审计系统会追加 \`memory.retrieve.missing\` 作为完整性告警（不阻断主流程）。
 【conversation_id 传入约定】当前会话 ID 由运行时提供；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），供记忆审计与会话级关联。
 `;
 

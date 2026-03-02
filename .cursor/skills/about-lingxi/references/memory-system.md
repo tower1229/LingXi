@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含**主动记忆捕获**（/remember、/extract）与 lingxi-memory 的写入执行；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
+**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含**主动记忆捕获**（/remember、/extract）与 lingxi-memory 的写入执行；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -22,7 +22,7 @@
 
 ### 1) 触发方式
 
-由用户通过 **/remember** 或 **/extract** 主动触发记忆捕获；主 Agent 在用户执行上述命令时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
+由用户通过 **/remember** 或 **/extract** 主动触发记忆捕获；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时按各环节 `references/taste-sniff-rules.md` 经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）也会产生沉淀并写入。主 Agent 在用户执行上述命令或环节选择题反馈时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
@@ -42,7 +42,7 @@
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
 - 执行 Skill：`memory-retrieve`
 
-**检索机制**：memory-retrieve 执行流程为**理解判断 → 提炼（语义摘要 + 关键词）→ 检索必要性判断 → 双路径检索**。当用户输入**无法独立理解、需结合上文理解**时，先结合最近对话推断完整含义再提炼；提炼后若无实质可检索（语义仅社交/元表达且关键词为空），则跳过检索以节省成本。双路径检索采用**语义 + 关键词**混合（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–2。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
+**检索机制**：memory-retrieve 执行流程为**理解判断 → 提炼（语义摘要 + 关键词）→ 检索必要性判断 → 双路径检索**。当用户输入**无法独立理解、需结合上文理解**时，先结合最近对话推断完整含义再提炼；提炼后若无实质可检索（语义仅社交/元表达且关键词为空），则跳过检索以节省成本。双路径检索采用**语义 + 关键词**混合（语义路径对 notes/ 做概念匹配，关键词路径对 notes/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–2。**降级策略**：语义不可用或失败时仅执行关键词路径；仍无匹配则静默，不向用户报错。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。**双路径可验证性**：仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径在当前 Cursor 实现下不以独立工具形式经过 preToolUse，仅以 performed 的 semantic_called 自报为准，不做工具链校验。
 
 **最小注入**：
 
@@ -51,10 +51,13 @@
 - 不把原文展示在对话中，除非用户明确要求查看
 - 若依据命中记忆做决策，在对外输出中自然引用记忆 ID（如 `[MEM-003]`）
 
-**每轮审计建议**：
+**每轮审计（v2，必须）**：
 
-- 每轮 memory-retrieve 后追加审计事件 `memory_retrieve`
-- 建议字段：query、hits、adopted、rejected、decision（附 conversation_id / generation_id）
+- 每轮 memory-retrieve 后必须追加：
+  - `memory.retrieve.performed`（执行检索）或
+  - `memory.retrieve.skipped`（显式跳过）
+- `memory.retrieve.performed` 必含字段：`query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（附 `conversation_id` / `generation_id`）
+- 若轮次内缺失上述事件，完整性审计会追加 `memory.retrieve.missing`（软强制，不阻断主流程）
 
 ## 统一索引（INDEX.md）
 
@@ -64,7 +67,7 @@
 
 | Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
 
-CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/auto 等）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
+CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/choice/init，来自 payload.source；或 manual、init、<packName>@<version> 等用于初始化或团队包）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
 
 ## 记忆文件（notes/\*.md）
 
@@ -118,6 +121,6 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（manual/init/user/
 
 ## 参考
 
-- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；**主动记忆捕获**由用户通过 /remember、/extract 触发；/init 在初始化时可将确认草稿可选写入，为初始化额外产物。经 taste-recognition 产出 payload 后以 **payloads 数组**调用 lingxi-memory。
+- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；**主动记忆捕获**由用户通过 /remember、/extract 触发；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 **payloads 数组**调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入，为初始化额外产物。详见 taste-recognition 的 `references/execution-and-triggers.md` 与各环节 `references/taste-sniff-rules.md`。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定
