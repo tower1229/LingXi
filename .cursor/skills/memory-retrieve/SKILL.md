@@ -32,6 +32,7 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 ## 关键约束
 
 - **双路径**：语义检索（notes/ 概念级匹配）+ 关键词（Grep INDEX 的 Title、When to load 及 notes 正文）；并集加权后取 top 0–2 条，按需读取原文后不相关则不注入。
+- **双路径可验证性**：双路径中仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径在当前 Cursor 实现下不以独立工具形式经过 preToolUse，仅以 performed 的 semantic_called 自报为准，不做工具链校验。
 - **禁止顺序全读**：禁止在未完成双路径检索前，直接顺序读取 `memory/notes/*` 全量文件。
 - **输出契约**：命中时输出结构化结果（`hits`、`adoptionCandidates`、`obligations`、`suggestedAction`）；供主 Agent 做 `adopt/reject/ask` 决策。无匹配时静默。
 - **最小注入**：有匹配时仅对 **adopt** 项给出一行极简提示（可执行提醒 + 轻量引用如 `[MEM-xxx]`）；`reject` 项不对用户展示，不输出冗长解释。若依据某条记忆做方案选择，应在表述中自然引用该记忆。

@@ -55,10 +55,28 @@ function buildBasePayload(input) {
   };
 }
 
-function invalidPayload(base, reason, invalidEvent) {
+function invalidPayloadForRetrieve(base, reason, invalidEvent) {
   return {
     ...base,
     event: "memory.retrieve.invalid",
+    reason,
+    ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
+  };
+}
+
+function invalidPayloadForWrite(base, reason, invalidEvent) {
+  return {
+    ...base,
+    event: "memory.write.invalid",
+    reason,
+    ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
+  };
+}
+
+function invalidPayloadForAudit(base, reason, invalidEvent) {
+  return {
+    ...base,
+    event: "memory.audit.invalid",
     reason,
     ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
   };
@@ -77,17 +95,17 @@ function validateMemoryWriteEvent(input, base) {
   if (input.event === "memory_index_updated") return payload;
 
   if (!isString(input.note_id) || input.note_id.length === 0) {
-    return invalidPayload(base, "memory write event requires note_id", input.event);
+    return invalidPayloadForWrite(base, "memory write event requires note_id", input.event);
   }
   if (!isString(input.operation) || input.operation.length === 0) {
-    return invalidPayload(base, "memory write event requires operation", input.event);
+    return invalidPayloadForWrite(base, "memory write event requires operation", input.event);
   }
   if (!isString(input.file) || input.file.length === 0) {
-    return invalidPayload(base, "memory write event requires file", input.event);
+    return invalidPayloadForWrite(base, "memory write event requires file", input.event);
   }
   if (input.event !== "memory_note_deleted") {
     if (!isString(input.source) || input.source.length === 0) {
-      return invalidPayload(base, "memory create/update requires source", input.event);
+      return invalidPayloadForWrite(base, "memory create/update requires source", input.event);
     }
   }
   return payload;
@@ -95,17 +113,17 @@ function validateMemoryWriteEvent(input, base) {
 
 function validateMemoryRetrieveEvent(input, base) {
   if (input.event === "memory.retrieve.performed") {
-    if (!isString(input.query)) return invalidPayload(base, "performed requires query", input.event);
-    if (!isArray(input.hits)) return invalidPayload(base, "performed requires hits[]", input.event);
-    if (!isArray(input.adopted)) return invalidPayload(base, "performed requires adopted[]", input.event);
-    if (!isArray(input.rejected)) return invalidPayload(base, "performed requires rejected[]", input.event);
-    if (!isBool(input.semantic_called)) return invalidPayload(base, "performed requires semantic_called(boolean)", input.event);
-    if (!isBool(input.keyword_called)) return invalidPayload(base, "performed requires keyword_called(boolean)", input.event);
+    if (!isString(input.query)) return invalidPayloadForRetrieve(base, "performed requires query", input.event);
+    if (!isArray(input.hits)) return invalidPayloadForRetrieve(base, "performed requires hits[]", input.event);
+    if (!isArray(input.adopted)) return invalidPayloadForRetrieve(base, "performed requires adopted[]", input.event);
+    if (!isArray(input.rejected)) return invalidPayloadForRetrieve(base, "performed requires rejected[]", input.event);
+    if (!isBool(input.semantic_called)) return invalidPayloadForRetrieve(base, "performed requires semantic_called(boolean)", input.event);
+    if (!isBool(input.keyword_called)) return invalidPayloadForRetrieve(base, "performed requires keyword_called(boolean)", input.event);
     if (!isNumber(input.candidate_read_count) || input.candidate_read_count < 0) {
-      return invalidPayload(base, "performed requires candidate_read_count(number>=0)", input.event);
+      return invalidPayloadForRetrieve(base, "performed requires candidate_read_count(number>=0)", input.event);
     }
     if (!isString(input.decision) || input.decision.length === 0) {
-      return invalidPayload(base, "performed requires decision", input.event);
+      return invalidPayloadForRetrieve(base, "performed requires decision", input.event);
     }
     return {
       ...base,
@@ -121,9 +139,9 @@ function validateMemoryRetrieveEvent(input, base) {
   }
 
   if (input.event === "memory.retrieve.skipped") {
-    if (!isString(input.query)) return invalidPayload(base, "skipped requires query", input.event);
+    if (!isString(input.query)) return invalidPayloadForRetrieve(base, "skipped requires query", input.event);
     if (!isString(input.reason) || input.reason.length === 0) {
-      return invalidPayload(base, "skipped requires reason", input.event);
+      return invalidPayloadForRetrieve(base, "skipped requires reason", input.event);
     }
     return {
       ...base,
@@ -136,7 +154,7 @@ function validateMemoryRetrieveEvent(input, base) {
 
   if (input.event === "memory.retrieve.missing") {
     if (!isString(input.reason) || input.reason.length === 0) {
-      return invalidPayload(base, "missing requires reason", input.event);
+      return invalidPayloadForRetrieve(base, "missing requires reason", input.event);
     }
     return {
       ...base,
@@ -147,7 +165,7 @@ function validateMemoryRetrieveEvent(input, base) {
 
   if (input.event === "memory.retrieve.invalid") {
     if (!isString(input.reason) || input.reason.length === 0) {
-      return invalidPayload(base, "invalid requires reason", input.event);
+      return invalidPayloadForRetrieve(base, "invalid requires reason", input.event);
     }
     return {
       ...base,
@@ -156,13 +174,13 @@ function validateMemoryRetrieveEvent(input, base) {
     };
   }
 
-  return invalidPayload(base, "unknown memory.retrieve event", input.event);
+  return invalidPayloadForRetrieve(base, "unknown memory.retrieve event", input.event);
 }
 
 function buildPayload(input) {
   const base = buildBasePayload(input);
   if (!isString(input.event) || input.event.length === 0) {
-    return invalidPayload(base, "event is required", "");
+    return invalidPayloadForAudit(base, "event is required", "");
   }
 
   if (MEMORY_WRITE_EVENTS.has(input.event)) {
@@ -171,7 +189,7 @@ function buildPayload(input) {
   if (MEMORY_RETRIEVE_EVENTS.has(input.event)) {
     return validateMemoryRetrieveEvent(input, base);
   }
-  return invalidPayload(base, "unsupported event for append-memory-audit", input.event);
+  return invalidPayloadForAudit(base, "unsupported event for append-memory-audit", input.event);
 }
 
 /**

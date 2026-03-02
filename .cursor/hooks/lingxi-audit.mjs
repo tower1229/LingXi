@@ -10,6 +10,7 @@ import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const TAIL_BYTES = 200 * 1024; // 200KB，完整性检查优先读取的尾部大小
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie|session|credential)/i;
 const RETRIEVE_SUCCESS_EVENTS = new Set(["memory.retrieve.performed", "memory.retrieve.skipped"]);
@@ -126,6 +127,45 @@ function safeJsonParse(line) {
   }
 }
 
+/**
+ * 读取 audit 文件最后 TAIL_BYTES 字节，解析为完整行得到 rows；避免全量读大文件。
+ */
+function readAuditRowsTail(auditPath) {
+  const stats = fs.statSync(auditPath, { throwIfNoEntry: false });
+  if (!stats || stats.size === 0) return [];
+  const size = stats.size;
+  const toRead = Math.min(size, TAIL_BYTES);
+  const start = Math.max(0, size - toRead);
+  const fd = fs.openSync(auditPath, "r");
+  try {
+    const buffer = Buffer.alloc(toRead);
+    fs.readSync(fd, buffer, 0, toRead, start);
+    let str = buffer.toString("utf8");
+    if (start > 0 && str.includes("\n")) {
+      str = str.slice(str.indexOf("\n") + 1);
+    }
+    return str
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => safeJsonParse(line))
+      .filter(Boolean);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * 全量读取 audit 文件并解析为 rows（fallback）。
+ */
+function readAuditRowsFull(auditPath) {
+  const content = fs.readFileSync(auditPath, { encoding: "utf8" });
+  return content
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .map((line) => safeJsonParse(line))
+    .filter(Boolean);
+}
+
 function appendAuditLine(auditPath, payload) {
   const line = JSON.stringify(payload) + "\n";
   fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
@@ -137,25 +177,53 @@ function maybeAppendRetrieveIntegrityEvent(auditPath, input) {
   const generation_id = input.generation_id ?? "";
   if (!conversation_id && !generation_id) return;
 
-  const content = fs.readFileSync(auditPath, { encoding: "utf8" });
-  const rows = content
-    .split("\n")
-    .filter((line) => line.trim().length > 0)
-    .map((line) => safeJsonParse(line))
-    .filter(Boolean);
-
+  let rows = readAuditRowsTail(auditPath);
   const matchTurn = (row) =>
     (row.conversation_id ?? "") === conversation_id && (row.generation_id ?? "") === generation_id;
-
-  const turnRows = rows.filter(matchTurn);
+  let turnRows = rows.filter(matchTurn);
+  if (turnRows.length === 0) {
+    rows = readAuditRowsFull(auditPath);
+    turnRows = rows.filter(matchTurn);
+  }
   if (turnRows.length === 0) return;
 
   const hasUserSubmit = turnRows.some((row) => row.event === "before_submit_prompt");
   if (!hasUserSubmit) return;
 
-  const hasRetrieve = turnRows.some((row) => RETRIEVE_SUCCESS_EVENTS.has(row.event));
+  const beforeSubmitRow = turnRows.find((row) => row.event === "before_submit_prompt");
+  const turnStartTs = beforeSubmitRow ? new Date(beforeSubmitRow.ts).getTime() : null;
+  const turnEndTs = Math.max(...turnRows.map((r) => new Date(r.ts).getTime()));
+  if (turnStartTs == null) return;
+
+  const hasRetrieveInWindow = (r) => {
+    if (!RETRIEVE_SUCCESS_EVENTS.has(r.event)) return false;
+    if ((r.conversation_id ?? "") !== conversation_id) return false;
+    const t = new Date(r.ts).getTime();
+    if (t < turnStartTs || t > turnEndTs) return false;
+    const rGen = r.generation_id ?? "";
+    return rGen === "" || rGen === generation_id;
+  };
+  const hasRetrieve = rows.some(hasRetrieveInWindow);
   const alreadyMarkedMissing = turnRows.some((row) => row.event === "memory.retrieve.missing");
-  if (hasRetrieve || alreadyMarkedMissing) return;
+  if (hasRetrieve || alreadyMarkedMissing) {
+    const hasGrepInTurn = rows.some(
+      (r) =>
+        r.event === "pre_tool_use" &&
+        r.tool_name === "Grep" &&
+        (r.conversation_id ?? "") === conversation_id &&
+        new Date(r.ts).getTime() >= turnStartTs &&
+        new Date(r.ts).getTime() <= turnEndTs &&
+        ((r.generation_id ?? "") === "" || r.generation_id === generation_id)
+    );
+    appendAuditLine(auditPath, {
+      ts: getSystemTimestamp(),
+      event: "memory.retrieve.keyword_path_verified",
+      conversation_id,
+      generation_id,
+      verified: hasGrepInTurn,
+    });
+    return;
+  }
 
   appendAuditLine(auditPath, {
     ts: getSystemTimestamp(),

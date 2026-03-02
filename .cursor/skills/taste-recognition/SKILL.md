@@ -21,13 +21,13 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 | `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达在哪些候选中做了选择。 |
 | `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述。 |
 | `evidence` | string | 否 | 一句用户原文或引用；无则省略。 |
-| `source` | enum | 是 | `auto` \| `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。 |
+| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。其中 `choice` 表示环节选择题反馈（与 payload 字段 `choice`「实际选择」区分）。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `personal` \| `project` \| `team`；缺省时下游可默认 project。 |
 
 **门控**（下游 lingxi-memory）：merge/replace 一律 questions；new 时 `confidence === "high"` 可静默写入，medium/low 必须 questions。
 
-**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "auto", "confidence": "high", "apply": "team" }`
+**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "remember", "confidence": "high", "apply": "team" }`
 
 ## References
 
