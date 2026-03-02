@@ -7,29 +7,36 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 意图
 
-从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则产出**唯一合法**的 7 字段 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀时静默。本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
+从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则经**升维**（模式靠拢 + 价值判定）后产出**唯一合法**的扩展 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀或**判定不写**时静默（不产出 payload、不调用 lingxi-memory）。升维（模式靠拢 + 价值判定）在本 Skill 完成，详见 references/elevation-rules.md、references/pattern-catalog.md。本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
 
 **品味**（可操作定义）：在给定场景下，在一组可能适用甚至冲突的原则中，用户实际采用的选择与权衡（含显式或可推断的理由）。识别目标：抽出「场景 + 原则候选 + 实际选择」→ 可写入记忆的 payload。
 
 ## 品味 Payload 规范（输出唯一形态，契约）
 
-下游 lingxi-memory **仅接受 payloads 数组**（元素为本结构）；不产候选，只做校验 → 映射 → 治理 → 门控 → 写入。
+下游 lingxi-memory **仅接受 payloads 数组**（元素为本结构）；不产候选，只做校验 → 按 payload 映射 → 治理 → 门控 → 写入。
 
 | 字段 | 类型 | 必选 | 说明 |
 | --- | --- | --- | --- |
 | `scene` | string | 是 | 场景（何时/何类情境）；下游据此生成 whenToLoad、场景族。 |
-| `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达在哪些候选中做了选择。 |
-| `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述。 |
-| `evidence` | string | 否 | 一句用户原文或引用；无则省略。 |
+| `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达在哪些候选中做了选择；模式靠拢后可为模式名或「模式名+约束」。 |
+| `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述；模式靠拢后可为模式名或「模式名+具体约束」。 |
+| `evidence` | string | 否 | 一句用户原文或引用；无则省略。始终保留用户原文便于可验证性与 L0。 |
 | `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。其中 `choice` 表示环节选择题反馈（与 payload 字段 `choice`「实际选择」区分）。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 notes/，团队级=写入 notes/share/（跨项目复用）。 |
+| `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由本 Skill 按 references/elevation-rules.md 填写。 |
+| `l0OneLiner` | string | 否 | 当 layer 为 L0 或 L0+L1 时建议填写；下游直接用于 note 的 L0 句/事实句。 |
+| `l1OneLiner` | string | 否 | 当 layer 为 L1 或 L0+L1 时建议填写；下游直接用于 note 的 L1 句/原则句。 |
+| `patternHint` | string | 否 | 设计模式名称（与 references/pattern-catalog.md 一致）；匹配到模式时填写。 |
+| `patternConfidence` | enum | 否 | `high` \| `medium` \| `low`；仅当 patternHint 存在时填写。 |
 
 **门控**（下游 lingxi-memory）：merge/replace 一律 questions；new 时 `confidence === "high"` 可静默写入，medium/low 必须 questions。
 
-**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "remember", "confidence": "high", "apply": "team" }`
+**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "remember", "confidence": "high", "apply": "team", "layer": "L1", "l1OneLiner": "引用能力时优先自然语言短引用，避免暴露实现路径" }`
 
 ## References
 
 - **触发点与输入表、执行步骤、与环节品味嗅探的关系**：[references/execution-and-triggers.md](references/execution-and-triggers.md)
+- **升维规则（四维 + 写/不写 + layer）**：[references/elevation-rules.md](references/elevation-rules.md)
+- **设计模式目录（模式靠拢参考）**：[references/pattern-catalog.md](references/pattern-catalog.md)
 - Payload → note 映射与门控细节：`references/payload-to-note.md`；下游契约：`.cursor/agents/lingxi-memory.md`

@@ -26,13 +26,13 @@
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
-**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收简报。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（单条或多条），将 payload 组成 **payloads 数组**传入 lingxi-memory；lingxi-memory **仅接受 payloads 数组**，不产候选、不从原始对话做识别。
+**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收简报。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出扩展品味 payload（必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence），将 payload 组成 **payloads 数组**传入 lingxi-memory；lingxi-memory **仅接受 payloads 数组**，不产候选、不从原始对话做识别。
 
-- **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
+- **写入流程**：payload → 校验 → **按 payload 映射**生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。升维（价值判定与模式靠拢）在 taste-recognition 完成，判定不写时不产出 payload、不调用 lingxi-memory。
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
 - **门控**：merge/replace 时**必须** ask-questions 确认（按 `question_id + option id` 协议）；new 路径按 `payload.confidence` 分流：high 可静默写入，medium/low 须 ask-questions。删除与替换须用户确认。
 - **治理策略**：语义近邻 TopK（merge/replace/veto/new）；合并/替换时更新 Supersedes，与 INDEX 同步。
-- **生命周期与升维判定**：Status 为 active / local / archive；记忆升维判定标准（低价值定义、五维评分、L0/L1 决策与书写模板、例外条件、生命周期、样例）见 `.cursor/agents/lingxi-memory.md` 内「记忆升维判定标准」一节。
+- **生命周期与升维**：Status 为 active / local / archive。升维（写/不写、L0/L1、设计模式靠拢）在 taste-recognition 内完成，见 `.cursor/skills/taste-recognition/references/elevation-rules.md` 与 `references/pattern-catalog.md`；lingxi-memory 仅按 payload 映射写入，不再执行评分卡。
 
 ## 记忆提取（Retrieve + Inject）
 

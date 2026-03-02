@@ -1,6 +1,6 @@
 ---
 name: lingxi-memory
-description: 当主 Agent 经 taste-recognition skill 产出品味 payload 后调用。仅接受 7 字段品味 payload 的数组 payloads；校验 → 映射生成 note → 治理 → 门控 → 直接文件写入；处理结束后统一返回简报。
+description: 当主 Agent 经 taste-recognition skill 产出品味 payload 后调用。仅接受扩展 payload 的数组 payloads（必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）；校验 → 按 payload 映射生成 note → 治理 → 门控 → 直接文件写入；处理结束后统一返回简报。
 model: inherit
 ---
 
@@ -10,8 +10,9 @@ model: inherit
 
 ## 输入约定（父代理必须传入）
 
-- **payloads**（必填，数组）：一组或多组品味 payload，每项为**唯一合法**的 7 字段结构（scene, principles, choice, evidence, source, confidence, apply）。单条时父代理传入仅含一元素的数组。任一项必填缺失或类型/枚举非法时拒收并返回原因。
-  - 每项字段：`scene`（string，必填）、`principles`（string[]，必填）、`choice`（string，必填）、`evidence`（string，可选）、`source`（enum，必填：`remember` | `extract` | `choice` | `init`）、`confidence`（enum，必填：`low` | `medium` | `high`）、`apply`（enum，可选：`project` | `team`，缺省按 project）。
+- **payloads**（必填，数组）：一组或多组品味 payload，每项为**唯一合法**的扩展结构：必填 7 字段（scene, principles, choice, evidence, source, confidence, apply）+ **layer**（enum：`L0` | `L1` | `L0+L1`）；可选 `l0OneLiner`、`l1OneLiner`、`patternHint`、`patternConfidence`。单条时父代理传入仅含一元素的数组。任一项必填缺失或类型/枚举非法时拒收并返回原因。
+  - 必填字段：`scene`（string）、`principles`（string[]）、`choice`（string）、`evidence`（string，可选）、`source`（enum：`remember` | `extract` | `choice` | `init`）、`confidence`（enum：`low` | `medium` | `high`）、`apply`（enum，可选：`project` | `team`，缺省按 project）、**`layer`**（enum，必填：`L0` | `L1` | `L0+L1`）。
+  - 可选字段：`l0OneLiner`（string）、`l1OneLiner`（string）、`patternHint`（string）、`patternConfidence`（enum：`high` | `medium` | `low`，仅当 patternHint 存在时有效）。
 - **conversation_id**（按需）：当前会话 ID，用于记忆审计与会话级关联；未传时记忆审计行中该字段可为空。
 - **generation_id**（按需）：当前轮次/生成 ID，有则传入，用于审计关联。
 
@@ -21,42 +22,26 @@ model: inherit
 
 在给定 **payloads**（数组）与可选 conversation_id、generation_id 下，统一按 payload 列表顺序执行：
 
-1. **输入校验**：校验 payloads 为非空数组，逐条校验每项 7 字段；任一条必填缺失或类型/枚举不符则拒收该条并向主对话返回错误与建议，不执行后续步骤（批量时可选：跳过非法条继续处理其余，由实现约定）。
-2. **映射与补全**：由每条 payload 按下文「映射规则」生成 note 各字段。
-3. **评分卡**：在映射生成候选 note 之后、写入之前，按下文「记忆升维判定标准」执行。
-4. **治理**：对 `.cursor/.lingxi/memory/notes/` 做语义近邻 TopK。近邻检索范围须**包含本批在本轮已写入的 note**（已处理的 payload 产生的 new/merge/replace 结果），以便本批内不重复建语义相同的 note。
-5. **门控**：merge 或 replace 时**必须**使用 ask-questions 交互收集用户选择并在确认后执行。**new 路径**：按 `payload.confidence` 分流。
-6. **写入**：**直接读写文件**。进入时**读一次** `memory/INDEX.md` 与现有 notes，得到当前最大 MEM-id；对 payloads 中每项顺序处理，若治理结果为 new 则分配 id = max_id+1 并递增 max_id，写 note 文件，在**内存**中追加 INDEX 行；本批**全部处理完后**一次性写回 INDEX 文件。每条写入 note 后照常调用 append-memory-audit 追加记忆审计行。
-7. **回传主对话**：**全部处理结束后**统一返回**简报**：新建 n 条（MEM-xxx, …）、合并 m 条、跳过 k 条（低价值/veto），可选「详见 INDEX」；若有 merge/replace 可简要列出。成功可静默或一句汇总；失败一句错误与建议。
+1. **输入校验**：校验 payloads 为非空数组，逐条校验每项必填字段（7 字段 + layer）及可选字段类型/枚举；任一条必填缺失或类型/枚举不符则拒收该条并向主对话返回错误与建议，不执行后续步骤（批量时可选：跳过非法条继续处理其余，由实现约定）。
+2. **映射与补全**：由每条 payload **按 payload 字段**按下文「映射规则」生成 note 各字段（含 layer、l0OneLiner/l1OneLiner、patternHint）；不再对 note 做额外加工或评分卡判定。
+3. **治理**：对 `.cursor/.lingxi/memory/notes/` 做语义近邻 TopK。近邻检索范围须**包含本批在本轮已写入的 note**（已处理的 payload 产生的 new/merge/replace 结果），以便本批内不重复建语义相同的 note。
+4. **门控**：merge 或 replace 时**必须**使用 ask-questions 交互收集用户选择并在确认后执行。**new 路径**：按 `payload.confidence` 分流。
+5. **写入**：**直接读写文件**。进入时**读一次** `memory/INDEX.md` 与现有 notes，得到当前最大 MEM-id；对 payloads 中每项顺序处理，若治理结果为 new 则分配 id = max_id+1 并递增 max_id，写 note 文件，在**内存**中追加 INDEX 行；本批**全部处理完后**一次性写回 INDEX 文件。每条写入 note 后照常调用 append-memory-audit 追加记忆审计行。
+6. **回传主对话**：**全部处理结束后**统一返回**简报**：新建 n 条（MEM-xxx, …）、合并 m 条、跳过 k 条（veto），可选「详见 INDEX」；若有 merge/replace 可简要列出。成功可静默或一句汇总；失败一句错误与建议。
 
 ## 映射规则（Payload → note）
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）；Kind/Status/Strength/Scope 按 source、apply 与用户表述；**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
-- **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；One-liner 偏「做什么」，如 `在 [scene] 下优先 [choice]`。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若 payload 含 patternHint 且 patternConfidence=high，Kind 设为 `pattern`，Title/When to load 可结合模式名；否则 Kind/Status/Strength/Scope 按 source、apply 与用户表述。**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
+- **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；若有 patternHint 可结合 taste-recognition 的 pattern-catalog 的 when-to-load 表述。One-liner 偏「做什么」。
+- **One-liner**：优先使用 payload.l1OneLiner（layer 为 L1 或 L0+L1）或 payload.l0OneLiner（layer 为 L0）；若无则按「在 [scene] 下优先 [choice]」生成。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。
-- **L0/L1**：按评分卡判定写 L0、L1 或双层；L0 模板：在 [具体场景] 下发生了 [可验证事实/操作]，导致 [结果]；L1 模板：在 [场景族] 中优先 [策略]，避免 [反策略]，因为 [目标/风险]。
+- **L0/L1**：**仅按 payload.layer 及 payload.l0OneLiner、payload.l1OneLiner 填写**；若 note 模板有单独 L0/L1 区块则按 layer 写入对应句。不再执行评分卡或升维判定（升维在 taste-recognition 完成）。
 
 **Note 模板**：`.cursor/.lingxi/memory/references/memory-note-template.md`。
 
 反例/拒绝类：payload 中 choice 或 evidence 表达约束/禁止时，One-liner 或 Decision 可表述为「在 [scene] 下避免 X」；Counter-signals 或 When to load 中体现「何时不适用」。
 
-## 记忆升维判定标准
-
-在映射生成候选 note 之后、写入之前，按本段标准执行评分与写/不写、L0/L1/双层判定。
-
-**低价值记忆定义**：真但无法显著提升未来决策质量的条目。表现为：仅复述单次事实、单对象/单文件细节，难以迁移到同类场景；未来难以被检索命中（触发性弱）；纯主观、不可验证或高时效、一次性易过期。判定口径：五维评分卡总分 T≤3 时视为低价值，**不写**，避免“正确废话”入库。
-
-**五维评分（每维 0–2 分）**：D1 决策增益、D2 迁移性、D3 触发性、D4 可验证性、D5 稳定性（0=低/1=中/2=高）。总分 T = D1+D2+D3+D4+D5。
-
-**L0/L1 决策规则**：T≤3 不写；T∈[4,5] 且 D4≥1 写 L0（实例事实层）；T∈[6,7] 且 D1+D2≥3 写 L1（可复用原则层）；T≥8 且 D2≥1 且 D4≥1 写 L0+L1（双层）。L0 用于保留可验证证据，L1 用于指导未来同类决策。
-
-**书写模板**：L0 一句话——在 [具体场景] 下，发生了 [可验证事实/操作]，导致 [结果]。L1 一句话——在 [场景族] 中，优先 [策略]，避免 [反策略]，因为 [目标函数/风险]。One-liner 偏「做什么/不做什么」，When to load 偏「何时加载」。
-
-**例外条件**：D4=0（不可验证）时即使总分高也不直接写 L1，降级为“不写”或“L0 待确认”。D5=0 且一次性解决时默认不写；除非 D1=2 且 D2≥1，可写 L1 弱版本并标注适用边界。存在明显反例或冲突记忆时优先进入门控（merge/replace/veto），不走静默写入。
-
 **生命周期与 Status**：active = 当前有效、参与检索与注入；local = 降级为仅本机/低优先级；archive = 归档、不再参与默认检索，可被 Supersedes 取代或长期未命中后迁移。触发条件与迁移节奏按治理约定执行。
-
-**升维样例（供书写参考）**：L0 事实层——引用某个 Skill 时，写完整路径会增加文档噪声与阅读负担。L1 原则层——引用能力时优先自然语言短引用，避免暴露实现路径，以提升表达简洁度和可迁移性。
 
 ## 治理逻辑（语义近邻 TopK）
 
