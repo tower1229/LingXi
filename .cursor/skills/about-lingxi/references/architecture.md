@@ -19,7 +19,7 @@ Commands 作为纯入口，负责参数解析和调用说明，执行逻辑委�
 | `/review`   | 审查交付；taskId 可选，省略时使用最新任务                                                       | `review-executor`                                                                                |
 | `/remember` | 写入记忆（随时可用，无需依赖任务编号）                                                          | **lingxi-memory**（Subagent）                                                                    |
 | `/extract`  | 从当前会话或指定时间范围的会话中提取可沉淀内容并写入记忆库（可选参数：时间范围）                | taste-recognition + **lingxi-memory**（Subagent，批量 payloads）                                 |
-| `/init`     | 初始化项目（首次使用：创建 .cursor/.lingxi/ 骨架，引导式收集并可选写入记忆）                    | `workspace-bootstrap`（Step 0）；init command（0.5–8）；写入时委派 **lingxi-memory**（Subagent） |
+| `/init`     | 初始化项目上下文（首次使用：引导式理解现有项目并生成可选记忆候选）                               | `workspace-bootstrap`（Step 0 预检）；init command（Step 1–7）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
 

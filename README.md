@@ -32,7 +32,7 @@ Lower cognitive load and a smooth, user-friendly experience.
 - **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
 - **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
 - **Context curation**: Optimize context so the model focuses on what matters
-- **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to quickly set up LingXi in your project
+- **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to understand project context and bootstrap LingXi workflow
 
 ---
 
@@ -51,13 +51,13 @@ Run one of the following commands from your **project root** to install LingXi i
   irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
   ```
 
-After install, open the project in Cursor and run `/init` once to create the workspace layout (`.cursor/.lingxi/`) and optional memory drafts.
+After install, open the project in Cursor and run `/init` once to build project context and generate optional memory candidates (write is gated by your explicit choice).
 
 ---
 
 ### Quick Start
 
-**We recommend running `/init` first** to initialize the project (creates `.cursor/.lingxi/` skeleton and templates); then use the commands below.
+**We recommend running `/init` first** to understand the existing project and prepare optional memory candidates; then use the commands below.
 
 #### Core workflow commands
 
@@ -77,7 +77,7 @@ Use these in lifecycle order:
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y` | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/notes/` for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content |
 | `/extract` | `/extract` or `/extract <time range>`<br><br>**Examples:**<br>`/extract` (current conversation)<br>`/extract 提炼今天的会话`<br>`/extract 1d` | **Extract memory from conversation(s)**<br><br>Extract sedimentable content from the current or time-scoped conversation(s) and write to memory. No args = current conversation; with args = natural-language time range (e.g. “today”, “last 2 days”, “1d”, “24h”). All payloads are sent to lingxi-memory in one batch; you get a short report. |
-| `/init`     | `/init`                                                                                                                          | **Initialize project (first use)**<br><br>Guided collection of project info (stack, patterns, rules), then optional write of initial memory to `memory/notes/`. Recommended when first using LingXi in a project.                                                                                                             |
+| `/init`     | `/init`                                                                                                                          | **Initialize project context (first use)**<br><br>Guided understanding of an existing project, producing memory candidates with explicit write gating. Internal workspace bootstrap may run as a preflight step. Recommended when first using LingXi in a project.                                                                 |
 
 #### Sharing experience across projects (share dir + git submodule)
 
