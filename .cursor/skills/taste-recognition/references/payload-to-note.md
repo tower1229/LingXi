@@ -12,7 +12,7 @@
 | `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达「在哪些候选中做了选择」。 |
 | `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述。 |
 | `evidence` | string | 否 | 一句用户原文或引用，用于可验证性及 L0 事实层；无则省略。 |
-| `source` | enum | 是 | `auto` \| `remember` \| `choice` \| `init`，写入路径，供审计与分流。 |
+| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。`choice` = 环节选择题反馈。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `personal` \| `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、可跨项目共享。 |
 
