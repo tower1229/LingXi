@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * 记忆审计追加脚本：从命令行参数或 stdin JSON 读 event、note_id、operation、source、file、conversation_id、generation_id，
- * 以及可选的 query、hits、adopted、rejected、obligations、decision，
- * 写一条 NDJSON 到与主审计同一的 audit.log。供 lingxi-memory 子代理在写 note/INDEX 后调用。
- * 参考：001.task.灵犀审计系统.md §8.2 记忆审计。
+ * Unified audit appender for memory events.
+ * Accepts one JSON argument and appends one NDJSON line into audit.log.
+ * Non-compatible mode: only v2 memory retrieve events are accepted.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -11,13 +10,168 @@ import path from "node:path";
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
+const MEMORY_WRITE_EVENTS = new Set([
+  "memory_note_created",
+  "memory_note_updated",
+  "memory_note_deleted",
+  "memory_index_updated",
+]);
+const MEMORY_RETRIEVE_EVENTS = new Set([
+  "memory.retrieve.performed",
+  "memory.retrieve.skipped",
+  "memory.retrieve.missing",
+  "memory.retrieve.invalid",
+]);
 
 /**
  * 获取系统当前时间戳（ISO 8601格式，UTC）
  */
 function getSystemTimestamp() {
-  // 使用系统API获取当前时间，转换为ISO 8601格式
   return new Date().toISOString();
+}
+
+function isString(v) {
+  return typeof v === "string";
+}
+
+function isBool(v) {
+  return typeof v === "boolean";
+}
+
+function isNumber(v) {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+function isArray(v) {
+  return Array.isArray(v);
+}
+
+function buildBasePayload(input) {
+  return {
+    ts: getSystemTimestamp(),
+    event: input.event,
+    conversation_id: input.conversation_id ?? "",
+    generation_id: input.generation_id ?? "",
+  };
+}
+
+function invalidPayload(base, reason, invalidEvent) {
+  return {
+    ...base,
+    event: "memory.retrieve.invalid",
+    reason,
+    ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
+  };
+}
+
+function validateMemoryWriteEvent(input, base) {
+  const payload = {
+    ...base,
+    ...(input.note_id != null && { note_id: input.note_id }),
+    ...(input.operation != null && { operation: input.operation }),
+    ...(input.source != null && { source: input.source }),
+    ...(input.file != null && { file: input.file }),
+    ...(input.reason != null && { reason: input.reason }),
+  };
+
+  if (input.event === "memory_index_updated") return payload;
+
+  if (!isString(input.note_id) || input.note_id.length === 0) {
+    return invalidPayload(base, "memory write event requires note_id", input.event);
+  }
+  if (!isString(input.operation) || input.operation.length === 0) {
+    return invalidPayload(base, "memory write event requires operation", input.event);
+  }
+  if (!isString(input.file) || input.file.length === 0) {
+    return invalidPayload(base, "memory write event requires file", input.event);
+  }
+  if (input.event !== "memory_note_deleted") {
+    if (!isString(input.source) || input.source.length === 0) {
+      return invalidPayload(base, "memory create/update requires source", input.event);
+    }
+  }
+  return payload;
+}
+
+function validateMemoryRetrieveEvent(input, base) {
+  if (input.event === "memory.retrieve.performed") {
+    if (!isString(input.query)) return invalidPayload(base, "performed requires query", input.event);
+    if (!isArray(input.hits)) return invalidPayload(base, "performed requires hits[]", input.event);
+    if (!isArray(input.adopted)) return invalidPayload(base, "performed requires adopted[]", input.event);
+    if (!isArray(input.rejected)) return invalidPayload(base, "performed requires rejected[]", input.event);
+    if (!isBool(input.semantic_called)) return invalidPayload(base, "performed requires semantic_called(boolean)", input.event);
+    if (!isBool(input.keyword_called)) return invalidPayload(base, "performed requires keyword_called(boolean)", input.event);
+    if (!isNumber(input.candidate_read_count) || input.candidate_read_count < 0) {
+      return invalidPayload(base, "performed requires candidate_read_count(number>=0)", input.event);
+    }
+    if (!isString(input.decision) || input.decision.length === 0) {
+      return invalidPayload(base, "performed requires decision", input.event);
+    }
+    return {
+      ...base,
+      query: input.query,
+      hits: input.hits,
+      adopted: input.adopted,
+      rejected: input.rejected,
+      semantic_called: input.semantic_called,
+      keyword_called: input.keyword_called,
+      candidate_read_count: input.candidate_read_count,
+      decision: input.decision,
+    };
+  }
+
+  if (input.event === "memory.retrieve.skipped") {
+    if (!isString(input.query)) return invalidPayload(base, "skipped requires query", input.event);
+    if (!isString(input.reason) || input.reason.length === 0) {
+      return invalidPayload(base, "skipped requires reason", input.event);
+    }
+    return {
+      ...base,
+      query: input.query,
+      reason: input.reason,
+      ...(isBool(input.semantic_called) ? { semantic_called: input.semantic_called } : {}),
+      ...(isBool(input.keyword_called) ? { keyword_called: input.keyword_called } : {}),
+    };
+  }
+
+  if (input.event === "memory.retrieve.missing") {
+    if (!isString(input.reason) || input.reason.length === 0) {
+      return invalidPayload(base, "missing requires reason", input.event);
+    }
+    return {
+      ...base,
+      reason: input.reason,
+      ...(isArray(input.expected_events) ? { expected_events: input.expected_events } : {}),
+    };
+  }
+
+  if (input.event === "memory.retrieve.invalid") {
+    if (!isString(input.reason) || input.reason.length === 0) {
+      return invalidPayload(base, "invalid requires reason", input.event);
+    }
+    return {
+      ...base,
+      reason: input.reason,
+      ...(isString(input.invalid_event) ? { invalid_event: input.invalid_event } : {}),
+    };
+  }
+
+  return invalidPayload(base, "unknown memory.retrieve event", input.event);
+}
+
+function buildPayload(input) {
+  const base = buildBasePayload(input);
+  if (!isString(input.event) || input.event.length === 0) {
+    return invalidPayload(base, "event is required", "");
+  }
+
+  if (MEMORY_WRITE_EVENTS.has(input.event)) {
+    return validateMemoryWriteEvent(input, base);
+  }
+  if (MEMORY_RETRIEVE_EVENTS.has(input.event)) {
+    return validateMemoryRetrieveEvent(input, base);
+  }
+  return invalidPayload(base, "unsupported event for append-memory-audit", input.event);
 }
 
 /**
@@ -93,29 +247,17 @@ function main() {
     console.error("Usage: node append-memory-audit.mjs '<JSON>'");
     process.exit(1);
   }
-  const input = JSON.parse(raw);
+  let input;
+  try {
+    input = JSON.parse(raw);
+  } catch (err) {
+    console.error("[append-memory-audit] invalid JSON:", err.message);
+    process.exit(1);
+  }
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  let auditPath = path.join(projectRoot, AUDIT_REL);
+  const auditPath = path.join(projectRoot, AUDIT_REL);
   const workspaceDir = path.dirname(auditPath);
-
-  const ts = getSystemTimestamp();
-  const payload = {
-    ts,
-    event: input.event,
-    conversation_id: input.conversation_id ?? "",
-    generation_id: input.generation_id ?? "",
-    ...(input.note_id != null && { note_id: input.note_id }),
-    ...(input.operation != null && { operation: input.operation }),
-    ...(input.source != null && { source: input.source }),
-    ...(input.file != null && { file: input.file }),
-    ...(input.reason != null && { reason: input.reason }),
-    ...(input.query != null && { query: input.query }),
-    ...(input.hits != null && { hits: input.hits }),
-    ...(input.adopted != null && { adopted: input.adopted }),
-    ...(input.rejected != null && { rejected: input.rejected }),
-    ...(input.obligations != null && { obligations: input.obligations }),
-    ...(input.decision != null && { decision: input.decision }),
-  };
+  const payload = buildPayload(input);
 
   // 确保目录存在
   if (!fs.existsSync(workspaceDir)) {
@@ -127,10 +269,7 @@ function main() {
     rotateAuditFile(auditPath);
   }
 
-  // 构建日志行，确保 JSON.stringify 正确处理 Unicode
   const line = JSON.stringify(payload) + "\n";
-
-  // 使用 UTF-8 编码写入（明确指定，确保跨平台一致性）
   fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
 }
 

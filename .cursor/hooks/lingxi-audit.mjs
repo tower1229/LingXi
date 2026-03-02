@@ -12,6 +12,7 @@ const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie|session|credential)/i;
+const RETRIEVE_SUCCESS_EVENTS = new Set(["memory.retrieve.performed", "memory.retrieve.skipped"]);
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
@@ -117,6 +118,55 @@ function buildPayload(input) {
   }
 }
 
+function safeJsonParse(line) {
+  try {
+    return JSON.parse(line);
+  } catch {
+    return null;
+  }
+}
+
+function appendAuditLine(auditPath, payload) {
+  const line = JSON.stringify(payload) + "\n";
+  fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
+}
+
+function maybeAppendRetrieveIntegrityEvent(auditPath, input) {
+  if (input.hook_event_name !== "afterAgentResponse") return;
+  const conversation_id = input.conversation_id ?? "";
+  const generation_id = input.generation_id ?? "";
+  if (!conversation_id && !generation_id) return;
+
+  const content = fs.readFileSync(auditPath, { encoding: "utf8" });
+  const rows = content
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .map((line) => safeJsonParse(line))
+    .filter(Boolean);
+
+  const matchTurn = (row) =>
+    (row.conversation_id ?? "") === conversation_id && (row.generation_id ?? "") === generation_id;
+
+  const turnRows = rows.filter(matchTurn);
+  if (turnRows.length === 0) return;
+
+  const hasUserSubmit = turnRows.some((row) => row.event === "before_submit_prompt");
+  if (!hasUserSubmit) return;
+
+  const hasRetrieve = turnRows.some((row) => RETRIEVE_SUCCESS_EVENTS.has(row.event));
+  const alreadyMarkedMissing = turnRows.some((row) => row.event === "memory.retrieve.missing");
+  if (hasRetrieve || alreadyMarkedMissing) return;
+
+  appendAuditLine(auditPath, {
+    ts: getSystemTimestamp(),
+    event: "memory.retrieve.missing",
+    conversation_id,
+    generation_id,
+    reason: "No memory.retrieve.performed or memory.retrieve.skipped found for this turn",
+    expected_events: ["memory.retrieve.performed", "memory.retrieve.skipped"],
+  });
+}
+
 function getAllowOutput(hookName) {
   if (hookName === "beforeSubmitPrompt") return { continue: true };
   if (hookName === "preToolUse") return { decision: "allow" };
@@ -207,14 +257,9 @@ async function main() {
     rotateAuditFile(auditPath);
   }
 
-  // 构建 payload，确保 JSON.stringify 正确处理 Unicode
   const payload = buildPayload(input);
-  // JSON.stringify 默认会将非 ASCII 字符转义为 \uXXXX，这是 JSON 标准
-  // 如果需要保留原始字符，可以使用 JSON.stringify(payload, null, 0) 但输出会更大
-  const line = JSON.stringify(payload) + "\n";
-
-  // 使用 UTF-8 编码写入（明确指定，确保跨平台一致性）
-  fs.appendFileSync(auditPath, line, { encoding: "utf8", flag: "a" });
+  appendAuditLine(auditPath, payload);
+  maybeAppendRetrieveIntegrityEvent(auditPath, input);
 
   const out = getAllowOutput(input.hook_event_name);
   writeStdoutJson(out);

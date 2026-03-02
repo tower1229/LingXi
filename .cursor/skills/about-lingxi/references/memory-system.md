@@ -51,10 +51,13 @@
 - 不把原文展示在对话中，除非用户明确要求查看
 - 若依据命中记忆做决策，在对外输出中自然引用记忆 ID（如 `[MEM-003]`）
 
-**每轮审计建议**：
+**每轮审计（v2，必须）**：
 
-- 每轮 memory-retrieve 后追加审计事件 `memory_retrieve`
-- 建议字段：query、hits、adopted、rejected、decision（附 conversation_id / generation_id）
+- 每轮 memory-retrieve 后必须追加：
+  - `memory.retrieve.performed`（执行检索）或
+  - `memory.retrieve.skipped`（显式跳过）
+- `memory.retrieve.performed` 必含字段：`query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（附 `conversation_id` / `generation_id`）
+- 若轮次内缺失上述事件，完整性审计会追加 `memory.retrieve.missing`（软强制，不阻断主流程）
 
 ## 统一索引（INDEX.md）
 
