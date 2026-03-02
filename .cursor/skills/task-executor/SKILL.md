@@ -7,7 +7,7 @@ description: 当执行 /task 命令时自动激活，负责需求分析、提纯
 
 ## 意图
 
-产出一份符合模板的 task 文档（需求提纯与放大 + 核心技术方案），作为工作流起点。能力：读项目文件与代码库、WebSearch/context7 调研、ask-questions 澄清（遵循 ask-questions 契约）。
+产出一份符合模板的 task 文档（需求提纯与放大 + 核心技术方案 + 可判定验收标准），作为工作流起点。能力：读项目文件与代码库、WebSearch/context7 调研、ask-questions 澄清（遵循 ask-questions 契约）。
 
 ## 关键约束
 
