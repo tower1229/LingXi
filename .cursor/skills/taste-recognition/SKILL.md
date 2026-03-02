@@ -7,9 +7,19 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 意图
 
-从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则经**升维**（模式靠拢 + 价值判定）后产出**唯一合法**的扩展 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀或**判定不写**时静默（不产出 payload、不调用 lingxi-memory）。升维（模式靠拢 + 价值判定）在本 Skill 完成，详见 references/elevation-rules.md、references/pattern-catalog.md。本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
+从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则经**升维**（模式靠拢 + 价值判定）后产出**唯一合法**的扩展 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀或**判定不写**时静默（不产出 payload、不调用 lingxi-memory）。详见下文「实现逻辑（数据流）」及 references/elevation-rules.md、references/pattern-catalog.md。
 
 **品味**（可操作定义）：在给定场景下，在一组可能适用甚至冲突的原则中，用户实际采用的选择与权衡（含显式或可推断的理由）。识别目标：抽出「场景 + 原则候选 + 实际选择」→ 可写入记忆的 payload。
+
+## 实现逻辑（数据流）
+
+1. **识别**：从当前触发点的输入中判断是否可沉淀（偏好、约束、取舍、决策等）；无可沉淀则静默返回，不产出 payload、不调用 lingxi-memory。
+2. **模式靠拢**：对可沉淀条目标抽 scene、principles、choice、evidence 后，参考 [references/pattern-catalog.md](references/pattern-catalog.md) 尝试将用户选择映射到常见设计模式；若匹配则更新 principles/choice 或填写 patternHint、patternConfidence。
+3. **价值判定（升维）**：对（可能已模式升维的）内容按 [references/elevation-rules.md](references/elevation-rules.md) 做四维评分，得到总分 T 与 layer；若 T≤3 或触犯例外则**不写**该条——不产出该条、不加入 payloads。
+4. **产出**：对判定为写的条目标注 layer、可选 l0OneLiner/l1OneLiner，产出符合扩展 payload 规范的 JSON；同一轮多条组成 payloads 数组。
+5. **主 Agent 行为**：**仅当 payloads 非空时**将 payloads 数组传入 lingxi-memory；不写时不调用 lingxi-memory（不传 skip 或低价值 payload）。
+
+本 Skill 不调用 lingxi-memory，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory。
 
 ## 品味 Payload 规范（输出唯一形态，契约）
 

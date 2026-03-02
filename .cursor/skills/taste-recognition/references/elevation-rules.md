@@ -1,6 +1,6 @@
 # 升维规则（Elevation Rules）
 
-本规则在 taste-recognition 内执行：**模式靠拢**（参考 pattern-catalog）完成后，对内容做**四维价值判定**，决定写/不写及 layer（L0/L1/L0+L1）。判定为不写时不产出该条 payload，不调用 lingxi-memory。
+**在实现中的位置**：本规则在 taste-recognition 的**执行步骤**中，于「模式靠拢」之后、「产出 payload」之前执行；用于决定写/不写及 layer（L0/L1/L0+L1）。判定为不写时不产出该条 payload，主 Agent 不因此条调用 lingxi-memory。
 
 ---
 

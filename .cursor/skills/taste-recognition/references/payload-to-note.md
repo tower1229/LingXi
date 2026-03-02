@@ -1,6 +1,11 @@
 # Payload → Note 映射与门控（本 Skill 引用）
 
-> 本 Skill 产出 payload 后，下游 lingxi-memory 按本约定做映射与门控。
+> 本 Skill 产出 payload 后，下游 lingxi-memory **仅按本约定**将 payload 映射为 note 并执行门控；不做升维或评分卡。
+
+## 数据流中的位置
+
+- **Payload 来源**：由 taste-recognition 产出，已含升维结果（layer、可选 l0OneLiner/l1OneLiner、patternHint、patternConfidence）；仅「判定为写」的条目会进入 payloads 数组。
+- **下游行为**：lingxi-memory 接受 payloads 数组后，**仅按本约定**做字段到 note 的映射、治理（TopK）、门控与写入；不执行价值判定、不产候选。
 
 ---
 
