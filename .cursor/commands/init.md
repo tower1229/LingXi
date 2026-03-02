@@ -1,221 +1,129 @@
 ---
 name: init
-description: 引导式初始化灵犀工作流（创建 .cursor/.lingxi/ 骨架与可选记忆草稿，用户门控写入）
+description: 引导式理解现有项目并生成可选记忆候选（内含骨架预检，默认不写入）
 args: []
 ---
 
 # /init - 项目初始化
 
-**用途**：初始化灵犀工作流到项目（创建 `.cursor/.lingxi/` 骨架），建立项目上下文并生成记忆候选清单；默认不写入，需用户在交互中选择写入。
+**用途**：面向**已有一定开发进度**的项目，在安装使用灵犀前先理解项目背景，生成可选记忆候选清单，帮助后续迭代开发提升质量；默认不写入，需用户明确选择后才写入。
 
 ---
 
-**用法**：`/init`（无参数）。优先从现有文档整理，仅对缺失或不确定项通过 ask-questions 收集；所有选择环节均用 ask-questions 协议。写入经 taste-recognition、lingxi-memory 完成。
+**用法**：`/init`（无参数）。优先从现有文档与仓库结构整理；仅对缺失或不确定项提问补齐。所有选择环节统一使用 ask-questions 协议；写入经 taste-recognition + lingxi-memory 完成。
 
+**关键约定**：
 
-**关键约定**：写入门控不可侵犯（仅当用户明确选择写入时才写盘）；用户选择均通过 ask-questions skill；执行遵循 workflow-output-principles（最小高信号）。
+- 写入门控不可侵犯：仅当用户明确选择写入时才写盘
+- 交互统一：所有选择均通过 ask-questions 协议
+- 最小高信号：只展示用户决策所需信息，不输出过程旁白
+- 骨架预检是内部实现步骤：用于兼容安装方式，不作为对外解释重点
 
-**委托**：先执行 workspace-bootstrap 确保骨架存在，再按 Step 0.5–8 执行；完整步骤与 init-checklists 见下方附录。
+**委托**：先执行 workspace-bootstrap 进行最小预检，再按 Step 1-7 执行；完整类型清单见下方 `init-checklists`。
 
 ---
 
 ## 附录：完整执行流程与 init-checklists
 
-### Step 0.5) Agent 静默推断项目类型（不展示、不确认、不修正）
+### Step 0) 最小预检与骨架初始化（内部步骤）
 
-仅用于提高收集清单与草稿的准确率，**不向用户展示推断结果，也不接受用户确认或修正**。根据工作区内容推断项目类型（A–H，可多选）：
+- 委托 `workspace-bootstrap` 检测并补齐 `.cursor/.lingxi/` 必需骨架。
+- 该步骤仅为兼容安装方式的内部实现；对用户不作为主信息展开。
 
-1. **读取**（工作区根）：`package.json`（若有）、`README`/`README.md`（若有）、`pyproject.toml`（若有）、根目录及一层子目录名列表；必要时扫 1～2 个关键配置文件（如 `next.config.*`、`vite.config.*`、`Dockerfile`）。不扫全仓，只取足以推断类型的信号。
-2. **推断**：结合文件内容与目录结构做语义判断，从下表选取适用的类型（可多选）。推断结果仅内部使用，用于 Step 1 选取收集清单与 Step 3 类型特化草稿；若无法得到有效信号，按「通用（common 仅）」处理。
+### Step 1) 静默理解项目（Must 优先）
 
-**类型推断信号参考**（非穷举，用于辅助语义判断）：
+在提问前先静默整理 `common Must` 五项草稿（每项为结论或“未找到”）：
 
-| 类型        | 可参考信号示例                                                                                                          |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| A Web       | `next.config.*` / `vite.config.*` / `nuxt.config.*`，`pages/`、`app/`（App Router），前端框架依赖（react、vue、svelte） |
-| B 后端      | `express`/`fastify`/`koa`、`server/`/`api/` 目录、`Dockerfile` 暴露服务端口、README 中「API/微服务」                    |
-| C 移动端    | `app.json`（Expo）、`android/`/`ios/`、`react-native`、Xcode/Android 工程结构                                           |
-| D 数据&ETL  | `dbt_project.yml`、`dagster`/`airflow`、数据/ETL 相关依赖、调度脚本目录                                                 |
-| E 库&SDK    | `package.json` 的 `main`/`exports` 且无 `bin`、`packages/*`（monorepo 库）、名称带 `-sdk`/`-lib`/`-core`                |
-| F CLI       | `package.json` 的 `bin` 字段、名称/描述含「cli」「命令行」、根目录 `src/cli`/`commands`                                 |
-| G 基建&平台 | `terraform/`、`k8s/`/`helm/`、多服务 `docker-compose.*`、README 中「平台/网关/IaC」                                     |
-| H AI 应用   | 依赖中含 `openai`/`langchain`/`@anthropic` 等、README 中「LLM/Agent/评测」                                              |
+1. 项目目标与非目标（goal + non-goals）
+2. 核心用户/角色与关键诉求（users）
+3. 关键链路及失败兜底（flows）
+4. 风险优先级与不可接受失败（risks）
+5. 环境/发布/回滚方式（releaseEnv）
 
-类型枚举（仅 Agent 内部使用）：A) Web 应用 B) 后端服务 C) 移动端 D) 数据&ETL E) 库&SDK F) CLI 工具 G) 基建&平台 H) AI 应用。规则：全栈/前后端一体优先按 A+B；AI + Web/服务按 H +（A 或 B）。
+同时做项目类型推断（A-H，可多选）用于内部补充清单与草稿，但**不向用户展示类型结果**。
 
-### Step 1) 带着 common Must 五项理解项目，再按缺失决定是否提问
+推断规则：
 
-在向用户提问前，**带着下面 5 个问题理解整个项目**（如何读仓库、读哪些文件由你自主决定），得到一份 common 草稿（每项为一小段结论或"未找到"）。理解过程静默完成，不向用户输出。
+- 仅读取足够信号（如 `README`、`package.json`、`pyproject.toml`、根目录与少量关键配置）
+- 不扫全仓，不做重型分析
+- 低置信度时自动降级为 `common-only`，避免误推断带偏流程
 
-**5 个问题**（与附录 init-checklists 的 common Must 对应）：(1) 项目解决什么问题、不做什么（goal + 非目标）；(2) 核心用户/角色与关键诉求（users）；(3) 1–3 条关键链路及失败兜底（flows）；(4) 风险优先级与最不可接受的失败（risks）；(5) 环境、发布与回滚方式（releaseEnv）。
+### Step 2) 展示校对摘要（先确认，再追问）
 
-**行为契约**：仅对草稿中**未找到或明显不确定**的项在后续 Step 4.2 中通过 **ask-questions 多选**让用户选择要补充的项，再逐项请求 1-3 行内容；若五项均已填满且置信度足够，**不要先问这五个问题**，直接进入 Step 2，将"项目结构/技术栈/规范/业务模块"整理成一段供用户确认（可标注「根据项目文档整理，请确认或修正」）。用户确认或补充完 Must 后，再按需进入 Should；Optional 默认不追问，除非用户在 Step 4.1 选择 `deep_dive` 并在 Step 4.2 中通过 ask-questions 多选勾选要补齐的项。从附录 init-checklists 读取通用骨架与**推断出的类型**的 Must → Should；类型不向用户询问。**所有“选哪一项/选哪些项”的环节均使用 `/ask-questions` skill 的 ask-questions 协议，不采用自然语言菜单或手输编号。**
-
-### Step 2) 展示"项目结构/技术栈/规范/业务模块"供确认
-
-把收集到的信息整理成以下区块（用于校对）：
+将已整理信息按 4 块输出供确认：
 
 - 项目结构信息
 - 技术栈信息
 - 开发规范信息
 - 业务/模块信息（如适用）
 
-### Step 3) 生成初始化记忆笔记草稿（不写入）
+若 Must 五项都已充分，直接进入候选生成；仅在“缺失或明显不确定”时再进入补齐问询。
 
-生成 3-6 条草稿项（采用让用户理解的格式，如标题 + 简短描述/要点，无需按 note 模板），并与额外候选项合并为一份"记忆候选清单"（连续编号，不写入）：
+### Step 3) 缺失项补齐（ask-questions-first）
 
-- **最少必须包含**：
-  - `MEM-project-goals-and-nongoals`（business）
-  - `MEM-domain-glossary-and-core-entities`（business）
-  - `MEM-architecture-overview`（tech）
-- **强烈建议再补齐**：
-  - `MEM-critical-user-flows`（business）
-  - `MEM-local-dev-mental-model`（tech）
-  - `MEM-release-and-environment-contract`（tech）
+所有用户选择统一通过 ask-questions 协议执行（参见 `.cursor/skills/ask-questions/SKILL.md`）：
 
-并根据**推断出的类型**，从附录 init-checklists 的 Draft targets 里补齐 0-2 份最关键的类型特化草稿（保持"少而准"）。
+- 先问 `next_action`：`confirm` / `supplement` / `deep_dive`
+- `supplement`：仅列出当前缺失的 Must 项，多选后逐项收集（每次只问一项，1-3 行）
+- `deep_dive`：在 Must 完整后，按当前类型列出 Should 项多选补齐；Optional 默认不主动追问
 
-候选清单输出格式：
+统一异常处理：
 
-- **一个清单**：`## 记忆候选清单（含草稿项）`
-- **连续编号**：从 1 开始递增（例如 1-10）
-- **每条候选**：标题 + 简短描述或要点，便于用户理解与选择；写入时经 taste-recognition 转为 payload 后由 lingxi-memory 按 note 模板生成
+- 无效选择或空选择：只重试当前问题，不回放整段流程
+- 若 UI 不可用：使用 ask-questions 文本兜底模板，并将用户输入归一化为 `selected_option_ids`
 
-### Step 4) 交互式推进（ask-questions-first，统一走 ask-questions 工具）
+### Step 4) 生成记忆候选清单（不写入）
 
-所有需用户选择的环节**统一通过 `/ask-questions` skill** 发起（参见 `.cursor/skills/ask-questions/SKILL.md`）：先确认是否继续，再按需用 ask-questions 多选补齐项，最后再做写入门控。
+生成 `0-6` 条高信号草稿候选，并按类型补 `0-2` 条特化候选（少而准）。不为凑数而生成低价值候选；若暂无法提炼高置信候选，可返回 0 条并说明原因：
 
-#### 4.1 Q1：确认是否继续生成候选清单（必答）
+- **优先覆盖的候选主题（可提炼时）**：
+  - `project_goals_and_nongoals`
+  - `domain_glossary_and_core_entities`
+  - `architecture_overview`
+- **建议补齐的候选主题（按需）**：
+  - `critical_user_flows`
+  - `local_dev_mental_model`
+  - `release_and_environment_contract`
 
-**必须**通过 ask-questions 工具发起单选（若环境不支持 ask-questions UI，按 `/ask-questions` skill 的文本兜底模板执行）：
+输出一个连续编号的候选清单（标题 + 简述），便于用户选择是否写入。
 
-```json
-{
-  "questions": [
-    {
-      "question_id": "next_action",
-      "question": "已整理项目结构与上下文，下一步如何继续？",
-      "options": [
-        { "id": "a", "label": "确认，生成候选清单" },
-        { "id": "b", "label": "先补充缺失项" },
-        { "id": "c", "label": "深入补齐 Should 项" }
-      ]
-    }
-  ]
-}
-```
+### Step 5) 写入门控（默认跳过）
 
-#### 4.2 缺失项交互补齐（仅在 supplement 或 deep_dive 时，均用 ask-questions 驱动）
+候选生成后，单独提问 `write_strategy`：
 
-- **supplement**：先通过 **ask-questions 多选**让用户选择要补充的 common Must 项（**仅列出当前未找到或不确定的项**），再逐项请求 1-3 行内容。示例（选项需按实际缺失项动态生成）：
+- `skip`：不写入
+- `all`：全部写入
+- `partial`：多选指定候选后写入
 
-```json
-{
-  "questions": [
-    {
-      "question_id": "supplement_fields",
-      "question": "请选择需要补充的项（可多选）",
-      "allow_multiple": true,
-      "options": [
-        { "id": "a", "label": "补充项目目标" },
-        { "id": "b", "label": "补充核心用户" },
-        { "id": "c", "label": "补充关键流程" },
-        { "id": "d", "label": "补充风险与优先级" },
-        { "id": "e", "label": "补充发布与环境" }
-      ]
-    }
-  ]
-}
-```
+`partial` 规则：
 
-根据用户勾选结果，**一次只问一个缺失项**，每次输出 1-3 行上下文，不重复展示整段菜单。
+- 必须通过 ask-questions 多选返回有效 `option id`
+- 无有效候选时仅重试当前多选问题
+- UI 不可用时沿用统一文本兜底并归一化，不切换到另一套编号协议
 
-- **deep_dive**：Must 完整后，通过 **ask-questions 多选**让用户选择要补齐的 Should 项（选项来自 init-checklists 中当前类型的 Should 清单，`label` 直接写项名如「术语表」「架构概览」「本地开发心智」），再逐项收集。Optional 不主动列入选项，除非业务需要。
+### Step 6) 可选写入执行（仅 all / partial）
 
-- 追问策略：一次只问一个缺失项；禁止重复展示整段菜单。
+仅在用户明确选择写入时执行：
 
-#### 4.3 兼容输入与异常处理（对齐 ask-questions）
+- 仅提交用户确认后的候选项，不做隐式扩写
+- 交由记忆系统按既有协议完成写入（taste-recognition → lingxi-memory）
+- 最终编号与命名由 lingxi-memory 统一治理
 
-- 兼容旧输入：若用户输入为选项序号、option id 或部分 label 文本，可映射为对应选项 id。
-- **无有效选择时**：仅提示一次简短澄清并**再次发起当前问题的 ask-questions**，不回放长段说明（遵循 ask-questions 的“只重试当前问题”）。
-- 若当前运行环境不支持 ask-questions UI，按 `/ask-questions` skill 的文本兜底模板执行；不采用手输编号等非结构化兜底，除非业务明确允许。
+### Step 7) 初始化结果输出（最小高信号）
 
-### Step 5) 写入策略门控（默认跳过，必须用 ask-questions 发起）
+输出 3-6 行：
 
-候选清单生成后，**必须**通过 ask-questions 工具单独询问写入策略（与 Q1 解耦）：
-
-```json
-{
-  "questions": [
-    {
-      "question_id": "write_strategy",
-      "question": "是否将候选条目写入记忆库？",
-      "options": [
-        { "id": "a", "label": "跳过，不写入" },
-        { "id": "b", "label": "全部写入" },
-        { "id": "c", "label": "部分写入" }
-      ]
-    }
-  ]
-}
-```
-
-- 选择「跳过，不写入」或未明确回答写入策略：仅展示候选清单，不写入磁盘。
-- 选择「全部写入」：全量写入候选清单。
-- 选择「部分写入」：**必须**再次通过 ask-questions 多选收集待写入候选（禁止手输编号）。
-
-`partial` 规则（ask-questions-only）：
-
-- **必须**通过 ask-questions 多选返回有效候选（参见 `/ask-questions` skill 模板 B）；不再支持自然语言编号写入。
-- 若未选择任何候选、或返回值不在当前候选的 option id 列表中，**重新发起同一 ask-questions 多选**，仅追问选择本身。
-- 若当前运行环境不支持 ask-questions 交互，提示用户改为「全部写入」或「跳过，不写入」（不走编号文本兜底）。
-
-推荐使用以下 ask-questions 多选格式收集 `selected_candidates`（协议细则见 `/ask-questions` skill）：
-
-```json
-{
-  "questions": [
-    {
-      "question_id": "selected_candidates",
-      "question": "请选择要写入记忆库的候选（可多选）",
-      "allow_multiple": true,
-      "options": [
-        { "id": "a", "label": "候选1：项目目标与非目标" },
-        { "id": "b", "label": "候选2：领域术语与核心实体" }
-      ]
-    }
-  ]
-}
-```
-
-- `options[].id` 与候选清单条目建立稳定映射，返回值即用户选中的 option id（或 id 列表），用于确定待写入条目。
-
-### Step 6) 可选写入执行（仅当用户选择「全部写入」或「部分写入」时）
-
-当且仅当用户在写入策略中选择「全部写入」或「部分写入」时，执行写入：
-
-- 从"记忆候选清单"确定待写入条目（用户确认后的草稿）。
-- **先**调用 taste-recognition skill（`.cursor/skills/taste-recognition/SKILL.md`），将每条确认后的草稿转为 7 字段品味 payload（source=init；可按附录 init-checklists 类型化字段生成 scene、principles、choice 等）；每条草稿对应一条 payload，可产出多条。
-- 对每条 payload **显式调用** lingxi-memory 子代理（传入 payload 及 conversation_id、可选 generation_id）；禁止将草稿或 selected_candidates 等旧结构直接传给 lingxi-memory。
-- 子代理在独立上下文完成校验 → 映射 → 治理与门控 → 直接读写 `.cursor/.lingxi/memory/notes/` 与 `.cursor/.lingxi/memory/INDEX.md`。
-
-主对话仅展示一句结果或静默；失败时输出明确错误与解决建议。
-
-### Step 7) 初始化报告（最小高信号）
-
-输出 3-6 行摘要：
-
-- 生成的草稿列表
-- 写入策略（跳过不写入 / 全部写入 / 部分写入）
-- 若写入：写入文件列表 + 是否更新 INDEX
-
-（不展示推断的项目类型；类型仅用于内部收集与草稿生成。）
+- 生成的候选概览
+- 写入策略（skip / all / partial）
+- 若写入：写入文件与 INDEX 更新结果
 
 ---
 
 ## 附录：init-checklists（SSoT）
 
-> 用途：init 命令的单一事实源。按项目类型（A-H）提供"收集清单 → 建议草稿记忆文件"的映射，遵循渐进式披露（Must → Should → Optional）。
+> 用途：init 命令的单一事实源。按项目类型（A-H）提供"收集清单 → 候选主题"的映射，遵循渐进式披露（Must → Should → Optional）。
+>
+> 说明：`Draft targets` 仅表示候选主题标签，用于引导草稿覆盖面；不等同于最终记忆文件名。实际写入时由 lingxi-memory 统一治理并分配编号/命名。
 
 ## 类型枚举（A-H）
 

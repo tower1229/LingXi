@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * 记忆审计追加脚本：从命令行参数或 stdin JSON 读 event、note_id、operation、source、file、conversation_id、generation_id，
+ * 以及可选的 query、hits、adopted、rejected、obligations、decision，
  * 写一条 NDJSON 到与主审计同一的 audit.log。供 lingxi-memory 子代理在写 note/INDEX 后调用。
  * 参考：001.task.灵犀审计系统.md §8.2 记忆审计。
  */
@@ -108,6 +109,12 @@ function main() {
     ...(input.source != null && { source: input.source }),
     ...(input.file != null && { file: input.file }),
     ...(input.reason != null && { reason: input.reason }),
+    ...(input.query != null && { query: input.query }),
+    ...(input.hits != null && { hits: input.hits }),
+    ...(input.adopted != null && { adopted: input.adopted }),
+    ...(input.rejected != null && { rejected: input.rejected }),
+    ...(input.obligations != null && { obligations: input.obligations }),
+    ...(input.decision != null && { decision: input.decision }),
   };
 
   // 确保目录存在
