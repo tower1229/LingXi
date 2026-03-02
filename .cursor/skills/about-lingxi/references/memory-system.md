@@ -37,6 +37,7 @@
 ## 记忆提取（Retrieve + Inject）
 
 **触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember、/extract 触发；/init 在初始化时可选写入，为初始化额外产物。
+注入约定要求：命中后主 Agent 必须完成一轮 `adopt/reject/ask` 决策，不允许命中后无决策直接继续。
 
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
 - 执行 Skill：`memory-retrieve`
@@ -46,8 +47,14 @@
 **最小注入**：
 
 - 无匹配：静默
-- 有匹配：最多 Top 0-2 条，每条 1-2 句可执行提醒 + 文件指针
+- 有匹配：仅在存在 adopt 时给一行极简可执行提醒 + 轻量引用；未采纳（reject）不展示
 - 不把原文展示在对话中，除非用户明确要求查看
+- 若依据命中记忆做决策，在对外输出中自然引用记忆 ID（如 `[MEM-003]`）
+
+**每轮审计建议**：
+
+- 每轮 memory-retrieve 后追加审计事件 `memory_retrieve`
+- 建议字段：query、hits、adopted、rejected、decision（附 conversation_id / generation_id）
 
 ## 统一索引（INDEX.md）
 

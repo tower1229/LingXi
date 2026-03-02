@@ -47,7 +47,7 @@ Skills 承载详细的工作流指导，按职责分为：
   - **触发**：用户通过 `/remember` 或 `/extract` 主动发起记忆捕获；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。
   - **手动记忆**：用户主动发起，经 taste-recognition 转为 payload 后以 **payloads 数组**交由 lingxi-memory。
   - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的 7 字段品味 **payloads 数组**（scene, principles, choice, evidence, source, confidence, apply），不产候选；完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话收简报。
-- **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–2 最小注入（由 sessionStart hook 注入的约定触发）。
+- **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–2 最小注入（由 sessionStart hook 注入的约定触发）；命中后主 Agent 需完成 `adopt/reject/ask` 决策，并遵循“仅对 adopt 一行极简提示、reject 不展示”的低打扰输出约束，且在采用时自然引用记忆来源。
 
 #### 工具类 Skills（提供辅助能力）
 
