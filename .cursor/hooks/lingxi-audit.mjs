@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 主审计脚本：被 8 类 Hook 调用，从 stdin 读入参，写一条 NDJSON 到 audit.log，返回放行 JSON。
+ * 主审计脚本：被 9 类 Hook 调用，从 stdin 读入参，写一条 NDJSON 到 audit.log，返回放行 JSON。
  * 参考：001.task.灵犀审计系统.md §8.2；Cursor Hooks 文档。
  */
 import fs from "node:fs";
@@ -11,10 +11,12 @@ const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
+const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie|session|credential)/i;
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
   afterAgentResponse: "after_agent_response",
+  preToolUse: "pre_tool_use",
   postToolUse: "post_tool_use",
   postToolUseFailure: "post_tool_use_failure",
   subagentStart: "subagent_start",
@@ -26,6 +28,28 @@ const HOOK_TO_EVENT = {
 function truncate(s, max = MAX_PREVIEW) {
   if (typeof s !== "string") return undefined;
   return s.length <= max ? s : s.slice(0, max) + "...";
+}
+
+function redactSecrets(value) {
+  if (Array.isArray(value)) return value.map((item) => redactSecrets(item));
+  if (value && typeof value === "object") {
+    const next = {};
+    for (const [key, val] of Object.entries(value)) {
+      next[key] = SENSITIVE_KEY_RE.test(key) ? "[REDACTED]" : redactSecrets(val);
+    }
+    return next;
+  }
+  return value;
+}
+
+function buildToolInputPreview(toolInput) {
+  if (toolInput == null) return undefined;
+  try {
+    const sanitized = redactSecrets(toolInput);
+    return truncate(JSON.stringify(sanitized));
+  } catch {
+    return truncate(String(toolInput));
+  }
 }
 
 /**
@@ -54,10 +78,19 @@ function buildPayload(input) {
         reply_preview: truncate(input.text),
         duration_ms: input.duration_ms,
       };
+    case "pre_tool_use":
+      return {
+        ...base,
+        tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
+        cwd: input.cwd,
+        tool_input_preview: buildToolInputPreview(input.tool_input),
+      };
     case "post_tool_use":
       return {
         ...base,
         tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
         duration_ms: input.duration,
         result_preview: truncate(input.tool_output),
       };
@@ -65,6 +98,8 @@ function buildPayload(input) {
       return {
         ...base,
         tool_name: input.tool_name,
+        tool_use_id: input.tool_use_id,
+        duration_ms: input.duration,
         error_preview: truncate(input.error_message),
       };
     case "subagent_start":
@@ -84,6 +119,7 @@ function buildPayload(input) {
 
 function getAllowOutput(hookName) {
   if (hookName === "beforeSubmitPrompt") return { continue: true };
+  if (hookName === "preToolUse") return { decision: "allow" };
   if (hookName === "subagentStart") return { decision: "allow" };
   return {};
 }
