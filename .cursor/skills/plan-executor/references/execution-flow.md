@@ -8,7 +8,7 @@
 
 - 扫描 `.cursor/.lingxi/tasks/` 目录
 - **如果指定 taskId**：查找 `<taskId>.task.*.md` 文件（如 `001.task.*.md`）
-- **如果省略 taskId**：提取所有 `*.task.*.md` 文件的编号，选取最大编号的任务
+- **如果省略 taskId**：执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号
 - 如果找不到文件，提示用户并提供解决方案
 - 识别需求类型（前端/后端/全栈/简单功能/其他）与特性标签（文档为主、库/SDK），以及复杂度
 

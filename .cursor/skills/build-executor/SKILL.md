@@ -11,6 +11,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 ## 关键约束
 
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。
 - **先测再实现（TDD）**：仅对验证方式为 `unit` 或 `integration` 的单元。每单元：先仅编写该单元测试（基于 testcase/task 文档输入/输出/边界）→ 运行确认失败/基线 → 只通过修改实现使通过，不改测试 → 通过后再下一单元。不通过改测试通过验收。
 - **Task-driven 无 testcase**：先调用 testcase-designer 生成并写入 `<taskId>.testcase.<标题>.md`，再继续。
 - **manual/rubric**：不写自动化测试；产出可执行清单（步骤+预期结果）与证据占位，交付前完成并保留证据。

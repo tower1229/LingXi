@@ -11,6 +11,7 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 ## 关键约束
 
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
 - **按 F 输出审计结果（必须）**：在写入 review 文档前，对 task 中每个 F 独立复核；按该 F 的验收标准与验证方式判定 Pass/Fail，填写证据引用；写入报告的「按需求编号的验收结果」表（见 references 模板）。
 - **维度启用**：文档一致性始终启用（reviewer-doc-consistency）；安全/性能/E2E 由语义分析 task 与变更代码判断是否启用，依赖 LLM 语义理解不关键词匹配。
 - **测试脚本质量**：执行测试前必须完成测试脚本质量检查（覆盖、断言、隔离、边界、一行为一测试）；不合格则补充/修正后再执行。

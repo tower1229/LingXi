@@ -10,7 +10,7 @@ Review 为**独立验收审计**：基于 task 验收标准复核实现与证据
 
 ### 1. 读取输入
 
-扫描 `.cursor/.lingxi/tasks/`；taskId 指定或用最大编号 task；查找 `<taskId>.task.*.md`、`<taskId>.plan.*.md`、`<taskId>.testcase.*.md`；定位测试脚本与变更代码文件列表。
+扫描 `.cursor/.lingxi/tasks/`；taskId 指定或执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新编号；查找 `<taskId>.task.*.md`、`<taskId>.plan.*.md`、`<taskId>.testcase.*.md`；定位测试脚本与变更代码文件列表。
 
 ### 2. 审查维度智能启用
 

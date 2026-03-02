@@ -11,7 +11,7 @@ description: 当执行 /vet 命令时自动激活，负责对 task 文档进行�
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则取 `.cursor/.lingxi/tasks/` 下 `*.task.*.md` 最大编号。找不到文件则输出错误并终止。
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
 - **元数据**：从 task 头部读取需求类型（前端/后端/全栈/简单功能/其他）、复杂度（简单/中等/复杂）、特性标签（可选：文档为主、库/SDK）。
 - **维度**：简单功能仅 D1+D2；前端/后端/全栈按复杂度执行 D1–D4 或 D1–D5；D4 按类型或特性标签有不同分支（见 references）。
 - **下一步建议**：只要输出了审查结果（总体评价、问题清单或改进建议任一项），必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：`/plan <taskId>`、`/build <taskId>`、调整 task、回头看 task、其他/跳过。

@@ -4,7 +4,7 @@
 
 ## 1. 模式检测（自动）
 
-- **taskId**：指定则用该编号；省略则取 `.cursor/.lingxi/tasks/` 下 `*.task.*.md` 最大编号。
+- **taskId**：指定则用该编号；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。
 - **检测 plan**：查找 `<taskId>.plan.*.md`。存在 → Plan-driven；不存在 → Task-driven。
 
 ## 2. 执行逻辑（统一流程）
