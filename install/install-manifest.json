@@ -92,9 +92,6 @@
             "skills/task-executor/references/task-doc-template-simple.md",
             "skills/task-executor/scripts/next-task-id.mjs",
             "skills/task-executor/scripts/latest-task-id.mjs"
-        ],
-        "vet-executor": [
-            "skills/vet-executor/references/dimensions-and-flow.md"
         ]
     },
     "workflowDirectories": [
