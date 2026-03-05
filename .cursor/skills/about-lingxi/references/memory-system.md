@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为四部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**、**记忆提取**。记忆沉淀包含**主动记忆捕获**（/remember、/extract）与 lingxi-memory 的写入执行；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
+**记忆系统分为三部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**（由 lingxi-memory 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember、/extract）与 lingxi-memory 的写入执行；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -26,13 +26,18 @@
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
-**执行模型**：治理、门控与写入由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在**独立上下文中**执行，主对话仅委派并收简报。**所有写入路径必须先经 taste-recognition skill**：主 Agent 先调用 taste-recognition skill 产出 7 字段品味 payload（单条或多条），将 payload 组成 **payloads 数组**传入 lingxi-memory；lingxi-memory **仅接受 payloads 数组**，不产候选、不从原始对话做识别。
+**数据流（实现逻辑）**：taste-recognition 产出扩展品味 payload（已含升维结果：layer、可选 l0OneLiner/l1OneLiner、patternHint）；仅「判定为写」的条目进入 payloads 数组。主 Agent **仅当 payloads 非空时**调用 lingxi-memory 并传入 payloads 数组；lingxi-memory 不产候选、不做升维，仅执行：校验 → 按 payload 映射生成 note → 治理（TopK）→ 门控 → 写 note 与 INDEX。
 
-- **写入流程**：payload → 校验 → 映射生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ **评分卡**（5 维 D1–D5，总分 T 判定写/不写、L0/L1/双层）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
+**输入约定**：lingxi-memory 仅接受 **payloads 数组**（每项为扩展结构：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）；可选 conversation_id、generation_id。详见 `.cursor/agents/lingxi-memory.md`。
+
+**写入流程（lingxi-memory 侧）**：payload → 校验 → **按 payload 映射**生成 note 字段（规则见 lingxi-memory.md 内「映射规则」）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 note 与 INDEX。
+
+**升维归属**：升维（写/不写、L0/L1、设计模式靠拢）在 taste-recognition 内完成，见 `.cursor/skills/taste-recognition/references/elevation-rules.md` 与 `references/pattern-catalog.md`；lingxi-memory 仅按 payload 映射写入，不执行评分卡。
+
 - **写入方式**：Subagent 使用 Cursor 提供的**文件读写能力**直接操作 `memory/notes/*.md` 与 `memory/INDEX.md`，不通过脚本。
 - **门控**：merge/replace 时**必须** ask-questions 确认（按 `question_id + option id` 协议）；new 路径按 `payload.confidence` 分流：high 可静默写入，medium/low 须 ask-questions。删除与替换须用户确认。
 - **治理策略**：语义近邻 TopK（merge/replace/veto/new）；合并/替换时更新 Supersedes，与 INDEX 同步。
-- **生命周期与升维判定**：Status 为 active / local / archive；记忆升维判定标准（低价值定义、五维评分、L0/L1 决策与书写模板、例外条件、生命周期、样例）见 `.cursor/agents/lingxi-memory.md` 内「记忆升维判定标准」一节。
+- **生命周期**：Status 为 active / local / archive（约定见 lingxi-memory 映射规则）。
 
 ## 记忆提取（Retrieve + Inject）
 
@@ -93,18 +98,17 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
 
-- **Audience**：team / project / personal（决策权归属与适用范围）
-- **Portability**：cross-project / project-only（是否允许跨项目复用）
+- **Audience**：project / team（项目级 / 团队级）；**本质区别为是否写入 notes/share/**：团队级写入 `notes/share/`，项目级写入 `notes/`。
+- **Portability**：project-only / cross-project（与 Audience 一致：project→project-only，team→cross-project）
 - **Source**：来源（如 `<packName>@<version>` / manual / init），用于审计与回溯
 - **Tags**（可选）：主题标签，便于导出筛选与聚合
 
 推荐约定（用于筛选“应进入 share 仓库”的内容）：
 
-- 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated
+- 团队级质量标准：Audience=team，Portability=cross-project，Strength=enforced/validated，**写入 notes/share/**
 - 团队级常见需求标准方案：Audience=team，Portability=cross-project，Kind=pattern/decision
 - 前后端/运维默认约定：Audience=team，Portability=cross-project，Kind=reference/tech
-- 项目内特殊备忘：Audience=project，Portability=project-only
-- 个人习惯：Audience=personal（默认不进入 share）
+- 项目内特殊备忘：Audience=project，Portability=project-only，**写入 notes/**
 
 ### 冲突优先级（稳定规则）
 
@@ -121,6 +125,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 ## 参考
 
-- **记忆沉淀**（用户触发 + 记忆写入）：Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）；**主动记忆捕获**由用户通过 /remember、/extract 触发；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 **payloads 数组**调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入，为初始化额外产物。详见 taste-recognition 的 `references/execution-and-triggers.md` 与各环节 `references/taste-sniff-rules.md`。
+- **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组。**主动记忆捕获**由用户通过 /remember、/extract 触发；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。
+- **记忆治理与写入**：完整步骤、治理逻辑（merge/replace/veto/new）、门控格式与映射规则见 `.cursor/agents/lingxi-memory.md`。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定

@@ -82,7 +82,7 @@
 
 灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
 
-- 共享目录：`.cursor/.lingxi/memory/notes/share/`（建议作为 **git submodule**）
+- 共享目录：`.cursor/.lingxi/memory/notes/share/`（建议作为 **git submodule**）。团队级记忆（apply=team）写入此处，项目级记忆写入 `notes/`。
 
 **1) 添加 share 仓库（submodule）**
 

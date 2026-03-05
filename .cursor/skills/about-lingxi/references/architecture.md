@@ -46,7 +46,7 @@ Skills 承载详细的工作流指导，按职责分为：
 - **记忆沉淀**（用户触发 + 记忆写入）
   - **触发**：用户通过 `/remember` 或 `/extract` 主动发起记忆捕获；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，payload source=choice）同样产生沉淀；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。
   - **手动记忆**：用户主动发起，经 taste-recognition 转为 payload 后以 **payloads 数组**交由 lingxi-memory。
-  - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的 7 字段品味 **payloads 数组**（scene, principles, choice, evidence, source, confidence, apply），不产候选；完成校验 → 映射 → 评分卡 → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话收简报。
+  - **记忆写入**：由 **Subagent lingxi-memory**（`.cursor/agents/lingxi-memory.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的扩展品味 **payloads 数组**（必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence），不产候选；完成校验 → **按 payload 映射** → 治理 → 门控 → **直接文件写入**（notes + INDEX），主对话收简报。升维（价值判定与模式靠拢）在 taste-recognition 完成，判定不写时不产出 payload、不调用 lingxi-memory。
 - **记忆提取**：由 `memory-retrieve`（Skill）承担，每轮回答前对 `memory/notes/` 做**语义+关键词双路径**混合检索、并集加权合并与降级，取 top 0–2 最小注入（由 sessionStart hook 注入的约定触发）；命中后主 Agent 需完成 `adopt/reject/ask` 决策，并遵循“仅对 adopt 一行极简提示、reject 不展示”的低打扰输出约束，且在采用时自然引用记忆来源。
 
 #### 工具类 Skills（提供辅助能力）
@@ -67,13 +67,14 @@ Skills 承载详细的工作流指导，按职责分为：
 灵犀的核心能力是捕获与治理记忆，并在每一轮对话前进行最小注入。记忆系统分为四部分：**记忆沉淀**（用户触发）、**记忆写入**、**记忆提取**。
 
 1. **记忆沉淀**（用户触发 + 记忆写入）
-   - **触发**：用户通过 `/remember` 或 `/extract` 主动发起记忆捕获；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，payload source=choice）同样产生沉淀；`/init` 在初始化时可将确认草稿可选写入，为初始化额外产物。不再由 session 约定每轮触发。sessionStart hook 仅注入记忆提取约定及 conversation_id 传入约定。
-   - **写入**：所有写入**必须先经 taste-recognition** 产出 7 字段品味 payload；**lingxi-memory** 子代理**仅接受 payloads 数组**（禁止原始对话或旧形态 input），在独立上下文中执行：校验 → 映射生成 note → 评分卡（5 维）→ 治理（TopK）→ 门控 → 直接读写 `memory/notes/` 与 `memory/INDEX.md`，主对话收简报。门控：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。
+   - **数据流**：taste-recognition（识别 → 模式靠拢 → 升维判定）→ 仅对判定为写的条目标产扩展 payload；**主 Agent 仅当 payloads 非空时**调用 lingxi-memory；lingxi-memory 执行：校验 → 按 payload 映射生成 note → 治理（TopK）→ 门控 → 直接读写 `memory/notes/` 与 `memory/INDEX.md`，主对话收简报。判定不写时不产出 payload、不调用 lingxi-memory。
+   - **触发**：用户通过 `/remember` 或 `/extract` 主动发起记忆捕获；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，payload source=choice）同样产生沉淀；`/init` 在初始化时可将确认草稿可选写入，为初始化额外产物。sessionStart hook 仅注入记忆提取约定及 conversation_id 传入约定。
+   - **门控**：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。
 2. **记忆提取**：每轮在回答前执行 `memory-retrieve`（由 sessionStart 约定触发），对 `memory/notes/` 做语义+关键词双路径检索与最小注入。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/notes/share/`（推荐作为 git submodule）
-   - **识别**：通过记忆元数据中的 `Audience`（team/project/personal）和 `Portability`（cross-project/project-only）字段标识可共享记忆；推荐约定：团队级经验（Audience=team，Portability=cross-project）应进入 share 仓库
-   - **写入**：`lingxi-memory` 子代理支持写入到 `share/` 目录；写入位置由用户门控时决定，或根据 `Portability` 字段提示用户
+   - **识别**：Audience 为 project（项目级）或 team（团队级）；**团队级=写入 notes/share/**，**项目级=写入 notes/**；Portability 为 project-only / cross-project。
+   - **写入**：lingxi-memory 根据 **payload.apply** 决定路径：`apply === "team"` 时写入 `notes/share/`，否则写入 `notes/`；门控可提示「项目级 / 团队级」选择。
    - **读取**：`memory-retrieve` 递归检索 `memory/notes/` 目录（包括 `share/` 子目录），语义+关键词混合检索会自动包含共享记忆；语义不可用时降级为仅关键词路径，仍无匹配则静默
    - **索引同步**：`memory-sync` 脚本（`npm run memory-sync`）递归扫描 `notes/**` 并更新 `INDEX.md`，支持 project 覆盖 share 的冲突优先级规则
 

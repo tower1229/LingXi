@@ -20,7 +20,7 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 2. **提炼**：产出 `semantic_summary` 与 `keywords`（技术词、配置项、API 名、场景词等）。
 3. **必要性判断**：若仅社交/元表达且关键词为空，跳过检索并静默返回。
 4. **双路径检索（必须）**：
-   - 语义路径：调用 `SemanticSearch`，范围 `.cursor/.lingxi/memory/notes/`（含 `share/`）。
+   - 语义路径：在范围 `.cursor/.lingxi/memory/notes/`（含 `share/`）内查找与 `semantic_summary` 相关的内容。
    - 关键词路径：调用 `Grep`（ripgrep），范围 `memory/notes/` 正文 + `memory/INDEX.md` 的 Title/When to load。
 5. **融合与最小读取**：两路并集合并重排取 top 0-2，只对 top 0-2 调用 `Read` 做最终相关性确认。
 6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`；仅对 adopt 做一行极简注入。
@@ -31,8 +31,8 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 
 ## 关键约束
 
-- **双路径**：语义检索（notes/ 概念级匹配）+ 关键词（Grep INDEX 的 Title、When to load 及 notes 正文）；并集加权后取 top 0–2 条，按需读取原文后不相关则不注入。
-- **双路径可验证性**：双路径中仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径在当前 Cursor 实现下不以独立工具形式经过 preToolUse，仅以 performed 的 semantic_called 自报为准，不做工具链校验。
+- **双路径**：语义路径（在 notes/ 范围内按 `semantic_summary` 做概念级匹配）+ 关键词路径（Grep `INDEX.md` 的 Title/When to load 及 notes 正文）；并集加权后取 top 0–2 条，按需读取原文后不相关则不注入。
+- **双路径可验证性**：双路径中仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径按自然语言检索结果执行，并以 `memory.retrieve.performed` 的 `semantic_called` 字段记录为准，不做工具链校验。
 - **禁止顺序全读**：禁止在未完成双路径检索前，直接顺序读取 `memory/notes/*` 全量文件。
 - **输出契约**：命中时输出结构化结果（`hits`、`adoptionCandidates`、`obligations`、`suggestedAction`）；供主 Agent 做 `adopt/reject/ask` 决策。无匹配时静默。
 - **最小注入**：有匹配时仅对 **adopt** 项给出一行极简提示（可执行提醒 + 轻量引用如 `[MEM-xxx]`）；`reject` 项不对用户展示，不输出冗长解释。若依据某条记忆做方案选择，应在表述中自然引用该记忆。

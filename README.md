@@ -83,7 +83,7 @@ Use these in lifecycle order:
 
 LingXi uses a designated share directory for team knowledge that can be reused across projects:
 
-- Share directory: `.cursor/.lingxi/memory/notes/share/` (recommended as a **git submodule**)
+- Share directory: `.cursor/.lingxi/memory/notes/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `notes/`.
 
 **1) Add share repo (submodule)**
 
