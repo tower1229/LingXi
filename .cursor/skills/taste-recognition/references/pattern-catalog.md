@@ -1,6 +1,6 @@
 # 设计模式目录（Pattern Catalog）
 
-**在实现中的位置**：本目录在 taste-recognition 的**执行步骤**中，于抽取 scene、principles、choice、evidence 之后、四维升维判定之前被引用，用于将用户偏好向常见设计模式靠拢（模式靠拢）；匹配成功则填写 patternHint、patternConfidence，并可用模式名改写 principles/choice。
+**在实现中的位置**：本目录在 taste-recognition 的**执行步骤**中，于抽取 scene、principles、choice、evidence 之后、升维判定之前被引用，用于将用户偏好向常见设计模式靠拢（模式靠拢）；匹配成功则填写 patternHint、patternConfidence，并可用模式名改写 principles/choice。
 
 ---
 

@@ -15,7 +15,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 1. **识别**：从当前触发点的输入中判断是否可沉淀（偏好、约束、取舍、决策等）；无可沉淀则静默返回，不产出 payload、不调用 lingxi-memory。
 2. **模式靠拢**：对可沉淀条目标抽 scene、principles、choice、evidence 后，参考 [references/pattern-catalog.md](references/pattern-catalog.md) 尝试将用户选择映射到常见设计模式；若匹配则更新 principles/choice 或填写 patternHint、patternConfidence。
-3. **价值判定（升维）**：对（可能已模式升维的）内容按 [references/elevation-rules.md](references/elevation-rules.md) 做四维评分，得到总分 T 与 layer；若 T≤3 或触犯例外则**不写**该条——不产出该条、不加入 payloads。
+3. **价值判定（升维）**：对（可能已模式升维的）内容按 [references/elevation-rules.md](references/elevation-rules.md) 做升维判定，得到总分 T 与 layer；若 T≤3 或触犯例外则**不写**该条——不产出该条、不加入 payloads。
 4. **产出**：对判定为写的条目标注 layer、可选 l0OneLiner/l1OneLiner，产出符合扩展 payload 规范的 JSON；同一轮多条组成 payloads 数组。
 5. **主 Agent 行为**：**仅当 payloads 非空时**将 payloads 数组传入 lingxi-memory；不写时不调用 lingxi-memory（不传 skip 或低价值 payload）。
 
@@ -47,6 +47,6 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 ## References
 
 - **触发点与输入表、执行步骤、与环节品味嗅探的关系**：[references/execution-and-triggers.md](references/execution-and-triggers.md)
-- **升维规则（四维 + 写/不写 + layer）**：[references/elevation-rules.md](references/elevation-rules.md)
+- **升维规则（写/不写 + layer）**：[references/elevation-rules.md](references/elevation-rules.md)
 - **设计模式目录（模式靠拢参考）**：[references/pattern-catalog.md](references/pattern-catalog.md)
 - Payload → note 映射与门控细节：`references/payload-to-note.md`；下游契约：`.cursor/agents/lingxi-memory.md`
