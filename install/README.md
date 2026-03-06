@@ -66,6 +66,8 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 不指定测试目录时将使用临时目录。脚本会在仓库根启动 HTTP 服务，并在测试目录中执行安装。
 
+**安装 → 卸载集成验证**：本地或 CI 可运行 `./install/test-install-uninstall.sh [测试目录]`，先安装再执行 `lx:uninstall --yes` 并断言 `.cursor/.lingxi` 及清单内路径已删除。
+
 ## 版本
 
 与主项目版本一致（当前 1.1.0）。

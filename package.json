@@ -6,6 +6,10 @@
   "license": "MIT",
   "scripts": {
     "lx:validate-plugin": "node scripts/validate-template.mjs",
-    "lx:uninstall": "node scripts/lx-uninstall.mjs"
+    "lx:uninstall": "node scripts/lx-uninstall.mjs",
+    "lx:test": "node --test test/",
+    "lx:test:scripts": "node --test test/scripts/",
+    "lx:test:hooks": "node --test test/hooks/",
+    "lx:test:skills": "node --test test/skills/"
   }
 }

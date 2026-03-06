@@ -73,7 +73,6 @@
         "memory-retrieve": [],
         "plan-executor": [
             "skills/plan-executor/references/taste-sniff-rules.md",
-            "skills/plan-executor/references/testcase-doc-template.md",
             "skills/plan-executor/references/plan-doc-template.md"
         ],
         "review-executor": [
@@ -114,6 +113,6 @@
     ],
     "packageScripts": {
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
-    ],
+    },
     "manifestCopyPath": "install/install-manifest.json"
 }
