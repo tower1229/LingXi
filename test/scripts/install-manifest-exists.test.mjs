@@ -27,6 +27,14 @@ describe("install-manifest-exists", () => {
   it("all manifest paths exist in repo", () => {
     const manifestPath = path.join(REPO_ROOT, "install", "install-manifest.json");
     let raw = fs.readFileSync(manifestPath, "utf8").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    // Normalize fullwidth punctuation that can break JSON.parse
+    raw = raw.replace(/\uFF0C/g, ",").replace(/\uFF3D/g, "]").replace(/\uFF5D/g, "}");
+    // Allow trailing commas: remove comma (ASCII or fullwidth) before ] or }
+    let prev;
+    do {
+      prev = raw;
+      raw = raw.replace(/[,\uFF0C](\s*[}\]])/g, "$1");
+    } while (prev !== raw);
     let manifest;
     try {
       manifest = JSON.parse(raw);
