@@ -224,6 +224,37 @@ foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
 
 Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
 
+# 下载 scripts（清单中 scripts 数组）
+if ($Manifest.scripts -and $Manifest.scripts.Count -gt 0) {
+  Write-Info "下载 scripts..."
+  New-Item -ItemType Directory -Force -Path "scripts" | Out-Null
+  foreach ($scriptFile in $Manifest.scripts) {
+    $remotePath = "scripts/" + $scriptFile.Replace('\', '/')
+    $localFile = "scripts\" + $scriptFile.Replace('/', '\')
+    if (-not (Download-File $remotePath $localFile)) {
+      Write-Error "安装 scripts 失败"
+      exit 1
+    }
+  }
+  Write-Success "已下载 scripts ($($Manifest.scripts.Count) 个文件)"
+}
+
+# 将安装清单保存到用户项目，供卸载脚本读取
+New-Item -ItemType Directory -Force -Path "install" | Out-Null
+$Manifest | ConvertTo-Json -Depth 100 | Set-Content -Path "install\install-manifest.json" -Encoding UTF8
+Write-Success "已保存安装清单到 install/install-manifest.json"
+
+# 合并 packageScripts 到用户 package.json
+if ((Test-Path "package.json") -and $Manifest.packageScripts) {
+  $pkg = Get-Content "package.json" -Raw | ConvertFrom-Json
+  if (-not $pkg.scripts) { $pkg | Add-Member -MemberType NoteProperty -Name scripts -Value @{} }
+  foreach ($key in $Manifest.packageScripts.PSObject.Properties.Name) {
+    $pkg.scripts | Add-Member -MemberType NoteProperty -Name $key -Value $Manifest.packageScripts.$key -Force
+  }
+  $pkg | ConvertTo-Json -Depth 100 | Set-Content -Path "package.json" -Encoding UTF8
+  Write-Success "已合并 lx: 脚本到 package.json"
+}
+
 # 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
 Write-Info "初始化工作区骨架（.cursor/.lingxi/）..."
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
@@ -273,7 +304,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 # git submodule update --remote --merge
 #
 # 3. 同步记忆索引（新增共享经验后执行）：
-# npm run memory-sync
+#    在 Cursor 中运行 /memory-govern
 #
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project
@@ -343,7 +374,7 @@ Write-Host ""
 Write-Info "经验共享（可选，跨项目复用）："
 Write-Host " - share 目录（已创建）：.cursor\.lingxi\memory\notes\share\"
 Write-Host " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
-Write-Host " - 更新索引：npm run memory-sync（需 Node.js；或 yarn memory-sync）"
+Write-Host " - 更新索引：在 Cursor 中运行 /memory-govern 同步索引"
 Write-Host ""
 Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"
 Write-Info "仓库地址：git@github.com:${RepoOwner}/${RepoName}.git"

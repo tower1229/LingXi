@@ -14,7 +14,7 @@
   - 从 GitHub 下载并安装
 
 - **`install-manifest.json`** — 安装清单  
-  - 定义要安装的 commands、skills、hooks、agents、references 及 workflow 目录/模板/gitignore 条目
+  - 定义要安装的 commands、skills、hooks、agents、references、scripts 及 workflow 目录/模板/gitignore 条目；安装时会复制到用户项目 `install/install-manifest.json` 供卸载脚本读取。
 
 - **`test-install.sh`** — 本地测试脚本（开发用）  
   - 在仓库根目录启动 HTTP 服务，模拟远程源  
@@ -39,6 +39,22 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 ```
 
 安装完成后，建议在 Cursor 中打开项目并运行 `/init` 初始化项目上下文（并按需进行可选记忆写入）。
+
+### 卸载
+
+在**项目根目录**执行以下命令之一，可彻底清除灵犀核心文件与运行数据（任务、记忆库、工作区日志等），卸载后无残留。
+
+- **yarn：**
+  ```bash
+  yarn lx:uninstall
+  ```
+- **npm：**
+  ```bash
+  npm run lx:uninstall
+  ```
+
+脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径；未列入清单的 `.cursor` 或 `scripts` 内容会保留。  
+非交互式环境（如 CI）下请加 `--yes` 跳过确认：`yarn lx:uninstall --yes` 或 `npm run lx:uninstall -- --yes`。
 
 ### 本地测试（开发用）
 

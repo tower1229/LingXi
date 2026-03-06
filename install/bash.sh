@@ -405,6 +405,73 @@ fi
 
 success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
 
+# 下载 scripts（清单中 scripts 数组，远程路径 scripts/xxx，本地 scripts/xxx）
+if command -v jq &> /dev/null; then
+  script_count=0
+  while IFS= read -r script_file; do
+    [ -z "$script_file" ] && continue
+    script_file="${script_file//$'\r'/}"
+    if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
+      error "安装 scripts 失败"
+      exit 1
+    fi
+    script_count=$((script_count + 1))
+  done < <(jq -r '.scripts[]?' "$MANIFEST_PATH" 2>/dev/null || true)
+  if [ "$script_count" -gt 0 ]; then
+    success "已下载 scripts ($script_count 个文件)"
+  fi
+elif [ -n "$PYTHON_CMD" ]; then
+  script_count=0
+  while IFS= read -r script_file; do
+    [ -z "$script_file" ] && continue
+    script_file="${script_file//$'\r'/}"
+    if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
+      error "安装 scripts 失败"
+      exit 1
+    fi
+    script_count=$((script_count + 1))
+  done < <($PYTHON_CMD -c "
+import sys, json
+with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
+  d = json.load(f)
+for x in d.get('scripts', []):
+  print(x)
+" 2>/dev/null || true)
+  if [ "$script_count" -gt 0 ]; then
+    success "已下载 scripts ($script_count 个文件)"
+  fi
+fi
+
+# 将安装清单保存到用户项目，供卸载脚本读取
+mkdir -p install
+if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then
+  cp "$MANIFEST_PATH" install/install-manifest.json
+  success "已保存安装清单到 install/install-manifest.json"
+fi
+
+# 合并 packageScripts 到用户 package.json
+if [ -f "package.json" ] && [ -f "install/install-manifest.json" ]; then
+  if command -v jq &> /dev/null; then
+    if jq -e '.packageScripts' install/install-manifest.json &>/dev/null; then
+      jq '.scripts += input.packageScripts' package.json install/install-manifest.json > package.json.tmp && mv package.json.tmp package.json
+      success "已合并 lx: 脚本到 package.json"
+    fi
+  elif [ -n "$PYTHON_CMD" ]; then
+    $PYTHON_CMD -c "
+import json
+with open('package.json', 'r', encoding='utf-8') as f:
+  p = json.load(f)
+with open('install/install-manifest.json', 'r', encoding='utf-8') as f:
+  m = json.load(f)
+ps = m.get('packageScripts', {})
+if ps:
+  p.setdefault('scripts', {}).update(ps)
+  with open('package.json', 'w', encoding='utf-8') as f:
+    json.dump(p, f, ensure_ascii=False, indent=2)
+" 2>/dev/null && success "已合并 lx: 脚本到 package.json"
+  fi
+fi
+
 # 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
 info "初始化工作区骨架（.cursor/.lingxi/）..."
 if command -v node &>/dev/null; then
@@ -447,7 +514,7 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 # git submodule update --remote --merge
 #
 # 3. 同步记忆索引（新增共享经验后执行）：
-# npm run memory-sync
+#    在 Cursor 中运行 /memory-govern
 #
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project
@@ -520,7 +587,7 @@ echo ""
 info "经验共享（可选，跨项目复用）："
 echo " - share 目录（已创建）：.cursor/.lingxi/memory/notes/share/"
 echo " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
-echo " - 更新索引：npm run memory-sync（需 Node.js；或 yarn memory-sync）"
+echo " - 更新索引：在 Cursor 中运行 /memory-govern 同步索引"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
 info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"

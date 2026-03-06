@@ -7,7 +7,8 @@
         "commands/review.md",
         "commands/init.md",
         "commands/remember.md",
-        "commands/extract.md"
+        "commands/extract.md",
+        "commands/memory-govern.md"
     ],
     "rules": [],
     "hooks": {
@@ -35,7 +36,8 @@
         "skills/skill-creator/SKILL.md",
         "skills/taste-recognition/SKILL.md",
         "skills/workspace-bootstrap/SKILL.md",
-        "skills/ask-questions/SKILL.md"
+        "skills/ask-questions/SKILL.md",
+        "skills/memory-govern/SKILL.md"
     ],
     "agents": {
         "files": [
@@ -90,6 +92,9 @@
             "skills/task-executor/references/task-doc-template-simple.md",
             "skills/task-executor/scripts/next-task-id.mjs",
             "skills/task-executor/scripts/latest-task-id.mjs"
+        ],
+        "memory-govern": [
+            "skills/memory-govern/scripts/memory-index-sync.mjs"
         ]
     },
     "workflowDirectories": [
@@ -103,5 +108,12 @@
     "gitignoreEntries": [
         "# Local workspace for temp code clones, generated artifacts, etc.",
         ".cursor/.lingxi/workspace/"
-    ]
+    ],
+    "scripts": [
+        "lx-uninstall.mjs"
+    ],
+    "packageScripts": {
+        "lx:uninstall": "node scripts/lx-uninstall.mjs"
+    ],
+    "manifestCopyPath": "install/install-manifest.json"
 }
