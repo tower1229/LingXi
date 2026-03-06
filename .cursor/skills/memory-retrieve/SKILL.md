@@ -7,7 +7,7 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 
 ## 意图
 
-以传入的 query（当前用户消息或 Agent 构建的决策点描述）从 `.cursor/.lingxi/memory/notes/` 检索可能有用的记忆，产出可执行的命中与决策输入（adopt/reject/ask），驱动回答前决策；无匹配时静默。
+以传入的 query（当前用户消息或 Agent 构建的决策点描述）从 @.lingxi/memory/notes/ 检索可能有用的记忆，产出可执行的命中与决策输入（adopt/reject/ask），驱动回答前决策；无匹配时静默。
 
 ## 调用形式与输入
 
@@ -20,8 +20,8 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 2. **提炼**：产出 `semantic_summary` 与 `keywords`（技术词、配置项、API 名、场景词等）。
 3. **必要性判断**：若仅社交/元表达且关键词为空，跳过检索并静默返回。
 4. **双路径检索（必须）**：
-   - 语义路径：在范围 `.cursor/.lingxi/memory/notes/`（含 `share/`）内查找与 `semantic_summary` 相关的内容。
-   - 关键词路径：调用 `Grep`（ripgrep），范围 `memory/notes/` 正文 + `memory/INDEX.md` 的 Title/When to load。
+   - 语义路径：在范围 @.lingxi/memory/notes/（含 `share/`）内查找与 `semantic_summary` 相关的内容。
+   - 关键词路径：调用 `Grep`（ripgrep），范围 @.lingxi/memory/notes/ 正文 + @.lingxi/memory/notes/INDEX.md 的 Title/When to load。
 5. **融合与最小读取**：两路并集合并重排取 top 0-2，只对 top 0-2 调用 `Read` 做最终相关性确认。
 6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`；仅对 adopt 做一行极简注入。
 7. **审计（v2，必须）**：
