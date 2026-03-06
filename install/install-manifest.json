@@ -103,5 +103,12 @@
     "gitignoreEntries": [
         "# Local workspace for temp code clones, generated artifacts, etc.",
         ".cursor/.lingxi/workspace/"
-    ]
+    ],
+    "scripts": [
+        "lx-uninstall.mjs"
+    ],
+    "packageScripts": {
+        "lx:uninstall": "node scripts/lx-uninstall.mjs"
+    ],
+    "manifestCopyPath": "install/install-manifest.json"
 }

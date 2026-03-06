@@ -5,10 +5,11 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "memory-sync": "node scripts/validate-memory-index.js --update",
-    "memory-check": "node scripts/validate-memory-index.js --check",
-    "validate-plugin": "node scripts/validate-template.mjs",
-    "test": "node scripts/__tests__/validate-memory-index.test.js",
-    "quality-check": "yarn validate-plugin && yarn memory-check && yarn test"
+    "lx:memory-sync": "node scripts/validate-memory-index.js --update",
+    "lx:memory-check": "node scripts/validate-memory-index.js --check",
+    "lx:validate-plugin": "node scripts/validate-template.mjs",
+    "lx:test": "node scripts/__tests__/validate-memory-index.test.js",
+    "lx:quality-check": "yarn lx:validate-plugin && yarn lx:memory-check && yarn lx:test",
+    "lx:uninstall": "node scripts/lx-uninstall.mjs"
   }
 }
