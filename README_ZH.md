@@ -98,11 +98,7 @@ git submodule update --remote --merge
 
 **3) 同步记忆索引（新增共享经验后执行）**
 
-```bash
-npm run memory-sync
-```
-
-> `memory-sync` 会递归扫描 `.cursor/.lingxi/memory/notes/**` 并更新 `.cursor/.lingxi/memory/INDEX.md`。
+在 Cursor 中运行 **/memory-govern**，可同步 INDEX 与 notes（删除孤儿索引行并由模型补全未索引条目的 INDEX 行）。
 
 ## 相关文档
 

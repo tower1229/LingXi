@@ -99,11 +99,7 @@ git submodule update --remote --merge
 
 **3) Sync memory index (after adding shared notes)**
 
-```bash
-npm run memory-sync
-```
-
-> `memory-sync` recursively scans `.cursor/.lingxi/memory/notes/**` and updates `.cursor/.lingxi/memory/INDEX.md`.
+In Cursor, run **/memory-govern** to sync INDEX with notes (removes orphan index rows and lets the model complete INDEX lines for unindexed notes).
 
 ## Related docs
 

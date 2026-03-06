@@ -514,7 +514,7 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 # git submodule update --remote --merge
 #
 # 3. 同步记忆索引（新增共享经验后执行）：
-# npm run memory-sync
+#    在 Cursor 中运行 /memory-govern
 #
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project
@@ -587,7 +587,7 @@ echo ""
 info "经验共享（可选，跨项目复用）："
 echo " - share 目录（已创建）：.cursor/.lingxi/memory/notes/share/"
 echo " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
-echo " - 更新索引：npm run memory-sync（需 Node.js；或 yarn memory-sync）"
+echo " - 更新索引：在 Cursor 中运行 /memory-govern 同步索引"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
 info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"
