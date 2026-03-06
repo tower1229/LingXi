@@ -1,0 +1,10 @@
+{
+  "commands": ["commands/task.md"],
+  "rules": [],
+  "hooks": { "files": ["hooks.json"] },
+  "skills": [],
+  "agents": { "files": [] },
+  "references": {},
+  "scripts": ["lx-uninstall.mjs"],
+  "manifestCopyPath": "install/install-manifest.json"
+}
