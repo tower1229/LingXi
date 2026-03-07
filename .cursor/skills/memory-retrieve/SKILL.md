@@ -22,7 +22,7 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 4. **双路径检索（必须）**：
    - 语义路径：在范围 @.lingxi/memory/notes/（含 `share/`）内查找与 `semantic_summary` 相关的内容。
    - 关键词路径：调用 `Grep`（ripgrep），范围 @.lingxi/memory/notes/ 正文 + @.lingxi/memory/notes/INDEX.md 的 Title/When to load。
-5. **融合与最小读取**：两路并集合并重排取 top 0-2，只对 top 0-2 调用 `Read` 做最终相关性确认。
+5. **融合与最小读取**：采用**并集（Union）**合并两路候选后重排取 top 0–2；优先保证召回率，避免仅语义路径或仅关键词路径命中的候选被误排除。只对合并后的 top 0–2 调用 `Read` 做最终相关性确认。
 6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`；仅对 adopt 做一行极简注入。
 7. **审计（v2，必须）**：
    - 正常执行检索：追加 `event=memory.retrieve.performed`，字段必须包含 `query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（并带 `conversation_id`、`generation_id`）。
