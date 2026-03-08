@@ -1,6 +1,6 @@
 ---
 name: workspace-bootstrap
-description: 检测并创建缺失的灵犀目录结构和文件；当 .cursor/.lingxi/ 或关键子目录不存在时创建。
+description: 创建缺失的灵犀目录骨架（.cursor/.lingxi/ 等）。仅支持手动或显式调用（如 /init Step 0、安装脚本），勿根据语义自动加载。
 ---
 
 # Workspace Bootstrap
