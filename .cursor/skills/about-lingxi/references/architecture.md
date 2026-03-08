@@ -39,7 +39,6 @@ Skills 承载详细的工作流指导，按职责分为：
 - `plan`：任务规划、测试设计及计划文档与测试用例文档生成
 - `build`：代码实现、测试编写和执行
 - `review`：多维度审查和交付质量保证
-- `workspace-bootstrap`：检测并创建缺失的灵犀目录结构和文件（若 .cursor/.lingxi/ 不存在则创建骨架）
 
 #### 记忆系统（实现"心有灵犀"的核心能力）
 
@@ -53,6 +52,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 工具类 Skills（提供辅助能力）
 
+- `workspace-bootstrap`：创建缺失的灵犀目录骨架（.cursor/.lingxi/ 等），由 /init 或安装脚本显式调用，勿自动加载。
 - `testcase-designer`：由 plan（主产出）、build（Task-driven 且无 testcase 时）、review（覆盖审计）显式调用，从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
 - `ask-questions`：统一 ask-questions 交互协议与结果校验（`question_id + option id`，返回 option id 列表），供 remember/init/记忆治理等高频交互场景复用

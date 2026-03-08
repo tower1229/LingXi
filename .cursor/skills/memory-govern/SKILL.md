@@ -1,6 +1,6 @@
 ---
 name: memory-govern
-description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模型补全未索引条目），可选全库主动治理。通过输入 /memory-govern 或「同步记忆索引」「执行 memory-govern」等显式触发。
+description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模型补全未索引条目），可选全库主动治理。仅支持手动或显式调用（如 /memory-govern、同步记忆索引），勿根据语义自动加载。
 ---
 
 # Memory Govern
