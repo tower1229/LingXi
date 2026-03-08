@@ -100,7 +100,7 @@ git submodule update --remote --merge
 
 **3) Sync memory index (after adding shared notes)**
 
-In Cursor, run **/memory-govern** to sync INDEX with notes (removes orphan index rows and lets the model complete INDEX lines for unindexed notes).
+In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync INDEX with notes (removes orphan index rows and lets the model complete INDEX lines for unindexed notes).
 
 ## Related docs
 

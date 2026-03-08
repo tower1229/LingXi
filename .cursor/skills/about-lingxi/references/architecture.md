@@ -78,7 +78,7 @@ Skills 承载详细的工作流指导，按职责分为：
    - **识别**：Audience 为 project（项目级）或 team（团队级）；**团队级=写入 memory/share/**，**项目级=写入 memory/project/**；Portability 为 project-only / cross-project。
    - **写入**：lingxi-memory 调用的 memory-write skill 根据 **payload.apply** 决定路径：`apply === "team"` 时写入 `memory/share/`，否则写入 `memory/project/`；门控可提示「项目级 / 团队级」选择。
    - **读取**：`memory-retrieve` 检索 `memory/project/` 与 `memory/share/` 目录，语义+关键词混合检索会自动包含共享记忆；仍无匹配则静默
-   - **索引同步**：使用 **/memory-govern** 做索引同步与治理；由 memory-govern Skill 调用脚本删除孤儿行并将未索引 note 交模型补全 INDEX，支持 project 覆盖 share 的冲突优先级规则
+   - **索引同步**：使用 **memory-govern** Skill（在 Cursor 中输入 `/memory-govern`）做索引同步与治理；由该 Skill 调用脚本删除孤儿行并将未索引 note 交模型补全 INDEX，支持 project 覆盖 share 的冲突优先级规则
 
 ### Hooks（sessionStart 记忆注入 + 可选审计/门控）
 
@@ -89,10 +89,9 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ```
 .cursor/
-├── commands/              # 辅助入口（init、remember、memory-govern 等）
+├── commands/              # 辅助入口（init、remember 等）
 │   ├── init.md
 │   ├── remember.md
-│   ├── memory-govern.md
 │   └── ...
 ├── skills/                # 执行逻辑
 │   ├── task/

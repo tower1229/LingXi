@@ -1,8 +1,7 @@
 {
     "commands": [
         "commands/init.md",
-        "commands/remember.md",
-        "commands/memory-govern.md"
+        "commands/remember.md"
     ],
     "rules": [],
     "hooks": {

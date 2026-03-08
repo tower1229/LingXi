@@ -100,7 +100,7 @@ git submodule update --remote --merge
 
 **3) 同步记忆索引（新增共享经验后执行）**
 
-在 Cursor 中运行 **/memory-govern**，可同步 INDEX 与 notes（删除孤儿索引行并由模型补全未索引条目的 INDEX 行）。
+在 Cursor 中运行 **memory-govern** Skill（如输入 `/memory-govern`），可同步 INDEX 与 notes（删除孤儿索引行并由模型补全未索引条目的 INDEX 行）。
 
 ## 相关文档
 

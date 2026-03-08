@@ -300,7 +300,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 # git submodule update --remote --merge
 #
 # 3. 同步记忆索引（新增共享经验后执行）：
-#    在 Cursor 中运行 /memory-govern
+#    在 Cursor 中运行 memory-govern Skill（输入 /memory-govern）
 #
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project
@@ -370,7 +370,7 @@ Write-Host ""
 Write-Info "经验共享（可选，跨项目复用）："
 Write-Host " - share 目录（已创建）：.cursor\.lingxi\memory\share\"
 Write-Host " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share"
-Write-Host " - 更新索引：在 Cursor 中运行 /memory-govern 同步索引"
+Write-Host " - 更新索引：在 Cursor 中运行 memory-govern Skill（输入 /memory-govern）同步索引"
 Write-Host ""
 Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"
 Write-Info "仓库地址：git@github.com:${RepoOwner}/${RepoName}.git"

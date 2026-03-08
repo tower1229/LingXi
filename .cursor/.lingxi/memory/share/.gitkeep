@@ -10,7 +10,7 @@
 #    git submodule update --remote --merge
 # 
 # 3. 同步记忆索引（新增共享经验后执行）：
-#    在 Cursor 中运行 /memory-govern
+#    在 Cursor 中运行 memory-govern Skill（输入 /memory-govern）
 # 
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project

@@ -94,7 +94,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 - 共享目录：`.cursor/.lingxi/memory/share/`
 - 推荐形态：**git submodule**（团队仓库，版本锁定、同步明确）
-- 生效方式：share 目录下的记忆与项目记忆一起参与检索。添加或更新 share 后运行 **/memory-govern** 同步索引并可选治理。
+- 生效方式：share 目录下的记忆与项目记忆一起参与检索。添加或更新 share 后运行 **memory-govern** Skill（在 Cursor 中输入 `/memory-govern`）同步索引并可选治理。
 
 团队级经验（可跨项目复用）需要**稳定可提取**，因此必须显式标注归属与可移植性：
 
@@ -112,7 +112,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 ### 冲突优先级（稳定规则）
 
-当出现同一 `Id` 同时存在于项目与 share 时，默认 **project 覆盖 share**（避免团队库更新导致项目行为不可控）。运行 **/memory-govern** 时可看到重复 Id 提示，便于人工治理与收敛。
+当出现同一 `Id` 同时存在于项目与 share 时，默认 **project 覆盖 share**（避免团队库更新导致项目行为不可控）。运行 **memory-govern** Skill（如 `/memory-govern`）时可看到重复 Id 提示，便于人工治理与收敛。
 
 ## 关键原则
 
