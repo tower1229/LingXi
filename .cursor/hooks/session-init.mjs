@@ -7,7 +7,8 @@
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
-const BASE_CONTEXT = `【记忆提取约定】每轮在回答前，如果存在用户自由输入（非仅command调用或skills调用）时，必须先执行 \`/memory-retrieve <当前用户消息>\`。
+const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续有效，不因对话轮次增加、上下文变长或压缩而失效；每一轮（包括第 2 轮及之后）均须遵守。
+每轮回答前的第一步：若存在用户自由输入（非仅 command 调用或 skills 调用），必须、不可省略地先执行 \`/memory-retrieve <当前用户消息>\`，再开始作答；不可跳过或认为「上一轮已做过」而省略。即使上一轮已执行过 memory-retrieve，本轮仍须针对**本轮**用户消息重新执行一次；每轮独立、不继承上一轮。
 若命中记忆（top 0-2），必须先做一轮决策：\`adopt\`（采用）/\`reject\`（不采用，给出一句理由）/\`ask\`（需向用户确认）。
 对用户呈现要求：未采纳（reject）的命中不展示；已采纳（adopt）的命中仅允许一行极简提示，不展开过程，不罗列列表。
 若本轮回答依据某条记忆做方案选择，需在表述中自然引用记忆来源（如 \`[MEM-003]\`）；禁止只检索不决策。
