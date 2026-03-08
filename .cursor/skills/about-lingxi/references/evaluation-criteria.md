@@ -84,6 +84,7 @@
 - [ ] **是否需要同步更新 `about-lingxi` 中的相关文档？**
   - 如果改动涉及 Commands、Skills、Rules、Hooks、Subagents 的增减或职责变更 → 更新 `references/architecture.md` 和 `references/component-guides.md`
   - 如果改动涉及记忆系统机制 → 更新 `references/memory-system.md`
+  - 如果改动涉及**记忆沉淀范围、可沉淀内容类型**或 **taste-recognition 的识别/升维约定** → 更新 taste-recognition 的 `references/content-types.md`、`references/execution-and-triggers.md`、`references/elevation-rules.md` 中相关描述，并同步 about-lingxi 的 `references/memory-system.md`；若官网有「开发者品味」或记忆类型表述，需同步 lingxi-site 中英文专题（`guide/how-to-recognize-developer-taste.md` 与 `en/guide/how-to-recognize-developer-taste.md`）。
   - 如果改动涉及设计原则或评价准则 → 更新 `references/design-principles.md` 或 `references/evaluation-criteria.md`
   - 如果改动涉及工作流输出与静默约束 → 更新 `references/workflow-output-principles.md`
   - 如果改动涉及核心价值或实现方式 → 更新 `references/core-values.md`

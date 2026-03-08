@@ -30,6 +30,12 @@
 
 ---
 
+## 与可沉淀内容类型的对应
+
+本环节以**偏好**、**反例与约束**、**启发式**为主。类型定义与信号见 taste-recognition 的 [references/content-types.md](../../taste-recognition/references/content-types.md) 与 [references/execution-and-triggers.md](../../taste-recognition/references/execution-and-triggers.md)。
+
+---
+
 ## 衔接
 
 嗅探产出 payload 后由主 Agent 交 lingxi-memory；payload.source=choice。拟提问前调用 memory-retrieve，传入 Agent 构建的决策点描述；若命中相关记忆则不再问。
