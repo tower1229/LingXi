@@ -1,9 +1,9 @@
 ---
-name: build-executor
-description: 当执行 /build 命令时自动激活（taskId 可选，省略时使用最新任务），负责代码实现、测试编写和执行。
+name: build
+description: Implements code and tests from a task (and optional plan) with TDD where applicable. Use when the user asks to implement a task, run build, or execute the build phase (e.g. /build or "implement task 001").
 ---
 
-# Build Executor
+# Build
 
 ## 意图
 
@@ -11,16 +11,16 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
 - **先测再实现（TDD）**：仅对验证方式为 `unit` 或 `integration` 的单元。每单元：先仅编写该单元测试（基于 testcase/task 文档输入/输出/边界）→ 运行确认失败/基线 → 只通过修改实现使通过，不改测试 → 通过后再下一单元。不通过改测试通过验收。
 - **Task-driven 无 testcase**：先调用 testcase-designer 生成并写入 `<taskId>.testcase.<标题>.md`。生成失败、未写入、或未通过 F→TC 覆盖与验证方式一致性校验时，必须立即终止；未通过校验不得进入编码循环。
 - **manual/rubric**：不写自动化测试；产出可执行清单（步骤+预期结果）与证据占位，交付前完成并保留证据。
-- **下一步建议**：只要产生代码或测试变更，必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：`/review <taskId>`、`/remember` 沉淀、先改代码再 review、其他/跳过。
+- **下一步建议**：只要产生代码或测试变更，必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：执行 review skill、`/remember` 沉淀、先改代码再 review、其他/跳过。
 
 ## 完整执行流程（关键步骤不省略）
 
 1. **模式检测（自动）**
-   - 指定 taskId 时使用该编号；省略时执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。
+   - 指定 taskId 时使用该编号；省略时执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
    - 查找 `<taskId>.plan.*.md`：存在为 Plan-driven，不存在为 Task-driven。
 
 2. **读取输入**
@@ -57,7 +57,7 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 9. **下一步建议（有产物时必须输出）**
    - 只要发生代码/测试变更，末尾必须输出「下一步可尝试（选一项）」+ A/B/C/D。
-   - 选项仅允许：`/review <taskId>`、`/remember`、先改代码再 review、其他/跳过。
+   - 选项仅允许：执行 review skill、`/remember`、先改代码再 review、其他/跳过。
 
 ## 测试执行规范
 
@@ -78,9 +78,5 @@ description: 当执行 /build 命令时自动激活（taskId 可选，省略时�
 
 ## 产物与 References
 
-- **产物**：代码与测试变更；无单独文档产物（review 文档由 review-executor 产出）。
+- **产物**：代码与测试变更；无单独文档产物（review 文档由 review skill 产出）。
 - 品味嗅探规则：`references/taste-sniff-rules.md`
-
-## 与 Commands 的协作
-
-本 Skill 由 `/build` 自动激活；Command 仅负责参数承载与触发说明。

@@ -1,9 +1,9 @@
 ---
-name: vet-executor
-description: 当执行 /vet 命令时自动激活，负责对 task 文档进行多维度审查，辅助提升任务文档质量。
+name: vet
+description: Reviews task documents for completeness, verifiability, and readiness. Use when the user asks to review a task doc, vet the task, or improve task quality (e.g. /vet or "review my task document").
 ---
 
-# Vet Executor
+# Vet
 
 ## 意图
 
@@ -11,10 +11,10 @@ description: 当执行 /vet 命令时自动激活，负责对 task 文档进行�
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
 - **元数据**：从 task 头部读取需求类型（前端/后端/全栈/简单功能/其他）、复杂度（简单/中等/复杂）、特性标签（可选：文档为主、库/SDK）。
 - **维度**：简单功能仅 D1+D2；前端/后端/全栈按复杂度执行 D1–D4 或 D1–D5；D4 按类型或特性标签有不同分支。
-- **下一步建议**：只要输出了审查结果（总体评价、问题清单或改进建议任一项），必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：`/plan <taskId>`、`/build <taskId>`、调整 task、其他/跳过。
+- **下一步建议**：只要输出了审查结果（总体评价、问题清单或改进建议任一项），必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：执行 plan skill、执行 build skill、调整 task、其他/跳过。
 
 ## 维度适配矩阵
 
@@ -74,7 +74,7 @@ description: 当执行 /vet 命令时自动激活，负责对 task 文档进行�
 
 ## 下一步建议
 
-只要输出了审查结果，回复末尾必须输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D。无 Blockers/High 时 A 推荐 `/plan` 或 `/build`；有 Blockers/High 时 A 推荐先改 task。允许集合：`/plan <taskId>`、`/build <taskId>`、调整 task、其他/跳过。
+只要输出了审查结果，回复末尾必须输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D。无 Blockers/High 时 A 推荐执行 plan 或 build skill；有 Blockers/High 时 A 推荐先改 task。允许集合：执行 plan skill、执行 build skill、调整 task、其他/跳过。
 
 ## 审查边界说明
 
@@ -87,7 +87,3 @@ task 定位是需求提纯与放大、核心技术方案/决策、可判定验�
 ## 注意事项
 
 审查深度应与 task 定位匹配；按复杂度裁剪检查项；输出遵循 workflow-output-principles；实现细节属于下游阶段。
-
-## 与 Commands 的协作
-
-由 `/vet` 自动激活（taskId 可选）；Command 仅负责参数解析和产物说明。

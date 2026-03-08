@@ -1,28 +1,28 @@
 ---
-name: review-executor
-description: 当执行 /review 命令时自动激活（taskId 可选，省略时使用最新任务），负责多维度审查和交付质量保证。
+name: review
+description: Performs multi-dimensional delivery review against task acceptance criteria (per-F Pass/Fail, evidence). Use when the user asks to review delivery, run review, or validate a task (e.g. /review or "review task 001").
 ---
 
-# Review Executor
+# Review
 
 ## 意图
 
-独立验收审计：基于 task 验收标准复核实现与证据，按需求编号（F1, F2, ...）给出 Pass/Fail 与证据引用，产出 review 报告。不在 review 阶段新增需求或改范围；缺口回退 build 修复。能力：读 task/plan/testcase 与变更代码、Run shell 执行测试、显式调用 reviewer-\*（含 Browser 用于 E2E）。
+独立验收审计：基于 task 验收标准复核实现与证据，按需求编号（F1, F2, ...）给出 Pass/Fail 与证据引用，产出 review 报告。不在 review 阶段新增需求或改范围；缺口回退 build 修复。能力：读 task/plan/testcase 与变更代码、Run shell 执行测试、显式调用 reviewer-*（含 Browser 用于 E2E）。
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
+- **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
 - **按 F 输出审计结果（必须）**：在写入 review 文档前，对 task 中每个 F 独立复核；按该 F 的验收标准与验证方式判定 Pass/Fail，填写证据引用；写入报告的「按需求编号的验收结果」表（见 references 模板）。证据缺失或不可验证时该 F 必须判定为 Fail，不得判 Pass。
 - **维度启用**：文档一致性始终启用（reviewer-doc-consistency）；安全/性能/E2E 由语义分析 task 与变更代码判断是否启用，依赖 LLM 语义理解不关键词匹配。
 - **测试脚本质量**：执行测试前必须完成测试脚本质量检查（覆盖、断言、隔离、边界、一行为一测试）；不合格则补充/修正后再执行。
-- **结论门控**：只要存在证据缺失/不可验证或任一 F=Fail，总结论不得为“通过”；必须至少归类为 High/Blocker，并回退 `/build` 修复。
-- **下一步建议**：只要完成审查（无论是否写入文件），必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：修复后再 `/review`、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
+- **结论门控**：只要存在证据缺失/不可验证或任一 F=Fail，总结论不得为“通过”；必须至少归类为 High/Blocker，并回退 build 修复。
+- **下一步建议**：只要完成审查（无论是否写入文件），必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：修复后再执行 review skill、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
 
 ## 完整执行流程（关键步骤不省略）
 
 1. **读取输入**
    - 扫描 `.cursor/.lingxi/tasks/`。
-   - 指定 taskId 用指定编号；省略时执行 `node .cursor/skills/task-executor/scripts/latest-task-id.mjs` 获取最新编号。
+   - 指定 taskId 用指定编号；省略时执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新编号。
    - 脚本失败必须终止并输出错误。
    - 读取 `<taskId>.task.*.md`、可选 `<taskId>.plan.*.md`、`<taskId>.testcase.*.md` 与变更文件列表。
 
@@ -62,9 +62,9 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 10. **结论与下一步建议（必须）**
    - 给出通过/需修复/拒绝结论。
-   - 只要存在证据缺失/不可验证或任一 F=Fail，结论不得为“通过”，并回退 `/build` 修复。
+   - 只要存在证据缺失/不可验证或任一 F=Fail，结论不得为“通过”，并回退 build 修复。
    - 只要完成审查（无论是否写入文件），末尾必须输出「下一步可尝试（选一项）」+ A/B/C/D。
-   - 选项仅允许：修复后再 `/review`、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
+   - 选项仅允许：修复后再执行 review skill、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
 
 ## 使用场景
 
@@ -81,7 +81,3 @@ description: 当执行 /review 命令时自动激活（taskId 可选，省略时
 
 - **产物**：`001.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
 - **报告模板**：`references/review-report-template.md`；品味嗅探规则：`references/taste-sniff-rules.md`
-
-## 与 Commands 的协作
-
-本 Skill 由 `/review` 自动激活；Command 仅负责参数承载与触发说明。

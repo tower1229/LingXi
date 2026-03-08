@@ -15,7 +15,7 @@ try {
   files = fs.readdirSync(TASKS_DIR);
 } catch (err) {
   if (err.code === "ENOENT") {
-    console.error("未找到任务目录，请先执行 /task 创建任务文档");
+    console.error("未找到任务目录，请先创建任务文档");
     process.exit(1);
   }
   console.error(err.message);
@@ -27,7 +27,7 @@ const ids = files
   .map((f) => parseInt(f.slice(0, 3), 10));
 
 if (!ids.length) {
-  console.error("未找到 task 文档，请先执行 /task 创建任务文档");
+  console.error("未找到 task 文档，请先创建任务文档");
   process.exit(1);
 }
 

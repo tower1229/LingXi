@@ -1,17 +1,17 @@
 ---
 name: reviewer-performance
-description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险、响应时间等。由 review-executor 显式调用，用于审查代码中的性能问题。
+description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险、响应时间等。由 review skill 显式调用，用于审查代码中的性能问题。
 ---
 
 # Reviewer Performance
 
-由 review-executor 显式调用，可访问其上下文（task、变更代码列表等）。能力：读 task 与变更代码；语义搜索性能相关实现（循环、查询、异步、缓存等），识别瓶颈与泄漏风险。
+由 review skill 显式调用，可访问其上下文（task、变更代码列表等）。能力：读 task 与变更代码；语义搜索性能相关实现（循环、查询、异步、缓存等），识别瓶颈与泄漏风险。
 
 ## Instructions
 
 ### 1. 读取输入
 
-从 review-executor 的上下文中获取：
+从 review skill 的上下文中获取：
 - task 文档路径（了解性能要求和成功标准）
 - 变更代码文件列表
 - 性能相关代码片段（如批量处理、数据库查询、异步处理等）

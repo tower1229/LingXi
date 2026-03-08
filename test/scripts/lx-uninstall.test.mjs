@@ -32,7 +32,7 @@ function setupUninstallFixture(tmpDir) {
   fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "tasks"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "tasks", "dummy"), "", "utf8");
   fs.mkdirSync(path.join(tmpDir, ".cursor", "commands"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, ".cursor", "commands", "task.md"), "# task", "utf8");
+  fs.writeFileSync(path.join(tmpDir, ".cursor", "commands", "init.md"), "# init", "utf8");
   fs.writeFileSync(path.join(tmpDir, ".cursor", "hooks.json"), "{}", "utf8");
   fs.mkdirSync(path.join(tmpDir, "scripts"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-uninstall.mjs"), "dummy", "utf8");
@@ -80,7 +80,7 @@ describe("lx-uninstall", () => {
   it("TC-004: removes only manifest-listed .cursor and scripts paths", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const inListCommands = path.join(tmpDir, ".cursor", "commands", "task.md");
+    const inListCommands = path.join(tmpDir, ".cursor", "commands", "init.md");
     const inListScripts = path.join(tmpDir, "scripts", "lx-uninstall.mjs");
     const userRule = path.join(tmpDir, ".cursor", "user-rule.md");
     const userScript = path.join(tmpDir, "scripts", "user-script.js");

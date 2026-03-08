@@ -1,5 +1,5 @@
 {
-  "commands": ["commands/task.md"],
+  "commands": ["commands/init.md"],
   "rules": [],
   "hooks": { "files": ["hooks.json"] },
   "skills": [],

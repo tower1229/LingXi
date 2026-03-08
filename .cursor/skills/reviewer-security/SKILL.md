@@ -1,17 +1,17 @@
 ---
 name: reviewer-security
-description: 安全审查专家，主动检查安全漏洞、注入风险、敏感信息暴露等。由 review-executor 显式调用，用于审查代码中的安全问题。
+description: 安全审查专家，主动检查安全漏洞、注入风险、敏感信息暴露等。由 review skill 显式调用，用于审查代码中的安全问题。
 ---
 
 # Reviewer Security
 
-由 review-executor 显式调用，可访问其上下文（task、变更代码列表等）。能力：读 task 与变更代码；语义搜索安全相关实现（认证、输入处理、敏感信息等），识别漏洞与风险。
+由 review skill 显式调用，可访问其上下文（task、变更代码列表等）。能力：读 task 与变更代码；语义搜索安全相关实现（认证、输入处理、敏感信息等），识别漏洞与风险。
 
 ## Instructions
 
 ### 1. 读取输入
 
-从 review-executor 的上下文中获取：
+从 review skill 的上下文中获取：
 - task 文档路径（了解安全相关需求）
 - 变更代码文件列表
 - 重点关注的安全相关代码片段（如用户输入处理、认证逻辑等）

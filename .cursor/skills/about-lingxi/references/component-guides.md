@@ -51,12 +51,9 @@
 
 ### 在灵犀中的应用
 
-灵犀以**工具包**形式提供上述命令，除 `/task` 作为需求起点外，其余均可选；**何时用哪个工具由用户根据偏好与任务复杂度决定**，workflow 不规定「何时用/何时不用」。
+工作流由 **task、vet、plan、build、review** 五个 **Skill** 驱动（用户通过输入 `/task`、`/plan` 等或自然语言触发）；以下为辅助 Command：
 
-- `/task`：创建任务文档（需求提纯与放大 + 核心技术方案/技术决策 + 可判定验收标准）
-- `/plan`：任务规划
-- `/build`：代码实现
-- `/review`：审查交付
+- **task / vet / plan / build / review**：以 **Skill** 形式提供，经 `/task`、`/plan` 等或自然语言调用（无单独 Command 文件）
 - `/remember`：记忆写入
 - 会话提炼由**心跳自动触发**（新会话时若距上次提炼超过 30 分钟，自动入队最多 3 个已完结会话，由后台 lingxi-session-distill 子代理提炼并写入记忆）；无需用户主动执行提炼命令。
 - `/init`：项目初始化（init command 承载主逻辑，Step 0 委托 `workspace-bootstrap`；init-checklists 作为 command 附录）
@@ -96,16 +93,16 @@
 
 ### 在灵犀中的应用
 
-**Executor Skills**：
+**工作流 Skills**：
 
-- `task-executor`：需求分析、提纯、放大和任务文档生成（含可判定验收标准）
-- `plan-executor`：任务规划、测试设计和文档生成
-- `build-executor`：代码实现、测试编写和执行
-- `review-executor`：多维度审查和交付质量保证
+- `task`：需求分析、提纯、放大和任务文档生成（含可判定验收标准）
+- `plan`：任务规划、测试设计和文档生成
+- `build`：代码实现、测试编写和执行
+- `review`：多维度审查和交付质量保证
 
 **记忆系统**（记忆沉淀由用户触发 + 记忆写入 + 记忆提取）：
 
-- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）同样产生沉淀；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
+- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）同样产生沉淀；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
 - **记忆提取**：`memory-retrieve`（Skill）——每轮回答前检索并最小注入（由 sessionStart hook 注入的约定触发）。
 
 **Hooks（记忆注入约定）**：
@@ -209,8 +206,8 @@
 ### 在灵犀中的应用
 
 - **选型与成本**：子代理适合独立上下文、多步、需隔离或静默的任务；可一次性完成的任务优先用 Skill，避免不必要子代理以控制 token 消耗。
-- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（扩展 payload：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。**apply=team** 时由 memory-write skill 写入 **memory/share/**（团队级），否则写入 **memory/project/**（项目级）。**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理）；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后调用；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory。子代理在独立上下文中完成校验并调用 **memory-write** skill → 治理 → 门控与**直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。
-- 审查类任务通过 Reviewer Skills 实现，由 review-executor 显式调用，共享上下文以降低 token 消耗。
+- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（扩展 payload：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。**apply=team** 时由 memory-write skill 写入 **memory/share/**（团队级），否则写入 **memory/project/**（项目级）。**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后调用；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory。子代理在独立上下文中完成校验并调用 **memory-write** skill → 治理 → 门控与**直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。
+- 审查类任务通过 Reviewer Skills 实现，由 **review** skill 显式调用，共享上下文以降低 token 消耗。
 
 ## 选择决策矩阵
 

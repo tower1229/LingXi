@@ -106,7 +106,7 @@ convert_path_for_python() {
   fi
 }
 
-# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/task.md）
+# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/init.md）
 # 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
