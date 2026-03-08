@@ -88,6 +88,7 @@
   - 如果改动涉及工作流输出与静默约束 → 更新 `references/workflow-output-principles.md`
   - 如果改动涉及核心价值或实现方式 → 更新 `references/core-values.md`
   - 如果改动涉及工作流程或使用场景 → 更新 `SKILL.md` 中的相关场景描述
+  - 如果改动涉及 task/vet 产出语义（含变更记录约定）→ 更新 task 的 `references/task-changelog-spec.md` 及 vet/task 两个 Skill 中的变更记录约定说明
 
 ## 工程实践检查
 
