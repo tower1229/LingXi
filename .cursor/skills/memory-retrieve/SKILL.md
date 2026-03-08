@@ -1,6 +1,6 @@
 ---
 name: memory-retrieve
-description: 以传入的 query（当前用户消息或 Agent 构建的决策点描述）从 `.cursor/.lingxi/memory/project/` 与 `.cursor/.lingxi/memory/share/` 检索可能有用的记忆，产出可执行的命中与决策输入（adopt/reject/ask），驱动回答前决策；无匹配时静默。本 Skill 为每轮强制约定：只要本轮存在用户自由输入，在给出回答前必须先调用本 Skill（以当前用户消息为 query），不因轮次或上下文长度而跳过。
+description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.cursor/.lingxi/memory/share/` 检索记忆，产出 adopt/reject/ask 决策输入。仅当用户消息包含自由输入时调用；仅 command/skill 调用时不调用，由主流程写入 memory.retrieve.skipped 后直接作答。
 ---
 
 # Memory Retrieve
@@ -12,7 +12,7 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 ## 调用形式与输入
 
 - **/memory-retrieve** \<query\>
-- **每轮强制**：有用户自由输入的轮次，必须先调用 `/memory-retrieve <当前用户消息>` 再回答；不因轮次或「上一轮已做过」而跳过。
+- **何时调用**：仅当本轮用户消息包含自由输入时，先调用 `/memory-retrieve <当前用户消息>` 再回答。**仅 command/skill 调用**（如仅输入 \`/task\`、\`/start-tuning\`）时不调用本 Skill，主流程写入 `memory.retrieve.skipped` 后直接作答。
 - 主流程：当前用户消息。嗅探场景：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
 
 ## 执行流程（SSoT）

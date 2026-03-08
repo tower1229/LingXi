@@ -7,15 +7,15 @@
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
-const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续有效，不因对话轮次增加、上下文变长或压缩而失效；每一轮（包括第 2 轮及之后）均须遵守。
-每轮回答前的第一步：若存在用户自由输入（非仅 command 调用或 skills 调用），必须、不可省略地先执行 \`/memory-retrieve <当前用户消息>\`，再开始作答；不可跳过或认为「上一轮已做过」而省略。即使上一轮已执行过 memory-retrieve，本轮仍须针对**本轮**用户消息重新执行一次；每轮独立、不继承上一轮。
-若命中记忆（top 0-2），必须先做一轮决策：\`adopt\`（采用）/\`reject\`（不采用，给出一句理由）/\`ask\`（需向用户确认）。
-对用户呈现要求：未采纳（reject）的命中不展示；已采纳（adopt）的命中仅允许一行极简提示，不展开过程，不罗列列表。
-若本轮回答依据某条记忆做方案选择，需在表述中自然引用记忆来源（如 \`[MEM-003]\`）；禁止只检索不决策。
-每轮记忆检索后，需写入一条审计：\`memory.retrieve.performed\`（执行检索）或 \`memory.retrieve.skipped\`（显式跳过）。
-其中 \`memory.retrieve.performed\` 必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision。
-每轮若未记录上述事件，审计系统会追加 \`memory.retrieve.missing\` 作为完整性告警（不阻断主流程）。
-【conversation_id 传入约定】当前会话 ID 由运行时提供；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），供记忆审计与会话级关联。
+const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续有效，每轮独立、不继承上一轮。
+
+每轮回答前必须先做**二选一**（禁止未写审计即作答）：
+- **仅 command/skill 调用**（用户消息仅为一条 command 如 \`/start-tuning\`、\`/task\` 或 skill 调用，无其它自然语言）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"），然后直接作答。
+- **否则**（存在用户自由输入）：先执行 \`/memory-retrieve <当前用户消息>\`，再作答；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
+
+若执行了检索且命中（top 0–2）：必须先对每条命中做 \`adopt\`/\`reject\`/\`ask\` 决策；仅对 adopt 做一行极简提示，reject 不展示；若依据某条记忆做方案选择，表述中自然引用来源（如 \`[MEM-003]\`）。未记录 performed 或 skipped 时审计系统会追加 \`memory.retrieve.missing\`（不阻断主流程）。
+
+【conversation_id 传入约定】调用 lingxi-memory 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
 
 function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
