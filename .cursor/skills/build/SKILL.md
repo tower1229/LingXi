@@ -1,6 +1,6 @@
 ---
 name: build
-description: Implements code and tests from a task (and optional plan) with TDD where applicable. Use when the user asks to implement a task, run build, or execute the build phase (e.g. /build or "implement task 001").
+description: 工作流步骤：按 task/plan 实现与测试。仅支持手动或显式调用（如 /build），勿根据语义自动加载。
 ---
 
 # Build

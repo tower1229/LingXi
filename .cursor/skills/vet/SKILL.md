@@ -1,6 +1,6 @@
 ---
 name: vet
-description: Reviews task documents for completeness, verifiability, and readiness. Use when the user asks to review a task doc, vet the task, or improve task quality (e.g. /vet or "review my task document").
+description: 工作流步骤：审查 task 文档。仅支持手动或显式调用（如 /vet），勿根据语义自动加载。
 ---
 
 # Vet

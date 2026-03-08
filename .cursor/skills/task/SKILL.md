@@ -1,6 +1,6 @@
 ---
 name: task
-description: Creates task documents with refined requirements, technical approach, and acceptance criteria. Use when the user asks to create a task document, refine requirements, start a new task, or invokes the task workflow (e.g. /task).
+description: 工作流步骤：产出 task 文档。仅支持手动或显式调用（如 /task、执行 task），勿根据语义自动加载。
 ---
 
 # Task

@@ -1,6 +1,6 @@
 ---
 name: review
-description: Performs multi-dimensional delivery review against task acceptance criteria (per-F Pass/Fail, evidence). Use when the user asks to review delivery, run review, or validate a task (e.g. /review or "review task 001").
+description: 工作流步骤：交付审查。仅支持手动或显式调用（如 /review），勿根据语义自动加载。
 ---
 
 # Review

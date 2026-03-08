@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Produces plan and testcase documents from a task document (F→T→TC mapping, execution order). Use when the user asks for task planning, to generate a plan or test cases, or invokes the plan workflow (e.g. /plan).
+description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显式调用（如 /plan），勿根据语义自动加载。
 ---
 
 # Plan
