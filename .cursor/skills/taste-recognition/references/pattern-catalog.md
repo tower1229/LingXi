@@ -82,4 +82,12 @@
 
 ---
 
+## 经验法则（Heuristic）
+
+- **定义**：在特定情境下「通常先…」「遇到 X 则 Y」的可复用判断规则，无需严格证明。
+- **When to load**：需要快速判断或排查时、需要一致的经验规则时。
+- **匹配时**：patternHint 填 `Heuristic`（与本节标题一致）。
+
+---
+
 *以上为 taste-recognition 升维时的参考列表；匹配时 `patternHint` 填模式名称（与上表标题一致），`patternConfidence` 按匹配强度填 high/medium/low。*

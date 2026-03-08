@@ -32,7 +32,7 @@
 
 ## 2. Payload → Note 映射要点（下游执行）
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若存在 payload.patternHint 且 patternConfidence=high，Kind 建议设为 `pattern`；否则 Kind/Status/Strength/Scope 按 source、apply、用户表述规则。Audience/Portability 来自 apply；Source 来自 payload.source；Supersedes 治理时填写。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若存在 payload.patternHint 且 patternConfidence=high，Kind 建议设为 `pattern`；否则 Kind/Status/Strength/Scope 按 source、apply、用户表述规则。**Kind 与内容类型**（偏好、决策经验、领域知识等）的对应见本目录 [content-types.md](content-types.md)。Audience/Portability 来自 apply；Source 来自 payload.source；Supersedes 治理时填写。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；若有 patternHint 可结合 pattern-catalog 的 when-to-load 表述。与 One-liner 分工（One-liner 偏「做什么」）。
 - **One-liner**：优先使用 payload.l1OneLiner（layer 为 L1 或 L0+L1）或 payload.l0OneLiner（layer 为 L0）；若无则按「在 [scene] 下优先 [choice]」生成。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。

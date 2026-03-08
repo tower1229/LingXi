@@ -25,7 +25,7 @@ is_background: true
 1. **解析输入**：从父代理的提示中解析 candidate_ids（及可选 enqueued_by）。若 candidate_ids 为空或缺失，直接执行步骤 5（仅收尾），不进行提炼。
 2. **逐会话提炼**：对每个 candidate_id：
    - 用自然语言获取该会话的完整内容，例如：「获取 id 为 \<该 conversation_id\> 的会话内容」。
-   - 将**完整对话内容**作为 taste-recognition 的输入，按 `.cursor/skills/taste-recognition/SKILL.md` 执行品味识别；**重点依据对话中的用户输入**判断可沉淀性，assistant 内容仅作上下文。
+   - 将**完整对话内容**作为 taste-recognition 的输入，按 `.cursor/skills/taste-recognition/SKILL.md` 执行品味识别；**重点依据对话中的用户输入**判断可沉淀性，assistant 内容仅作上下文。可沉淀内容类型与用户信号见 taste-recognition 的 `references/content-types.md` 与 `references/execution-and-triggers.md`。
    - 产出时 **source 一律为 `heartbeat`**；将本批所有 payload 汇总到同一 payloads 数组。
 3. **写入记忆**：若汇总后 payloads 非空，调用 **lingxi-memory** 子代理，传入 payloads 数组及可选 conversation_id（可用 enqueued_by）。
 4. **记录结果**：统计本批 sessions_processed（实际处理的会话数）、payloads_written（新建/合并/跳过条数，来自 lingxi-memory 简报）。

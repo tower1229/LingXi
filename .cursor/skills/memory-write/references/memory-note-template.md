@@ -10,6 +10,14 @@
 - **Id**: MEM-xxxx
 - **Title**: 简短标题，与 INDEX 的 Title 列一致；用于检索与列表展示（SSoT：本字段为 INDEX Title 的来源）
 - **Kind**: principle / heuristic / decision / pattern / business / tech / reference / other
+- **按 Kind 的书写建议**（可选，便于写入一致、检索更准；完整类型见 taste-recognition 的 `references/content-types.md`）：
+  - **principle**：When to load 如「做 X 类选择时」「定 Y 约定时」；One-liner 如「在 [场景] 下优先 [选择]」。
+  - **heuristic**：When to load 如「需要快速判断/排查时」；One-liner 如「遇到 [A] 则先 [B]」「在 [场景] 下通常 [规则]」。
+  - **decision**：When to load 如「做类似技术/产品决策时」；One-liner 为结论句；Context/Decision 填 Decision、Alternatives、Counter-signals。
+  - **pattern**：When to load 沿用 pattern-catalog 的表述；One-liner 含模式名与适用约束。
+  - **business**：When to load 如「需求澄清/验收/边界讨论时」；One-liner 为业务规则或验收标准一句。
+  - **tech**：When to load 如「用 X 做 Y 时」「出现 Z 错误时」；One-liner 为事实或规则；Pointers 指向文档/代码。
+  - **reference**：When to load 按使用场景；One-liner 为可查证事实或约定一句。
 - **Status**: active / local / archive（生命周期治理用）
 - **Strength**: hypothesis / validated / enforced
 - **Scope**: narrow / medium / broad（场景粒度；与 Audience 配合，见 payload 映射规则）

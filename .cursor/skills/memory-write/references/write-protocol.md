@@ -9,6 +9,8 @@
 
 ## 映射规则（Payload → note）
 
+Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 taste-recognition 的 `references/content-types.md`。
+
 - **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若 payload 含 patternHint 且 patternConfidence=high，Kind 设为 `pattern`，Title/When to load 可结合模式名；否则 Kind/Status/Strength/Scope 按 source、apply 与用户表述。**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；若有 patternHint 可结合 taste-recognition 的 pattern-catalog 的 when-to-load 表述。One-liner 偏「做什么」。
 - **One-liner**：优先使用 payload.l1OneLiner（layer 为 L1 或 L0+L1）或 payload.l0OneLiner（layer 为 L0）；若无则按「在 [scene] 下优先 [choice]」生成。

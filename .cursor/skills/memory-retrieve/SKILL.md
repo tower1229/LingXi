@@ -38,3 +38,7 @@ description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.curs
 - **输出契约**：命中时输出结构化结果（`hits`、`adoptionCandidates`、`obligations`、`suggestedAction`）；供主 Agent 做 `adopt/reject/ask` 决策。无匹配时静默。
 - **最小注入**：有匹配时仅对 **adopt** 项给出一行极简提示（可执行提醒 + 轻量引用如 `[MEM-xxx]`）；`reject` 项不对用户展示，不输出冗长解释。若依据某条记忆做方案选择，应在表述中自然引用该记忆。
 - **决策必达**：主 Agent 拿到命中后必须对每条候选给出 `adopt/reject/ask` 之一；禁止命中后不做决策直接继续。
+
+## References
+
+- **按类型检索策略（文档约定，当前未实现逻辑）**：[references/retrieval-strategy-by-kind.md](references/retrieval-strategy-by-kind.md)
