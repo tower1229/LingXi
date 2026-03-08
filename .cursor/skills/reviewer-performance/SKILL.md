@@ -33,13 +33,20 @@ description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险�
 
 ### 4. 输出审查结果
 
+必须遵循 **review 的 references/reviewer-output-spec.md** 统一输出结构：
+
+- **维度**：`performance`；**状态**：`completed` | `partial` | `degraded`（降级时在「说明」中写原因）。
+- 按 **Blockers / High / Medium / Low** 四级列出问题，每项含：描述、位置、建议修复（表格形式）；无则写「无」或省略该级表格。
+- 结尾 **小结**：共 X 项（各级数量）、结论（通过/需修复）。
+- **可选（机器可读）**：在 Markdown 前输出 `<!-- REVIEWER_JSON` + JSON（含 dimension、status、issues[]、summary） + `-->`，格式见 spec 第 4 节。
+
 - 性能问题清单（按优先级分级）
 - 具体问题描述和代码位置
 - 性能影响评估和优化建议
 
 ### 5. 输出与静默
 
-遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**。
 
 ### 6. 降级处理
 

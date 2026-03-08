@@ -41,6 +41,8 @@
 
 ## 多维度审查结果
 
+子维度（安全/性能/文档一致性/E2E）的输出结构见本 skill 的 **references/reviewer-output-spec.md**，由各 reviewer-* 按该规范产出；review 主流程将各块插入下方对应小节。
+
 ### 1. 功能审查
 
 - Blockers:
