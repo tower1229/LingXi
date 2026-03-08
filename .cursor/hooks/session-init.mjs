@@ -18,15 +18,15 @@ const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续�
 【conversation_id 传入约定】当前会话 ID 由运行时提供；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），供记忆审计与会话级关联。
 `;
 
-function buildHeartbeatContext(trigger_heartbeat, candidate_ids) {
+function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
   if (!trigger_heartbeat || !candidate_ids || candidate_ids.length === 0) return "";
   const idsJson = JSON.stringify(candidate_ids);
+  const enqueuedBy = (conversationId || "").trim();
   return `
 
 【会话提炼心跳】本会话已触发会话提炼心跳，待提炼会话已入队（candidate_ids: ${idsJson}）。请按以下顺序执行：
-1. 向 audit.log 追加一条 \`heartbeat.triggered\` 事件（ts、conversation_id、candidate_ids、reason: "30min_threshold"）。
-2. **必须使用 mcp_task 工具**发起会话提炼子代理：\`subagent_type\` 设为 \`lingxi-session-distill\`，\`description\` 填简短说明（如「会话提炼」），\`prompt\` 中明确写出：candidate_ids: ${idsJson}（可加一句「对以上 candidate_ids 批量获取会话内容、经 taste-recognition 提炼、若有 payload 则调用 lingxi-memory 写入」）。该子代理为后台运行（run_in_background 可选），无需等待其完成。
-3. 然后直接执行记忆提取约定，无需等待提炼完成。
+1. **必须使用 mcp_task 工具**发起 **lingxi-session-distill** 子代理，在 **prompt** 中明确传入 **candidate_ids**: ${idsJson} 与 **enqueued_by**: "${enqueuedBy}"（当前会话的 conversation_id）。子代理会在其内部先写入 \`heartbeat.triggered\` 再执行提炼，主会话**无需**再写 audit。
+2. 然后直接执行记忆提取约定并作答，无需等待提炼完成。
 
 说明：\`heartbeat-control.json\` 中的 \`heartbeat.running\` 只有会话提炼子代理在**收尾步骤**会置为 false；若子代理未被调用或未执行到收尾，running 会一直为 true，下次心跳（约 5 分钟锁超时后）可重新入队。
 `;
@@ -37,7 +37,7 @@ async function main() {
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
   const { trigger_heartbeat, candidate_ids } = runHeartbeatCheck(projectRoot, conversationId);
-  const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids);
+  const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId);
   const additional_context = BASE_CONTEXT + heartbeatContext;
   writeStdoutJson({
     continue: true,
