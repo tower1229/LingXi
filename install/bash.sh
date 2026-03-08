@@ -106,7 +106,7 @@ convert_path_for_python() {
   fi
 }
 
-# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/task.md）
+# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/init.md）
 # 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
@@ -490,7 +490,6 @@ else
   done < <(get_json_array "workflowDirectories")
   if [ -f ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
     cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".cursor/.lingxi/memory/INDEX.md"
-    cp ".cursor/skills/workspace-bootstrap/references/memory-note-template.default.md" ".cursor/.lingxi/memory/references/memory-note-template.md"
     success "已创建目录与模板（无 Node.js 模式）"
   else
     error "模板文件不存在，请确保 skills 已完整下载"
@@ -499,7 +498,7 @@ else
 fi
 
 # 为 share 目录创建 .gitkeep 文件（确保空目录被 git 跟踪）
-SHARE_DIR=".cursor/.lingxi/memory/notes/share"
+SHARE_DIR=".cursor/.lingxi/memory/share"
 if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
   cat > "$SHARE_DIR/.gitkeep" << 'EOF'
 # Share Directory
@@ -508,13 +507,13 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 #
 # 使用方式：
 # 1. 添加 share 仓库（submodule）：
-# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
+# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
 #
 # 2. 更新 share 仓库：
 # git submodule update --remote --merge
 #
 # 3. 同步记忆索引（新增共享经验后执行）：
-#    在 Cursor 中运行 /memory-govern
+#    在 Cursor 中运行 memory-govern Skill（输入 /memory-govern）
 #
 # 推荐约定：
 # - 团队级质量标准：Audience=team，Portability=cross-project
@@ -585,9 +584,9 @@ echo " 3. 运行 /task <需求描述> 创建第一个任务"
 echo " 4. 查看 README.md 了解完整工作流"
 echo ""
 info "经验共享（可选，跨项目复用）："
-echo " - share 目录（已创建）：.cursor/.lingxi/memory/notes/share/"
-echo " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share"
-echo " - 更新索引：在 Cursor 中运行 /memory-govern 同步索引"
+echo " - share 目录（已创建）：.cursor/.lingxi/memory/share/"
+echo " - 添加共享记忆仓库（git submodule）：git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share"
+echo " - 更新索引：在 Cursor 中运行 memory-govern Skill（输入 /memory-govern）同步索引"
 echo ""
 info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
 info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"

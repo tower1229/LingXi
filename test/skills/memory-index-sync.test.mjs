@@ -53,7 +53,7 @@ describe("memory-index-sync", () => {
 
   it("outputs JSON with orphanDeleted, unindexedNotes, duplicateIds", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, "notes"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, "project"), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, "INDEX.md"), INDEX_HEADER, "utf8");
     const noteContent = `---
 - **Id**: MEM-001
@@ -62,7 +62,7 @@ describe("memory-index-sync", () => {
 ---
 # Title
 `;
-    fs.writeFileSync(path.join(tmpDir, "notes", "MEM-001.md"), noteContent, "utf8");
+    fs.writeFileSync(path.join(tmpDir, "project", "MEM-001.md"), noteContent, "utf8");
 
     const { code, stdout } = await runMemoryIndexSync(tmpDir);
     assert.strictEqual(code, 0);
@@ -74,10 +74,10 @@ describe("memory-index-sync", () => {
 
   it("reports unindexed note when INDEX has no row for it", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, "notes"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, "project"), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, "INDEX.md"), INDEX_HEADER, "utf8");
     fs.writeFileSync(
-      path.join(tmpDir, "notes", "NEW.md"),
+      path.join(tmpDir, "project", "NEW.md"),
       "---\n- **Id**: NEW\n---\n# New\n",
       "utf8"
     );

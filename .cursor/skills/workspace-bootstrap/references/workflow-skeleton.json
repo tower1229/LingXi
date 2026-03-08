@@ -1,1 +1,12 @@
-{"workflowDirectories":[".cursor/.lingxi/tasks",".cursor/.lingxi/memory",".cursor/.lingxi/memory/notes",".cursor/.lingxi/memory/notes/share",".cursor/.lingxi/memory/references",".cursor/.lingxi/workspace"],"workflowTemplateFiles":[".cursor/.lingxi/memory/references/memory-note-template.md"],"workflowIndexFiles":[".cursor/.lingxi/memory/INDEX.md"]}
+{
+    "workflowDirectories": [
+        ".cursor/.lingxi/tasks",
+        ".cursor/.lingxi/memory",
+        ".cursor/.lingxi/memory/project",
+        ".cursor/.lingxi/memory/share",
+        ".cursor/.lingxi/workspace"
+    ],
+    "workflowIndexFiles": [
+        ".cursor/.lingxi/memory/INDEX.md"
+    ]
+}

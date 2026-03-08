@@ -1,17 +1,17 @@
 ---
 name: memory-govern
-description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模型补全未索引条目），可选全库主动治理。
+description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模型补全未索引条目），可选全库主动治理。通过输入 /memory-govern 或「同步记忆索引」「执行 memory-govern」等显式触发。
 ---
 
 # Memory Govern
 
 ## 意图
 
-由 `/memory-govern` 调用。同步 `.cursor/.lingxi/memory/INDEX.md` 与 `memory/notes/` 的一致性，并由模型补全未索引 note 的 INDEX 行以提升检索质量；可选对整库做主动治理（合并/改写/归档建议）。
+同步 `.cursor/.lingxi/memory/INDEX.md` 与 `memory/project/`、`memory/share/` 的一致性，并由模型补全未索引 note 的 INDEX 行以提升检索质量；可选对整库做主动治理（合并/改写/归档建议）。由用户通过输入 **/memory-govern** 或自然语言（如「同步记忆索引」）显式触发本 Skill。
 
 ## 调用形式与输入
 
-- **/memory-govern** [--dry-run] [--skip-govern] [--root \<memoryRoot\>]
+- **/memory-govern** [--dry-run] [--skip-govern] [--root \<memoryRoot\>]（或自然语言「同步记忆索引」「执行 memory-govern」等）
 - `--dry-run`：仅执行脚本并输出结果，不写回 INDEX、不调用模型补全、不执行阶段 2。
 - `--skip-govern`：执行阶段 1（同步 + 模型补全未索引），跳过阶段 2（全库治理）。
 - `--root`：指定 memory 根目录，默认 `.cursor/.lingxi/memory`（相对项目根）。
@@ -21,7 +21,7 @@ description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模
 ### 阶段 1：同步
 
 1. **调用脚本**：在项目根执行 `node .cursor/skills/memory-govern/scripts/memory-index-sync.mjs [--root <memoryRoot>]`。脚本会：
-   - 扫描 `memory/notes/`（含 `share/`）与 `memory/INDEX.md`；
+   - 扫描 `memory/project/`、`memory/share/` 与 `memory/INDEX.md`；
    - **直接删除**孤儿索引行（INDEX 中有但对应 note 文件不存在），并写回 INDEX；
    - 向 **stdout** 输出一行 JSON，不向 stdout 输出其他内容；错误与警告可写 stderr。
 2. **解析输出**：从 stdout 读取一行 JSON，得到 `orphanDeleted`、`unindexedNotes`、`duplicateIds`。

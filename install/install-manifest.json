@@ -1,20 +1,14 @@
 {
     "commands": [
-        "commands/task.md",
-        "commands/vet.md",
-        "commands/plan.md",
-        "commands/build.md",
-        "commands/review.md",
         "commands/init.md",
-        "commands/remember.md",
-        "commands/extract.md",
-        "commands/memory-govern.md"
+        "commands/remember.md"
     ],
     "rules": [],
     "hooks": {
         "files": [
             "hooks.json",
             "hooks/session-init.mjs",
+            "hooks/heartbeat-check.mjs",
             "hooks/_hook-utils.mjs",
             "hooks/append-memory-audit.mjs",
             "hooks/lingxi-audit.mjs"
@@ -22,12 +16,11 @@
     },
     "skills": [
         "skills/about-lingxi/SKILL.md",
-        "skills/build-executor/SKILL.md",
-        "skills/memory-retrieve/SKILL.md",
-        "skills/plan-executor/SKILL.md",
-        "skills/task-executor/SKILL.md",
-        "skills/review-executor/SKILL.md",
-        "skills/vet-executor/SKILL.md",
+        "skills/task/SKILL.md",
+        "skills/vet/SKILL.md",
+        "skills/plan/SKILL.md",
+        "skills/build/SKILL.md",
+        "skills/review/SKILL.md",
         "skills/testcase-designer/SKILL.md",
         "skills/reviewer-doc-consistency/SKILL.md",
         "skills/reviewer-e2e/SKILL.md",
@@ -71,37 +64,58 @@
             "skills/taste-recognition/references/payload-and-downstream.md"
         ],
         "memory-retrieve": [],
-        "plan-executor": [
-            "skills/plan-executor/references/taste-sniff-rules.md",
-            "skills/plan-executor/references/plan-doc-template.md"
+        "plan": [
+            "skills/plan/references/taste-sniff-rules.md",
+            "skills/plan/references/plan-doc-template.md"
         ],
-        "review-executor": [
-            "skills/review-executor/references/taste-sniff-rules.md",
-            "skills/review-executor/references/review-report-template.md"
+        "review": [
+            "skills/review/references/taste-sniff-rules.md",
+            "skills/review/references/review-report-template.md"
         ],
         "testcase-designer": [
             "skills/testcase-designer/references/testcase-doc-template.md"
         ],
-        "build-executor": [
-            "skills/build-executor/references/taste-sniff-rules.md"
+        "build": [
+            "skills/build/references/taste-sniff-rules.md"
         ],
-        "task-executor": [
-            "skills/task-executor/references/taste-sniff-rules.md",
-            "skills/task-executor/references/task-doc-template-full.md",
-            "skills/task-executor/references/task-doc-template-simple.md",
-            "skills/task-executor/scripts/next-task-id.mjs",
-            "skills/task-executor/scripts/latest-task-id.mjs"
+        "task": [
+            "skills/task/references/taste-sniff-rules.md",
+            "skills/task/references/task-doc-template-full.md",
+            "skills/task/references/task-doc-template-simple.md",
+            "skills/task/scripts/next-task-id.mjs",
+            "skills/task/scripts/latest-task-id.mjs"
         ],
         "memory-govern": [
             "skills/memory-govern/scripts/memory-index-sync.mjs"
+        ],
+        "memory-write": [
+            "skills/memory-write/references/write-protocol.md",
+            "skills/memory-write/references/memory-note-template.md"
+        ],
+        "skill-creator": [
+            "skills/skill-creator/references/schemas.md",
+            "skills/skill-creator/scripts/utils.py",
+            "skills/skill-creator/scripts/run_loop.py",
+            "skills/skill-creator/scripts/quick_validate.py",
+            "skills/skill-creator/scripts/package_skill.py",
+            "skills/skill-creator/scripts/run_eval.py",
+            "skills/skill-creator/scripts/improve_description.py",
+            "skills/skill-creator/scripts/generate_report.py",
+            "skills/skill-creator/scripts/aggregate_benchmark.py",
+            "skills/skill-creator/agents/grader.md",
+            "skills/skill-creator/agents/analyzer.md",
+            "skills/skill-creator/agents/comparator.md",
+            "skills/skill-creator/eval-viewer/viewer.html",
+            "skills/skill-creator/eval-viewer/generate_review.py",
+            "skills/skill-creator/assets/eval_review.html",
+            "skills/skill-creator/LICENSE.txt"
         ]
     },
     "workflowDirectories": [
         ".cursor/.lingxi/tasks",
         ".cursor/.lingxi/memory",
-        ".cursor/.lingxi/memory/notes",
-        ".cursor/.lingxi/memory/notes/share",
-        ".cursor/.lingxi/memory/references",
+        ".cursor/.lingxi/memory/project",
+        ".cursor/.lingxi/memory/share",
         ".cursor/.lingxi/workspace"
     ],
     "gitignoreEntries": [

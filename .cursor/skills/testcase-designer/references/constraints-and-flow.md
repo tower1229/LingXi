@@ -1,6 +1,6 @@
 # Testcase Designer — 完整约束与流程
 
-本 Skill 由 plan-executor（主产出）、build-executor（Task-driven 且无 testcase 时）、review-executor（覆盖审计）显式调用。从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
+本 Skill 由 plan（主产出）、build（Task-driven 且无 testcase 时）、review（覆盖审计）显式调用。从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
 
 ## 输入输出
 
@@ -16,7 +16,7 @@
 
 ## 与 plan/build/review 的约定
 
-plan-executor 调用本 Skill 产出 testcase；build-executor 在 Task-driven 且无 testcase 时调用并生成后再继续；review-executor 按相同 F→TC 映射与验证方式做覆盖审计。
+plan 调用本 Skill 产出 testcase；build 在 Task-driven 且无 testcase 时调用并生成后再继续；review 按相同 F→TC 映射与验证方式做覆盖审计。
 
 ## 注意事项
 

@@ -1,6 +1,6 @@
 ---
 name: testcase-designer
-description: 由 plan-executor（主产出）、build-executor（Task-driven 且无 testcase 时）、review-executor（覆盖审计）显式调用，从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
+description: 由 plan（主产出）、build（Task-driven 且无 testcase 时）、review（覆盖审计）显式调用，从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致。
 ---
 
 # Testcase Designer

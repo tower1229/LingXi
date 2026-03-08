@@ -1,15 +1,15 @@
 ---
 name: reviewer-doc-consistency
-description: 文档一致性审查专家，检查代码与文档是否一致。由 review-executor 显式调用，用于审查代码与 task、plan、testcase 文档的一致性。
+description: 文档一致性审查专家，检查代码与文档是否一致。由 review skill 显式调用，用于审查代码与 task、plan、testcase 文档的一致性。
 ---
 
 # Reviewer Doc Consistency
 
-由 review-executor 显式调用，可访问其上下文（task、变更代码列表、plan/testcase 等）。能力：读 task/plan/testcase 与变更代码；语义搜索与逐文件对比。
+由 review skill 显式调用，可访问其上下文（task、变更代码列表、plan/testcase 等）。能力：读 task/plan/testcase 与变更代码；语义搜索与逐文件对比。
 
 ## Instructions
 
-从 review-executor 的上下文中获取：
+从 review skill 的上下文中获取：
 - task 文档路径
 - 变更代码文件列表
 - plan/testcase 文档路径（如存在）

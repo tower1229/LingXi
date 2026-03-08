@@ -1,5 +1,6 @@
 {
   "name": "lingxi-workflow",
+  "description": "Cursor workflow with persistent memory.",
   "private": true,
   "author": "tower1229@gmail.com",
   "version": "1.0.0",
@@ -7,9 +8,9 @@
   "scripts": {
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",
-    "lx:test": "node --test test/",
-    "lx:test:scripts": "node --test test/scripts/",
-    "lx:test:hooks": "node --test test/hooks/",
-    "lx:test:skills": "node --test test/skills/"
+    "test": "node --test test/",
+    "test:scripts": "node --test test/scripts/",
+    "test:hooks": "node --test test/hooks/",
+    "test:skills": "node --test test/skills/"
   }
 }
