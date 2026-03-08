@@ -38,4 +38,3 @@ description: 以传入的 query（当前用户消息或 Agent 构建的决策点
 - **输出契约**：命中时输出结构化结果（`hits`、`adoptionCandidates`、`obligations`、`suggestedAction`）；供主 Agent 做 `adopt/reject/ask` 决策。无匹配时静默。
 - **最小注入**：有匹配时仅对 **adopt** 项给出一行极简提示（可执行提醒 + 轻量引用如 `[MEM-xxx]`）；`reject` 项不对用户展示，不输出冗长解释。若依据某条记忆做方案选择，应在表述中自然引用该记忆。
 - **决策必达**：主 Agent 拿到命中后必须对每条候选给出 `adopt/reject/ask` 之一；禁止命中后不做决策直接继续。
-- **降级**：语义不可用时仅执行关键词路径；仍无匹配则静默，但仍需记录 `memory.retrieve.performed`（`semantic_called=false`、`keyword_called=true`）或 `memory.retrieve.skipped`。
