@@ -1,8 +1,8 @@
 ---
 name: lingxi-session-distill
-description: 会话提炼子代理。由主 Agent 在心跳触发时调用，对已入队的 conversation_id 批量获取会话内容、经 taste-recognition 提炼、写入记忆；后台运行，主会话无需等待。传入 candidate_ids 数组（最多 3 个）即可。
 model: inherit
-background: true
+description: 会话提炼子代理。由主 Agent 在心跳触发时调用，对已入队的 conversation_id 批量获取会话内容、经 taste-recognition 提炼、写入记忆；后台运行，主会话无需等待。传入 candidate_ids 数组（最多 3 个）即可。
+is_background: true
 ---
 
 # Lingxi Session Distill
@@ -15,6 +15,7 @@ background: true
 - **enqueued_by**（可选）：触发入队的会话 id，用于审计字段 conversation_id。
 
 控制文件与审计路径（默认）：
+
 - 控制文件：`.cursor/.lingxi/workspace/heartbeat-control.json`
 - 审计日志：`.cursor/.lingxi/workspace/audit.log`
 

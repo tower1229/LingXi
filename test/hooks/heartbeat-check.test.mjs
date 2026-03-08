@@ -177,7 +177,7 @@ describe("heartbeat-check", () => {
     assert.deepStrictEqual(out.candidate_ids, ["new", "mid", "old"]);
   });
 
-  it("acquires lock when lock is stale (>5 min)", () => {
+  it("acquires lock when lock is stale (>5 min); does not hold running to avoid stuck lock", () => {
     tmpDir = createTempDir();
     const ts = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     writeControl(tmpDir, {
@@ -195,5 +195,8 @@ describe("heartbeat-check", () => {
     const out = runHeartbeatCheck(tmpDir, "cur-conv");
     assert.strictEqual(out.trigger_heartbeat, true);
     assert.deepStrictEqual(out.candidate_ids, ["conv-1"]);
+    const controlPath = path.join(tmpDir, CONTROL_REL);
+    const control = JSON.parse(fs.readFileSync(controlPath, "utf8"));
+    assert.strictEqual(control.heartbeat.running, false, "when re-triggering due to stale lock, running is false to avoid stuck lock");
   });
 });

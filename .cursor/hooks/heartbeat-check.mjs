@@ -4,6 +4,9 @@
  * 读 heartbeat-control.json 与 audit.log，判断是否距上次会话提炼超过 30 分钟；
  * 若是且锁可用，则选出最多 3 个已完结、未提炼的会话（按 session_end 倒序），写入 pending_distillation 与锁，返回 trigger_heartbeat 与 candidate_ids。
  * 主 Agent 据此调用后台会话提炼子代理，无需等待。
+ *
+ * heartbeat.running：首次入队时设为 true；仅会话提炼子代理在收尾步骤会置为 false。
+ * 若因锁超时（LOCK_STALE_MINUTES）重新入队，本脚本不再占用锁（running 写为 false），避免子代理未被调用时锁一直为 true。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -148,13 +151,15 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return { trigger_heartbeat: false, candidate_ids: [] };
   }
 
+  // 若因锁超时重新入队，不再占用 running 锁，避免子代理从未被调用时 running 一直为 true
+  const holdLock = !lockStale;
   const next = {
     ...control,
     last_distillation_completed_at: control.last_distillation_completed_at,
     heartbeat: {
-      running: true,
-      started_at: new Date(now).toISOString(),
-      run_id: currentConversationId || null,
+      running: holdLock,
+      started_at: holdLock ? new Date(now).toISOString() : null,
+      run_id: holdLock ? (currentConversationId || null) : null,
     },
     pending_distillation: {
       candidate_ids,

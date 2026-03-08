@@ -25,8 +25,10 @@ function buildHeartbeatContext(trigger_heartbeat, candidate_ids) {
 
 【会话提炼心跳】本会话已触发会话提炼心跳，待提炼会话已入队（candidate_ids: ${idsJson}）。请按以下顺序执行：
 1. 向 audit.log 追加一条 \`heartbeat.triggered\` 事件（ts、conversation_id、candidate_ids、reason: "30min_threshold"）。
-2. 调用会话提炼子代理 lingxi-session-distill，传入 candidate_ids: ${idsJson}；该子代理为后台运行，无需等待其完成。
+2. **必须使用 mcp_task 工具**发起会话提炼子代理：\`subagent_type\` 设为 \`lingxi-session-distill\`，\`description\` 填简短说明（如「会话提炼」），\`prompt\` 中明确写出：candidate_ids: ${idsJson}（可加一句「对以上 candidate_ids 批量获取会话内容、经 taste-recognition 提炼、若有 payload 则调用 lingxi-memory 写入」）。该子代理为后台运行（run_in_background 可选），无需等待其完成。
 3. 然后直接执行记忆提取约定，无需等待提炼完成。
+
+说明：\`heartbeat-control.json\` 中的 \`heartbeat.running\` 只有会话提炼子代理在**收尾步骤**会置为 false；若子代理未被调用或未执行到收尾，running 会一直为 true，下次心跳（约 5 分钟锁超时后）可重新入队。
 `;
 }
 
