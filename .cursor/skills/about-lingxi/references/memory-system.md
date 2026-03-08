@@ -76,6 +76,8 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 ## 记忆文件（project/*.md、share/*.md）
 
+**沉淀范围**：记忆沉淀包括偏好、决策经验、领域知识、产品/业务知识、行业/组织经验、启发式、设计模式、反例与约束、排障与根因等；具体类型定义及与 Kind 的对应见 taste-recognition 的 `references/content-types.md`。
+
 记忆应记录**可复用的品味与约定**（原则、决策、模式、排障路径等），不存任务级实施细节（如某次迁移步骤、某任务的具体实现顺序）。
 
 每条记忆一个文件，小而清晰，建议结构：
@@ -126,7 +128,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 ## 参考
 
-- **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组；lingxi-memory 调用 **memory-write** skill 执行写入。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理，source=heartbeat）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。
+- **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组；lingxi-memory 调用 **memory-write** skill 执行写入。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理，source=heartbeat）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。**内容类型定义及与 Kind 对应**见 taste-recognition 的 `references/content-types.md`。
 - **记忆治理与写入**：完整步骤、治理逻辑（merge/replace/veto/new）、门控格式与映射规则见 `.cursor/skills/memory-write/references/write-protocol.md` 与 `.cursor/agents/lingxi-memory.md`。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定

@@ -28,6 +28,14 @@
 | **问什么** | 「您更倾向于先简单实现再迭代，还是预留扩展点？」（选项配置稳定 option id） |
 | **如何提取** | 先按 option id 映射到预定义 principles/choice，再填 payload；source=choice。 |
 
+方案讨论中若用户明确将**产品/业务规则**固化为记忆（如验收标准、边界条件、业务语义），可按**产品/业务知识**沉淀；必要时问是否沉淀，并指向 content-types。
+
+---
+
+## 与可沉淀内容类型的对应
+
+本环节以**决策经验**、**偏好**、**启发式**为主。类型定义与信号见 taste-recognition 的 [references/content-types.md](../../taste-recognition/references/content-types.md) 与 [references/execution-and-triggers.md](../../taste-recognition/references/execution-and-triggers.md)。
+
 ---
 
 ## 衔接

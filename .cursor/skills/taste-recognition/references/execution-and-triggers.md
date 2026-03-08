@@ -25,10 +25,19 @@
 
 1. **确定触发与输入**：确定触发场景（/remember / 心跳会话提炼 / /init 写入 / 环节选择题）→ 输入范围与 source。
 2. **上下文增强**：当用户输入无法独立理解时，结合最近 1～2 轮对话理解用户认可、选择或拒绝的具体内容。
-3. **判断是否可沉淀**：仅依据用户自由输入/指定内容/确认草稿（含上下文推断）中的偏好、约束、取舍、决策或例外；不依据 command 模板、系统注入、工具输出。可沉淀情形包括任务完成或关键决策、需求固化、方案选择、用户拒绝或纠正、用户明确表示要记住、在若干原则间做出可命名的选择、用户对上一轮表示认可或延续等。
+3. **判断是否可沉淀**：仅依据用户自由输入/指定内容/确认草稿（含上下文推断）中的偏好、约束、取舍、决策或例外；不依据 command 模板、系统注入、工具输出。可沉淀情形按**内容类型**区分（类型定义及与 Kind 对应见 [references/content-types.md](content-types.md)），以下为各类型的典型用户信号与可沉淀情形：
+   - **偏好**：用户明确「喜欢/不喜欢」「我们习惯/一律」「不要…」「就用 X」；环节选择题的 option 即显式选择。
+   - **决策经验**：「选了 X 因为」「Y 和 Z 里选 Y」「考虑到 A 所以…」；方案对比、取舍、trade-off。
+   - **领域知识**：解释概念、API/框架用法、约定、坑、最佳实践；带出处或可验证表述。
+   - **产品/业务知识**：需求固化、验收标准、边界条件、业务规则。
+   - **行业/组织经验**：合规、公司/团队约定、协作方式；出现「我们公司/团队」或跨项目适用时考虑 apply=team。
+   - **启发式**：「一般先…」「遇到 X 就先看 Y」「通常 A 比 B 好」。
+   - **模式**：设计模式名或「多种实现可替换」「统一入口」等描述；交 pattern-catalog 匹配。
+   - **反例与约束**：「不要」「这里不用」「千万别」「例外是」。
+   - **排障与根因**：错误信息、现象、排查步骤、根因结论；须可复现、可迁移到同类问题。
 4. **若无可沉淀**：静默返回，不产出 payload，不调用 lingxi-memory。
-5. **若有可沉淀**：抽取 scene、principles、choice、evidence；**模式靠拢**（参考 references/pattern-catalog.md），若匹配则更新 principles/choice 或设置 patternHint、patternConfidence。
-6. **升维判定**：按 references/elevation-rules.md 做升维判定，计算 T 与 D1–D4；若 T≤3 或触犯例外不写 → **不产出该条**，不加入 payloads。
+5. **若有可沉淀**：抽取 scene、principles、choice、evidence；**模式靠拢**（参考 references/pattern-catalog.md），若匹配则更新 principles/choice 或设置 patternHint、patternConfidence。类型与 Kind 对应见 content-types.md。
+6. **升维判定**：按 references/elevation-rules.md 做升维判定（含按内容类型的评分指引），计算 T 与 D1–D4；若 T≤3 或触犯例外不写 → **不产出该条**，不加入 payloads。
 7. **产出 payload**：对建议写入的条目标注 layer、可选 l0OneLiner/l1OneLiner；产出符合扩展 payload 规范的 JSON；同一轮多条组成 payloads 数组。
 8. **主 Agent 行为**：**仅当 payloads 非空时**调用 lingxi-memory 并传入 payloads 数组；禁止将原始用户消息或对话片段作为 lingxi-memory 的输入。
 

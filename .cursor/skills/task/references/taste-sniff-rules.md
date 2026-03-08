@@ -30,6 +30,24 @@
 
 ---
 
+## 规则 3：需求/验收/边界固化（产品/业务知识）
+
+| 要素 | 内容 |
+| --- | --- |
+| **情境描述** | 用户明确固化验收标准、业务规则、边界条件或与竞品差异（如「我们产品里 X 一律按 Y 算」「验收必须包含 Z」）。 |
+| **可命名的原则/策略** | 由用户表述归纳为 principles/choice；Kind 倾向 business/reference。 |
+| **是否提问** | 可静默抽取；若表述模糊可问「是否希望将这条规则沉淀为记忆，以便后续需求/验收时自动参考？」。 |
+| **问什么** | 与现有规则格式一致（选项配置稳定 option id，如需）。 |
+| **如何提取** | 映射到 principles/choice、evidence；scene 偏需求/验收/边界；source=choice；沉淀类型为产品/业务知识。 |
+
+---
+
+## 与可沉淀内容类型的对应
+
+本环节嗅探以**偏好**、**决策经验**、**产品/业务知识**为主。类型定义与信号见 taste-recognition 的 [references/content-types.md](../../taste-recognition/references/content-types.md) 与 [references/execution-and-triggers.md](../../taste-recognition/references/execution-and-triggers.md)。
+
+---
+
 ## 与 taste-recognition、lingxi-memory 的衔接
 
 - 嗅探产出 payload 后由主 Agent 交 lingxi-memory 写入；payload.source=choice。

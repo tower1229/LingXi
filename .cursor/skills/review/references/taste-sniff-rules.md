@@ -28,6 +28,14 @@
 | **问什么** | 「这条建议是否希望作为团队级约定沉淀？」 |
 | **如何提取** | 归纳为 principles/choice，填 payload；source=choice。 |
 
+审查中若用户明确固化**验收标准/业务规则**（如「这类问题一律视为必须修复」），可问是否沉淀为产品/业务知识或原则，并指向 [content-types](../../taste-recognition/references/content-types.md)。
+
+---
+
+## 与可沉淀内容类型的对应
+
+本环节以**反例与约束**、**偏好**、**产品/业务知识**（验收相关）为主。类型定义与信号见 taste-recognition 的 [references/content-types.md](../../taste-recognition/references/content-types.md) 与 [references/execution-and-triggers.md](../../taste-recognition/references/execution-and-triggers.md)。
+
 ---
 
 ## 衔接

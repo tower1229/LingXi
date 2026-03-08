@@ -66,7 +66,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### 记忆库机制（Memory-first）
 
-灵犀的核心能力是捕获与治理记忆，并在每一轮对话前进行最小注入。记忆系统分为四部分：**记忆沉淀**（用户触发）、**记忆写入**、**记忆提取**。
+灵犀的核心能力是捕获与治理记忆，并在每一轮对话前进行最小注入。**沉淀内容类型**（偏好、决策经验、领域知识、产品/业务知识、行业/组织经验、启发式、模式、反例与约束、排障与根因等）见 memory-system 与 taste-recognition 的 `references/content-types.md`。记忆系统分为四部分：**记忆沉淀**（用户触发）、**记忆写入**、**记忆提取**。
 
 1. **记忆沉淀**（用户触发 + 记忆写入）
    - **数据流**：taste-recognition（识别 → 模式靠拢 → 升维判定）→ 仅对判定为写的条目标产扩展 payload；**主 Agent 仅当 payloads 非空时**调用 lingxi-memory；lingxi-memory 校验后调用 **memory-write** skill 执行：按 payload 映射生成 note → 治理（TopK）→ 门控 → 直接读写 `memory/project/`、`memory/share/` 与 `memory/INDEX.md`，主对话收简报。判定不写时不产出 payload、不调用 lingxi-memory。
