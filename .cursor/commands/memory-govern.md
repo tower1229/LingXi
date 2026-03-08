@@ -1,6 +1,6 @@
 ---
 name: memory-govern
-description: 记忆库治理（同步 INDEX 与 notes，并由模型补全未索引条目、可选全库治理）
+description: 记忆库治理（同步 INDEX 与 project/share，并由模型补全未索引条目、可选全库治理）
 args:
   - name: dryRun
     required: false
@@ -15,7 +15,7 @@ args:
 
 # /memory-govern - 记忆库治理
 
-**用途**：同步 INDEX 与 notes（删除孤儿索引行、由模型补全未索引 note 的 INDEX 行），并可对整库做主动治理（合并/改写/归档建议）。委托 **memory-govern** Skill 执行。
+**用途**：同步 INDEX 与 project/share（删除孤儿索引行、由模型补全未索引 note 的 INDEX 行），并可对整库做主动治理（合并/改写/归档建议）。委托 **memory-govern** Skill 执行。
 
 **用法**：`/memory-govern [--dry-run] [--skip-govern] [--root <memoryRoot>]`
 

@@ -75,7 +75,7 @@ Use these in lifecycle order:
 
 | Command     | Usage                                                                                                                                         | Description                                                                                                                                                                                                                                                                                                                                       |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y`              | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/notes/` for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content                     |
+| `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y`              | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/project/` (or `memory/share/` for team-level) for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content                     |
 | `/extract`  | `/extract` or `/extract <time range>`<br><br>**Examples:**<br>`/extract` (current conversation)<br>`/extract 提炼今天的会话`<br>`/extract 1d` | **Extract memory from conversation(s)**<br><br>Extract sedimentable content from the current or time-scoped conversation(s) and write to memory. No args = current conversation; with args = natural-language time range (e.g. “today”, “last 2 days”, “1d”, “24h”). All payloads are sent to lingxi-memory in one batch; you get a short report. |
 | `/init`     | `/init`                                                                                                                                       | **Initialize project context (first use)**<br><br>Guided understanding of an existing project, producing memory candidates with explicit write gating. Internal workspace bootstrap may run as a preflight step. Recommended when first using LingXi in a project.                                                                                |
 
@@ -83,12 +83,12 @@ Use these in lifecycle order:
 
 LingXi uses a designated share directory for team knowledge that can be reused across projects:
 
-- Share directory: `.cursor/.lingxi/memory/notes/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `notes/`.
+- Share directory: `.cursor/.lingxi/memory/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `memory/project/`.
 
 **1) Add share repo (submodule)**
 
 ```bash
-git submodule add <shareRepoUrl> .cursor/.lingxi/memory/notes/share
+git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
 ```
 
 **2) Update share repo**

@@ -33,7 +33,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 | `evidence` | string | 否 | 一句用户原文或引用；无则省略。始终保留用户原文便于可验证性与 L0。 |
 | `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。其中 `choice` 表示环节选择题反馈（与 payload 字段 `choice`「实际选择」区分）。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
-| `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 notes/，团队级=写入 notes/share/（跨项目复用）。 |
+| `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 memory/project/，团队级=写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由本 Skill 按 references/elevation-rules.md 填写。 |
 | `l0OneLiner` | string | 否 | 当 layer 为 L0 或 L0+L1 时建议填写；下游直接用于 note 的 L0 句/事实句。 |
 | `l1OneLiner` | string | 否 | 当 layer 为 L1 或 L0+L1 时建议填写；下游直接用于 note 的 L1 句/原则句。 |

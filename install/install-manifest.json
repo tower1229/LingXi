@@ -24,6 +24,7 @@
         "skills/about-lingxi/SKILL.md",
         "skills/build-executor/SKILL.md",
         "skills/memory-retrieve/SKILL.md",
+        "skills/memory-write/SKILL.md",
         "skills/plan-executor/SKILL.md",
         "skills/task-executor/SKILL.md",
         "skills/review-executor/SKILL.md",
@@ -94,14 +95,35 @@
         ],
         "memory-govern": [
             "skills/memory-govern/scripts/memory-index-sync.mjs"
+        ],
+        "memory-write": [
+            "skills/memory-write/references/write-protocol.md",
+            "skills/memory-write/references/memory-note-template.md"
+        ],
+        "skill-creator": [
+            "skills/skill-creator/references/schemas.md",
+            "skills/skill-creator/scripts/utils.py",
+            "skills/skill-creator/scripts/run_loop.py",
+            "skills/skill-creator/scripts/quick_validate.py",
+            "skills/skill-creator/scripts/package_skill.py",
+            "skills/skill-creator/scripts/run_eval.py",
+            "skills/skill-creator/scripts/improve_description.py",
+            "skills/skill-creator/scripts/generate_report.py",
+            "skills/skill-creator/scripts/aggregate_benchmark.py",
+            "skills/skill-creator/agents/grader.md",
+            "skills/skill-creator/agents/analyzer.md",
+            "skills/skill-creator/agents/comparator.md",
+            "skills/skill-creator/eval-viewer/viewer.html",
+            "skills/skill-creator/eval-viewer/generate_review.py",
+            "skills/skill-creator/assets/eval_review.html",
+            "skills/skill-creator/LICENSE.txt"
         ]
     },
     "workflowDirectories": [
         ".cursor/.lingxi/tasks",
         ".cursor/.lingxi/memory",
-        ".cursor/.lingxi/memory/notes",
-        ".cursor/.lingxi/memory/notes/share",
-        ".cursor/.lingxi/memory/references",
+        ".cursor/.lingxi/memory/project",
+        ".cursor/.lingxi/memory/share",
         ".cursor/.lingxi/workspace"
     ],
     "gitignoreEntries": [

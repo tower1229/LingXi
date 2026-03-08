@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * memory-index-sync.mjs
- * 仅服务 memory-govern Skill：扫描 notes 与 INDEX，删除孤儿索引行并写回 INDEX，
+ * 仅服务 memory-govern Skill：扫描 memory/project 与 memory/share 及 INDEX，删除孤儿索引行并写回 INDEX，
  * 向 stdout 输出一行 JSON（orphanDeleted、unindexedNotes、duplicateIds）供 Agent 解析。
  * 用法：node memory-index-sync.mjs [--root <memoryRoot>]
  */
@@ -102,16 +102,17 @@ function createContext(memoryRoot) {
     memoryRoot: normalizedRoot,
     baseDir,
     indexPath: path.join(normalizedRoot, "INDEX.md"),
-    notesDir: path.join(normalizedRoot, "notes"),
+    projectDir: path.join(normalizedRoot, "project"),
+    shareDir: path.join(normalizedRoot, "share"),
   };
 }
 
-function scanNotes(notesDir) {
-  if (!fs.existsSync(notesDir)) return [];
-  const files = listMarkdownFilesRecursive(notesDir);
+function scanNotesDir(dir, relPrefix, sourceDir) {
+  if (!fs.existsSync(dir)) return [];
+  const files = listMarkdownFilesRecursive(dir);
   return files.map((filePath) => {
-    const relFromNotes = toPosixPath(path.relative(notesDir, filePath));
-    const rel = `memory/notes/${relFromNotes}`;
+    const relFromDir = toPosixPath(path.relative(dir, filePath));
+    const rel = `${relPrefix}${relFromDir}`;
     const lines = fs.readFileSync(filePath, "utf8").split("\n");
     const id = extractMetaValue(lines, "Id") || path.basename(filePath, ".md");
     const kind = extractMetaValue(lines, "Kind") || "other";
@@ -129,10 +130,17 @@ function scanNotes(notesDir) {
       strength,
       scope,
       file: `\`${rel}\``,
-      relFromNotes,
+      relFromNotes: relFromDir,
+      sourceDir,
       filePath,
     };
   });
+}
+
+function scanNotes(ctx) {
+  const fromProject = scanNotesDir(ctx.projectDir, "memory/project/", "project");
+  const fromShare = scanNotesDir(ctx.shareDir, "memory/share/", "share");
+  return fromProject.concat(fromShare);
 }
 
 function dedupeNotesById(notes) {
@@ -153,13 +161,13 @@ function dedupeNotesById(notes) {
       const aTop = a.relFromNotes === topLevelName(id) ? 0 : 1;
       const bTop = b.relFromNotes === topLevelName(id) ? 0 : 1;
       if (aTop !== bTop) return aTop - bTop;
-      const aShare = a.relFromNotes.startsWith("share/") ? 1 : 0;
-      const bShare = b.relFromNotes.startsWith("share/") ? 1 : 0;
+      const aShare = a.sourceDir === "share" ? 1 : 0;
+      const bShare = b.sourceDir === "share" ? 1 : 0;
       if (aShare !== bShare) return aShare - bShare;
       return a.relFromNotes.split("/").length - b.relFromNotes.split("/").length || a.relFromNotes.localeCompare(b.relFromNotes);
     });
     deduped.push(sorted[0]);
-    duplicates.push({ id, winner: sorted[0].relFromNotes, all: sorted.map((x) => x.relFromNotes) });
+    duplicates.push({ id, winner: sorted[0].sourceDir + "/" + sorted[0].relFromNotes, all: sorted.map((x) => x.sourceDir + "/" + x.relFromNotes) });
   }
   return { deduped, duplicates };
 }
@@ -188,7 +196,7 @@ function main() {
   }
 
   const existing = parseIndex(ctx.indexPath);
-  const scanned = scanNotes(ctx.notesDir);
+  const scanned = scanNotes(ctx);
   const { deduped: notes, duplicates } = dedupeNotesById(scanned);
   const noteIds = new Set(notes.map((n) => n.id));
   const indexedIds = new Set();

@@ -14,8 +14,6 @@ const SKILL_DIR = path.resolve(__dirname, "..");
 const REFS_DIR = path.join(SKILL_DIR, "references");
 
 const TEMPLATE_SOURCES = {
-  ".cursor/.lingxi/memory/references/memory-note-template.md":
-    "memory-note-template.default.md",
   ".cursor/.lingxi/memory/INDEX.md": "INDEX.default.md",
 };
 

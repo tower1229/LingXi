@@ -19,7 +19,7 @@
 | `evidence` | string | 否 | 一句用户原文或引用，用于可验证性及 L0 事实层；无则省略。 |
 | `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。`choice` = 环节选择题反馈。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
-| `apply` | enum | 否 | `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、写入 notes/share/（跨项目复用）。 |
+| `apply` | enum | 否 | `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由 taste-recognition 按 elevation-rules 填写。 |
 | `l0OneLiner` | string | 否 | 当 layer 为 L0 或 L0+L1 时建议填写；下游直接用于 note 的 L0 句/事实句。 |
 | `l1OneLiner` | string | 否 | 当 layer 为 L1 或 L0+L1 时建议填写；下游直接用于 note 的 L1 句/原则句。 |
