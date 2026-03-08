@@ -54,11 +54,13 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
 
 8. **可选维度审查（按需）**
    - 按启用决策显式调用 reviewer-security/reviewer-performance/reviewer-e2e。
+   - 调用时约定：各 reviewer 按 **references/reviewer-output-spec.md** 输出（含可选 `<!-- REVIEWER_JSON -->` 机器可读块）。
    - 子审查失败时记录降级原因并回退主流程补审。
 
 9. **写入 Review 文档**
    - 覆盖写入 `001.review.<标题>.md`（不存档、每次覆盖）。
    - 文档必须包含「按需求编号的验收结果」表。
+   - **多维度审查结果**：将 reviewer-doc-consistency / reviewer-security / reviewer-performance / reviewer-e2e 返回的 **Markdown 整块**按 spec 对应关系插入模板对应小节（### 3–4、### 8–9）；E2E 的「场景执行结果」表放入「E2E 测试执行结果」表位置。若存在 `REVIEWER_JSON` 块，可先解析用于汇总统计或审计，写入报告时以 Markdown 内容为准。
 
 10. **结论与下一步建议（必须）**
    - 给出通过/需修复/拒绝结论。
@@ -80,4 +82,4 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
 ## 产物与 References
 
 - **产物**：`001.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
-- **报告模板**：`references/review-report-template.md`；品味嗅探规则：`references/taste-sniff-rules.md`
+- **报告模板**：`references/review-report-template.md`；**子维度输出规范**：`references/reviewer-output-spec.md`；品味嗅探规则：`references/taste-sniff-rules.md`

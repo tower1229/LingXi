@@ -71,6 +71,7 @@ description: 工作流步骤：产出 task 文档。仅支持手动或显式调�
 1. 记忆写入通过显式调用 `lingxi-memory`，本 Skill 不包含写入逻辑。
 2. 不引入需求冻结或硬门禁；是否进入 plan/build 由用户决定。
 3. 输出遵循静默与高信号原则，避免冗长重复说明。
+4. 当**补充/修改 task** 且本次修改来源于 **vet 反馈**（本轮或上一轮 vet 的审查结果）时，除修改正文外，须在 task 文档的「变更记录」小节追加一条记录（格式见 `references/task-changelog-spec.md`），并建议将头部 `版本` 递增；若无该小节则先按 spec 创建再追加。
 
 ## 产物与模板
 
@@ -79,4 +80,4 @@ description: 工作流步骤：产出 task 文档。仅支持手动或显式调�
 
 ## References
 
-- 文档模板：`references/task-doc-template-*.md`；品味嗅探规则：`references/taste-sniff-rules.md`
+- 文档模板：`references/task-doc-template-*.md`；品味嗅探规则：`references/taste-sniff-rules.md`；变更记录规范：`references/task-changelog-spec.md`

@@ -12,7 +12,7 @@ is_background: true
 ## 输入约定（父代理必须传入）
 
 - **candidate_ids**（必填）：字符串数组，conversation_id 列表，最多 3 个。父代理在调用时通过提示传入，例如「candidate_ids: ["uuid1","uuid2"]」。
-- **enqueued_by**（可选）：触发入队的会话 id，用于审计字段 conversation_id。
+- **enqueued_by**（心跳触发时必填）：触发入队的会话 id。由心跳触发时父代理**必须传入**（当前会话的 conversation_id），用于本子代理写入 `heartbeat.triggered` 的 `conversation_id` 字段；若未传则 `conversation_id` 可为空。也用于调用 lingxi-memory 时的 conversation_id。
 
 控制文件与审计路径（默认）：
 
@@ -21,6 +21,7 @@ is_background: true
 
 ## 执行流程（按顺序）
 
+0. **写心跳触发事件**：向 `.cursor/.lingxi/workspace/audit.log` 追加一条 NDJSON：`heartbeat.triggered`，字段含 `ts`（ISO 8601）、`conversation_id`（取 enqueued_by，未传则空）、`candidate_ids`、`reason: "30min_threshold"`。
 1. **解析输入**：从父代理的提示中解析 candidate_ids（及可选 enqueued_by）。若 candidate_ids 为空或缺失，直接执行步骤 5（仅收尾），不进行提炼。
 2. **逐会话提炼**：对每个 candidate_id：
    - 用自然语言获取该会话的完整内容，例如：「获取 id 为 \<该 conversation_id\> 的会话内容」。
@@ -37,4 +38,4 @@ is_background: true
 ## 约束
 
 - 不读、不写与本次 candidate_ids 无关的会话；不向主对话输出过程性内容。
-- 无论提炼是否成功，**都必须**执行步骤 5，避免心跳锁长期占用。
+- 无论提炼是否成功，**都必须**执行步骤 5（收尾），避免心跳锁长期占用。

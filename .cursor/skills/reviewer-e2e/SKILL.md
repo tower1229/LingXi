@@ -114,14 +114,18 @@ e. **验证结果**：
 
 ### 5. 输出审查结果
 
+必须遵循 **review 的 references/reviewer-output-spec.md** 统一输出结构（含 E2E 扩展）：
+
+- **维度**：`e2e`；**状态**：`completed` | `partial` | `degraded`。
+- **场景执行结果表（必须）**：表格列「测试场景 | 状态 | 备注」，状态为 ✅ 通过 / ❌ 失败 / ⏭️ 跳过。
+- 按 **Blockers / High / Medium / Low** 四级列出问题（含 E2E 功能缺陷、交互问题等），每项含：描述、位置、建议修复；无则写「无」或省略。
+- 可选 **失败场景详情**：对每个失败场景补充失败步骤、预期 vs 实际、截图/控制台信息。
+- 结尾 **小结**：共 X 项、结论（通过/需修复）。
+- **可选（机器可读）**：在 Markdown 前输出 `<!-- REVIEWER_JSON` + JSON（含 dimension、status、**scenarios**[]、issues[]、summary） + `-->`；scenarios 每项含 id、name、status（passed/failed/skipped）、note；格式见 spec 第 4.2 节。
+
 - E2E 测试结果清单（按优先级分级：Blockers/High/Medium/Low）
 - 测试场景执行状态（通过/失败/跳过）
-- 失败场景的详细描述：
-  - 失败步骤
-  - 预期结果 vs 实际结果
-  - 截图信息（Agent 自动保存的截图）
-  - 控制台错误信息（如有）
-- 建议修复方向
+- 失败场景的详细描述与建议修复方向
 
 ### 6. 降级处理
 
@@ -140,4 +144,4 @@ e. **验证结果**：
 
 ### 7. 输出与静默
 
-遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回结构化审查结果，格式与其他 reviewer skills 一致。优先使用 `@browser` + 自然语言描述，让 Agent 解析执行；不显式调用底层工具方法；利用截图与控制台监控识别问题。
+遵循 [workflow-output-principles](.cursor/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**（含场景执行结果表与可选 REVIEWER_JSON）。优先使用 `@browser` + 自然语言描述，让 Agent 解析执行；不显式调用底层工具方法；利用截图与控制台监控识别问题。
