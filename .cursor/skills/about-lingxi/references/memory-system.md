@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为三部分**：**记忆沉淀**（由用户通过 Command 触发）、**记忆写入**（由 lingxi-memory 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember、/extract）与 lingxi-memory 的写入执行；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
+**记忆系统分为三部分**：**记忆沉淀**（用户通过 /remember 触发 + 心跳自动会话提炼）、**记忆写入**（由 lingxi-memory 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember）与**心跳触发的会话提炼**（新会话时若距上次提炼超过 30 分钟，自动入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼，source=heartbeat）；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -14,7 +14,7 @@
 
 ## 每轮参与
 
-检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 Command 在需要时触发：**主动记忆捕获**为 /remember、/extract；/init 在初始化时可将确认草稿可选写入，属初始化额外产物。新输入与后续轮次自然带来纠错与更新机会。
+检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 /remember 或**心跳自动会话提炼**在需要时触发；/init 在初始化时可将确认草稿可选写入，属初始化额外产物。新输入与后续轮次自然带来纠错与更新机会。
 
 **「何时写入、何时纠错」由「每轮触发检索 + 按需写入」的机制覆盖，无需额外“记忆可错/纠错”规则。**
 
@@ -22,7 +22,7 @@
 
 ### 1) 触发方式
 
-由用户通过 **/remember** 或 **/extract** 主动触发记忆捕获；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时按各环节 `references/taste-sniff-rules.md` 经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）也会产生沉淀并写入。主 Agent 在用户执行上述命令或环节选择题反馈时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
+由用户通过 **/remember** 主动触发记忆捕获；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等环节在情境驱动时按各环节 `references/taste-sniff-rules.md` 经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）也会产生沉淀并写入。主 Agent 在用户执行 /remember 或环节选择题反馈时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
@@ -41,7 +41,7 @@
 
 ## 记忆提取（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember、/extract 触发；/init 在初始化时可选写入，为初始化额外产物。
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物。
 注入约定要求：命中后主 Agent 必须完成一轮 `adopt/reject/ask` 决策，不允许命中后无决策直接继续。
 
 - Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
@@ -72,7 +72,7 @@
 
 | Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |
 
-CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/choice/init，来自 payload.source；或 manual、init、<packName>@<version> 等用于初始化或团队包）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
+CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/choice/init/heartbeat，来自 payload.source；或 manual、init、<packName>@<version> 等用于初始化或团队包）；Session 为创建/更新时的会话 ID（conversation_id）。检索依赖 Title、When to load 及 notes 正文。
 
 ## 记忆文件（project/*.md、share/*.md）
 
@@ -126,7 +126,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 ## 参考
 
-- **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组；lingxi-memory 调用 **memory-write** skill 执行写入。**主动记忆捕获**由用户通过 /remember、/extract 触发；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。
+- **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组；lingxi-memory 调用 **memory-write** skill 执行写入。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理，source=heartbeat）；**工作流品味嗅探**由 task/plan/build/review 等环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。
 - **记忆治理与写入**：完整步骤、治理逻辑（merge/replace/veto/new）、门控格式与映射规则见 `.cursor/skills/memory-write/references/write-protocol.md` 与 `.cursor/agents/lingxi-memory.md`。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定

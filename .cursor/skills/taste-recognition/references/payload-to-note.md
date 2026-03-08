@@ -17,7 +17,7 @@
 | `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达「在哪些候选中做了选择」；模式靠拢后可为模式名或「模式名+约束」。 |
 | `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述；模式靠拢后可为模式名或「模式名+具体约束」。 |
 | `evidence` | string | 否 | 一句用户原文或引用，用于可验证性及 L0 事实层；无则省略。 |
-| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。`choice` = 环节选择题反馈。 |
+| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init` \| `heartbeat`，写入路径，供审计与分流。`choice` = 环节选择题反馈；`heartbeat` = 心跳自动会话提炼。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `project` \| `team`，适用范围；缺省时下游可推断或默认 project。team = 团队级、写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由 taste-recognition 按 elevation-rules 填写。 |

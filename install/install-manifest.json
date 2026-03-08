@@ -7,7 +7,6 @@
         "commands/review.md",
         "commands/init.md",
         "commands/remember.md",
-        "commands/extract.md",
         "commands/memory-govern.md"
     ],
     "rules": [],
@@ -15,6 +14,7 @@
         "files": [
             "hooks.json",
             "hooks/session-init.mjs",
+            "hooks/heartbeat-check.mjs",
             "hooks/_hook-utils.mjs",
             "hooks/append-memory-audit.mjs",
             "hooks/lingxi-audit.mjs"

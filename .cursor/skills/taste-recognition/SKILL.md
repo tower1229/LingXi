@@ -7,9 +7,11 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 
 ## 意图
 
-从用户自由输入、/remember 指定内容、/extract 会话范围、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则经**升维**（模式靠拢 + 价值判定）后产出**唯一合法**的扩展 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀或**判定不写**时静默（不产出 payload、不调用 lingxi-memory）。详见下文「实现逻辑（数据流）」及 references/elevation-rules.md、references/pattern-catalog.md。
+从用户自由输入、/remember 指定内容、心跳对入队会话的完整对话内容、/init 确认草稿或环节选择题反馈中判断是否存在可沉淀的「品味」；若有则经**升维**（模式靠拢 + 价值判定）后产出**唯一合法**的扩展 payload，主 Agent 必须将 payload（单条或多条）组成 **payloads 数组**显式调用 lingxi-memory；无可沉淀或**判定不写**时静默（不产出 payload、不调用 lingxi-memory）。详见下文「实现逻辑（数据流）」及 references/elevation-rules.md、references/pattern-catalog.md。
 
 **品味**（可操作定义）：在给定场景下，在一组可能适用甚至冲突的原则中，用户实际采用的选择与权衡（含显式或可推断的理由）。识别目标：抽出「场景 + 原则候选 + 实际选择」→ 可写入记忆的 payload。
+
+**入参统一**：本 Skill 的入参形式统一为**完整对话内容**（按轮次排列的 user/assistant 文本或约定格式）。**可沉淀性判断**以对话中的**用户消息（user）**为主：偏好、约束、取舍、决策、纠正等仅依据用户输入；assistant 内容仅作上下文与证据补充，不单独作为沉淀依据。
 
 ## 实现逻辑（数据流）
 
@@ -31,7 +33,7 @@ description: 从用户输入或行为中识别可沉淀的「品味」（场景�
 | `principles` | string[] | 是 | 原则或选项，通常 1～2 项；与 choice 共同表达在哪些候选中做了选择；模式靠拢后可为模式名或「模式名+约束」。 |
 | `choice` | string | 是 | 实际选择，须与 principles 中某一项一致或等价表述；模式靠拢后可为模式名或「模式名+具体约束」。 |
 | `evidence` | string | 否 | 一句用户原文或引用；无则省略。始终保留用户原文便于可验证性与 L0。 |
-| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init`，写入路径，供审计与分流。其中 `choice` 表示环节选择题反馈（与 payload 字段 `choice`「实际选择」区分）。 |
+| `source` | enum | 是 | `remember` \| `extract` \| `choice` \| `init` \| `heartbeat`，写入路径，供审计与分流。其中 `choice` 表示环节选择题反馈（与 payload 字段 `choice`「实际选择」区分）；`heartbeat` 表示心跳自动会话提炼。 |
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 memory/project/，团队级=写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由本 Skill 按 references/elevation-rules.md 填写。 |

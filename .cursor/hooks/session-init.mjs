@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * sessionStart hook：在会话开始时注入「记忆提取约定」与「conversation_id 传入约定」。
- * 记忆提取约定：每轮先执行 /memory-retrieve <当前用户消息>；约定中的「当前用户消息」由 agent 每轮代入。
- * conversation_id：调用 lingxi-memory 时请在 input 中传入 conversation_id（及可选 generation_id），供审计与会话级关联。
+ * sessionStart hook：在会话开始时注入「记忆提取约定」与「conversation_id 传入约定」；
+ * 若距上次会话提炼超过 30 分钟则执行心跳检查，将待提炼会话入队并注入「调用后台会话提炼子代理」约定。
  * 参考：https://cursor.com/cn/docs/agent/hooks#sessionstart
  */
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
+import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
 const BASE_CONTEXT = `【记忆提取约定】每轮在回答前，如果存在用户自由输入（非仅command调用或skills调用）时，必须先执行 \`/memory-retrieve <当前用户消息>\`。
 若命中记忆（top 0-2），必须先做一轮决策：\`adopt\`（采用）/\`reject\`（不采用，给出一句理由）/\`ask\`（需向用户确认）。
@@ -17,11 +17,28 @@ const BASE_CONTEXT = `【记忆提取约定】每轮在回答前，如果存在�
 【conversation_id 传入约定】当前会话 ID 由运行时提供；调用 lingxi-memory 子代理时请在 input 中传入 conversation_id（及可选 generation_id），供记忆审计与会话级关联。
 `;
 
+function buildHeartbeatContext(trigger_heartbeat, candidate_ids) {
+  if (!trigger_heartbeat || !candidate_ids || candidate_ids.length === 0) return "";
+  const idsJson = JSON.stringify(candidate_ids);
+  return `
+
+【会话提炼心跳】本会话已触发会话提炼心跳，待提炼会话已入队（candidate_ids: ${idsJson}）。请按以下顺序执行：
+1. 向 audit.log 追加一条 \`heartbeat.triggered\` 事件（ts、conversation_id、candidate_ids、reason: "30min_threshold"）。
+2. 调用会话提炼子代理 lingxi-session-distill，传入 candidate_ids: ${idsJson}；该子代理为后台运行，无需等待其完成。
+3. 然后直接执行记忆提取约定，无需等待提炼完成。
+`;
+}
+
 async function main() {
-  await readStdinJson();
+  const input = await readStdinJson();
+  const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
+  const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
+  const { trigger_heartbeat, candidate_ids } = runHeartbeatCheck(projectRoot, conversationId);
+  const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids);
+  const additional_context = BASE_CONTEXT + heartbeatContext;
   writeStdoutJson({
     continue: true,
-    additional_context: BASE_CONTEXT,
+    additional_context,
   });
 }
 
