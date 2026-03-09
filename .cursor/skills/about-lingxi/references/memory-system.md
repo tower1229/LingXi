@@ -73,8 +73,8 @@
 - 诊断与执行闭环事件：
   - `memory.merge.diagnosed` / `memory.merge.invalid`
   - `memory.improvement.proposed|approved|rejected|applied|failed`
-- 24h 诊断触发后，主流程应在同一轮展示“诊断结果 + 改进方案”，并立即通过 ask-questions 让用户确认是否执行自动改进。
-- 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成、待确认检测、确认与应用统一在一个子代理内分支执行，主会话只消费简报。
+- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。
+- 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成与自动应用统一在后台执行，主会话只消费简报。
 
 ## 统一索引（INDEX.md）
 

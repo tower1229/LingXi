@@ -8,7 +8,6 @@ const DEFAULT_JSON_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
 const DEFAULT_MD_REL = ".cursor/.lingxi/workspace/memory-diagnostics.md";
 const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
 const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
-const PENDING_CONFIRM_REL = ".cursor/.lingxi/workspace/improvement-pending-confirmation.json";
 const DEFAULT_WINDOW_HOURS = 24;
 
 function readArg(name, fallback = "") {
@@ -208,21 +207,6 @@ function markImprovementCycle(projectRoot, tsIso) {
   fs.writeFileSync(controlPath, JSON.stringify(control, null, 2), "utf8");
 }
 
-function writePendingConfirmation(projectRoot, proposal, summary) {
-  const pendingPath = path.join(projectRoot, PENDING_CONFIRM_REL);
-  const payload = {
-    proposal_id: proposal.proposal_id,
-    generated_at: proposal.generated_at,
-    findings_count: proposal.findings.length,
-    actions_count: proposal.actions.length,
-    summary,
-    action_ids: proposal.actions.map((a) => a.action_id),
-    status: "pending_confirmation",
-  };
-  ensureDir(pendingPath);
-  fs.writeFileSync(pendingPath, JSON.stringify(payload, null, 2) + "\n", "utf8");
-}
-
 function main() {
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
   const auditPath = path.join(projectRoot, AUDIT_REL);
@@ -277,9 +261,6 @@ function main() {
         risk: a.risk,
       })),
     });
-    if (proposal.actions.length > 0) {
-      writePendingConfirmation(projectRoot, proposal, summary);
-    }
     markImprovementCycle(projectRoot, proposal.generated_at);
   }
 

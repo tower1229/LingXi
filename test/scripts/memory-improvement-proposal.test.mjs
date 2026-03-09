@@ -81,10 +81,8 @@ describe("memory-improvement-proposal script", () => {
 
     const proposalPath = path.join(workspace, "improvement-proposal.json");
     const mdPath = path.join(workspace, "memory-diagnostics.md");
-    const pendingPath = path.join(workspace, "improvement-pending-confirmation.json");
     assert.ok(fs.existsSync(proposalPath));
     assert.ok(fs.existsSync(mdPath));
-    assert.ok(fs.existsSync(pendingPath));
 
     const proposal = JSON.parse(fs.readFileSync(proposalPath, "utf8"));
     assert.ok(Array.isArray(proposal.findings));
@@ -95,9 +93,5 @@ describe("memory-improvement-proposal script", () => {
     const controlPath = path.join(workspace, "heartbeat-control.json");
     const control = JSON.parse(fs.readFileSync(controlPath, "utf8"));
     assert.ok(control.last_improvement_cycle_at);
-
-    const pending = JSON.parse(fs.readFileSync(pendingPath, "utf8"));
-    assert.strictEqual(pending.proposal_id, proposal.proposal_id);
-    assert.strictEqual(pending.status, "pending_confirmation");
   });
 });

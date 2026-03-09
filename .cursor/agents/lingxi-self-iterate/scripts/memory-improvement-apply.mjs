@@ -5,7 +5,6 @@ import { spawnSync } from "node:child_process";
 
 const DEFAULT_PROPOSAL_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
 const DEFAULT_QUEUE_REL = ".cursor/.lingxi/workspace/improvement-actions.queue.json";
-const DEFAULT_PENDING_REL = ".cursor/.lingxi/workspace/improvement-pending-confirmation.json";
 const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
 
 function readArg(name, fallback = "") {
@@ -53,19 +52,12 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-function clearPending(filePath) {
-  if (!fs.existsSync(filePath)) return;
-  fs.unlinkSync(filePath);
-}
-
 function main() {
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
   const proposalPath = path.join(projectRoot, readArg("--proposal", DEFAULT_PROPOSAL_REL));
   const queuePath = path.join(projectRoot, readArg("--queue", DEFAULT_QUEUE_REL));
-  const pendingPath = path.join(projectRoot, readArg("--pending", DEFAULT_PENDING_REL));
   const approveAll = isFlagEnabled("--approve-all");
   const allowHighRisk = isFlagEnabled("--allow-non-low-risk");
-  const rejectAll = isFlagEnabled("--reject-all");
   const requestedActionIds = new Set(parseActionIds(readArg("--action-ids", "")));
 
   const proposal = readJson(proposalPath);
@@ -74,28 +66,6 @@ function main() {
     process.exit(1);
   }
 
-  if (rejectAll) {
-    appendAudit(projectRoot, {
-      event: "memory.improvement.rejected",
-      proposal_id: proposal.proposal_id,
-      action_ids: proposal.actions.map((a) => a.action_id),
-      reason: "reject_all",
-    });
-    clearPending(pendingPath);
-    process.stdout.write(
-      JSON.stringify({
-        ok: true,
-        proposal_id: proposal.proposal_id,
-        approved: 0,
-        rejected: proposal.actions.length,
-        applied: 0,
-        failed: 0,
-        skipped: 0,
-        queue: path.relative(projectRoot, queuePath),
-      }) + "\n"
-    );
-    return;
-  }
   const approvedActions = proposal.actions.filter((action) =>
     approveAll ? true : requestedActionIds.has(action.action_id)
   );
@@ -156,7 +126,6 @@ function main() {
   }
 
   writeJson(queuePath, queue);
-  clearPending(pendingPath);
   process.stdout.write(
     JSON.stringify({
       ok: true,

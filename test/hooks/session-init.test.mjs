@@ -3,8 +3,6 @@
  * Pipes stdin JSON; asserts stdout has continue and additional_context with convention keywords.
  */
 import path from "node:path";
-import fs from "node:fs";
-import os from "node:os";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
@@ -43,30 +41,11 @@ describe("session-init", () => {
     assert.ok(out.additional_context.includes("conversation_id"));
   });
 
-  it("injects pending self-iteration context when pending file exists", async () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-session-init-"));
-    try {
-      const pendingPath = path.join(
-        tmpDir,
-        ".cursor",
-        ".lingxi",
-        "workspace",
-        "improvement-pending-confirmation.json"
-      );
-      fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
-      fs.writeFileSync(
-        pendingPath,
-        JSON.stringify({ proposal_id: "p1", status: "pending_confirmation" }, null, 2),
-        "utf8"
-      );
-
-      const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tmpDir });
-      assert.strictEqual(code, 0);
-      const out = JSON.parse(stdout.trim());
-      assert.ok(out.additional_context.includes("lingxi-self-iterate"));
-      assert.ok(out.additional_context.includes("mode=confirm"));
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
+  it("injects background self-iteration context", async () => {
+    const { code, stdout } = await runSessionInit("{}");
+    assert.strictEqual(code, 0);
+    const out = JSON.parse(stdout.trim());
+    assert.ok(out.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(out.additional_context.includes("run_in_background=true"));
   });
 });

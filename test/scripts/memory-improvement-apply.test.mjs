@@ -105,29 +105,4 @@ describe("memory-improvement-apply script", () => {
     assert.strictEqual(queue.queued_actions.length, 1);
   });
 
-  it("supports reject-all and clears pending confirmation file", async () => {
-    tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    fs.mkdirSync(workspace, { recursive: true });
-    const proposal = {
-      proposal_id: "proposal-reject",
-      actions: [{ action_id: "action-001", note_id: "MEM-001", type: "rewrite_one_liner", risk: "low" }],
-    };
-    fs.writeFileSync(path.join(workspace, "improvement-proposal.json"), JSON.stringify(proposal, null, 2), "utf8");
-    fs.writeFileSync(
-      path.join(workspace, "improvement-pending-confirmation.json"),
-      JSON.stringify({ proposal_id: "proposal-reject", status: "pending_confirmation" }, null, 2),
-      "utf8"
-    );
-
-    const out = await runScript(tmpDir, ["--reject-all"]);
-    assert.strictEqual(out.code, 0);
-    const result = JSON.parse(out.stdout.trim());
-    assert.strictEqual(result.rejected, 1);
-    assert.strictEqual(result.applied, 0);
-    assert.strictEqual(
-      fs.existsSync(path.join(workspace, "improvement-pending-confirmation.json")),
-      false
-    );
-  });
 });

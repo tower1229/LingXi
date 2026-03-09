@@ -6,8 +6,6 @@
  */
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
-import fs from "node:fs";
-import path from "node:path";
 
 const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续有效，每轮独立、不继承上一轮。
 
@@ -19,7 +17,6 @@ const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续�
 
 【conversation_id 传入约定】调用 lingxi-memory 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
-const PENDING_CONFIRM_REL = ".cursor/.lingxi/workspace/improvement-pending-confirmation.json";
 
 function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
   if (!trigger_heartbeat || !candidate_ids || candidate_ids.length === 0) return "";
@@ -39,20 +36,7 @@ function buildImprovementContext(triggerImprovementDiagnosis) {
   if (!triggerImprovementDiagnosis) return "";
   return `
 
-【自我迭代心跳】已到 24h 低频窗口。请优先使用 mcp_task 调用 **lingxi-self-iterate** 子代理（mode=heartbeat），生成提案与待确认状态；主会话无需等待后再继续当前回答。
-`;
-}
-
-function hasPendingImprovementConfirmation(projectRoot) {
-  const pendingPath = path.join(projectRoot, PENDING_CONFIRM_REL);
-  return fs.existsSync(pendingPath);
-}
-
-function buildPendingConfirmContext(hasPending) {
-  if (!hasPending) return "";
-  return `
-
-【自我迭代待确认】检测到待确认改进提案。请在作答前使用 mcp_task 调用 **lingxi-self-iterate** 子代理（mode=confirm）完成“用户确认 + 执行”闭环，并将简报带回主会话。
+【自我迭代心跳】已到 24h 低频窗口。请优先使用 mcp_task 调用 **lingxi-self-iterate** 子代理，并设置后台运行（run_in_background=true），执行“诊断 + 自动改进（仅 low risk）”；主会话无需等待后再继续当前回答。
 `;
 }
 
@@ -66,8 +50,7 @@ async function main() {
   );
   const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId);
   const improvementContext = buildImprovementContext(trigger_improvement_diagnosis);
-  const pendingConfirmContext = buildPendingConfirmContext(hasPendingImprovementConfirmation(projectRoot));
-  const additional_context = BASE_CONTEXT + heartbeatContext + improvementContext + pendingConfirmContext;
+  const additional_context = BASE_CONTEXT + heartbeatContext + improvementContext;
   writeStdoutJson({
     continue: true,
     additional_context,
