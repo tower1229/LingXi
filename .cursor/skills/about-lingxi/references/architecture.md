@@ -20,6 +20,7 @@
 | ----------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `/remember` | 写入记忆（随时可用，无需依赖任务编号）                                                          | **lingxi-memory**（Subagent）                                                                    |
 | 会话提炼（心跳） | 新会话时若距上次提炼 >30 分钟，按 transcript 增量自动入队最多 3 个未提炼候选会话，由 **lingxi-session-distill**（Background 子代理）异步提炼并写入记忆 | taste-recognition + **lingxi-memory**（Subagent，payloads 的 source=heartbeat）                   |
+| 自我迭代（心跳） | 新会话时若距上次 24h 诊断 >24 小时，由 sessionStart 注入约定，主 Agent 在步骤 A 发起 **lingxi-self-iterate**（Background 子代理）执行诊断与仅 low risk 的自动改进，主会话不等待 | **lingxi-self-iterate**（Subagent，后台）                                                        |
 | `/init`     | 初始化项目上下文（首次使用：引导式理解现有项目并生成可选记忆候选）                               | `workspace-bootstrap`（Step 0 预检）；init command（Step 1–7）；写入时委派 **lingxi-memory**（Subagent） |
 
 **特性**：
@@ -81,9 +82,9 @@ Skills 承载详细的工作流指导，按职责分为：
    - **读取**：`memory-retrieve` 检索 `memory/project/` 与 `memory/share/` 目录，语义+关键词混合检索会自动包含共享记忆；仍无匹配则静默
    - **索引同步**：使用 **memory-govern** Skill（在 Cursor 中输入 `/memory-govern`）做索引同步与治理；由该 Skill 调用脚本删除孤儿行并将未索引 note 交模型补全 INDEX，支持 project 覆盖 share 的冲突优先级规则
 
-### Hooks（sessionStart 记忆注入 + 可选审计/门控）
+### Hooks（sessionStart 记忆注入 + 心跳检查 + 可选审计/门控）
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定；
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定；并执行**心跳检查**（读 `heartbeat-control.json` 与 transcript 增量索引）。若距上次会话提炼超过 30 分钟且锁可用，则入队待提炼会话并注入「会话提炼心跳」约定，主 Agent 在步骤 A 调用 **lingxi-session-distill** 后台子代理；若距上次 24h 诊断超过 24 小时，则注入「自我迭代心跳」约定，主 Agent 在步骤 A 调用 **lingxi-self-iterate** 后台子代理。两种心跳均在后台执行，主会话无需等待。
 - **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀由用户通过 Command（/remember）或**心跳自动会话提炼**触发，而非在每次 stop 时追加系统提示
 
 ## 目录结构
@@ -108,8 +109,9 @@ Skills 承载详细的工作流指导，按职责分为：
 │   └── ...
 ├── agents/                # Subagents（独立上下文）
 │   ├── lingxi-memory.md   # 记忆写入
-│   └── lingxi-session-distill.md  # 会话提炼（后台，心跳触发）
-├── hooks/                 # sessionStart 记忆注入约定 + 可选审计/门控
+│   ├── lingxi-session-distill.md  # 会话提炼（后台，30min 心跳触发）
+│   └── lingxi-self-iterate.md     # 自我迭代（后台，24h 心跳触发）
+├── hooks/                 # sessionStart 记忆注入约定 + 心跳检查 + 可选审计/门控
 ├──.lingxi/
         ├── tasks/                 # 任务文档（统一目录）
         │   ├── 001.task.<标题>.md
@@ -120,8 +122,8 @@ Skills 承载详细的工作流指导，按职责分为：
         │   ├── project/           # 项目级记忆文件（语义+关键词混合检索的主搜索面）
         │   └── share/             # 共享记忆目录（推荐作为 git submodule，跨项目复用）
         └── workspace/             # 工作空间
-            ├── audit.log           # 审计日志
-            ├── heartbeat-control.json  # 心跳控制（入队、锁、已提炼会话）
+            ├── audit.log           # 审计日志（NDJSON，含核心事件与可选 Debug 事件，见 plugin-hooks）
+            ├── heartbeat-control.json  # 心跳控制：会话提炼（入队、锁、已提炼会话）；自我迭代（last_improvement_cycle_at 用于 24h 触发判断）
             └── heartbeat-transcript-index.json  # transcript 增量索引（mtime + lastProcessedAt）
 ```
 
