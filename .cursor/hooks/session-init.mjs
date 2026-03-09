@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
  * sessionStart hook：在会话开始时注入「记忆提取约定」与「conversation_id 传入约定」；
- * 若距上次会话提炼超过 30 分钟则执行心跳检查，将待提炼会话入队并注入「调用后台会话提炼子代理」约定。
+ * 若距上次会话提炼超过 30 分钟则执行心跳检查，从 transcript 增量中入队待提炼会话并注入「调用后台会话提炼子代理」约定。
  * 参考：https://cursor.com/cn/docs/agent/hooks#sessionstart
  */
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
+import fs from "node:fs";
+import path from "node:path";
 
 const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续有效，每轮独立、不继承上一轮。
 
@@ -17,6 +19,7 @@ const BASE_CONTEXT = `【记忆提取约定】本约定在整场会话中持续�
 
 【conversation_id 传入约定】调用 lingxi-memory 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
+const PENDING_CONFIRM_REL = ".cursor/.lingxi/workspace/improvement-pending-confirmation.json";
 
 function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
   if (!trigger_heartbeat || !candidate_ids || candidate_ids.length === 0) return "";
@@ -24,7 +27,7 @@ function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId)
   const enqueuedBy = (conversationId || "").trim();
   return `
 
-【会话提炼心跳】本会话已触发会话提炼心跳，待提炼会话已入队（candidate_ids: ${idsJson}）。请按以下顺序执行：
+【会话提炼心跳】本会话已触发会话提炼心跳，待提炼会话已按 transcript 增量入队（candidate_ids: ${idsJson}）。请按以下顺序执行：
 1. **必须使用 mcp_task 工具**发起 **lingxi-session-distill** 子代理，在 **prompt** 中明确传入 **candidate_ids**: ${idsJson} 与 **enqueued_by**: "${enqueuedBy}"（当前会话的 conversation_id）。子代理会在其内部先写入 \`heartbeat.triggered\` 再执行提炼，主会话**无需**再写 audit。
 2. 然后直接执行记忆提取约定并作答，无需等待提炼完成。
 
@@ -32,13 +35,39 @@ function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId)
 `;
 }
 
+function buildImprovementContext(triggerImprovementDiagnosis) {
+  if (!triggerImprovementDiagnosis) return "";
+  return `
+
+【自我迭代心跳】已到 24h 低频窗口。请优先使用 mcp_task 调用 **lingxi-self-iterate** 子代理（mode=heartbeat），生成提案与待确认状态；主会话无需等待后再继续当前回答。
+`;
+}
+
+function hasPendingImprovementConfirmation(projectRoot) {
+  const pendingPath = path.join(projectRoot, PENDING_CONFIRM_REL);
+  return fs.existsSync(pendingPath);
+}
+
+function buildPendingConfirmContext(hasPending) {
+  if (!hasPending) return "";
+  return `
+
+【自我迭代待确认】检测到待确认改进提案。请在作答前使用 mcp_task 调用 **lingxi-self-iterate** 子代理（mode=confirm）完成“用户确认 + 执行”闭环，并将简报带回主会话。
+`;
+}
+
 async function main() {
   const input = await readStdinJson();
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
-  const { trigger_heartbeat, candidate_ids } = runHeartbeatCheck(projectRoot, conversationId);
+  const { trigger_heartbeat, candidate_ids, trigger_improvement_diagnosis } = runHeartbeatCheck(
+    projectRoot,
+    conversationId
+  );
   const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId);
-  const additional_context = BASE_CONTEXT + heartbeatContext;
+  const improvementContext = buildImprovementContext(trigger_improvement_diagnosis);
+  const pendingConfirmContext = buildPendingConfirmContext(hasPendingImprovementConfirmation(projectRoot));
+  const additional_context = BASE_CONTEXT + heartbeatContext + improvementContext + pendingConfirmContext;
   writeStdoutJson({
     continue: true,
     additional_context,

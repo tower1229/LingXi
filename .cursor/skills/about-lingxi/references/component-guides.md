@@ -55,7 +55,7 @@
 
 - **task / vet / plan / build / review**：以 **Skill** 形式提供，经 `/task`、`/plan` 等或自然语言调用（无单独 Command 文件）
 - `/remember`：记忆写入
-- 会话提炼由**心跳自动触发**（新会话时若距上次提炼超过 30 分钟，自动入队最多 3 个已完结会话，由后台 lingxi-session-distill 子代理提炼并写入记忆）；无需用户主动执行提炼命令。
+- 会话提炼由**心跳自动触发**（新会话时若距上次提炼超过 30 分钟，按 transcript 增量自动入队最多 3 个候选会话，由后台 lingxi-session-distill 子代理提炼并写入记忆）；无需用户主动执行提炼命令。
 - `/init`：项目初始化（init command 承载主逻辑，Step 0 委托 `workspace-bootstrap`；init-checklists 作为 command 附录）
 
 ## Skills 指南
@@ -102,7 +102,8 @@
 
 **记忆系统**（记忆沉淀由用户触发 + 记忆写入 + 记忆提取）：
 
-- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）同样产生沉淀；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
+- **记忆沉淀**：**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，按 transcript 增量入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）同样产生沉淀；`/init` 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常捕获入口。经 taste-recognition 产出 payload 后，以 **payloads 数组**交由 **lingxi-memory** Subagent 在独立上下文中执行（校验→治理→门控与直接文件写入 notes + INDEX，主对话收简报）。
+- **准入口径**：由 taste-recognition 在识别与升维流程内统一执行（Exclusions 前置拦截，Inclusion 语义综合判定）；通过判定的候选才会进入后续写入。
 - **记忆提取**：`memory-retrieve`（Skill）——每轮回答前检索并最小注入（由 sessionStart hook 注入的约定触发）。
 
 **Hooks（记忆注入约定）**：
