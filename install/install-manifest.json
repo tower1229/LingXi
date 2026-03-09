@@ -34,7 +34,9 @@
     ],
     "agents": {
         "files": [
-            "agents/lingxi-memory.md"
+            "agents/lingxi-memory.md",
+            "agents/lingxi-session-distill.md",
+            "agents/lingxi-self-iterate.md"
         ]
     },
     "references": {
@@ -87,6 +89,11 @@
         ],
         "memory-govern": [
             "skills/memory-govern/scripts/memory-index-sync.mjs"
+        ],
+        "self-iterate": [
+            "agents/lingxi-self-iterate.md",
+            "agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs",
+            "agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
         ],
         "memory-write": [
             "skills/memory-write/references/write-protocol.md",

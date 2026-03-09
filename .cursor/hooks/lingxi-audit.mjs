@@ -14,6 +14,7 @@ const TAIL_BYTES = 200 * 1024; // 200KB，完整性检查优先读取的尾部�
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie|session|credential)/i;
 const RETRIEVE_SUCCESS_EVENTS = new Set(["memory.retrieve.performed", "memory.retrieve.skipped"]);
+const DEFAULT_HOOK_EVENTS = new Set(["session_end", "stop"]);
 
 const HOOK_TO_EVENT = {
   beforeSubmitPrompt: "before_submit_prompt",
@@ -119,6 +120,17 @@ function buildPayload(input) {
   }
 }
 
+function isAuditDebugEnabled() {
+  const v = (process.env.LINGXI_AUDIT_DEBUG || "").trim();
+  return v === "1" || v.toLowerCase() === "true";
+}
+
+function shouldAppendHookEvent(eventName, debugEnabled) {
+  if (!eventName || eventName === "unknown") return false;
+  if (debugEnabled) return true;
+  return DEFAULT_HOOK_EVENTS.has(eventName);
+}
+
 function safeJsonParse(line) {
   try {
     return JSON.parse(line);
@@ -172,6 +184,7 @@ function appendAuditLine(auditPath, payload) {
 }
 
 function maybeAppendRetrieveIntegrityEvent(auditPath, input) {
+  if (!isAuditDebugEnabled()) return;
   if (input.hook_event_name !== "afterAgentResponse") return;
   const conversation_id = input.conversation_id ?? "";
   const generation_id = input.generation_id ?? "";
@@ -326,8 +339,11 @@ async function main() {
   }
 
   const payload = buildPayload(input);
-  appendAuditLine(auditPath, payload);
-  maybeAppendRetrieveIntegrityEvent(auditPath, input);
+  const debugEnabled = isAuditDebugEnabled();
+  if (shouldAppendHookEvent(payload.event, debugEnabled)) {
+    appendAuditLine(auditPath, payload);
+    maybeAppendRetrieveIntegrityEvent(auditPath, input);
+  }
 
   const out = getAllowOutput(input.hook_event_name);
   writeStdoutJson(out);

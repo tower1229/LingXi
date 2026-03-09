@@ -18,11 +18,11 @@ function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-hook-"));
 }
 
-function runLingxiAudit(projectRoot, stdinJson) {
+function runLingxiAudit(projectRoot, stdinJson, extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn("node", [HOOK_PATH], {
       cwd: REPO_ROOT,
-      env: { ...process.env, CURSOR_PROJECT_DIR: projectRoot },
+      env: { ...process.env, CURSOR_PROJECT_DIR: projectRoot, ...extraEnv },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -45,7 +45,7 @@ describe("lingxi-audit", () => {
     }
   });
 
-  it("TC-001: writes one NDJSON line to audit.log and returns allow JSON", async () => {
+  it("TC-001: returns allow JSON and defaults to minimal hook events", async () => {
     tmpDir = createTempDir();
     fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
     const input = {
@@ -59,13 +59,10 @@ describe("lingxi-audit", () => {
     assert.strictEqual(out.continue, true, "return allow");
 
     const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
-    assert.ok(fs.existsSync(auditPath), "audit.log should exist");
-    const lines = fs.readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
-    assert.ok(lines.length >= 1, "at least one NDJSON line");
-    const payload = JSON.parse(lines[lines.length - 1]);
-    assert.ok(payload.ts, "ts");
-    assert.strictEqual(payload.event, "before_submit_prompt");
-    assert.ok("conversation_id" in payload);
+    if (fs.existsSync(auditPath)) {
+      const lines = fs.readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
+      assert.strictEqual(lines.length, 0, "before_submit_prompt is skipped in default mode");
+    }
   });
 
   it("TC-003: returns allow for preToolUse", async () => {
@@ -94,5 +91,22 @@ describe("lingxi-audit", () => {
       out.continue === true || out.decision === "allow" || Object.keys(out).length === 0,
       "still allow (no block)"
     );
+  });
+
+  it("writes hook trace when debug mode is enabled", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      hook_event_name: "beforeSubmitPrompt",
+      prompt: "hello debug",
+      conversation_id: "conv-debug",
+    };
+    const { code } = await runLingxiAudit(tmpDir, JSON.stringify(input), { LINGXI_AUDIT_DEBUG: "1" });
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const lines = fs.readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
+    assert.ok(lines.length >= 1, "debug mode should write audit lines");
+    const payload = JSON.parse(lines[lines.length - 1]);
+    assert.strictEqual(payload.event, "before_submit_prompt");
   });
 });

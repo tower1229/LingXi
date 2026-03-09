@@ -11,7 +11,7 @@
 
 Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 taste-recognition 的 `references/content-types.md`。
 
-- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若 payload 含 patternHint 且 patternConfidence=high，Kind 设为 `pattern`，Title/When to load 可结合模式名；否则 Kind/Status/Strength/Scope 按 source、apply 与用户表述。**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。
+- **Meta**：Title 由 payload.scene + choice 生成（与 INDEX Title 一致）。若 payload 含 patternHint 且 patternConfidence=high，Kind 设为 `pattern`，Title/When to load 可结合模式名；否则 Kind/Status/Strength/Scope 按 source、apply 与用户表述。**Audience/Portability 来自 apply**：`apply === "team"` → Audience=team、Portability=cross-project，否则 Audience=project、Portability=project-only；Source 来自 payload.source；Supersedes 在治理合并/替换时填写。`Strength` 允许在治理阶段根据重复 merge 信号提升。
 - **When to load**：由 payload.scene 生成 1～3 条，偏「何时加载」；若有 patternHint 可结合 taste-recognition 的 pattern-catalog 的 when-to-load 表述。One-liner 偏「做什么」。
 - **One-liner**：优先使用 payload.l1OneLiner（layer 为 L1 或 L0+L1）或 payload.l0OneLiner（layer 为 L0）；若无则按「在 [scene] 下优先 [choice]」生成。
 - **Context/Decision**：Decision = principles + choice；Alternatives = principles 中除 choice 外；Counter-signals 可选。
@@ -31,6 +31,27 @@ Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 ta
   - **replace**：conflict 且用户明确选新结论 → 覆盖或先删旧再建新；删除旧 note、从 INDEX 移除旧行；新 note 的 Supersedes 填被取代的 MEM-xxx，INDEX 新行同步。
   - **veto**：conflict 但无法判断更优且用户未给决定性变量 → 不写入，提示补齐或让用户选择保留哪一个。
   - **new**：与 TopK 均不构成 merge/replace → 新建 note 与 INDEX 行。
+
+### 重复信号到 Strength 提升（治理侧）
+
+- repeated 信号来源于治理阶段的 **merge** 事件，不在识别阶段单独计数。
+- 仅当 merge 判定满足 `same_scenario && same_conclusion` 时，才可提升 Strength；replace/veto 不提升。
+- 推荐映射（保守）：
+  - 初始：`hypothesis`
+  - 累计 merge 次数 ≥1：提升为 `validated`
+  - 累计 merge 次数 ≥3：提升为 `enforced`
+- 若当前条目已高于目标等级，不降级；仅在有明确人工治理指令时允许降级。
+
+### merge 强化诊断事件（memory.merge.diagnosed）
+
+- 当且仅当治理判定为 `merge` 且满足 `same_scenario && same_conclusion` 时，追加审计事件 `memory.merge.diagnosed`。
+- 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`merge_context`、`action_plan[]`。
+- 一致性约束：
+  - `primary_tag` 必须属于 `diagnosis_tags[]`。
+  - `merge_context` 必须包含 `same_scenario`、`same_conclusion`（boolean）。
+  - `status=applied` 仅在 `same_scenario && same_conclusion` 为 true 时允许。
+- 建议在 `merge_context` 内附带 `idempotency_key`（例如 `${note_id}:${conversation_id}:${generation_id}`）以支持去重。
+- 校验失败不阻断主链路：降级写入 `memory.merge.invalid`（含 `reason` 与可选 `invalid_event`）。
 
 ## 用户门控（ask-questions）
 

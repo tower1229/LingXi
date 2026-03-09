@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为三部分**：**记忆沉淀**（用户通过 /remember 触发 + 心跳自动会话提炼）、**记忆写入**（由 lingxi-memory 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember）与**心跳触发的会话提炼**（新会话时若距上次提炼超过 30 分钟，自动入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼，source=heartbeat）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
+**记忆系统分为三部分**：**记忆沉淀**（用户通过 /remember 触发 + 心跳自动会话提炼）、**记忆写入**（由 lingxi-memory 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember）与**心跳触发的会话提炼**（新会话时若距上次提炼超过 30 分钟，基于 transcript 增量自动入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼，source=heartbeat）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -22,7 +22,7 @@
 
 ### 1) 触发方式
 
-由用户通过 **/remember** 主动触发记忆捕获；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，入队最多 3 个已完结会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时按各环节 `references/taste-sniff-rules.md` 经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）也会产生沉淀并写入。主 Agent 在用户执行 /remember 或环节选择题反馈时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
+由用户通过 **/remember** 主动触发记忆捕获；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，按 transcript 增量入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时按各环节 `references/taste-sniff-rules.md` 经 ask-questions 收集用户选择，经 taste-recognition 产出 payload、source=choice）也会产生沉淀并写入。主 Agent 在用户执行 /remember 或环节选择题反馈时，先经 taste-recognition 产出 payload，再调用 lingxi-memory 完成写入。**/init** 在初始化项目时可将确认草稿可选写入，为初始化流程的额外产物，非惯常记忆捕获入口。
 
 ### 2) 记忆写入（Subagent lingxi-memory）
 
@@ -31,6 +31,8 @@
 **输入约定**：lingxi-memory 仅接受 **payloads 数组**（每项为扩展结构：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）；可选 conversation_id、generation_id。详见 `.cursor/agents/lingxi-memory.md`。
 
 **写入流程**：payload → lingxi-memory 校验 → **memory-write skill** 按 payload 映射生成 note 字段（规则见 `.cursor/skills/memory-write/references/write-protocol.md`）→ 治理（语义近邻 TopK，merge/replace/veto/new）→ 门控 → 写 `memory/project/` 或 `memory/share/` 与 INDEX。
+
+**准入规则归属**：可写判定统一由 taste-recognition 在既有流程内执行：识别阶段前置 Exclusions（敏感信息、一次性指令、瞬时细节），升维阶段综合 Inclusion 语义（actionable、stable、repeated-or-broad-rule、non-sensitive）；仅产出通过判定的 payload。
 
 **升维归属**：升维（写/不写、L0/L1、设计模式靠拢）在 taste-recognition 内完成，见 `.cursor/skills/taste-recognition/references/elevation-rules.md` 与 `references/pattern-catalog.md`；lingxi-memory 仅按 payload 映射写入，不执行评分卡。
 
@@ -63,6 +65,16 @@
   - `memory.retrieve.skipped`（显式跳过）
 - `memory.retrieve.performed` 必含字段：`query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（附 `conversation_id` / `generation_id`）
 - 若轮次内缺失上述事件，完整性审计会追加 `memory.retrieve.missing`（软强制，不阻断主流程）
+
+## 审计事件集（默认最小集）
+
+- 默认保留核心事件：`memory_note_*`、`memory_index_updated`、`memory.retrieve.*`、`heartbeat.*`、`memory.merge.*`、`memory.improvement.*`。
+- 高频 Hook 轨迹事件默认不写入；设置 `LINGXI_AUDIT_DEBUG=1` 时开启详细审计。
+- 诊断与执行闭环事件：
+  - `memory.merge.diagnosed` / `memory.merge.invalid`
+  - `memory.improvement.proposed|approved|rejected|applied|failed`
+- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。
+- 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成与自动应用统一在后台执行，主会话只消费简报。
 
 ## 统一索引（INDEX.md）
 

@@ -8,9 +8,9 @@
   "scripts": {
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",
-    "test": "node --test test/",
-    "test:scripts": "node --test test/scripts/",
-    "test:hooks": "node --test test/hooks/",
-    "test:skills": "node --test test/skills/"
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "test:scripts": "node --test \"test/scripts/**/*.test.mjs\"",
+    "test:hooks": "node --test \"test/hooks/**/*.test.mjs\"",
+    "test:skills": "node --test \"test/skills/**/*.test.mjs\""
   }
 }

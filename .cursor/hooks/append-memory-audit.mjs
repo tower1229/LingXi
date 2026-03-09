@@ -22,6 +22,14 @@ const MEMORY_RETRIEVE_EVENTS = new Set([
   "memory.retrieve.missing",
   "memory.retrieve.invalid",
 ]);
+const MEMORY_MERGE_EVENTS = new Set(["memory.merge.diagnosed", "memory.merge.invalid"]);
+const MEMORY_IMPROVEMENT_EVENTS = new Set([
+  "memory.improvement.proposed",
+  "memory.improvement.approved",
+  "memory.improvement.rejected",
+  "memory.improvement.applied",
+  "memory.improvement.failed",
+]);
 
 /**
  * 获取系统当前时间戳（ISO 8601格式，UTC）
@@ -80,6 +88,28 @@ function invalidPayloadForAudit(base, reason, invalidEvent) {
     reason,
     ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
   };
+}
+
+function invalidPayloadForMerge(base, reason, invalidEvent) {
+  return {
+    ...base,
+    event: "memory.merge.invalid",
+    reason,
+    ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
+  };
+}
+
+function invalidPayloadForImprovement(base, reason, invalidEvent) {
+  return {
+    ...base,
+    event: "memory.improvement.failed",
+    reason,
+    ...(invalidEvent ? { invalid_event: invalidEvent } : {}),
+  };
+}
+
+function isNonEmptyStringArray(v) {
+  return Array.isArray(v) && v.length > 0 && v.every((item) => typeof item === "string" && item.length > 0);
 }
 
 function validateMemoryWriteEvent(input, base) {
@@ -177,6 +207,98 @@ function validateMemoryRetrieveEvent(input, base) {
   return invalidPayloadForRetrieve(base, "unknown memory.retrieve event", input.event);
 }
 
+function validateMemoryMergeEvent(input, base) {
+  if (input.event === "memory.merge.invalid") {
+    if (!isString(input.reason) || input.reason.length === 0) {
+      return invalidPayloadForMerge(base, "invalid requires reason", input.event);
+    }
+    return {
+      ...base,
+      reason: input.reason,
+      ...(isString(input.invalid_event) ? { invalid_event: input.invalid_event } : {}),
+    };
+  }
+
+  if (input.event !== "memory.merge.diagnosed") {
+    return invalidPayloadForMerge(base, "unknown memory.merge event", input.event);
+  }
+  if (!isString(input.note_id) || input.note_id.length === 0) {
+    return invalidPayloadForMerge(base, "diagnosed requires note_id", input.event);
+  }
+  if (!isString(input.source) || input.source.length === 0) {
+    return invalidPayloadForMerge(base, "diagnosed requires source", input.event);
+  }
+  if (!isNonEmptyStringArray(input.diagnosis_tags)) {
+    return invalidPayloadForMerge(base, "diagnosed requires diagnosis_tags[]", input.event);
+  }
+  if (!isString(input.primary_tag) || !input.diagnosis_tags.includes(input.primary_tag)) {
+    return invalidPayloadForMerge(base, "primary_tag must be included in diagnosis_tags", input.event);
+  }
+  if (!Array.isArray(input.action_plan)) {
+    return invalidPayloadForMerge(base, "diagnosed requires action_plan[]", input.event);
+  }
+  if (!input.merge_context || typeof input.merge_context !== "object") {
+    return invalidPayloadForMerge(base, "diagnosed requires merge_context", input.event);
+  }
+  const sameScenario = input.merge_context.same_scenario;
+  const sameConclusion = input.merge_context.same_conclusion;
+  if (!isBool(sameScenario) || !isBool(sameConclusion)) {
+    return invalidPayloadForMerge(
+      base,
+      "merge_context requires same_scenario/same_conclusion(boolean)",
+      input.event
+    );
+  }
+  if (input.status === "applied" && !(sameScenario && sameConclusion)) {
+    return invalidPayloadForMerge(base, "status=applied requires merge_context match", input.event);
+  }
+
+  return {
+    ...base,
+    note_id: input.note_id,
+    source: input.source,
+    diagnosis_tags: input.diagnosis_tags,
+    primary_tag: input.primary_tag,
+    merge_context: input.merge_context,
+    action_plan: input.action_plan,
+    ...(isString(input.status) ? { status: input.status } : {}),
+  };
+}
+
+function validateMemoryImprovementEvent(input, base) {
+  if (!isString(input.proposal_id) || input.proposal_id.length === 0) {
+    return invalidPayloadForImprovement(base, "improvement event requires proposal_id", input.event);
+  }
+  if (input.event === "memory.improvement.proposed") {
+    if (!isArray(input.findings)) {
+      return invalidPayloadForImprovement(base, "proposed requires findings[]", input.event);
+    }
+    if (!isArray(input.actions)) {
+      return invalidPayloadForImprovement(base, "proposed requires actions[]", input.event);
+    }
+  }
+  if (input.event === "memory.improvement.approved" || input.event === "memory.improvement.rejected") {
+    if (!isArray(input.action_ids)) {
+      return invalidPayloadForImprovement(base, "approved/rejected requires action_ids[]", input.event);
+    }
+  }
+  if (input.event === "memory.improvement.applied" || input.event === "memory.improvement.failed") {
+    if (!isString(input.action_id) || input.action_id.length === 0) {
+      return invalidPayloadForImprovement(base, "applied/failed requires action_id", input.event);
+    }
+  }
+  return {
+    ...base,
+    proposal_id: input.proposal_id,
+    ...(isArray(input.findings) ? { findings: input.findings } : {}),
+    ...(isArray(input.actions) ? { actions: input.actions } : {}),
+    ...(isArray(input.action_ids) ? { action_ids: input.action_ids } : {}),
+    ...(isString(input.action_id) ? { action_id: input.action_id } : {}),
+    ...(isString(input.reason) ? { reason: input.reason } : {}),
+    ...(isString(input.invalid_event) ? { invalid_event: input.invalid_event } : {}),
+  };
+}
+
 function buildPayload(input) {
   const base = buildBasePayload(input);
   if (!isString(input.event) || input.event.length === 0) {
@@ -188,6 +310,12 @@ function buildPayload(input) {
   }
   if (MEMORY_RETRIEVE_EVENTS.has(input.event)) {
     return validateMemoryRetrieveEvent(input, base);
+  }
+  if (MEMORY_MERGE_EVENTS.has(input.event)) {
+    return validateMemoryMergeEvent(input, base);
+  }
+  if (MEMORY_IMPROVEMENT_EVENTS.has(input.event)) {
+    return validateMemoryImprovementEvent(input, base);
   }
   return invalidPayloadForAudit(base, "unsupported event for append-memory-audit", input.event);
 }

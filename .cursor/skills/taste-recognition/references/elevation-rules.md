@@ -33,6 +33,14 @@
 - **T ≤ 3**：不写。不产出该条 payload，不加入 payloads 数组；主 Agent 不因此条调用 lingxi-memory。
 - **T ≥ 4**：进入 layer 判定；若未触犯下述例外，则产出 payload 并填写 layer、可选 l0OneLiner/l1OneLiner。
 
+### 2.1 Inclusion 语义对齐（在既有判定内执行）
+
+- **actionable / stable**：由 D1、D2、D4 共同体现；若仅为瞬时状态或一次性执行细节，按 D4=0 处理并倾向不写。
+- **repeated-or-broad-rule**：
+  - 用户明确声明「通用规则/默认规则」时，可作为 broad-rule 信号提升 D2。
+  - repeated 信号不在识别阶段单独计数，交由下游治理与权重机制沉淀后反向影响检索优先级。
+- **non-sensitive**：敏感信息在识别阶段前置排除；升维阶段不再重复放行。
+
 ---
 
 ## 3. layer 判定（仅对 T ≥ 4 的条）

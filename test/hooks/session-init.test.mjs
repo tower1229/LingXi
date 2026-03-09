@@ -12,11 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const HOOK_PATH = path.join(REPO_ROOT, ".cursor", "hooks", "session-init.mjs");
 
-function runSessionInit(stdinJson) {
+function runSessionInit(stdinJson, extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn("node", [HOOK_PATH], {
       cwd: REPO_ROOT,
-      env: process.env,
+      env: { ...process.env, ...extraEnv },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -39,5 +39,13 @@ describe("session-init", () => {
     assert.ok(typeof out.additional_context === "string");
     assert.ok(out.additional_context.includes("记忆提取约定"));
     assert.ok(out.additional_context.includes("conversation_id"));
+  });
+
+  it("injects background self-iteration context", async () => {
+    const { code, stdout } = await runSessionInit("{}");
+    assert.strictEqual(code, 0);
+    const out = JSON.parse(stdout.trim());
+    assert.ok(out.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(out.additional_context.includes("run_in_background=true"));
   });
 });

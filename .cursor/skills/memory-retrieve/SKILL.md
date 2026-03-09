@@ -23,7 +23,7 @@ description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.curs
 4. **双路径检索（必须）**：
    - 语义路径：在范围 @.lingxi/memory/project/ 与 @.lingxi/memory/share/ 内查找与 `semantic_summary` 相关的内容。
    - 关键词路径：调用 `Grep`（ripgrep），范围 @.lingxi/memory/project/、@.lingxi/memory/share/ 正文 + @.lingxi/memory/INDEX.md 的 Title/When to load。
-5. **融合与最小读取**：采用**并集（Union）**合并两路候选后重排取 top 0–2；优先保证召回率，避免仅语义路径或仅关键词路径命中的候选被误排除。只对合并后的 top 0–2 调用 `Read` 做最终相关性确认。
+5. **融合与最小读取**：采用**并集（Union）**合并两路候选后重排取 top 0–2；优先保证召回率，避免仅语义路径或仅关键词路径命中的候选被误排除。重排时以语义/关键词相关性为主，`Strength`（hypothesis/validated/enforced）仅作为小权重因子或同分 tie-breaker。只对合并后的 top 0–2 调用 `Read` 做最终相关性确认。
 6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`；仅对 adopt 做一行极简注入。
 7. **审计（v2，必须）**：
    - 正常执行检索：追加 `event=memory.retrieve.performed`，字段必须包含 `query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（并带 `conversation_id`、`generation_id`）。
@@ -32,7 +32,7 @@ description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.curs
 
 ## 关键约束
 
-- **双路径**：语义路径（在 memory/project/、memory/share/ 范围内按 `semantic_summary` 做概念级匹配）+ 关键词路径（Grep `INDEX.md` 的 Title/When to load 及 project/、share/ 下 note 正文）；并集加权后取 top 0–2 条，按需读取原文后不相关则不注入。
+- **双路径**：语义路径（在 memory/project/、memory/share/ 范围内按 `semantic_summary` 做概念级匹配）+ 关键词路径（Grep `INDEX.md` 的 Title/When to load 及 project/、share/ 下 note 正文）；并集加权后取 top 0–2 条，按需读取原文后不相关则不注入。`Strength` 仅参与同分或近似同分时的保守重排，不覆盖主相关性分。
 - **双路径可验证性**：双路径中仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径按自然语言检索结果执行，并以 `memory.retrieve.performed` 的 `semantic_called` 字段记录为准，不做工具链校验。
 - **禁止顺序全读**：禁止在未完成双路径检索前，直接顺序读取 `memory/project/*` 或 `memory/share/*` 全量文件。
 - **输出契约**：命中时输出结构化结果（`hits`、`adoptionCandidates`、`obligations`、`suggestedAction`）；供主 Agent 做 `adopt/reject/ask` 决策。无匹配时静默。

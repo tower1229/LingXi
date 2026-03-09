@@ -104,4 +104,49 @@ describe("append-memory-audit", () => {
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.retrieve.invalid");
   });
+
+  it("writes memory.merge.diagnosed when payload is valid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.merge.diagnosed",
+      conversation_id: "c-merge",
+      note_id: "MEM-001",
+      source: "heartbeat",
+      diagnosis_tags: ["scope_too_narrow", "trigger_miss"],
+      primary_tag: "scope_too_narrow",
+      merge_context: { same_scenario: true, same_conclusion: true },
+      action_plan: [{ type: "expand_when_to_load", risk: "medium" }],
+      status: "observed",
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.diagnosed");
+    assert.strictEqual(payload.note_id, "MEM-001");
+    assert.strictEqual(payload.primary_tag, "scope_too_narrow");
+  });
+
+  it("downgrades invalid merge diagnosis to memory.merge.invalid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.merge.diagnosed",
+      note_id: "MEM-001",
+      source: "heartbeat",
+      diagnosis_tags: ["scope_too_narrow"],
+      primary_tag: "trigger_miss",
+      merge_context: { same_scenario: true, same_conclusion: true },
+      action_plan: [],
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.invalid");
+    assert.match(payload.reason, /primary_tag/);
+  });
 });
