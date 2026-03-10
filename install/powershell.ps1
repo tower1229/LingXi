@@ -349,6 +349,9 @@ if (Test-Path ".gitignore") {
 # 输出成功信息
 Write-Host ""
 Write-Success "安装完成！"
+if ($Manifest.version) {
+  Write-Info "已安装版本: $($Manifest.version)"
+}
 Write-Host ""
 Write-Info "已安装的文件："
 Write-Host " - .cursor/commands/ ($commandCount 个命令)"

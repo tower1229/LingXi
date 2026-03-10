@@ -174,6 +174,30 @@ load_manifest() {
   fi
 }
 
+# 使用 jq 或 Python 获取 JSON 标量值（如 version）
+get_json_string() {
+  local key=$1
+  if [ -z "${MANIFEST_PATH:-}" ] || [ ! -f "$MANIFEST_PATH" ]; then
+    echo ""
+    return 0
+  fi
+  if command -v jq &> /dev/null; then
+    jq -r ".$key // \"\"" "$MANIFEST_PATH" 2>/dev/null || echo ""
+  elif [ -n "$PYTHON_CMD" ]; then
+    $PYTHON_CMD -c "
+import sys, json
+try:
+  with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+  print(data.get('$key', '') or '')
+except Exception:
+  print('')
+" 2>/dev/null || echo ""
+  else
+    echo ""
+  fi
+}
+
 # 使用 jq 或 python3 获取 JSON 数组值
 get_json_array() {
   local key=$1
@@ -239,6 +263,9 @@ except Exception as e:
 
 # 加载清单
 load_manifest
+
+LINGXI_VERSION=$(get_json_string "version")
+[ -z "$LINGXI_VERSION" ] && LINGXI_VERSION="(未知)"
 
 info "开始安装 LíngXī..."
 info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
@@ -565,6 +592,9 @@ fi
 # 输出成功信息
 echo ""
 success "安装完成！"
+if [ -n "$LINGXI_VERSION" ] && [ "$LINGXI_VERSION" != "(未知)" ]; then
+  info "已安装版本: ${LINGXI_VERSION}"
+fi
 echo ""
 info "已安装的文件："
 echo " - .cursor/commands/ ($command_count 个命令)"
