@@ -42,7 +42,7 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
    - 不发明需求外行为；manual/rubric 必须提供可执行步骤、预期结果和证据形式。
 
 6. **文档写入**
-   - 写入 `001.plan.<标题>.md` 与 `001.testcase.<标题>.md`。
+   - 写入 `.cursor/.lingxi/tasks/001.plan.<标题>.md` 与 `.cursor/.lingxi/tasks/001.testcase.<标题>.md`（与 task 同目录，统一在 tasks/ 下）。
    - plan 必须包含：任务清单、依赖关系、文件变更清单、测试映射、执行顺序。
 
 7. **质量自检与下一步建议（有产物时必须输出）**
@@ -63,5 +63,5 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
 
 ## 产物与 References
 
-- **产物**：`001.plan.<标题>.md`、`001.testcase.<标题>.md`（标题 10 字以内，从 task 提取）。
+- **产物**：`.cursor/.lingxi/tasks/001.plan.<标题>.md`、`.cursor/.lingxi/tasks/001.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
 - **模板**：`references/plan-doc-template.md`；testcase-designer 见 `.cursor/skills/testcase-designer/SKILL.md`；品味嗅探规则：`references/taste-sniff-rules.md`

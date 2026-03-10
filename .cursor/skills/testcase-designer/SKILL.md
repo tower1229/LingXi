@@ -11,7 +11,7 @@ description: 由 plan（主产出）、build（Task-driven 且无 testcase 时�
 
 ## 关键约束
 
-- **输入**：task 文档路径或正文。**输出**：与 `references/testcase-doc-template.md` 同构的 testcase 文档；命名 `<taskId>.testcase.<标题>.md`（标题 10 字以内）。
+- **输入**：task 文档路径或正文。**输出**：与 `references/testcase-doc-template.md` 同构的 testcase 文档；写入路径 `.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`（与 task/plan 同目录），命名 `<taskId>.testcase.<标题>.md`（标题 10 字以内）。
 - **覆盖**：所有「验证方式不为空」的 F 必须有对应 TC 或手工/rubric 区块；每个 TC 或手工/评审块必须标注来源需求编号（至少一个 F）。
 - **按验证方式分区**：unit → 单元测试用例区块；integration → 集成测试用例区块；e2e → 端到端用例区块；manual/rubric → 手工验证与评审区块（见模板）。
 - 不发明 task 中未出现的需求或验收标准；边界/异常从 task 推导；模板以 references 为 SSoT。
