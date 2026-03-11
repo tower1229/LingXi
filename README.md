@@ -31,7 +31,7 @@ Lower cognitive load and a smooth, user-friendly experience.
 - **Flexible workflow**: Compose your own flow—rigorous when needed, light when not
 - **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
 - **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
-- **Context curation**: Optimize context so the model focuses on what matters
+- **Self-iterate**: Run low-risk, audit-driven improvements on heartbeat cycles so the system keeps getting more stable and accurate
 - **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to understand project context and bootstrap LingXi workflow
 
 ---

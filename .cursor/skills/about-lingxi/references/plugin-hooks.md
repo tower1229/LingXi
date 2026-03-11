@@ -12,14 +12,14 @@
 **职责**：在会话开始时注入约定并执行心跳检查。
 
 1. **注入约定**  
-   - 每轮先执行 `/memory-retrieve <当前用户消息>` 的记忆提取约定，以及调用 lingxi-memory-write 时传入 conversation_id 的约定。
+   - 注入执行顺序约定：步骤 A（心跳子代理）、步骤 B（检索审计）、步骤 C（主流程），以及**步骤 D（仅当步骤 C 有文件写入时触发 post 检索）**；并注入调用 lingxi-memory-write 时传入 conversation_id 的约定。
 
 2. **心跳检查**  
    脚本读取 `.cursor/.lingxi/workspace/heartbeat-control.json` 与 transcript 增量索引（`heartbeat-transcript-index.json`），并视情况向当轮上下文追加约定：
    - **会话提炼心跳**：若距上次会话提炼完成超过 30 分钟且锁可用，则从 transcript 增量中入队最多 3 个未提炼候选会话，写入 `pending_distillation` 与锁，并注入约定：主 Agent 在步骤 A 必须发起 **lingxi-session-distill** 子代理（传入 candidate_ids、enqueued_by），后台运行，无需等待。
    - **自我迭代心跳**：若距上次 24h 诊断完成超过 24 小时（依据 `last_improvement_cycle_at`），则注入约定：主 Agent 在步骤 A 必须发起 **lingxi-self-iterate** 子代理（run_in_background=true），执行“诊断 + 自动改进（仅 low risk）”，无需等待。
 
-两种心跳均由主 Agent 在步骤 A 通过 mcp_task 调用对应子代理，主会话不等待子代理完成即进入步骤 B（记忆提取）与步骤 C（作答）。
+两种心跳均由主 Agent 在步骤 A 通过 mcp_task 调用对应子代理，主会话不等待子代理完成即进入步骤 B（记忆提取审计）与步骤 C（作答/实施）。若步骤 C 发生文件写入，则按约定进入步骤 D 执行 post 模式 memory-retrieve，并对 `trigger_timing=post|both` 的记忆即时履约。
 
 ## 审计与 audit.log：核心事件 vs Debug 事件
 

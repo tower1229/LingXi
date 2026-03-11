@@ -4,7 +4,7 @@
 
 记忆系统是灵犀实现“心有灵犀”的核心能力。它以 **更好的检索与注入** 为最终目的：把对话中的判断与取舍沉淀为可检索资产，并在每一轮对话前做最小注入，提升一致性与长期复用能力。
 
-**记忆系统分为三部分**：**记忆沉淀**（用户通过 /remember 触发 + 心跳自动会话提炼）、**记忆写入**（由 lingxi-memory-write 子代理执行）、**记忆提取**（由 memory-retrieve 每轮执行）。记忆沉淀包含**主动记忆捕获**（/remember）与**心跳触发的会话提炼**（新会话时若距上次提炼超过 30 分钟，基于 transcript 增量自动入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼，source=heartbeat）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
+**记忆系统分为三部分**：**记忆沉淀**（用户通过 /remember 触发 + 心跳自动会话提炼）、**记忆写入**（由 lingxi-memory-write 子代理执行）、**记忆提取**（由 memory-retrieve 按 pre/post 双时机执行）。记忆沉淀包含**主动记忆捕获**（/remember）与**心跳触发的会话提炼**（新会话时若距上次提炼超过 30 分钟，基于 transcript 增量自动入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼，source=heartbeat）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，产出 payload 的 source=choice）同样是重要沉淀来源；/init 在初始化流程中可将确认草稿可选写入，为初始化额外产物，非惯常记忆捕获方式。
 
 本版本采用 **扁平化记忆库**：
 
@@ -14,7 +14,7 @@
 
 ## 每轮参与
 
-检索与注入在**每次用户输入**时由 sessionStart 约定触发（每轮先执行 memory-retrieve），因此每一轮都有机会根据最新上下文做匹配；写入则通过用户触发的 /remember 或**心跳自动会话提炼**在需要时触发；/init 在初始化时可将确认草稿可选写入，属初始化额外产物。新输入与后续轮次自然带来纠错与更新机会。
+检索与注入在**每次用户输入**时由 sessionStart 约定触发，采用“步骤 C 的 pre 检索 + 步骤 D 的 post 检索（条件触发）”双时机机制：每轮先执行 pre 检索；若本轮发生文件写入，再执行 post 检索并根据 `TriggerTiming` 立即履约。因此每一轮都有机会根据最新上下文与实际变更做匹配；写入则通过用户触发的 /remember 或**心跳自动会话提炼**在需要时触发；/init 在初始化时可将确认草稿可选写入，属初始化额外产物。新输入与后续轮次自然带来纠错与更新机会。
 
 **「何时写入、何时纠错」由「每轮触发检索 + 按需写入」的机制覆盖，无需额外“记忆可错/纠错”规则。**
 
@@ -30,7 +30,7 @@
 
 **输入约定**：lingxi-memory-write 仅接受 **payloads 数组**（每项为扩展结构：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）；可选 conversation_id、generation_id。详见 `.cursor/agents/lingxi-memory-write.md`。
 
-**写入流程**：payload → lingxi-memory-write 校验 → **memory-write skill** 按 payload 映射生成 note 字段（规则见 `.cursor/skills/memory-write/references/write-protocol.md`）→ 治理（语义近邻 TopK，dedupe/merge/replace/veto/new）→ 门控 → 写 `memory/project/` 或 `memory/share/` 与 INDEX。
+**写入流程**：payload → lingxi-memory-write 校验 → **memory-write skill** 按 payload 映射生成 note 字段（含 `TriggerTiming`，规则见 `.cursor/skills/memory-write/references/write-protocol.md`）→ 治理（语义近邻 TopK，dedupe/merge/replace/veto/new）→ 门控 → 写 `memory/project/` 或 `memory/share/` 与 INDEX。
 
 **准入规则归属**：可写判定统一由 taste-recognition 在既有流程内执行：识别阶段前置 Exclusions（敏感信息、一次性指令、瞬时细节），升维阶段综合 Inclusion 语义（actionable、stable、repeated-or-broad-rule、non-sensitive）；仅产出通过判定的 payload。
 
@@ -43,10 +43,10 @@
 
 ## 记忆提取（Retrieve + Inject）
 
-**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在回答前执行一次检索与最小注入。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物。
+**触发方式**：通过 sessionStart hook 在会话开始时注入约定，要求每轮在步骤 C 执行一次 pre 检索；若步骤 C 发生文件写入，再在步骤 D 执行一次 post 检索与履约。**仅注入记忆提取约定**，不注入记忆沉淀约定；**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物。
 注入约定要求：命中后主 Agent 必须完成一轮 `adopt/reject/ask` 决策，不允许命中后无决策直接继续。
 
-- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入「每轮先执行 /memory-retrieve <当前用户消息>」的约定及 conversation_id 传入约定）
+- Hook：`.cursor/hooks/session-init.mjs`（sessionStart，注入执行顺序约定：步骤 C pre 检索 + 条件触发的步骤 D post 检索，并注入 conversation_id 传入约定）
 - 执行 Skill：`memory-retrieve`
 
 **检索机制**：memory-retrieve 执行流程为**理解判断 → 提炼（语义摘要 + 关键词）→ 检索必要性判断 → 双路径检索**。当用户输入**无法独立理解、需结合上文理解**时，先结合最近对话推断完整含义再提炼；提炼后若无实质可检索（语义仅社交/元表达且关键词为空），则跳过检索以节省成本。双路径检索采用**语义 + 关键词**混合（语义路径对 memory/project/、memory/share/ 做概念匹配，关键词路径对 project/、share/ 及 INDEX 的 Title、When to load 做文本匹配），**并集加权合并**（0.7×语义 + 0.3×关键词）、**召回优先**（取并集不做交集），每路取若干候选后合并排序取 top 0–2。**嗅探场景**：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。**双路径可验证性**：仅关键词路径（Grep）可通过同轮 pre_tool_use 做执行证据验证；语义路径在当前 Cursor 实现下不以独立工具形式经过 preToolUse，仅以 performed 的 semantic_called 自报为准，不做工具链校验。
@@ -75,7 +75,7 @@
   - `memory.improvement.proposed|approved|rejected|applied|failed`
 - 审计事件机器契约（JSON Schema）：`.cursor/hooks/schemas/memory-audit-events.schema.json`
 - `append-memory-audit` 先按该 schema 做事件枚举/必填字段校验，再执行事件级业务约束校验（如 merge 诊断一致性）。
-- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。**同一 conversation_id 会话内仅触发一次**（会话级幂等门控）；诊断提案应包含回放评测指标（如 duplicate_creation_rate、merge_conversion_rate、fragmentation_index、post_injection_correction_rate）以驱动后续优化。
+- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。**同一 conversation_id 会话内仅触发一次**（会话级幂等门控）；诊断提案应包含回放评测指标（如 duplicate_creation_rate、merge_conversion_rate、fragmentation_index、post_injection_correction_rate）并包含 INDEX 漂移信号（index_rows vs note_files）以驱动后续优化。
 - 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成与自动应用统一在后台执行，主会话只消费简报。
 
 ## 统一索引（INDEX.md）

@@ -137,6 +137,14 @@
 - [ ] 错误是否能够尽早发现？
 - [ ] 是否有适当的错误处理和报告机制？
 
+**安装与分发场景的落地约定（本项目）**：
+
+- 安装清单采用三层自动化门禁，避免“能开发、不能安装/卸载”的后置风险：
+  - `install-manifest-exists`：manifest 声明路径都存在（manifest → repo）
+  - `install-manifest-coverage`：约定目录新增文件不漏进清单（repo → manifest）
+  - `install-manifest-version-sync`：`install/install-manifest.json` 与 `package.json` 版本一致
+- 语义版本递增后，必须同步更新安装清单版本并通过上述门禁，确保“可安装最新版”。
+
 ### 7. Explicit is Better than Implicit - 显式优于隐式
 
 **原则**：明确表达意图，避免隐式行为和魔法。
