@@ -14,8 +14,10 @@ const BASE_CONTEXT = `【本回合执行顺序】本约定在整场会话中持�
 - **步骤 C**：作答。
 
 【记忆提取约定】每轮必须二选一：
-- **仅 command/skill 调用**（用户消息仅为一条 command 如 \`/start-tuning\`、\`/task\` 或 skill 调用，无其它自然语言）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）。
-- **否则**（存在用户自由输入）：先执行 \`/memory-retrieve <当前用户消息>\`；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
+- **仅 command/skill 调用**（满足以下任一条件）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）：
+  - 用户消息仅为一条零参数命令（如 \`/task\`、\`/review\`、\`/start-tuning\`）；
+  - 用户消息为一条**携带参数的命令**（如 \`/remember <内容>\`、\`/task <描述>\`），参数内容是命令的形式输入，而非独立的用户意图表达；判断依据：消息以已知命令前缀开头且其后内容为该命令的直接参数。
+- **否则**（存在独立的用户自由输入，如命令后附带了与命令无关的分析/提问）：先执行 \`/memory-retrieve <当前用户消息>\`；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
 
 若执行了检索且命中（top 0–2）：必须先对每条命中做 \`adopt\`/\`reject\`/\`ask\` 决策；仅对 adopt 做一行极简提示，reject 不展示；若依据某条记忆做方案选择，表述中自然引用来源（如 \`[MEM-003]\`）。未记录 performed 或 skipped 时审计系统会追加 \`memory.retrieve.missing\`（不阻断主流程）。
 

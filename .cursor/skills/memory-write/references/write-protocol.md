@@ -36,6 +36,7 @@ Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 ta
 ### 无打分硬门槛决策树（实现约束）
 
 - 仅允许规则判定，不使用相似度打分。
+- **same_subject 判定粒度**：以**元主题层面**（这条记忆在解决什么类型的风险/约束/决策域）为准，而非以具体触发场景为准。只要两条记忆的核心问题域重叠（如"都在维护灵犀的可安装性/可发布性"），即视为 same_subject，触发 merge 门控而非 new。场景措辞不同（如"文件变更时"vs"版本发布时"）不构成 different_subject 的依据；应问"这两条记忆在防御同一类风险吗"。
 - 推荐顺序：
   - same_subject + same_conclusion → `dedupe`
   - same_subject + non_conflicting → `merge`（`merge_kind=subject_expansion`）
@@ -59,7 +60,7 @@ Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 ta
 
 - 治理判定为 `merge` 时，追加审计事件 `memory.merge.diagnosed`。
 - 治理判定为 `dedupe` 时，追加审计事件 `memory.dedupe.applied`；仅建议去重未执行时记 `memory.dedupe.suggested`。
-- 当治理判定为 `new` 且已识别存在高相关候选时，记录 `memory.new.created_but_related_exists`（用于碎片化诊断）。
+- 当治理判定为 `new` 且已识别存在高相关候选（TopK 中任一候选的 same_subject 或 same_conclusion 为 true，但因其他原因未触发 merge/dedupe）时，**必须**记录 `memory.new.created_but_related_exists`（用于碎片化诊断）；此为强制要求，不得省略。
 - `memory.merge.diagnosed` 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`action_plan[]`，并建议附带 `merge_kind` 与 `governance_context`。
 - 一致性约束：
   - `primary_tag` 必须属于 `diagnosis_tags[]`。

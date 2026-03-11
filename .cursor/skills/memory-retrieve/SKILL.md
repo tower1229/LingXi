@@ -12,7 +12,9 @@ description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.curs
 ## 调用形式与输入
 
 - **/memory-retrieve** \<query\>
-- **何时调用**：仅当本轮用户消息包含自由输入时，先调用 `/memory-retrieve <当前用户消息>` 再回答。**仅 command/skill 调用**（如仅输入 \`/task\`、\`/start-tuning\`）时不调用本 Skill，主流程写入 `memory.retrieve.skipped` 后直接作答。
+- **何时调用**：仅当本轮用户消息包含**独立的自由输入**时，先调用 `/memory-retrieve <当前用户消息>` 再回答。以下情况**不调用**本 Skill，主流程写入 `memory.retrieve.skipped` 后直接作答：
+  - 仅有零参数命令（如 `/task`、`/review`、`/start-tuning`）；
+  - 命令携带参数的调用（如 `/remember <内容>`、`/task <描述>`），参数是命令的形式输入而非独立用户意图。判断依据：消息以已知命令前缀开头，其后内容为该命令的直接参数。
 - 主流程：当前用户消息。嗅探场景：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
 
 ## 执行流程（SSoT）
