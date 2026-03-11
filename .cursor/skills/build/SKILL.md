@@ -12,9 +12,9 @@ description: 工作流步骤：按 task/plan 实现与测试。仅支持手动�
 ## 关键约束
 
 - **taskId**：指定则用该编号的 task；省略则执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
+- **Task-driven 无 testcase（硬门控，优先于所有其他步骤）**：无论 task 中验证方式是否包含 unit/integration，**testcase 文档都是 Task-driven 模式的必需前置输入**。若不存在 `<taskId>.testcase.*.md`，必须先调用 testcase-designer 生成并写入；生成失败、未写入、或未通过 F→TC 覆盖与验证方式一致性校验时，必须立即终止，**不得进入编码循环**。testcase-designer 的调用与 TDD 循环是两件独立的事：前者产出 testcase 文档（始终必须）；后者仅在 unit/integration 单元时执行。
 - **先测再实现（TDD）**：仅对验证方式为 `unit` 或 `integration` 的单元。每单元：先仅编写该单元测试（基于 testcase/task 文档输入/输出/边界）→ 运行确认失败/基线 → 只通过修改实现使通过，不改测试 → 通过后再下一单元。不通过改测试通过验收。
-- **Task-driven 无 testcase**：先调用 testcase-designer 生成并写入 `<taskId>.testcase.<标题>.md`。生成失败、未写入、或未通过 F→TC 覆盖与验证方式一致性校验时，必须立即终止；未通过校验不得进入编码循环。
-- **manual/rubric**：不写自动化测试；产出可执行清单（步骤+预期结果）与证据占位，交付前完成并保留证据。
+- **manual/rubric**：不写自动化测试；在 testcase 文档中产出可执行清单（步骤+预期结果）与证据占位，交付前完成并保留证据。
 - **下一步建议**：只要产生代码或测试变更，必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：执行 review skill、`/remember` 沉淀、先改代码再 review、其他/跳过。
 
 ## 完整执行流程（关键步骤不省略）
@@ -26,8 +26,11 @@ description: 工作流步骤：按 task/plan 实现与测试。仅支持手动�
 2. **读取输入**
    - 必读 `<taskId>.task.*.md`。
    - Plan-driven 追加读取 plan + testcase。
-   - Task-driven 若无 testcase，必须先调用 testcase-designer 生成并写入；生成失败或未写入时立即终止。
-   - Task-driven 在进入实现前，testcase 是必需输入；若未完成 F→TC 覆盖与验证方式一致性校验，必须终止。
+   - **Task-driven（硬门控）**：
+     1. 检查是否存在 `<taskId>.testcase.*.md`。
+     2. 不存在时，**立即**调用 testcase-designer 生成并写入，无论 task 的验证方式是 unit/integration/manual/e2e/rubric 的任意组合——testcase 文档始终必须。
+     3. 生成失败或未写入时立即终止，不得进入步骤 3。
+     4. 存在（或生成成功）后，做 F→TC 覆盖与验证方式一致性校验；未通过必须终止，不得进入步骤 3。
 
 3. **任务与顺序确定**
    - Plan-driven 的任务顺序来自 plan。
