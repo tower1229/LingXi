@@ -95,3 +95,4 @@ JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_
 ## References
 
 - `governance_context` 契约：`references/governance-context-schema.md`
+- `governance_context` JSON Schema：`references/governance-context.schema.json`

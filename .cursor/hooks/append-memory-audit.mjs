@@ -3,15 +3,18 @@
  * Unified audit appender for memory events.
  * Accepts one JSON argument and appends one NDJSON line into audit.log.
  * Non-compatible mode: only v2 memory retrieve events are accepted.
+ * Event contract reference: .cursor/hooks/schemas/memory-audit-events.schema.json
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   normalizeGovernanceContext,
   validateMergeKind,
 } from "../skills/memory-write/scripts/governance-context-validator.mjs";
 
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
+const AUDIT_SCHEMA_REL = "schemas/memory-audit-events.schema.json";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 const MEMORY_WRITE_EVENTS = new Set([
@@ -40,6 +43,34 @@ const MEMORY_IMPROVEMENT_EVENTS = new Set([
   "memory.improvement.applied",
   "memory.improvement.failed",
 ]);
+
+function loadAuditSchemaContract() {
+  try {
+    const hooksDir = path.dirname(fileURLToPath(import.meta.url));
+    const schemaPath = path.join(hooksDir, AUDIT_SCHEMA_REL);
+    const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+    const eventEnum = schema?.$defs?.eventEnum?.enum;
+    if (!Array.isArray(eventEnum)) return null;
+    const requiredByEvent = new Map();
+    const oneOf = Array.isArray(schema.oneOf) ? schema.oneOf : [];
+    for (const item of oneOf) {
+      const ref = item?.$ref;
+      if (typeof ref !== "string" || !ref.startsWith("#/$defs/")) continue;
+      const defName = ref.slice("#/$defs/".length);
+      const def = schema?.$defs?.[defName];
+      const eventConst = def?.properties?.event?.const;
+      const required = Array.isArray(def?.required) ? def.required : [];
+      if (typeof eventConst === "string") {
+        requiredByEvent.set(eventConst, required);
+      }
+    }
+    return { allowedEvents: new Set(eventEnum), requiredByEvent };
+  } catch {
+    return null;
+  }
+}
+
+const AUDIT_SCHEMA_CONTRACT = loadAuditSchemaContract();
 
 /**
  * 获取系统当前时间戳（ISO 8601格式，UTC）
@@ -406,10 +437,29 @@ function validateMemoryImprovementEvent(input, base) {
   };
 }
 
+function invalidPayloadByEventType(base, event, reason) {
+  if (MEMORY_WRITE_EVENTS.has(event)) return invalidPayloadForWrite(base, reason, event);
+  if (MEMORY_RETRIEVE_EVENTS.has(event)) return invalidPayloadForRetrieve(base, reason, event);
+  if (MEMORY_GOVERNANCE_EVENTS.has(event)) return invalidPayloadForMerge(base, reason, event);
+  if (MEMORY_IMPROVEMENT_EVENTS.has(event)) return invalidPayloadForImprovement(base, reason, event);
+  return invalidPayloadForAudit(base, reason, event);
+}
+
 function buildPayload(input) {
   const base = buildBasePayload(input);
   if (!isString(input.event) || input.event.length === 0) {
     return invalidPayloadForAudit(base, "event is required", "");
+  }
+  if (AUDIT_SCHEMA_CONTRACT) {
+    if (!AUDIT_SCHEMA_CONTRACT.allowedEvents.has(input.event)) {
+      return invalidPayloadForAudit(base, "event not allowed by schema", input.event);
+    }
+    const required = AUDIT_SCHEMA_CONTRACT.requiredByEvent.get(input.event) || [];
+    for (const field of required) {
+      if (input[field] == null) {
+        return invalidPayloadByEventType(base, input.event, `schema required field missing: ${field}`);
+      }
+    }
   }
 
   if (MEMORY_WRITE_EVENTS.has(input.event)) {

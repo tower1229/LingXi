@@ -73,6 +73,8 @@
 - 诊断与执行闭环事件：
   - `memory.merge.diagnosed` / `memory.merge.invalid` / `memory.dedupe.applied` / `memory.dedupe.suggested`
   - `memory.improvement.proposed|approved|rejected|applied|failed`
+- 审计事件机器契约（JSON Schema）：`.cursor/hooks/schemas/memory-audit-events.schema.json`
+- `append-memory-audit` 先按该 schema 做事件枚举/必填字段校验，再执行事件级业务约束校验（如 merge 诊断一致性）。
 - 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。诊断提案应包含回放评测指标（如 duplicate_creation_rate、merge_conversion_rate、fragmentation_index、post_injection_correction_rate）以驱动后续优化。
 - 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成与自动应用统一在后台执行，主会话只消费简报。
 
@@ -141,6 +143,6 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 ## 参考
 
 - **记忆沉淀与写入（实现逻辑）**：taste-recognition（`.cursor/skills/taste-recognition/SKILL.md`）完成识别、模式靠拢与升维判定；仅当 payloads 非空时主 Agent 调用 Subagent `lingxi-memory`（`.cursor/agents/lingxi-memory.md`）传入 payloads 数组；lingxi-memory 调用 **memory-write** skill 执行写入。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理，source=heartbeat）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后以 payloads 数组调用 lingxi-memory；/init 在初始化时可将确认草稿可选写入。详见 taste-recognition 的 `references/execution-and-triggers.md`、`references/elevation-rules.md`、`references/pattern-catalog.md` 与各环节 `references/taste-sniff-rules.md`。**内容类型定义及与 Kind 对应**见 taste-recognition 的 `references/content-types.md`。
-- **记忆治理与写入**：完整步骤、治理逻辑（dedupe/merge/replace/veto/new）、门控格式与映射规则见 `.cursor/skills/memory-write/references/write-protocol.md` 与 `.cursor/agents/lingxi-memory.md`；`governance_context` 字段契约见 `.cursor/skills/memory-write/references/governance-context-schema.md`。
+- **记忆治理与写入**：完整步骤、治理逻辑（dedupe/merge/replace/veto/new）、门控格式与映射规则见 `.cursor/skills/memory-write/references/write-protocol.md` 与 `.cursor/agents/lingxi-memory.md`；`governance_context` 字段契约见 `.cursor/skills/memory-write/references/governance-context-schema.md`，机器校验 SSoT 见 `.cursor/skills/memory-write/references/governance-context.schema.json`。
 - **记忆提取**：`memory-retrieve`（`.cursor/skills/memory-retrieve/SKILL.md`）
 - **注入约定**：sessionStart hook（`.cursor/hooks/session-init.mjs`）——仅注入记忆检索约定及 conversation_id 传入约定

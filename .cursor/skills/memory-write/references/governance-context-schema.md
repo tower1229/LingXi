@@ -38,3 +38,9 @@
 }
 ```
 
+## JSON Schema
+
+机器可校验 schema（SSoT）：
+
+- `references/governance-context.schema.json`
+

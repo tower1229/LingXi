@@ -105,6 +105,19 @@ describe("append-memory-audit", () => {
     assert.strictEqual(payload.event, "memory.retrieve.invalid");
   });
 
+  it("writes memory.audit.invalid for schema-unsupported event", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = { event: "memory.unknown.event", foo: "bar" };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.audit.invalid");
+    assert.match(payload.reason, /event not allowed by schema/);
+  });
+
   it("writes memory.merge.diagnosed when payload is valid", async () => {
     tmpDir = createTempDir();
     fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
