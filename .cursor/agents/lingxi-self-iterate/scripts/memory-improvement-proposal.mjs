@@ -12,6 +12,9 @@ const DEFAULT_JSON_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
 const DEFAULT_MD_REL = ".cursor/.lingxi/workspace/memory-diagnostics.md";
 const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
 const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
+const INDEX_REL = ".cursor/.lingxi/memory/INDEX.md";
+const PROJECT_MEMORY_REL = ".cursor/.lingxi/memory/project";
+const SHARE_MEMORY_REL = ".cursor/.lingxi/memory/share";
 const DEFAULT_WINDOW_HOURS = 24;
 
 function readArg(name, fallback = "") {
@@ -85,6 +88,42 @@ function toIso(ts) {
 function ratio(numerator, denominator) {
   if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return 0;
   return Number((numerator / denominator).toFixed(4));
+}
+
+/**
+ * 检查 INDEX.md 行数与 memory/project/ + memory/share/ 中的 note 文件数是否一致。
+ * 仅做只读诊断，不执行任何修复操作。
+ */
+function checkIndexDrift(projectRoot) {
+  const indexPath = path.join(projectRoot, INDEX_REL);
+  const projectMemoryPath = path.join(projectRoot, PROJECT_MEMORY_REL);
+  const shareMemoryPath = path.join(projectRoot, SHARE_MEMORY_REL);
+
+  let indexRows = 0;
+  let noteFiles = 0;
+
+  if (fs.existsSync(indexPath)) {
+    const lines = fs.readFileSync(indexPath, "utf8").split("\n");
+    indexRows = lines.filter((line) => {
+      const trimmed = line.trim();
+      return (
+        trimmed.startsWith("|") &&
+        !trimmed.startsWith("| Id") &&
+        !trimmed.startsWith("|--") &&
+        !trimmed.startsWith("| --")
+      );
+    }).length;
+  }
+
+  if (fs.existsSync(projectMemoryPath)) {
+    noteFiles += fs.readdirSync(projectMemoryPath).filter((f) => /^MEM-\d+\.md$/.test(f)).length;
+  }
+  if (fs.existsSync(shareMemoryPath)) {
+    noteFiles += fs.readdirSync(shareMemoryPath).filter((f) => /^MEM-\d+\.md$/.test(f)).length;
+  }
+
+  const diff = Math.abs(indexRows - noteFiles);
+  return { detected: diff > 0, index_rows: indexRows, note_files: noteFiles, diff };
 }
 
 function buildProposal(rows, windowHours) {
@@ -228,7 +267,7 @@ function buildProposal(rows, windowHours) {
   };
 }
 
-function writeDiagnosticsMd(outputPath, proposal) {
+function writeDiagnosticsMd(outputPath, proposal, indexDrift) {
   const lines = [];
   lines.push("# Memory Diagnostics");
   lines.push("");
@@ -240,6 +279,12 @@ function writeDiagnosticsMd(outputPath, proposal) {
   lines.push(
     `- Metrics: duplicate_creation_rate=\`${proposal.metrics.duplicate_creation_rate}\`, merge_conversion_rate=\`${proposal.metrics.merge_conversion_rate}\`, fragmentation_index=\`${proposal.metrics.fragmentation_index}\`, post_injection_correction_rate=\`${proposal.metrics.post_injection_correction_rate}\``
   );
+  if (indexDrift) {
+    const driftStatus = indexDrift.detected
+      ? `**DRIFT DETECTED** (index_rows=${indexDrift.index_rows}, note_files=${indexDrift.note_files}, diff=${indexDrift.diff}) — 建议运行 \`/memory-govern\` 修复`
+      : `OK (index_rows=${indexDrift.index_rows}, note_files=${indexDrift.note_files})`;
+    lines.push(`- Index Health: ${driftStatus}`);
+  }
   lines.push("");
   lines.push("## Top Findings");
   lines.push("");
@@ -310,6 +355,7 @@ function main() {
 
   const rows = readAuditRows(auditPath);
   const proposal = buildProposal(rows, windowHours);
+  const indexDrift = checkIndexDrift(projectRoot);
   const confirmationHint = {
     mode: "ask_questions_required",
     options: [
@@ -341,7 +387,7 @@ function main() {
   if (!dryRun) {
     ensureDir(jsonOut);
     fs.writeFileSync(jsonOut, JSON.stringify(proposal, null, 2) + "\n", "utf8");
-    writeDiagnosticsMd(mdOut, proposal);
+    writeDiagnosticsMd(mdOut, proposal, indexDrift);
     appendAudit(projectRoot, {
       event: "memory.improvement.proposed",
       proposal_id: proposal.proposal_id,
@@ -376,6 +422,7 @@ function main() {
       md_out: path.relative(projectRoot, mdOut),
       summary,
       confirmation_hint: confirmationHint,
+      index_drift: indexDrift,
     }) + "\n"
   );
 }

@@ -1,17 +1,17 @@
 ---
 name: memory-write
-description: 由 lingxi-memory 调用，执行 payloads 校验 → 映射生成 note → 治理 → 门控 → 直接文件写入；写入路径为 memory/project/ 与 memory/share/（由 payload.apply 决定）。
+description: 由 lingxi-memory-write 调用，执行 payloads 校验 → 映射生成 note → 治理 → 门控 → 直接文件写入；写入路径为 memory/project/ 与 memory/share/（由 payload.apply 决定）。
 ---
 
 # Memory Write
 
 ## 意图
 
-由 **lingxi-memory** 子代理调用，在给定 **payloads**（及可选 conversation_id、generation_id）下执行：校验 → 按 payload 映射生成 note → 治理（语义近邻 TopK）→ 门控 → 直接文件写入（`memory/project/` 或 `memory/share/` + INDEX），并向调用方返回执行结果摘要。
+由 **lingxi-memory-write** 子代理调用，在给定 **payloads**（及可选 conversation_id、generation_id）下执行：校验 → 按 payload 映射生成 note → 治理（语义近邻 TopK）→ 门控 → 直接文件写入（`memory/project/` 或 `memory/share/` + INDEX），并向调用方返回执行结果摘要。
 
 ## 调用方约定
 
-- 仅当 taste-recognition 已产出 payload 时，由 lingxi-memory 将 payload（单条或多条）组成 **payloads 数组**传入本 skill。
+- 仅当 taste-recognition 已产出 payload 时，由 lingxi-memory-write 将 payload（单条或多条）组成 **payloads 数组**传入本 skill。
 - 本 skill 不产候选、不做升维；仅接收「已判定为写」的扩展 payload，按协议执行写入。
 
 ## 输入
@@ -27,7 +27,7 @@ description: 由 lingxi-memory 调用，执行 payloads 校验 → 映射生成 
 3. **治理**：对 `memory/project/` 与 `memory/share/` 做语义近邻 TopK，按无打分硬门槛决策 `dedupe/merge/replace/veto/new`；其中 `merge` 对外单语义，内部可记录 `merge_kind`（`subject_expansion`/`scope_expansion`）。检索范围须包含本批在本轮已写入的 note。
 4. **门控**：dedupe 可低风险自动执行；merge/replace 必须 ask-questions 确认；new 时按 payload.confidence：high 可静默写入，medium/low 须 ask-questions 确认。详见 write-protocol 门控节。
 5. **写入**：按 payload.apply 决定路径——**apply === "team"** 时写入 `.cursor/.lingxi/memory/share/MEM-<id>.md`，INDEX 的 File 列为 `memory/share/MEM-<id>.md`；否则写入 `.cursor/.lingxi/memory/project/MEM-<id>.md`，File 列为 `memory/project/MEM-<id>.md`。读一次 INDEX 与现有 note 得最大 MEM-id，本批内顺序分配 id，本批全部处理完后一次性写回 INDEX；每条写入后调用 append-memory-audit.mjs 追加审计。
-6. **返回**：向调用方（lingxi-memory）返回简报：新建 n 条（MEM-xxx, …）、去重 d 条、合并 m 条、跳过 k 条（veto）；失败时返回错误与建议。
+6. **返回**：向调用方（lingxi-memory-write）返回简报：新建 n 条（MEM-xxx, …）、去重 d 条、合并 m 条、跳过 k 条（veto）；失败时返回错误与建议。
 
 ## 依赖（References）
 

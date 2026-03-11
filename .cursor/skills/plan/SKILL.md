@@ -57,7 +57,7 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
 
 ## 注意事项
 
-1. 记忆写入通过显式调用 `lingxi-memory`，本 Skill 不包含写入逻辑。
+1. 记忆写入通过显式调用 `lingxi-memory-write`，本 Skill 不包含写入逻辑。
 2. 测试设计必须从 task 验收标准推导，禁止新增需求外目标。
 3. 计划产物需要可直接驱动 build，不写“只能讨论、不可执行”的抽象描述。
 

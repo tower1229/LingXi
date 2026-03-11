@@ -1,6 +1,6 @@
 # 升维规则（Elevation Rules）
 
-**在实现中的位置**：本规则在 taste-recognition 的**执行步骤**中，于「模式靠拢」之后、「产出 payload」之前执行；用于决定写/不写及 layer（L0/L1/L0+L1）。判定为不写时不产出该条 payload，主 Agent 不因此条调用 lingxi-memory。
+**在实现中的位置**：本规则在 taste-recognition 的**执行步骤**中，于「模式靠拢」之后、「产出 payload」之前执行；用于决定写/不写及 layer（L0/L1/L0+L1）。判定为不写时不产出该条 payload，主 Agent 不因此条调用 lingxi-memory-write。
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## 2. 写/不写
 
-- **T ≤ 3**：不写。不产出该条 payload，不加入 payloads 数组；主 Agent 不因此条调用 lingxi-memory。
+- **T ≤ 3**：不写。不产出该条 payload，不加入 payloads 数组；主 Agent 不因此条调用 lingxi-memory-write。
 - **T ≥ 4**：进入 layer 判定；若未触犯下述例外，则产出 payload 并填写 layer、可选 l0OneLiner/l1OneLiner。
 
 ### 2.1 Inclusion 语义对齐（在既有判定内执行）
@@ -55,7 +55,7 @@
 
 - **D3 = 0**：不单独写 L1；可写 L0 仅当 T∈[4,5] 且其他维度允许（实际因 D3=0 常导致不写或仅弱 L0）。
 - **D4 = 0 且一次性**：默认不写。除非 **D1 = 2 且 D2 ≥ 1**，可写 L1 弱版本，并在 payload 或下游 note 中标注适用边界。
-- **存在明显反例或冲突记忆**：不在此处过滤，交由下游 lingxi-memory 治理（merge/replace/veto）；taste-recognition 仍可产出 payload。
+- **存在明显反例或冲突记忆**：不在此处过滤，交由下游 lingxi-memory-write 治理（merge/replace/veto）；taste-recognition 仍可产出 payload。
 
 ---
 
@@ -64,7 +64,7 @@
 - **L0**（事实层）：在 [具体场景] 下发生了 [可验证事实/操作]，导致 [结果]。
 - **L1**（原则层）：在 [场景族] 中优先 [策略]，避免 [反策略]，因为 [目标/风险]。
 
-下游 lingxi-memory 可直接采用 payload 内的 l0OneLiner、l1OneLiner 写入 note；若无则按 scene + choice 生成。
+下游 lingxi-memory-write 可直接采用 payload 内的 l0OneLiner、l1OneLiner 写入 note；若无则按 scene + choice 生成。
 
 ---
 

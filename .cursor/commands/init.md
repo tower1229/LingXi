@@ -10,7 +10,7 @@ args: []
 
 ---
 
-**用法**：`/init`（无参数）。优先从现有文档与仓库结构整理；仅对缺失或不确定项提问补齐。所有选择环节统一使用 ask-questions 协议；写入经 taste-recognition + lingxi-memory 完成。
+**用法**：`/init`（无参数）。优先从现有文档与仓库结构整理；仅对缺失或不确定项提问补齐。所有选择环节统一使用 ask-questions 协议；写入经 taste-recognition + lingxi-memory-write 完成。
 
 **关键约定**：
 
@@ -106,8 +106,8 @@ args: []
 仅在用户明确选择写入时执行：
 
 - 仅提交用户确认后的候选项，不做隐式扩写
-- 交由记忆系统按既有协议完成写入（taste-recognition → lingxi-memory）
-- 最终编号与命名由 lingxi-memory 统一治理
+- 交由记忆系统按既有协议完成写入（taste-recognition → lingxi-memory-write）
+- 最终编号与命名由 lingxi-memory-write 统一治理
 
 ### Step 7) 初始化结果输出（最小高信号）
 
@@ -123,7 +123,7 @@ args: []
 
 > 用途：init 命令的单一事实源。按项目类型（A-H）提供"收集清单 → 候选主题"的映射，遵循渐进式披露（Must → Should → Optional）。
 >
-> 说明：`Draft targets` 仅表示候选主题标签，用于引导草稿覆盖面；不等同于最终记忆文件名。实际写入时由 lingxi-memory 统一治理并分配编号/命名。
+> 说明：`Draft targets` 仅表示候选主题标签，用于引导草稿覆盖面；不等同于最终记忆文件名。实际写入时由 lingxi-memory-write 统一治理并分配编号/命名。
 
 ## 类型枚举（A-H）
 

@@ -48,7 +48,7 @@
 
 ---
 
-## 与 taste-recognition、lingxi-memory 的衔接
+## 与 taste-recognition、lingxi-memory-write 的衔接
 
-- 嗅探产出 payload 后由主 Agent 交 lingxi-memory 写入；payload.source=choice。
+- 嗅探产出 payload 后由主 Agent 交 lingxi-memory-write 写入；payload.source=choice。
 - 「不再问」：拟提问前调用 memory-retrieve，传入 Agent 构建的决策点描述；若命中相关记忆则不再问。

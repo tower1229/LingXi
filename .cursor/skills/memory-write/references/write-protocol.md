@@ -1,6 +1,6 @@
 # Memory Write Protocol
 
-本协议由 memory-write skill 执行，供 lingxi-memory 调用。根目录指 `.cursor/.lingxi/memory/`，相对路径均相对项目根（如 `memory/project/MEM-001.md`）。
+本协议由 memory-write skill 执行，供 lingxi-memory-write 调用。根目录指 `.cursor/.lingxi/memory/`，相对路径均相对项目根（如 `memory/project/MEM-001.md`）。
 
 ## 写入路径（由 payload.apply 决定）
 
@@ -92,6 +92,24 @@ JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_
 - 使用 Cursor 提供的读/写/编辑文件能力，禁止调用 memory-storage 类脚本。
 - 进入时读一次 INDEX 与现有 project/、share/ 下 note，得到当前最大 MEM-id；本批内顺序分配 id 并递增，本批全部处理完后一次性写回 INDEX。
 - Id 格式：MEM- 加数字，保证唯一。
+
+## 记忆升级路径（project → team）
+
+记忆沉淀时默认写入 `memory/project/`（项目级）。当某条记忆满足以下条件时，可考虑将其升级为团队级（写入 `memory/share/`，跨项目复用）：
+
+**升级触发条件（满足其一）**：
+- 用户在 `/remember` 或工作流嗅探时明确表示"这个规则适用于所有项目"；
+- 记忆的 `Portability` 字段为 `cross-project` 且 `Strength` 已达到 `validated`（即已被合并加强过一次）；
+- 在多个项目中出现相同内容的记忆沉淀（self-iterate 碎片化诊断可识别此信号）。
+
+**升级操作步骤**：
+1. 将 `memory/project/MEM-xxx.md` 复制到 `memory/share/MEM-xxx.md`；
+2. 更新 note 的 Meta 字段：`Audience: team`、`Portability: cross-project`；
+3. 更新 `INDEX.md` 中对应行的 `File` 列（由 `memory/project/` 改为 `memory/share/`）、`Audience` 列；
+4. 删除原 `memory/project/MEM-xxx.md` 文件；
+5. 执行写入审计：追加 `memory_note_updated` 事件记录迁移。
+
+**注意**：升级为 team 级后，该记忆将跨项目可见（若 `memory/share/` 以 git submodule 形式共享）。升级前应确认内容不包含项目特定细节（如具体路径、API 密钥命名等）。
 
 ## References
 

@@ -40,7 +40,7 @@ description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模
 
 1. **输入**：当前 INDEX 表（及可选：关键 note 摘要或全文）。
 2. **模型**：对整库提出建议，可包括：合并/ Supersedes 建议、Title/When to load 优化、Kind/Strength/Scope 一致性、归档（Status=archive）建议、对 `duplicateIds` 的保留建议。
-3. **门控**：建议列表经 **ask-questions** 或逐条确认，用户确认后再写回 INDEX 与（必要时）note 文件；删除/合并/归档等敏感操作必须确认，与 lingxi-memory 门控一致。
+3. **门控**：建议列表经 **ask-questions** 或逐条确认，用户确认后再写回 INDEX 与（必要时）note 文件；删除/合并/归档等敏感操作必须确认，与 lingxi-memory-write 门控一致。
 4. **写回**：仅对用户采纳的项修改 INDEX 与 note。
 
 ## 关键约束
