@@ -16,11 +16,11 @@ is_background: true
 
 ## 执行流程（统一）
 
-1. 执行提案生成：
+1. 执行提案生成（含回放评测指标）：
    - `node .cursor/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs --window-hours 24`
 2. 执行自动改进：
    - `node .cursor/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs --approve-all`
-3. 返回执行简报（proposal_id/findings/actions/applied/failed/skipped）。
+3. 返回执行简报（proposal_id/findings/actions/metrics/applied/failed/skipped）。
 
 ## 约束
 

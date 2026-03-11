@@ -23,39 +23,52 @@ Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 ta
 
 ## 治理逻辑（语义近邻 TopK）
 
-- 搜索范围：`memory/project/` 与 `memory/share/`（即 `.cursor/.lingxi/memory/project/`、`.cursor/.lingxi/memory/share/`）。近邻检索须**包含本批在本轮已写入的 note**，以便本批内不重复建语义相同的 note。
+- 搜索范围：`memory/project/` 与 `memory/share/`。近邻检索须**包含本批在本轮已写入的 note**，以便本批内不重复建语义相同的 note。
 - 用语义搜索构建概念化查询（描述「这条记忆在解决什么决策/风险/约束」），取 Top 5 近邻。
-- 对每个近邻评估：same_scenario、same_conclusion、conflict、completeness。
+- 对每个近邻评估：same_subject、same_conclusion、non_conflicting、conflict、completeness。
 - **决策**：
-  - **merge**：same_scenario && same_conclusion → 合并到更完整版本，删除被合并的旧 note 文件，从 INDEX 移除旧行；保留的新 note 的 Supersedes 填被取代的 MEM-xxx，INDEX 对应行同步更新 Supersedes 列。
+  - **dedupe**：same_subject && same_conclusion → 视为重复记忆去重；保留更完整版本，删除重复 note 文件并从 INDEX 移除旧行；保留 note 的 Supersedes 填被取代的 MEM-xxx，INDEX 同步更新。
+  - **merge**：用于扩展合并（减少碎片化，扩大承载信息）。对外仅暴露 `merge`；内部可记录 `merge_kind`：`subject_expansion`（同主体扩结论）或 `scope_expansion`（跨主体扩适用面）。
   - **replace**：conflict 且用户明确选新结论 → 覆盖或先删旧再建新；删除旧 note、从 INDEX 移除旧行；新 note 的 Supersedes 填被取代的 MEM-xxx，INDEX 新行同步。
   - **veto**：conflict 但无法判断更优且用户未给决定性变量 → 不写入，提示补齐或让用户选择保留哪一个。
-  - **new**：与 TopK 均不构成 merge/replace → 新建 note 与 INDEX 行。
+  - **new**：与 TopK 均不构成 dedupe/merge/replace → 新建 note 与 INDEX 行。
+
+### 无打分硬门槛决策树（实现约束）
+
+- 仅允许规则判定，不使用相似度打分。
+- 推荐顺序：
+  - same_subject + same_conclusion → `dedupe`
+  - same_subject + non_conflicting → `merge`（`merge_kind=subject_expansion`）
+  - different_subject + same_conclusion → `merge`（`merge_kind=scope_expansion`）
+  - conflicting + decisive_choice=true → `replace`
+  - conflicting + decisive_choice=false → `veto`
+  - 其他 → `new`
+- 可执行参考实现：`scripts/governance-decision.mjs`（仅作规则实现与测试基线，不绑定具体工具链）。
 
 ### 重复信号到 Strength 提升（治理侧）
 
-- repeated 信号来源于治理阶段的 **merge** 事件，不在识别阶段单独计数。
-- 仅当 merge 判定满足 `same_scenario && same_conclusion` 时，才可提升 Strength；replace/veto 不提升。
+- repeated 信号来源于治理阶段的 **merge/dedupe** 事件，不在识别阶段单独计数。
+- 仅当治理判定为 `merge` 或 `dedupe` 且无冲突时，才可提升 Strength；replace/veto 不提升。
 - 推荐映射（保守）：
   - 初始：`hypothesis`
   - 累计 merge 次数 ≥1：提升为 `validated`
   - 累计 merge 次数 ≥3：提升为 `enforced`
 - 若当前条目已高于目标等级，不降级；仅在有明确人工治理指令时允许降级。
 
-### merge 强化诊断事件（memory.merge.diagnosed）
+### merge/dedupe 诊断事件
 
-- 当且仅当治理判定为 `merge` 且满足 `same_scenario && same_conclusion` 时，追加审计事件 `memory.merge.diagnosed`。
-- 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`merge_context`、`action_plan[]`。
+- 治理判定为 `merge` 时，追加审计事件 `memory.merge.diagnosed`。
+- 治理判定为 `dedupe` 时，追加审计事件 `memory.dedupe.applied`；仅建议去重未执行时记 `memory.dedupe.suggested`。
+- 当治理判定为 `new` 且已识别存在高相关候选时，记录 `memory.new.created_but_related_exists`（用于碎片化诊断）。
+- `memory.merge.diagnosed` 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`action_plan[]`，并建议附带 `merge_kind` 与 `governance_context`。
 - 一致性约束：
   - `primary_tag` 必须属于 `diagnosis_tags[]`。
-  - `merge_context` 必须包含 `same_scenario`、`same_conclusion`（boolean）。
-  - `status=applied` 仅在 `same_scenario && same_conclusion` 为 true 时允许。
-- 建议在 `merge_context` 内附带 `idempotency_key`（例如 `${note_id}:${conversation_id}:${generation_id}`）以支持去重。
+  - `governance_context` 字段与枚举约束见 `references/governance-context-schema.md`。
 - 校验失败不阻断主链路：降级写入 `memory.merge.invalid`（含 `reason` 与可选 `invalid_event`）。
 
 ## 用户门控（ask-questions）
 
-merge/replace 时必须通过 ask-questions 发起交互（question_id: governance_confirm，options：确认执行/取消/新建替代/查看对比）。**仅在用户返回确认执行时**执行写入或删除。**new 路径**：`payload.confidence === "high"` 可静默写入；medium/low 须 ask-questions 确认后再写入。
+dedupe 为低风险可自动执行；merge/replace 时必须通过 ask-questions 发起交互（question_id: governance_confirm，options：确认执行/取消/新建替代/查看对比）。**仅在用户返回确认执行时**执行写入或删除。**new 路径**：`payload.confidence === "high"` 可静默写入；medium/low 须 ask-questions 确认后再写入。
 
 ## INDEX 格式
 
@@ -78,3 +91,7 @@ JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_
 - 使用 Cursor 提供的读/写/编辑文件能力，禁止调用 memory-storage 类脚本。
 - 进入时读一次 INDEX 与现有 project/、share/ 下 note，得到当前最大 MEM-id；本批内顺序分配 id 并递增，本批全部处理完后一次性写回 INDEX。
 - Id 格式：MEM- 加数字，保证唯一。
+
+## References
+
+- `governance_context` 契约：`references/governance-context-schema.md`

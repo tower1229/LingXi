@@ -3,6 +3,8 @@
  * Pipes stdin JSON; asserts stdout has continue and additional_context with convention keywords.
  */
 import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
@@ -31,8 +33,15 @@ function runSessionInit(stdinJson, extraEnv = {}) {
 }
 
 describe("session-init", () => {
+  function createTempProjectRoot() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-session-init-"));
+    fs.mkdirSync(path.join(root, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    return root;
+  }
+
   it("TC-005: returns continue and additional_context with convention text", async () => {
-    const { code, stdout } = await runSessionInit("{}");
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
     assert.strictEqual(out.continue, true);
@@ -42,7 +51,8 @@ describe("session-init", () => {
   });
 
   it("injects background self-iteration context", async () => {
-    const { code, stdout } = await runSessionInit("{}");
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
     assert.ok(out.additional_context.includes("lingxi-self-iterate"));

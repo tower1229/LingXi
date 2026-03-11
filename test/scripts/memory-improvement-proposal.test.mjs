@@ -77,6 +77,7 @@ describe("memory-improvement-proposal script", () => {
     assert.strictEqual(result.ok, true);
     assert.ok(result.proposal_id);
     assert.ok(result.summary);
+    assert.ok(result.summary.metrics);
     assert.ok(result.confirmation_hint);
 
     const proposalPath = path.join(workspace, "improvement-proposal.json");
@@ -87,6 +88,8 @@ describe("memory-improvement-proposal script", () => {
     const proposal = JSON.parse(fs.readFileSync(proposalPath, "utf8"));
     assert.ok(Array.isArray(proposal.findings));
     assert.ok(Array.isArray(proposal.actions));
+    assert.ok(proposal.metrics);
+    assert.ok(proposal.signal_counts);
     assert.strictEqual(proposal.findings.length, 1);
     assert.strictEqual(proposal.actions.length, 1);
 

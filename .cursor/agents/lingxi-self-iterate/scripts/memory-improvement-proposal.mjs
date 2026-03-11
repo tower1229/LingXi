@@ -2,6 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  normalizeGovernanceContext,
+  validateMergeKind,
+} from "../../../skills/memory-write/scripts/governance-context-validator.mjs";
 
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
 const DEFAULT_JSON_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
@@ -49,6 +53,9 @@ function readAuditRows(auditPath) {
 
 function pickActionType(primaryTag) {
   const table = {
+    dedupe_pressure: "apply_dedupe_rule",
+    merge_opportunity: "expand_merge_policy",
+    fragmentation_signal: "tighten_governance_gate",
     scope_too_narrow: "expand_when_to_load",
     trigger_miss: "feedback_to_taste_recognition",
     one_liner_weak: "rewrite_one_liner",
@@ -59,7 +66,13 @@ function pickActionType(primaryTag) {
 }
 
 function pickRisk(actionType) {
-  if (actionType === "rewrite_one_liner" || actionType === "add_counter_signals") return "low";
+  if (
+    actionType === "rewrite_one_liner" ||
+    actionType === "add_counter_signals" ||
+    actionType === "apply_dedupe_rule"
+  ) {
+    return "low";
+  }
   return "medium";
 }
 
@@ -69,48 +82,101 @@ function toIso(ts) {
   return d.toISOString();
 }
 
+function ratio(numerator, denominator) {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return 0;
+  return Number((numerator / denominator).toFixed(4));
+}
+
 function buildProposal(rows, windowHours) {
   const nowMs = Date.now();
   const windowStartMs = nowMs - windowHours * 60 * 60 * 1000;
-  const merges = rows.filter((row) => {
-    if (row.event !== "memory.merge.diagnosed") return false;
+  const inWindowRows = rows.filter((row) => {
     const t = new Date(row.ts || 0).getTime();
     return Number.isFinite(t) && t >= windowStartMs && t <= nowMs;
   });
+  const validRows = inWindowRows.filter((row) => {
+    if (row.event === "memory.merge.diagnosed") {
+      const mergeKindResult = validateMergeKind(row.merge_kind);
+      if (!mergeKindResult.ok) return false;
+    }
+    if (row.governance_context != null) {
+      const ctxResult = normalizeGovernanceContext(row.governance_context, row.event || "governance_event");
+      if (!ctxResult.ok) return false;
+    }
+    return true;
+  });
+  const merges = validRows.filter((row) => row.event === "memory.merge.diagnosed");
+  const dedupeApplied = validRows.filter((row) => row.event === "memory.dedupe.applied");
+  const dedupeSuggested = validRows.filter((row) => row.event === "memory.dedupe.suggested");
+  const relatedNew = validRows.filter((row) => row.event === "memory.new.created_but_related_exists");
+  const noteCreated = validRows.filter((row) => row.event === "memory_note_created");
+  const retrievePerformed = validRows.filter((row) => row.event === "memory.retrieve.performed");
 
   const aggregate = new Map();
-  for (const row of merges) {
-    const noteId = row.note_id || "unknown";
-    const primaryTag = row.primary_tag || "unknown";
-    const key = `${noteId}::${primaryTag}`;
-    if (!aggregate.has(key)) {
-      aggregate.set(key, {
+  for (const row of validRows) {
+    const noteId = row.note_id || "";
+    if (!noteId) continue;
+    if (!aggregate.has(noteId)) {
+      aggregate.set(noteId, {
         note_id: noteId,
-        primary_tag: primaryTag,
-        diagnosis_tags: Array.isArray(row.diagnosis_tags) ? row.diagnosis_tags : [],
+        diagnosis_tags: new Set(),
         merge_count: 0,
+        dedupe_applied_count: 0,
+        dedupe_suggested_count: 0,
+        related_new_count: 0,
         first_seen_at: row.ts || "",
         last_seen_at: row.ts || "",
       });
     }
-    const item = aggregate.get(key);
-    item.merge_count += 1;
+    const item = aggregate.get(noteId);
+    if (row.event === "memory.merge.diagnosed") {
+      item.merge_count += 1;
+      if (Array.isArray(row.diagnosis_tags)) {
+        for (const tag of row.diagnosis_tags) item.diagnosis_tags.add(tag);
+      }
+      if (row.primary_tag) item.diagnosis_tags.add(row.primary_tag);
+    } else if (row.event === "memory.dedupe.applied") {
+      item.dedupe_applied_count += 1;
+      item.diagnosis_tags.add("dedupe_applied");
+    } else if (row.event === "memory.dedupe.suggested") {
+      item.dedupe_suggested_count += 1;
+      item.diagnosis_tags.add("dedupe_pressure");
+    } else if (row.event === "memory.new.created_but_related_exists") {
+      item.related_new_count += 1;
+      item.diagnosis_tags.add("fragmentation_signal");
+    }
     if (row.ts && (!item.first_seen_at || row.ts < item.first_seen_at)) item.first_seen_at = row.ts;
     if (row.ts && (!item.last_seen_at || row.ts > item.last_seen_at)) item.last_seen_at = row.ts;
   }
 
   const findings = [...aggregate.values()]
-    .sort((a, b) => b.merge_count - a.merge_count)
+    .filter((item) => item.merge_count + item.dedupe_applied_count + item.dedupe_suggested_count + item.related_new_count > 0)
+    .sort((a, b) => {
+      const sa = a.merge_count + a.dedupe_applied_count + a.dedupe_suggested_count + a.related_new_count;
+      const sb = b.merge_count + b.dedupe_applied_count + b.dedupe_suggested_count + b.related_new_count;
+      return sb - sa;
+    })
     .slice(0, 20)
     .map((item, index) => ({
       finding_id: `finding-${String(index + 1).padStart(3, "0")}`,
       note_id: item.note_id,
-      primary_tag: item.primary_tag,
-      diagnosis_tags: item.diagnosis_tags,
+      primary_tag:
+        item.related_new_count > 0
+          ? "fragmentation_signal"
+          : item.dedupe_suggested_count > 0
+            ? "dedupe_pressure"
+            : "merge_opportunity",
+      diagnosis_tags: [...item.diagnosis_tags],
       merge_count: item.merge_count,
+      dedupe_applied_count: item.dedupe_applied_count,
+      dedupe_suggested_count: item.dedupe_suggested_count,
+      related_new_count: item.related_new_count,
       first_seen_at: toIso(item.first_seen_at),
       last_seen_at: toIso(item.last_seen_at),
-      confidence: item.merge_count >= 3 ? "high" : "medium",
+      confidence:
+        item.merge_count + item.dedupe_applied_count + item.dedupe_suggested_count + item.related_new_count >= 3
+          ? "high"
+          : "medium",
     }));
 
   const actions = findings.map((finding, index) => {
@@ -122,7 +188,7 @@ function buildProposal(rows, windowHours) {
       note_id: finding.note_id,
       type: actionType,
       risk,
-      reason: `${finding.primary_tag} repeated ${finding.merge_count} times in ${windowHours}h`,
+      reason: `${finding.primary_tag} repeated in ${windowHours}h window`,
       suggested_update: {
         primary_tag: finding.primary_tag,
         hint: `Focus on ${finding.primary_tag} for ${finding.note_id}`,
@@ -130,12 +196,31 @@ function buildProposal(rows, windowHours) {
     };
   });
 
+  const adoptedRetrievals = retrievePerformed.filter(
+    (row) => Array.isArray(row.adopted) && row.adopted.length > 0
+  ).length;
+  const correctionWrites = noteCreated.filter((row) => row.source === "remember").length;
+  const metrics = {
+    duplicate_creation_rate: ratio(relatedNew.length, Math.max(noteCreated.length, 1)),
+    merge_conversion_rate: ratio(merges.length, Math.max(merges.length + relatedNew.length, 1)),
+    fragmentation_index: ratio(relatedNew.length + dedupeSuggested.length, Math.max(noteCreated.length, 1)),
+    post_injection_correction_rate: ratio(correctionWrites, Math.max(adoptedRetrievals, 1)),
+  };
+  const signal_counts = {
+    merge_diagnosed: merges.length,
+    dedupe_applied: dedupeApplied.length,
+    dedupe_suggested: dedupeSuggested.length,
+    new_related_exists: relatedNew.length,
+  };
+
   return {
     proposal_id: `proposal-${new Date(nowMs).toISOString().replace(/[:.]/g, "-")}`,
     generated_at: new Date(nowMs).toISOString(),
     window_hours: windowHours,
     findings,
     actions,
+    metrics,
+    signal_counts,
     constraints: {
       auto_apply_risk: "low",
       max_actions_per_cycle: 20,
@@ -152,6 +237,9 @@ function writeDiagnosticsMd(outputPath, proposal) {
   lines.push(`- Window: last \`${proposal.window_hours}\` hours`);
   lines.push(`- Findings: \`${proposal.findings.length}\``);
   lines.push(`- Actions: \`${proposal.actions.length}\``);
+  lines.push(
+    `- Metrics: duplicate_creation_rate=\`${proposal.metrics.duplicate_creation_rate}\`, merge_conversion_rate=\`${proposal.metrics.merge_conversion_rate}\`, fragmentation_index=\`${proposal.metrics.fragmentation_index}\`, post_injection_correction_rate=\`${proposal.metrics.post_injection_correction_rate}\``
+  );
   lines.push("");
   lines.push("## Top Findings");
   lines.push("");
@@ -160,7 +248,7 @@ function writeDiagnosticsMd(outputPath, proposal) {
   } else {
     for (const f of proposal.findings.slice(0, 10)) {
       lines.push(
-        `- ${f.finding_id}: ${f.note_id}, tag=${f.primary_tag}, merges=${f.merge_count}, confidence=${f.confidence}`
+        `- ${f.finding_id}: ${f.note_id}, tag=${f.primary_tag}, merges=${f.merge_count}, dedupe_suggested=${f.dedupe_suggested_count}, related_new=${f.related_new_count}, confidence=${f.confidence}`
       );
     }
   }
@@ -227,11 +315,15 @@ function main() {
     selectable_action_ids: proposal.actions.map((a) => a.action_id),
   };
   const summary = {
+    metrics: proposal.metrics,
+    signal_counts: proposal.signal_counts,
     top_findings: proposal.findings.slice(0, 5).map((f) => ({
       finding_id: f.finding_id,
       note_id: f.note_id,
       primary_tag: f.primary_tag,
       merge_count: f.merge_count,
+      dedupe_suggested_count: f.dedupe_suggested_count,
+      related_new_count: f.related_new_count,
     })),
     top_actions: proposal.actions.slice(0, 5).map((a) => ({
       action_id: a.action_id,
@@ -253,6 +345,8 @@ function main() {
         note_id: f.note_id,
         primary_tag: f.primary_tag,
         merge_count: f.merge_count,
+        dedupe_suggested_count: f.dedupe_suggested_count,
+        related_new_count: f.related_new_count,
       })),
       actions: proposal.actions.map((a) => ({
         action_id: a.action_id,
@@ -260,6 +354,8 @@ function main() {
         type: a.type,
         risk: a.risk,
       })),
+      metrics: proposal.metrics,
+      signal_counts: proposal.signal_counts,
     });
     markImprovementCycle(projectRoot, proposal.generated_at);
   }

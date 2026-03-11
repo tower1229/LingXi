@@ -26,7 +26,7 @@ model: inherit
 
 1. **输入校验**：校验 payloads 为非空数组，逐条校验每项必填字段（7 字段 + layer）及可选字段类型/枚举；任一条必填缺失或类型/枚举不符则拒收并向主对话返回错误与建议，不调用 memory-write。
 2. **调用 memory-write**：将 payloads 及可选 conversation_id、generation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `.cursor/skills/memory-write/references/write-protocol.md`，note 结构见 `.cursor/skills/memory-write/references/memory-note-template.md`。
-3. **回传主对话**：根据 memory-write 返回结果，向主对话返回**简报**：新建 n 条（MEM-xxx, …）、合并 m 条、跳过 k 条（veto），可选「详见 INDEX」；失败时一句错误与建议。不输出过程性描述或实现细节。
+3. **回传主对话**：根据 memory-write 返回结果，向主对话返回**简报**：新建 n 条（MEM-xxx, …）、去重 d 条、合并 m 条、跳过 k 条（veto），可选「详见 INDEX」；失败时一句错误与建议。不输出过程性描述或实现细节。
 
 ## 输出原则
 

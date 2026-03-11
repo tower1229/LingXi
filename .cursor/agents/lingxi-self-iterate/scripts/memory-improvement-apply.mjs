@@ -130,6 +130,7 @@ function main() {
     JSON.stringify({
       ok: true,
       proposal_id: proposal.proposal_id,
+      metrics: proposal.metrics || {},
       approved: approvedActions.length,
       rejected: rejectedActions.length,
       applied,
