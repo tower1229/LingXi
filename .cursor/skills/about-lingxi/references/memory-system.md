@@ -75,7 +75,7 @@
   - `memory.improvement.proposed|approved|rejected|applied|failed`
 - 审计事件机器契约（JSON Schema）：`.cursor/hooks/schemas/memory-audit-events.schema.json`
 - `append-memory-audit` 先按该 schema 做事件枚举/必填字段校验，再执行事件级业务约束校验（如 merge 诊断一致性）。
-- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。诊断提案应包含回放评测指标（如 duplicate_creation_rate、merge_conversion_rate、fragmentation_index、post_injection_correction_rate）以驱动后续优化。
+- 24h 诊断触发后，由 `lingxi-self-iterate` 后台子代理执行“诊断 + 自动改进（仅 low risk）”，主会话不等待、不插入确认交互。**同一 conversation_id 会话内仅触发一次**（会话级幂等门控）；诊断提案应包含回放评测指标（如 duplicate_creation_rate、merge_conversion_rate、fragmentation_index、post_injection_correction_rate）以驱动后续优化。
 - 当前推荐实现为“**lingxi-self-iterate 单子代理**”架构：提案生成与自动应用统一在后台执行，主会话只消费简报。
 
 ## 统一索引（INDEX.md）

@@ -118,6 +118,26 @@ describe("heartbeat-check", () => {
     assert.strictEqual(out.trigger_improvement_diagnosis, false);
   });
 
+  it("triggers 24h diagnosis at most once per conversation session", () => {
+    tmpDir = createTempDir();
+    transcriptRoot = path.join(tmpDir, "agent-transcripts");
+    fs.mkdirSync(transcriptRoot, { recursive: true });
+    prevTranscriptEnv = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR;
+    process.env.CURSOR_AGENT_TRANSCRIPTS_DIR = transcriptRoot;
+
+    writeControl(tmpDir, {
+      last_distillation_completed_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+      last_improvement_cycle_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+      processed_conversation_ids: [],
+    });
+
+    const first = runHeartbeatCheck(tmpDir, "same-session");
+    const second = runHeartbeatCheck(tmpDir, "same-session");
+
+    assert.strictEqual(first.trigger_improvement_diagnosis, true);
+    assert.strictEqual(second.trigger_improvement_diagnosis, false);
+  });
+
   it("returns no trigger when lock is running and not stale", () => {
     tmpDir = createTempDir();
     transcriptRoot = path.join(tmpDir, "agent-transcripts");

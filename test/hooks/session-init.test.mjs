@@ -58,4 +58,17 @@ describe("session-init", () => {
     assert.ok(out.additional_context.includes("lingxi-self-iterate"));
     assert.ok(out.additional_context.includes("run_in_background=true"));
   });
+
+  it("injects self-iteration context only once per session id", async () => {
+    const tempRoot = createTempProjectRoot();
+    const input = JSON.stringify({ conversation_id: "session-once" });
+    const first = await runSessionInit(input, { CURSOR_PROJECT_DIR: tempRoot });
+    const second = await runSessionInit(input, { CURSOR_PROJECT_DIR: tempRoot });
+    assert.strictEqual(first.code, 0);
+    assert.strictEqual(second.code, 0);
+    const out1 = JSON.parse(first.stdout.trim());
+    const out2 = JSON.parse(second.stdout.trim());
+    assert.ok(out1.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(!out2.additional_context.includes("lingxi-self-iterate"));
+  });
 });

@@ -284,6 +284,8 @@ function markImprovementCycle(projectRoot, tsIso) {
     pending_distillation: null,
     processed_conversation_ids: [],
     last_improvement_cycle_at: null,
+    last_improvement_prompted_session_id: null,
+    last_improvement_prompted_at: null,
   };
   if (fs.existsSync(controlPath)) {
     try {
@@ -291,6 +293,9 @@ function markImprovementCycle(projectRoot, tsIso) {
     } catch {}
   }
   control.last_improvement_cycle_at = tsIso;
+  // 诊断周期已完成，清理会话级提示标记，便于下一次 24h 窗口重新触发。
+  control.last_improvement_prompted_session_id = null;
+  control.last_improvement_prompted_at = null;
   ensureDir(controlPath);
   fs.writeFileSync(controlPath, JSON.stringify(control, null, 2), "utf8");
 }

@@ -38,7 +38,7 @@ function buildImprovementContext(triggerImprovementDiagnosis) {
   if (!triggerImprovementDiagnosis) return "";
   return `
 
-【自我迭代心跳】本会话已进入 24h 低频窗口。**步骤 A 中必须**使用 mcp_task 工具发起 **lingxi-self-iterate** 子代理（subagent_type=lingxi-self-iterate），并设置 **run_in_background=true**，在 prompt 中说明执行“诊断 + 自动改进（仅 low risk）”。无需等待子代理完成即进入步骤 B。
+【自我迭代心跳】本会话已进入 24h 低频窗口。**本会话仅触发一次**：在首次触发轮次的步骤 A 中必须使用 mcp_task 工具发起 **lingxi-self-iterate** 子代理（subagent_type=lingxi-self-iterate），并设置 **run_in_background=true**，在 prompt 中说明执行“诊断 + 自动改进（仅 low risk）”。同一会话后续轮次无需重复触发。无需等待子代理完成即进入步骤 B。
 `;
 }
 
