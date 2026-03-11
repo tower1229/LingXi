@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "1.1.0",
     "commands": [
         "commands/init.md",
         "commands/remember.md"
@@ -31,11 +31,13 @@
         "skills/taste-recognition/SKILL.md",
         "skills/workspace-bootstrap/SKILL.md",
         "skills/ask-questions/SKILL.md",
-        "skills/memory-govern/SKILL.md"
+        "skills/memory-govern/SKILL.md",
+        "skills/memory-retrieve/SKILL.md",
+        "skills/memory-write/SKILL.md"
     ],
     "agents": {
         "files": [
-            "agents/lingxi-memory.md",
+            "agents/lingxi-memory-write.md",
             "agents/lingxi-session-distill.md",
             "agents/lingxi-self-iterate.md"
         ]

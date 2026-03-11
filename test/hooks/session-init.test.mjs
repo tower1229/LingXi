@@ -59,6 +59,16 @@ describe("session-init", () => {
     assert.ok(out.additional_context.includes("run_in_background=true"));
   });
 
+  it("TC-step-D: additional_context contains step D post-execution check convention", async () => {
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
+    assert.strictEqual(code, 0);
+    const out = JSON.parse(stdout.trim());
+    assert.ok(out.additional_context.includes("步骤 D"), "should include 步骤 D in context");
+    assert.ok(out.additional_context.includes("post 模式"), "should mention post 模式");
+    assert.ok(out.additional_context.includes("trigger_timing"), "should mention trigger_timing");
+  });
+
   it("injects self-iteration context only once per session id", async () => {
     const tempRoot = createTempProjectRoot();
     const input = JSON.stringify({ conversation_id: "session-once" });

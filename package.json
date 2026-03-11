@@ -3,7 +3,7 @@
   "description": "Cursor workflow with persistent memory.",
   "private": true,
   "author": "tower1229@gmail.com",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "license": "MIT",
   "scripts": {
     "lx:validate-plugin": "node scripts/validate-template.mjs",

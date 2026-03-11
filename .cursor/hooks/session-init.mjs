@@ -11,7 +11,8 @@ const BASE_CONTEXT = `【本回合执行顺序】本约定在整场会话中持�
 
 - **步骤 A**（若存在下方「会话提炼心跳」或「自我迭代心跳」）：先执行其 mcp_task 步骤（后台，无需等待），再进入步骤 B。
 - **步骤 B**（记忆提取约定）：执行下方「记忆提取约定」二选一，写审计（performed 或 skipped），**禁止未写审计即作答**。
-- **步骤 C**：作答。
+- **步骤 C**：作答与实施。
+- **步骤 D**（执行后记忆检查，条件触发）：**仅当本轮步骤 C 中执行了文件写入操作**（StrReplace/Write/Delete 中的任一）时，在主要实施完成后、最终回复前，以「本轮实际变更摘要」为 query，以 **post 模式**再执行一次 \`/memory-retrieve\`；对命中的 \`trigger_timing=post\` 或 \`both\` 的记忆**立即评估并执行对应义务**（如同步更新测试、递增版本号等）。步骤 D 无需额外写审计，正常走 memory-retrieve 的审计流程。
 
 【记忆提取约定】每轮必须二选一：
 - **仅 command/skill 调用**（满足以下任一条件）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）：

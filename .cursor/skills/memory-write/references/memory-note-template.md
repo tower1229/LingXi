@@ -24,6 +24,7 @@
 - **Audience**: project / team（项目级 / 团队级；项目级=project/，团队级=share/）
 - **Portability**: project-only / cross-project（与 Audience 一致：project→project-only，team→cross-project）
 - **Source**: remember / extract / choice / init / heartbeat（来自 payload.source）；或 manual / init / <packName>@<version>（其他来源，如初始化、团队包）
+- **TriggerTiming**: pre / post / both（默认 pre；决定本记忆在何时触发检索注入，见 write-protocol 说明）
 - **Tags**: 可选；自由关键词
 - **Supersedes**: 可选；当本条由 merge/replace 取代其他条目时，填被取代的 MEM-xxx，与 INDEX 同步
 - **CreatedAt**: ISO 8601 时间，创建时间

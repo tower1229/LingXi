@@ -97,4 +97,63 @@ describe("memory-improvement-proposal script", () => {
     const control = JSON.parse(fs.readFileSync(controlPath, "utf8"));
     assert.ok(control.last_improvement_cycle_at);
   });
+
+  it("includes index_drift in output with detected=false when index and files match", async () => {
+    tmpDir = createTempDir();
+    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
+    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
+    fs.mkdirSync(workspace, { recursive: true });
+    fs.mkdirSync(projectDir, { recursive: true });
+
+    // Create INDEX.md with 1 data row and 1 note file
+    const indexContent = [
+      "| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+      "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
+    ].join("\n") + "\n";
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
+
+    fs.writeFileSync(path.join(workspace, "audit.log"), "", "utf8");
+
+    const { code, stdout } = await runScript(tmpDir, ["--dry-run"]);
+    assert.strictEqual(code, 0);
+    const result = JSON.parse(stdout.trim());
+    assert.ok("index_drift" in result, "index_drift field should be present");
+    assert.strictEqual(result.index_drift.detected, false);
+    assert.strictEqual(result.index_drift.index_rows, 1);
+    assert.strictEqual(result.index_drift.note_files, 1);
+    assert.strictEqual(result.index_drift.diff, 0);
+  });
+
+  it("detects index drift when note files count differs from INDEX rows", async () => {
+    tmpDir = createTempDir();
+    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
+    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
+    fs.mkdirSync(workspace, { recursive: true });
+    fs.mkdirSync(projectDir, { recursive: true });
+
+    // INDEX has 1 row but project dir has 2 note files → drift
+    const indexContent = [
+      "| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+      "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
+    ].join("\n") + "\n";
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
+    fs.writeFileSync(path.join(projectDir, "MEM-002.md"), "## Meta\n- **Id**: MEM-002\n", "utf8");
+
+    fs.writeFileSync(path.join(workspace, "audit.log"), "", "utf8");
+
+    const { code, stdout } = await runScript(tmpDir, ["--dry-run"]);
+    assert.strictEqual(code, 0);
+    const result = JSON.parse(stdout.trim());
+    assert.ok("index_drift" in result, "index_drift field should be present");
+    assert.strictEqual(result.index_drift.detected, true);
+    assert.strictEqual(result.index_drift.index_rows, 1);
+    assert.strictEqual(result.index_drift.note_files, 2);
+    assert.strictEqual(result.index_drift.diff, 1);
+  });
 });
