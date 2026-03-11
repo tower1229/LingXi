@@ -58,7 +58,7 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
    - 子审查失败时记录降级原因并回退主流程补审。
 
 9. **写入 Review 文档**
-   - 覆盖写入 `001.review.<标题>.md`（不存档、每次覆盖）。
+   - 覆盖写入 `.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（不存档、每次覆盖）。
    - 文档必须包含「按需求编号的验收结果」表。
    - **多维度审查结果**：将 reviewer-doc-consistency / reviewer-security / reviewer-performance / reviewer-e2e 返回的 **Markdown 整块**按 spec 对应关系插入模板对应小节（### 3–4、### 8–9）；E2E 的「场景执行结果」表放入「E2E 测试执行结果」表位置。若存在 `REVIEWER_JSON` 块，可先解析用于汇总统计或审计，写入报告时以 Markdown 内容为准。
 
@@ -75,11 +75,11 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
 
 ## 注意事项
 
-1. 记忆写入通过显式调用 `lingxi-memory`，本 Skill 不包含写入逻辑。
+1. 记忆写入通过显式调用 `lingxi-memory-write`，本 Skill 不包含写入逻辑。
 2. 测试脚本质量检查必须在测试执行前完成。
 3. 分级与结论必须明确，避免“有问题但无判定”。
 
 ## 产物与 References
 
-- **产物**：`001.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
+- **产物**：`.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
 - **报告模板**：`references/review-report-template.md`；**子维度输出规范**：`references/reviewer-output-spec.md`；品味嗅探规则：`references/taste-sniff-rules.md`

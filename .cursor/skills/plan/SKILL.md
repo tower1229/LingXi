@@ -42,7 +42,7 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
    - 不发明需求外行为；manual/rubric 必须提供可执行步骤、预期结果和证据形式。
 
 6. **文档写入**
-   - 写入 `.cursor/.lingxi/tasks/001.plan.<标题>.md` 与 `.cursor/.lingxi/tasks/001.testcase.<标题>.md`（与 task 同目录，统一在 tasks/ 下）。
+   - 写入 `.cursor/.lingxi/tasks/<taskId>.plan.<标题>.md` 与 `.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`。
    - plan 必须包含：任务清单、依赖关系、文件变更清单、测试映射、执行顺序。
 
 7. **质量自检与下一步建议（有产物时必须输出）**
@@ -57,11 +57,11 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
 
 ## 注意事项
 
-1. 记忆写入通过显式调用 `lingxi-memory`，本 Skill 不包含写入逻辑。
+1. 记忆写入通过显式调用 `lingxi-memory-write`，本 Skill 不包含写入逻辑。
 2. 测试设计必须从 task 验收标准推导，禁止新增需求外目标。
 3. 计划产物需要可直接驱动 build，不写“只能讨论、不可执行”的抽象描述。
 
 ## 产物与 References
 
-- **产物**：`.cursor/.lingxi/tasks/001.plan.<标题>.md`、`.cursor/.lingxi/tasks/001.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
+- **产物**：`.cursor/.lingxi/tasks/<taskId>.plan.<标题>.md`、`.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
 - **模板**：`references/plan-doc-template.md`；testcase-designer 见 `.cursor/skills/testcase-designer/SKILL.md`；品味嗅探规则：`references/taste-sniff-rules.md`

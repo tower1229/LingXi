@@ -12,7 +12,7 @@
 **职责**：在会话开始时注入约定并执行心跳检查。
 
 1. **注入约定**  
-   - 每轮先执行 `/memory-retrieve <当前用户消息>` 的记忆提取约定，以及调用 lingxi-memory 时传入 conversation_id 的约定。
+   - 每轮先执行 `/memory-retrieve <当前用户消息>` 的记忆提取约定，以及调用 lingxi-memory-write 时传入 conversation_id 的约定。
 
 2. **心跳检查**  
    脚本读取 `.cursor/.lingxi/workspace/heartbeat-control.json` 与 transcript 增量索引（`heartbeat-transcript-index.json`），并视情况向当轮上下文追加约定：
@@ -30,7 +30,7 @@
 | 来源 | 说明 |
 |------|------|
 | **lingxi-audit.mjs** | 由 9 类 Cursor Hook（beforeSubmitPrompt、afterAgentResponse、preToolUse、postToolUse、postToolUseFailure、subagentStart、subagentStop、sessionEnd、stop）触发；**默认仅写入部分事件**（见下），受环境变量 `LINGXI_AUDIT_DEBUG` 控制是否写入其余事件。 |
-| **append-memory-audit.mjs** | 由主 Agent、lingxi-memory、lingxi-self-iterate 等通过命令行传入 JSON 调用；写入记忆与心跳相关业务事件，**与 LINGXI_AUDIT_DEBUG 无关**，始终写入。 |
+| **append-memory-audit.mjs** | 由主 Agent、lingxi-memory-write、lingxi-self-iterate 等通过命令行传入 JSON 调用；写入记忆与心跳相关业务事件，**与 LINGXI_AUDIT_DEBUG 无关**，始终写入。 |
 | **子代理/脚本直接写 audit.log** | 如 lingxi-session-distill 按 agent 说明向 audit.log 追加 `heartbeat.triggered`、`heartbeat.distillation_completed`、`heartbeat.distillation_failed` 等 NDJSON。 |
 
 ### 核心事件（默认会写入 audit.log）

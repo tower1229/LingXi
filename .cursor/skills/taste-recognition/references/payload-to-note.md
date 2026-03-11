@@ -1,11 +1,11 @@
 # Payload → Note 映射与门控（本 Skill 引用）
 
-> 本 Skill 产出 payload 后，下游 lingxi-memory **仅按本约定**将 payload 映射为 note 并执行门控；不做升维或评分卡。
+> 本 Skill 产出 payload 后，下游 lingxi-memory-write **仅按本约定**将 payload 映射为 note 并执行门控；不做升维或评分卡。
 
 ## 数据流中的位置
 
 - **Payload 来源**：由 taste-recognition 产出，已含升维结果（layer、可选 l0OneLiner/l1OneLiner、patternHint、patternConfidence）；仅「判定为写」的条目会进入 payloads 数组。
-- **下游行为**：lingxi-memory 接受 payloads 数组后，**仅按本约定**做字段到 note 的映射、治理（TopK）、门控与写入；不执行价值判定、不产候选。
+- **下游行为**：lingxi-memory-write 接受 payloads 数组后，**仅按本约定**做字段到 note 的映射、治理（TopK）、门控与写入；不执行价值判定、不产候选。
 
 ---
 
@@ -26,7 +26,7 @@
 | `patternHint` | string | 否 | 设计模式名称（与 pattern-catalog 一致）；匹配到模式时填写。 |
 | `patternConfidence` | enum | 否 | `high` \| `medium` \| `low`；仅当 patternHint 存在时填写。 |
 
-**门控（下游 lingxi-memory）**：merge/replace 一律 questions，与 confidence 无关。new：`confidence === "high"` 可静默写入；`medium` / `low` 必须 questions。
+**门控（下游 lingxi-memory-write）**：merge/replace 一律 questions，与 confidence 无关。new：`confidence === "high"` 可静默写入；`medium` / `low` 必须 questions。
 
 ---
 

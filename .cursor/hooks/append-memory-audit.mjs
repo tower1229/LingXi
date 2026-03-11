@@ -3,11 +3,18 @@
  * Unified audit appender for memory events.
  * Accepts one JSON argument and appends one NDJSON line into audit.log.
  * Non-compatible mode: only v2 memory retrieve events are accepted.
+ * Event contract reference: .cursor/hooks/schemas/memory-audit-events.schema.json
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  normalizeGovernanceContext,
+  validateMergeKind,
+} from "../skills/memory-write/scripts/governance-context-validator.mjs";
 
 const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
+const AUDIT_SCHEMA_REL = "schemas/memory-audit-events.schema.json";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";
 const MEMORY_WRITE_EVENTS = new Set([
@@ -22,7 +29,13 @@ const MEMORY_RETRIEVE_EVENTS = new Set([
   "memory.retrieve.missing",
   "memory.retrieve.invalid",
 ]);
-const MEMORY_MERGE_EVENTS = new Set(["memory.merge.diagnosed", "memory.merge.invalid"]);
+const MEMORY_GOVERNANCE_EVENTS = new Set([
+  "memory.merge.diagnosed",
+  "memory.merge.invalid",
+  "memory.dedupe.applied",
+  "memory.dedupe.suggested",
+  "memory.new.created_but_related_exists",
+]);
 const MEMORY_IMPROVEMENT_EVENTS = new Set([
   "memory.improvement.proposed",
   "memory.improvement.approved",
@@ -30,6 +43,34 @@ const MEMORY_IMPROVEMENT_EVENTS = new Set([
   "memory.improvement.applied",
   "memory.improvement.failed",
 ]);
+
+function loadAuditSchemaContract() {
+  try {
+    const hooksDir = path.dirname(fileURLToPath(import.meta.url));
+    const schemaPath = path.join(hooksDir, AUDIT_SCHEMA_REL);
+    const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+    const eventEnum = schema?.$defs?.eventEnum?.enum;
+    if (!Array.isArray(eventEnum)) return null;
+    const requiredByEvent = new Map();
+    const oneOf = Array.isArray(schema.oneOf) ? schema.oneOf : [];
+    for (const item of oneOf) {
+      const ref = item?.$ref;
+      if (typeof ref !== "string" || !ref.startsWith("#/$defs/")) continue;
+      const defName = ref.slice("#/$defs/".length);
+      const def = schema?.$defs?.[defName];
+      const eventConst = def?.properties?.event?.const;
+      const required = Array.isArray(def?.required) ? def.required : [];
+      if (typeof eventConst === "string") {
+        requiredByEvent.set(eventConst, required);
+      }
+    }
+    return { allowedEvents: new Set(eventEnum), requiredByEvent };
+  } catch {
+    return null;
+  }
+}
+
+const AUDIT_SCHEMA_CONTRACT = loadAuditSchemaContract();
 
 /**
  * 获取系统当前时间戳（ISO 8601格式，UTC）
@@ -207,7 +248,7 @@ function validateMemoryRetrieveEvent(input, base) {
   return invalidPayloadForRetrieve(base, "unknown memory.retrieve event", input.event);
 }
 
-function validateMemoryMergeEvent(input, base) {
+function validateMemoryGovernanceEvent(input, base) {
   if (input.event === "memory.merge.invalid") {
     if (!isString(input.reason) || input.reason.length === 0) {
       return invalidPayloadForMerge(base, "invalid requires reason", input.event);
@@ -219,8 +260,92 @@ function validateMemoryMergeEvent(input, base) {
     };
   }
 
+  if (input.event === "memory.dedupe.applied") {
+    if (!isString(input.note_id) || input.note_id.length === 0) {
+      return invalidPayloadForMerge(base, "dedupe.applied requires note_id", input.event);
+    }
+    if (!isString(input.source) || input.source.length === 0) {
+      return invalidPayloadForMerge(base, "dedupe.applied requires source", input.event);
+    }
+    if (!isNonEmptyStringArray(input.deduped_note_ids)) {
+      return invalidPayloadForMerge(base, "dedupe.applied requires deduped_note_ids[]", input.event);
+    }
+    try {
+      const governanceContextResult = normalizeGovernanceContext(input.governance_context, input.event);
+      if (!governanceContextResult.ok) {
+        return invalidPayloadForMerge(base, governanceContextResult.reason, input.event);
+      }
+      return {
+        ...base,
+        note_id: input.note_id,
+        source: input.source,
+        deduped_note_ids: input.deduped_note_ids,
+        ...(isString(input.reason) ? { reason: input.reason } : {}),
+        ...(governanceContextResult.value ? { governance_context: governanceContextResult.value } : {}),
+      };
+    } catch (err) {
+      return invalidPayloadForMerge(base, err.message, input.event);
+    }
+  }
+
+  if (input.event === "memory.dedupe.suggested") {
+    if (!isString(input.note_id) || input.note_id.length === 0) {
+      return invalidPayloadForMerge(base, "dedupe.suggested requires note_id", input.event);
+    }
+    if (!isString(input.source) || input.source.length === 0) {
+      return invalidPayloadForMerge(base, "dedupe.suggested requires source", input.event);
+    }
+    if (!isNonEmptyStringArray(input.dedupe_candidates)) {
+      return invalidPayloadForMerge(base, "dedupe.suggested requires dedupe_candidates[]", input.event);
+    }
+    try {
+      const governanceContextResult = normalizeGovernanceContext(input.governance_context, input.event);
+      if (!governanceContextResult.ok) {
+        return invalidPayloadForMerge(base, governanceContextResult.reason, input.event);
+      }
+      return {
+        ...base,
+        note_id: input.note_id,
+        source: input.source,
+        dedupe_candidates: input.dedupe_candidates,
+        ...(isString(input.reason) ? { reason: input.reason } : {}),
+        ...(governanceContextResult.value ? { governance_context: governanceContextResult.value } : {}),
+      };
+    } catch (err) {
+      return invalidPayloadForMerge(base, err.message, input.event);
+    }
+  }
+
+  if (input.event === "memory.new.created_but_related_exists") {
+    if (!isString(input.note_id) || input.note_id.length === 0) {
+      return invalidPayloadForMerge(base, "new.created_but_related_exists requires note_id", input.event);
+    }
+    if (!isString(input.source) || input.source.length === 0) {
+      return invalidPayloadForMerge(base, "new.created_but_related_exists requires source", input.event);
+    }
+    if (!isNonEmptyStringArray(input.related_note_ids)) {
+      return invalidPayloadForMerge(base, "new.created_but_related_exists requires related_note_ids[]", input.event);
+    }
+    try {
+      const governanceContextResult = normalizeGovernanceContext(input.governance_context, input.event);
+      if (!governanceContextResult.ok) {
+        return invalidPayloadForMerge(base, governanceContextResult.reason, input.event);
+      }
+      return {
+        ...base,
+        note_id: input.note_id,
+        source: input.source,
+        related_note_ids: input.related_note_ids,
+        ...(isString(input.reason) ? { reason: input.reason } : {}),
+        ...(governanceContextResult.value ? { governance_context: governanceContextResult.value } : {}),
+      };
+    } catch (err) {
+      return invalidPayloadForMerge(base, err.message, input.event);
+    }
+  }
+
   if (input.event !== "memory.merge.diagnosed") {
-    return invalidPayloadForMerge(base, "unknown memory.merge event", input.event);
+    return invalidPayloadForMerge(base, "unknown governance event", input.event);
   }
   if (!isString(input.note_id) || input.note_id.length === 0) {
     return invalidPayloadForMerge(base, "diagnosed requires note_id", input.event);
@@ -237,32 +362,45 @@ function validateMemoryMergeEvent(input, base) {
   if (!Array.isArray(input.action_plan)) {
     return invalidPayloadForMerge(base, "diagnosed requires action_plan[]", input.event);
   }
-  if (!input.merge_context || typeof input.merge_context !== "object") {
-    return invalidPayloadForMerge(base, "diagnosed requires merge_context", input.event);
+  if (
+    (!input.merge_context || typeof input.merge_context !== "object") &&
+    (!input.governance_context || typeof input.governance_context !== "object")
+  ) {
+    return invalidPayloadForMerge(base, "diagnosed requires merge_context or governance_context", input.event);
   }
-  const sameScenario = input.merge_context.same_scenario;
-  const sameConclusion = input.merge_context.same_conclusion;
-  if (!isBool(sameScenario) || !isBool(sameConclusion)) {
-    return invalidPayloadForMerge(
-      base,
-      "merge_context requires same_scenario/same_conclusion(boolean)",
-      input.event
-    );
+  const sameScenario = input.merge_context?.same_scenario;
+  const sameConclusion = input.merge_context?.same_conclusion;
+  if (
+    input.merge_context &&
+    ((sameScenario != null && !isBool(sameScenario)) || (sameConclusion != null && !isBool(sameConclusion)))
+  ) {
+    return invalidPayloadForMerge(base, "merge_context same_scenario/same_conclusion must be boolean", input.event);
   }
-  if (input.status === "applied" && !(sameScenario && sameConclusion)) {
-    return invalidPayloadForMerge(base, "status=applied requires merge_context match", input.event);
+  const mergeKindResult = validateMergeKind(input.merge_kind);
+  if (!mergeKindResult.ok) {
+    return invalidPayloadForMerge(base, mergeKindResult.reason, input.event);
   }
 
-  return {
-    ...base,
-    note_id: input.note_id,
-    source: input.source,
-    diagnosis_tags: input.diagnosis_tags,
-    primary_tag: input.primary_tag,
-    merge_context: input.merge_context,
-    action_plan: input.action_plan,
-    ...(isString(input.status) ? { status: input.status } : {}),
-  };
+  try {
+    const governanceContextResult = normalizeGovernanceContext(input.governance_context, input.event);
+    if (!governanceContextResult.ok) {
+      return invalidPayloadForMerge(base, governanceContextResult.reason, input.event);
+    }
+    return {
+      ...base,
+      note_id: input.note_id,
+      source: input.source,
+      diagnosis_tags: input.diagnosis_tags,
+      primary_tag: input.primary_tag,
+      ...(input.merge_context && typeof input.merge_context === "object" ? { merge_context: input.merge_context } : {}),
+      ...(isString(input.merge_kind) ? { merge_kind: input.merge_kind } : {}),
+      ...(governanceContextResult.value ? { governance_context: governanceContextResult.value } : {}),
+      action_plan: input.action_plan,
+      ...(isString(input.status) ? { status: input.status } : {}),
+    };
+  } catch (err) {
+    return invalidPayloadForMerge(base, err.message, input.event);
+  }
 }
 
 function validateMemoryImprovementEvent(input, base) {
@@ -299,10 +437,29 @@ function validateMemoryImprovementEvent(input, base) {
   };
 }
 
+function invalidPayloadByEventType(base, event, reason) {
+  if (MEMORY_WRITE_EVENTS.has(event)) return invalidPayloadForWrite(base, reason, event);
+  if (MEMORY_RETRIEVE_EVENTS.has(event)) return invalidPayloadForRetrieve(base, reason, event);
+  if (MEMORY_GOVERNANCE_EVENTS.has(event)) return invalidPayloadForMerge(base, reason, event);
+  if (MEMORY_IMPROVEMENT_EVENTS.has(event)) return invalidPayloadForImprovement(base, reason, event);
+  return invalidPayloadForAudit(base, reason, event);
+}
+
 function buildPayload(input) {
   const base = buildBasePayload(input);
   if (!isString(input.event) || input.event.length === 0) {
     return invalidPayloadForAudit(base, "event is required", "");
+  }
+  if (AUDIT_SCHEMA_CONTRACT) {
+    if (!AUDIT_SCHEMA_CONTRACT.allowedEvents.has(input.event)) {
+      return invalidPayloadForAudit(base, "event not allowed by schema", input.event);
+    }
+    const required = AUDIT_SCHEMA_CONTRACT.requiredByEvent.get(input.event) || [];
+    for (const field of required) {
+      if (input[field] == null) {
+        return invalidPayloadByEventType(base, input.event, `schema required field missing: ${field}`);
+      }
+    }
   }
 
   if (MEMORY_WRITE_EVENTS.has(input.event)) {
@@ -311,8 +468,8 @@ function buildPayload(input) {
   if (MEMORY_RETRIEVE_EVENTS.has(input.event)) {
     return validateMemoryRetrieveEvent(input, base);
   }
-  if (MEMORY_MERGE_EVENTS.has(input.event)) {
-    return validateMemoryMergeEvent(input, base);
+  if (MEMORY_GOVERNANCE_EVENTS.has(input.event)) {
+    return validateMemoryGovernanceEvent(input, base);
   }
   if (MEMORY_IMPROVEMENT_EVENTS.has(input.event)) {
     return validateMemoryImprovementEvent(input, base);

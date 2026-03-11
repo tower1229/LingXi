@@ -3,6 +3,8 @@
  * Pipes stdin JSON; asserts stdout has continue and additional_context with convention keywords.
  */
 import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
@@ -31,8 +33,15 @@ function runSessionInit(stdinJson, extraEnv = {}) {
 }
 
 describe("session-init", () => {
+  function createTempProjectRoot() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-session-init-"));
+    fs.mkdirSync(path.join(root, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    return root;
+  }
+
   it("TC-005: returns continue and additional_context with convention text", async () => {
-    const { code, stdout } = await runSessionInit("{}");
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
     assert.strictEqual(out.continue, true);
@@ -42,10 +51,34 @@ describe("session-init", () => {
   });
 
   it("injects background self-iteration context", async () => {
-    const { code, stdout } = await runSessionInit("{}");
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
     assert.ok(out.additional_context.includes("lingxi-self-iterate"));
     assert.ok(out.additional_context.includes("run_in_background=true"));
+  });
+
+  it("TC-step-D: additional_context contains step D post-execution check convention", async () => {
+    const tempRoot = createTempProjectRoot();
+    const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
+    assert.strictEqual(code, 0);
+    const out = JSON.parse(stdout.trim());
+    assert.ok(out.additional_context.includes("步骤 D"), "should include 步骤 D in context");
+    assert.ok(out.additional_context.includes("post 模式"), "should mention post 模式");
+    assert.ok(out.additional_context.includes("trigger_timing"), "should mention trigger_timing");
+  });
+
+  it("injects self-iteration context only once per session id", async () => {
+    const tempRoot = createTempProjectRoot();
+    const input = JSON.stringify({ conversation_id: "session-once" });
+    const first = await runSessionInit(input, { CURSOR_PROJECT_DIR: tempRoot });
+    const second = await runSessionInit(input, { CURSOR_PROJECT_DIR: tempRoot });
+    assert.strictEqual(first.code, 0);
+    assert.strictEqual(second.code, 0);
+    const out1 = JSON.parse(first.stdout.trim());
+    const out2 = JSON.parse(second.stdout.trim());
+    assert.ok(out1.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(!out2.additional_context.includes("lingxi-self-iterate"));
   });
 });

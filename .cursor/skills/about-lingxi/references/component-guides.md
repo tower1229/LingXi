@@ -194,8 +194,8 @@
 
 ### 在灵犀中的应用
 
-- **lingxi-memory**（`.cursor/agents/lingxi-memory.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（扩展 payload：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。**apply=team** 时由 memory-write skill 写入 **memory/share/**（团队级），否则写入 **memory/project/**（项目级）。**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后调用；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory。子代理在独立上下文中完成校验并调用 **memory-write** skill → 治理 → 门控与**直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。
-- **lingxi-session-distill**（`.cursor/agents/lingxi-session-distill.md`）：**会话提炼**。由 30min 心跳触发时主 Agent 在步骤 A 调用，传入 candidate_ids 与 enqueued_by；在后台对入队会话做 taste-recognition 提炼并调用 lingxi-memory 写入，主会话不等待。
+- **lingxi-memory-write**（`.cursor/agents/lingxi-memory-write.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（扩展 payload：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。**apply=team** 时由 memory-write skill 写入 **memory/share/**（团队级），否则写入 **memory/project/**（项目级）。**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后调用；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory-write。子代理在独立上下文中完成校验并调用 **memory-write** skill → 治理 → 门控与**直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。
+- **lingxi-session-distill**（`.cursor/agents/lingxi-session-distill.md`）：**会话提炼**。由 30min 心跳触发时主 Agent 在步骤 A 调用，传入 candidate_ids 与 enqueued_by；在后台对入队会话做 taste-recognition 提炼并调用 lingxi-memory-write 写入，主会话不等待。
 - **lingxi-self-iterate**（`.cursor/agents/lingxi-self-iterate.md`）：**自我迭代**。由 24h 心跳触发时主 Agent 在步骤 A 调用（run_in_background=true），在后台执行诊断与仅 low risk 的自动改进（如记忆改进提案与应用），主会话不等待、不插入确认，仅消费简报。
 - 审查类任务通过 Reviewer Skills 实现，由 **review** skill 显式调用，共享上下文以降低 token 消耗。
 

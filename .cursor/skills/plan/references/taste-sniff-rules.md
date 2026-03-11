@@ -40,4 +40,4 @@
 
 ## 衔接
 
-嗅探产出 payload 后由主 Agent 交 lingxi-memory；payload.source=choice。拟提问前调用 memory-retrieve，传入 Agent 构建的决策点描述；若命中相关记忆则不再问。
+嗅探产出 payload 后由主 Agent 交 lingxi-memory-write；payload.source=choice。拟提问前调用 memory-retrieve，传入 Agent 构建的决策点描述；若命中相关记忆则不再问。

@@ -105,6 +105,19 @@ describe("append-memory-audit", () => {
     assert.strictEqual(payload.event, "memory.retrieve.invalid");
   });
 
+  it("writes memory.audit.invalid for schema-unsupported event", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = { event: "memory.unknown.event", foo: "bar" };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.audit.invalid");
+    assert.match(payload.reason, /event not allowed by schema/);
+  });
+
   it("writes memory.merge.diagnosed when payload is valid", async () => {
     tmpDir = createTempDir();
     fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
@@ -129,6 +142,58 @@ describe("append-memory-audit", () => {
     assert.strictEqual(payload.primary_tag, "scope_too_narrow");
   });
 
+  it("writes memory.merge.diagnosed with governance_context", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.merge.diagnosed",
+      note_id: "MEM-009",
+      source: "remember",
+      diagnosis_tags: ["merge_opportunity"],
+      primary_tag: "merge_opportunity",
+      action_plan: [{ type: "expand_merge_policy", risk: "medium" }],
+      merge_kind: "subject_expansion",
+      governance_context: {
+        subject_relation: "same_subject",
+        conclusion_relation: "non_conflicting",
+        target_note_id: "MEM-003",
+        applied_changes: ["append_policy"],
+      },
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.diagnosed");
+    assert.strictEqual(payload.merge_kind, "subject_expansion");
+  });
+
+  it("downgrades invalid governance_context enum to memory.merge.invalid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.merge.diagnosed",
+      note_id: "MEM-009",
+      source: "remember",
+      diagnosis_tags: ["merge_opportunity"],
+      primary_tag: "merge_opportunity",
+      action_plan: [{ type: "expand_merge_policy", risk: "medium" }],
+      merge_kind: "subject_expansion",
+      governance_context: {
+        subject_relation: "bad_value",
+        conclusion_relation: "non_conflicting",
+      },
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.invalid");
+    assert.match(payload.reason, /subject_relation/);
+  });
+
   it("downgrades invalid merge diagnosis to memory.merge.invalid", async () => {
     tmpDir = createTempDir();
     fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
@@ -148,5 +213,60 @@ describe("append-memory-audit", () => {
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.invalid");
     assert.match(payload.reason, /primary_tag/);
+  });
+
+  it("writes memory.dedupe.applied when payload is valid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.dedupe.applied",
+      note_id: "MEM-010",
+      source: "remember",
+      deduped_note_ids: ["MEM-003"],
+      reason: "same_subject_same_conclusion",
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.dedupe.applied");
+    assert.deepStrictEqual(payload.deduped_note_ids, ["MEM-003"]);
+  });
+
+  it("writes memory.new.created_but_related_exists when payload is valid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.new.created_but_related_exists",
+      note_id: "MEM-011",
+      source: "remember",
+      related_note_ids: ["MEM-003", "MEM-006"],
+      reason: "gate_confidence_high_created_new",
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.new.created_but_related_exists");
+    assert.deepStrictEqual(payload.related_note_ids, ["MEM-003", "MEM-006"]);
+  });
+
+  it("maps schema-required governance missing fields to memory.merge.invalid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.dedupe.applied",
+      source: "remember",
+      deduped_note_ids: ["MEM-003"],
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.invalid");
+    assert.match(payload.reason, /schema required field missing: note_id/);
   });
 });

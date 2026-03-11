@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lingxi/memory-audit-events.schema.json",
+  "title": "MemoryAuditEvent",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/$defs/base"
+    }
+  ],
+  "oneOf": [
+    { "$ref": "#/$defs/memory_note_created" },
+    { "$ref": "#/$defs/memory_note_updated" },
+    { "$ref": "#/$defs/memory_note_deleted" },
+    { "$ref": "#/$defs/memory_index_updated" },
+
+    { "$ref": "#/$defs/memory_retrieve_performed" },
+    { "$ref": "#/$defs/memory_retrieve_skipped" },
+    { "$ref": "#/$defs/memory_retrieve_missing" },
+    { "$ref": "#/$defs/memory_retrieve_invalid" },
+
+    { "$ref": "#/$defs/memory_merge_diagnosed" },
+    { "$ref": "#/$defs/memory_merge_invalid" },
+    { "$ref": "#/$defs/memory_dedupe_applied" },
+    { "$ref": "#/$defs/memory_dedupe_suggested" },
+    { "$ref": "#/$defs/memory_new_created_but_related_exists" },
+
+    { "$ref": "#/$defs/memory_improvement_proposed" },
+    { "$ref": "#/$defs/memory_improvement_approved" },
+    { "$ref": "#/$defs/memory_improvement_rejected" },
+    { "$ref": "#/$defs/memory_improvement_applied" },
+    { "$ref": "#/$defs/memory_improvement_failed" }
+  ],
+  "$defs": {
+    "eventEnum": {
+      "type": "string",
+      "enum": [
+        "memory_note_created",
+        "memory_note_updated",
+        "memory_note_deleted",
+        "memory_index_updated",
+        "memory.retrieve.performed",
+        "memory.retrieve.skipped",
+        "memory.retrieve.missing",
+        "memory.retrieve.invalid",
+        "memory.merge.diagnosed",
+        "memory.merge.invalid",
+        "memory.dedupe.applied",
+        "memory.dedupe.suggested",
+        "memory.new.created_but_related_exists",
+        "memory.improvement.proposed",
+        "memory.improvement.approved",
+        "memory.improvement.rejected",
+        "memory.improvement.applied",
+        "memory.improvement.failed"
+      ]
+    },
+    "base": {
+      "type": "object",
+      "required": ["event"],
+      "properties": {
+        "event": { "$ref": "#/$defs/eventEnum" },
+        "ts": { "type": "string" },
+        "conversation_id": { "type": "string" },
+        "generation_id": { "type": "string" }
+      }
+    },
+    "memory_note_created": {
+      "properties": { "event": { "const": "memory_note_created" } },
+      "required": ["event", "note_id", "operation", "source", "file"]
+    },
+    "memory_note_updated": {
+      "properties": { "event": { "const": "memory_note_updated" } },
+      "required": ["event", "note_id", "operation", "source", "file"]
+    },
+    "memory_note_deleted": {
+      "properties": { "event": { "const": "memory_note_deleted" } },
+      "required": ["event", "note_id", "operation", "file"]
+    },
+    "memory_index_updated": {
+      "properties": { "event": { "const": "memory_index_updated" } },
+      "required": ["event"]
+    },
+    "memory_retrieve_performed": {
+      "properties": { "event": { "const": "memory.retrieve.performed" } },
+      "required": [
+        "event",
+        "query",
+        "hits",
+        "adopted",
+        "rejected",
+        "semantic_called",
+        "keyword_called",
+        "candidate_read_count",
+        "decision"
+      ]
+    },
+    "memory_retrieve_skipped": {
+      "properties": { "event": { "const": "memory.retrieve.skipped" } },
+      "required": ["event", "query", "reason"]
+    },
+    "memory_retrieve_missing": {
+      "properties": { "event": { "const": "memory.retrieve.missing" } },
+      "required": ["event", "reason"]
+    },
+    "memory_retrieve_invalid": {
+      "properties": { "event": { "const": "memory.retrieve.invalid" } },
+      "required": ["event", "reason"]
+    },
+    "memory_merge_diagnosed": {
+      "properties": { "event": { "const": "memory.merge.diagnosed" } },
+      "required": ["event", "note_id", "source", "diagnosis_tags", "primary_tag", "action_plan"]
+    },
+    "memory_merge_invalid": {
+      "properties": { "event": { "const": "memory.merge.invalid" } },
+      "required": ["event", "reason"]
+    },
+    "memory_dedupe_applied": {
+      "properties": { "event": { "const": "memory.dedupe.applied" } },
+      "required": ["event", "note_id", "source", "deduped_note_ids"]
+    },
+    "memory_dedupe_suggested": {
+      "properties": { "event": { "const": "memory.dedupe.suggested" } },
+      "required": ["event", "note_id", "source", "dedupe_candidates"]
+    },
+    "memory_new_created_but_related_exists": {
+      "properties": { "event": { "const": "memory.new.created_but_related_exists" } },
+      "required": ["event", "note_id", "source", "related_note_ids"]
+    },
+    "memory_improvement_proposed": {
+      "properties": { "event": { "const": "memory.improvement.proposed" } },
+      "required": ["event", "proposal_id", "findings", "actions"]
+    },
+    "memory_improvement_approved": {
+      "properties": { "event": { "const": "memory.improvement.approved" } },
+      "required": ["event", "proposal_id", "action_ids"]
+    },
+    "memory_improvement_rejected": {
+      "properties": { "event": { "const": "memory.improvement.rejected" } },
+      "required": ["event", "proposal_id", "action_ids"]
+    },
+    "memory_improvement_applied": {
+      "properties": { "event": { "const": "memory.improvement.applied" } },
+      "required": ["event", "proposal_id", "action_id"]
+    },
+    "memory_improvement_failed": {
+      "properties": { "event": { "const": "memory.improvement.failed" } },
+      "required": ["event", "proposal_id", "action_id"]
+    }
+  }
+}

@@ -87,6 +87,14 @@ function writeTranscriptIndex(indexPath, index) {
   fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), "utf8");
 }
 
+function writeControlFile(controlPath, control) {
+  const workspaceDir = path.dirname(controlPath);
+  if (!fs.existsSync(workspaceDir)) {
+    fs.mkdirSync(workspaceDir, { recursive: true });
+  }
+  fs.writeFileSync(controlPath, JSON.stringify(control, null, 2), "utf8");
+}
+
 function collectTranscriptCandidates({
   transcriptRoot,
   index,
@@ -158,6 +166,8 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     last_distillation_completed_at: null,
     heartbeat: { running: false, started_at: null, run_id: null },
     last_improvement_cycle_at: null,
+    last_improvement_prompted_session_id: null,
+    last_improvement_prompted_at: null,
     pending_distillation: null,
     processed_conversation_ids: [],
   };
@@ -173,8 +183,28 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const lastImprovementAt = control.last_improvement_cycle_at
     ? new Date(control.last_improvement_cycle_at).getTime()
     : 0;
-  const triggerImprovementDiagnosis =
+  const triggerImprovementByTime =
     lastImprovementAt === 0 || now - lastImprovementAt > improvementThresholdMs;
+  const promptedSessionId = typeof control.last_improvement_prompted_session_id === "string"
+    ? control.last_improvement_prompted_session_id
+    : "";
+  const alreadyPromptedThisSession = !!currentConversationId && promptedSessionId === currentConversationId;
+  const triggerImprovementDiagnosis = triggerImprovementByTime && !alreadyPromptedThisSession;
+
+  // 24h 诊断在同一会话内只提示一次，避免主流程每轮重复触发 self-iterate。
+  if (triggerImprovementDiagnosis && currentConversationId) {
+    const nextControl = {
+      ...control,
+      last_improvement_prompted_session_id: currentConversationId,
+      last_improvement_prompted_at: nowIso,
+    };
+    try {
+      writeControlFile(controlPath, nextControl);
+      control = nextControl;
+    } catch (err) {
+      console.error("[heartbeat-check] write improvement prompt marker failed:", err.message);
+    }
+  }
 
   const processedSet = new Set(
     Array.isArray(control.processed_conversation_ids) ? control.processed_conversation_ids : []
@@ -253,11 +283,7 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   };
 
   try {
-    const workspaceDir = path.dirname(controlPath);
-    if (!fs.existsSync(workspaceDir)) {
-      fs.mkdirSync(workspaceDir, { recursive: true });
-    }
-    fs.writeFileSync(controlPath, JSON.stringify(next, null, 2), "utf8");
+    writeControlFile(controlPath, next);
   } catch (err) {
     console.error("[heartbeat-check] write control failed:", err.message);
     return {

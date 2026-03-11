@@ -12,19 +12,29 @@ description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.curs
 ## 调用形式与输入
 
 - **/memory-retrieve** \<query\>
-- **何时调用**：仅当本轮用户消息包含自由输入时，先调用 `/memory-retrieve <当前用户消息>` 再回答。**仅 command/skill 调用**（如仅输入 \`/task\`、\`/start-tuning\`）时不调用本 Skill，主流程写入 `memory.retrieve.skipped` 后直接作答。
+- **何时调用**：仅当本轮用户消息包含**独立的自由输入**时，先调用 `/memory-retrieve <当前用户消息>` 再回答。以下情况**不调用**本 Skill，主流程写入 `memory.retrieve.skipped` 后直接作答：
+  - 仅有零参数命令（如 `/task`、`/review`、`/start-tuning`）；
+  - 命令携带参数的调用（如 `/remember <内容>`、`/task <描述>`），参数是命令的形式输入而非独立用户意图。判断依据：消息以已知命令前缀开头，其后内容为该命令的直接参数。
 - 主流程：当前用户消息。嗅探场景：拟做品味嗅探提问前，可传入 Agent 构建的决策点描述；若检索到相关记忆且能覆盖当前选择，则不再问、直接按该记忆行为。
 
 ## 执行流程（SSoT）
 
-1. **理解判断**：判断输入是否具备可检索实质；若存在指代/省略，结合最近 1-2 轮上下文补全。
+**pre 模式**（默认，每轮用户输入时）与 **post 模式**（本轮有文件写入后，以实际变更摘要为 query 触发）共用此流程，差异见各步骤括注。
+
+1. **理解判断与意图展开**：判断输入是否具备可检索实质；若存在指代/省略，结合最近 1-2 轮上下文补全。**【意图展开，pre 模式专属】** 当输入为实施类指令（含「修复」「实现」「落地」「完成」「改进」「重构」等动词，或描述一组待执行的技术操作）时，进一步推断该任务将涉及的变更类型并纳入 `semantic_summary`：
+   - 将修改灵犀代码/配置/核心文件 → 加入「修改灵犀代码或配置」「灵犀核心文件变更」
+   - 将修改含逻辑的脚本（如 .mjs、.ts）→ 加入「修改可测试逻辑」
+   - 此展开仅影响 `semantic_summary` 的广度，不改变回答行为，命中后仍按正常 adopt/reject/ask 流程决策。
 2. **提炼**：产出 `semantic_summary` 与 `keywords`（技术词、配置项、API 名、场景词等）。
 3. **必要性判断**：若仅社交/元表达且关键词为空，跳过检索并静默返回。
 4. **双路径检索（必须）**：
    - 语义路径：在范围 @.lingxi/memory/project/ 与 @.lingxi/memory/share/ 内查找与 `semantic_summary` 相关的内容。
    - 关键词路径：调用 `Grep`（ripgrep），范围 @.lingxi/memory/project/、@.lingxi/memory/share/ 正文 + @.lingxi/memory/INDEX.md 的 Title/When to load。
 5. **融合与最小读取**：采用**并集（Union）**合并两路候选后重排取 top 0–2；优先保证召回率，避免仅语义路径或仅关键词路径命中的候选被误排除。重排时以语义/关键词相关性为主，`Strength`（hypothesis/validated/enforced）仅作为小权重因子或同分 tie-breaker。只对合并后的 top 0–2 调用 `Read` 做最终相关性确认。
-6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`；仅对 adopt 做一行极简注入。
+6. **决策与注入**：对命中逐条给出 `adopt/reject/ask`，同时检查每条 note 的 `trigger_timing` 字段：
+   - **pre 模式**：`trigger_timing=pre` 或 `both` 的记忆正常 adopt/reject；`trigger_timing=post` 的记忆在 pre 模式中**跳过**（不注入，不计入 adopted）。
+   - **post 模式**：`trigger_timing=post` 或 `both` 的记忆正常 adopt/reject 并**立即执行对应义务**（如运行测试、更新版本号等）；`trigger_timing=pre` 的记忆在 post 模式中跳过。
+   - `trigger_timing` 字段缺失时默认视为 `pre`（向后兼容）。
 7. **审计（v2，必须）**：
    - 正常执行检索：追加 `event=memory.retrieve.performed`，字段必须包含 `query`、`hits`、`adopted`、`rejected`、`semantic_called`、`keyword_called`、`candidate_read_count`、`decision`（并带 `conversation_id`、`generation_id`）。
    - 显式跳过检索：追加 `event=memory.retrieve.skipped`，字段至少包含 `query`、`reason`（并带 `conversation_id`、`generation_id`）。

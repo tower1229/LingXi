@@ -11,15 +11,18 @@ const BASE_CONTEXT = `【本回合执行顺序】本约定在整场会话中持�
 
 - **步骤 A**（若存在下方「会话提炼心跳」或「自我迭代心跳」）：先执行其 mcp_task 步骤（后台，无需等待），再进入步骤 B。
 - **步骤 B**（记忆提取约定）：执行下方「记忆提取约定」二选一，写审计（performed 或 skipped），**禁止未写审计即作答**。
-- **步骤 C**：作答。
+- **步骤 C**：作答与实施。
+- **步骤 D**（执行后记忆检查，条件触发）：**仅当本轮步骤 C 中执行了文件写入操作**（StrReplace/Write/Delete 中的任一）时，在主要实施完成后、最终回复前，以「本轮实际变更摘要」为 query，以 **post 模式**再执行一次 \`/memory-retrieve\`；对命中的 \`trigger_timing=post\` 或 \`both\` 的记忆**立即评估并执行对应义务**（如同步更新测试、递增版本号等）。步骤 D 无需额外写审计，正常走 memory-retrieve 的审计流程。
 
 【记忆提取约定】每轮必须二选一：
-- **仅 command/skill 调用**（用户消息仅为一条 command 如 \`/start-tuning\`、\`/task\` 或 skill 调用，无其它自然语言）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）。
-- **否则**（存在用户自由输入）：先执行 \`/memory-retrieve <当前用户消息>\`；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
+- **仅 command/skill 调用**（满足以下任一条件）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）：
+  - 用户消息仅为一条零参数命令（如 \`/task\`、\`/review\`、\`/start-tuning\`）；
+  - 用户消息为一条**携带参数的命令**（如 \`/remember <内容>\`、\`/task <描述>\`），参数内容是命令的形式输入，而非独立的用户意图表达；判断依据：消息以已知命令前缀开头且其后内容为该命令的直接参数。
+- **否则**（存在独立的用户自由输入，如命令后附带了与命令无关的分析/提问）：先执行 \`/memory-retrieve <当前用户消息>\`；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
 
 若执行了检索且命中（top 0–2）：必须先对每条命中做 \`adopt\`/\`reject\`/\`ask\` 决策；仅对 adopt 做一行极简提示，reject 不展示；若依据某条记忆做方案选择，表述中自然引用来源（如 \`[MEM-003]\`）。未记录 performed 或 skipped 时审计系统会追加 \`memory.retrieve.missing\`（不阻断主流程）。
 
-【conversation_id 传入约定】调用 lingxi-memory 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
+【conversation_id 传入约定】调用 lingxi-memory-write 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
 
 function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
@@ -38,7 +41,7 @@ function buildImprovementContext(triggerImprovementDiagnosis) {
   if (!triggerImprovementDiagnosis) return "";
   return `
 
-【自我迭代心跳】本会话已进入 24h 低频窗口。**步骤 A 中必须**使用 mcp_task 工具发起 **lingxi-self-iterate** 子代理（subagent_type=lingxi-self-iterate），并设置 **run_in_background=true**，在 prompt 中说明执行“诊断 + 自动改进（仅 low risk）”。无需等待子代理完成即进入步骤 B。
+【自我迭代心跳】本会话已进入 24h 低频窗口。**本会话仅触发一次**：在首次触发轮次的步骤 A 中必须使用 mcp_task 工具发起 **lingxi-self-iterate** 子代理（subagent_type=lingxi-self-iterate），并设置 **run_in_background=true**，在 prompt 中说明执行“诊断 + 自动改进（仅 low risk）”。同一会话后续轮次无需重复触发。无需等待子代理完成即进入步骤 B。
 `;
 }
 
