@@ -71,7 +71,7 @@
 - 默认保留核心事件：`memory_note_*`、`memory_index_updated`、`memory.retrieve.*`、`heartbeat.*`、`memory.merge.*`、`memory.dedupe.*`、`memory.improvement.*`。
 - 高频 Hook 轨迹事件默认不写入；设置 `LINGXI_AUDIT_DEBUG=1` 时开启详细审计。
 - 诊断与执行闭环事件：
-  - `memory.merge.diagnosed` / `memory.merge.invalid` / `memory.dedupe.applied` / `memory.dedupe.suggested`
+  - `memory.merge.diagnosed` / `memory.merge.invalid` / `memory.dedupe.applied` / `memory.dedupe.suggested` / `memory.new.created_but_related_exists`
   - `memory.improvement.proposed|approved|rejected|applied|failed`
 - 审计事件机器契约（JSON Schema）：`.cursor/hooks/schemas/memory-audit-events.schema.json`
 - `append-memory-audit` 先按该 schema 做事件枚举/必填字段校验，再执行事件级业务约束校验（如 merge 诊断一致性）。

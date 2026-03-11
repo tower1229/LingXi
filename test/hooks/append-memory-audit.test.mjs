@@ -252,4 +252,21 @@ describe("append-memory-audit", () => {
     assert.strictEqual(payload.event, "memory.new.created_but_related_exists");
     assert.deepStrictEqual(payload.related_note_ids, ["MEM-003", "MEM-006"]);
   });
+
+  it("maps schema-required governance missing fields to memory.merge.invalid", async () => {
+    tmpDir = createTempDir();
+    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    const input = {
+      event: "memory.dedupe.applied",
+      source: "remember",
+      deduped_note_ids: ["MEM-003"],
+    };
+    const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
+    assert.strictEqual(code, 0);
+    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const payload = getLastAuditLine(auditPath);
+    assert.ok(payload);
+    assert.strictEqual(payload.event, "memory.merge.invalid");
+    assert.match(payload.reason, /schema required field missing: note_id/);
+  });
 });
