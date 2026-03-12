@@ -1,6 +1,6 @@
 ---
 name: reviewer-performance
-description: 性能审查专家，主动检查性能瓶颈、内存泄漏风险、响应时间等。由 review skill 显式调用，用于审查代码中的性能问题。
+description: 显式调用。由 review skill 调用，用于审查代码中的性能问题。
 ---
 
 # Reviewer Performance

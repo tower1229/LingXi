@@ -9,7 +9,7 @@ args:
 
 # /remember - 即时记忆写入
 
-**用途**：从用户输入（可结合对话上下文）提取记忆。委托 **taste-recognition** 做品味识别，若有产出则按 AgentOS 协议压入 `HOT_RAM.md` 的 `[POST-PROCESSING QUEUE]`。
+**用途**：从用户输入（可结合对话上下文）提取记忆。委托 **taste-recognition** 做品味识别，若有产出则按协议压入 `HOT_RAM.md` 的 `[POST-PROCESSING QUEUE]`。
 
 **用法**：`/remember <用户输入>`。输入必填，可为直接记忆表达、禁止/约束、历史提取指引或简短提示；详见 taste-recognition Skill。
 

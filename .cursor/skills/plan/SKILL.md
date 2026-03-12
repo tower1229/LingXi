@@ -1,6 +1,6 @@
 ---
 name: plan
-description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显式调用（如 /plan），勿根据语义自动加载。
+description: 显式调用。工作流步骤：产出 plan 与 testcase。
 ---
 
 # Plan

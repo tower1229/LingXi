@@ -1,6 +1,6 @@
 ---
 name: reviewer-e2e
-description: 端到端测试审查专家，使用 Cursor Agent Browser 工具验证完整用户流程。由 review skill 显式调用，用于执行 E2E 测试审查。
+description: 显式调用。由 review skill 调用，使用 Cursor Agent Browser 工具验证完整用户流程。
 ---
 
 # Reviewer E2E

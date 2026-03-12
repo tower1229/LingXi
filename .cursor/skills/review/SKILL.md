@@ -1,6 +1,6 @@
 ---
 name: review
-description: 工作流步骤：交付审查。仅支持手动或显式调用（如 /review），勿根据语义自动加载。
+description: 显式调用。工作流步骤：交付审查。
 ---
 
 # Review

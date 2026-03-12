@@ -1,6 +1,6 @@
 ---
 name: task
-description: 工作流步骤：产出 task 文档。仅支持手动或显式调用（如 /task、执行 task），勿根据语义自动加载。
+description: 显式调用。工作流步骤：产出 task 文档。
 ---
 
 # Task

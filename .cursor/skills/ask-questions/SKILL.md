@@ -1,6 +1,6 @@
 ---
 name: ask-questions
-description: 灵犀内部统一可复用的交互式问询方法。在需要单选/多选（如 init、remember、记忆治理）时使用，统一 questions/answers 协议、结果校验与重试/取消语义。
+description: 显式调用。灵犀内部统一可复用的交互式问询方法。
 ---
 
 # Ask Questions

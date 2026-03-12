@@ -1,6 +1,6 @@
 ---
 name: reviewer-doc-consistency
-description: 文档一致性审查专家，检查代码与文档是否一致。由 review skill 显式调用，用于审查代码与 task、plan、testcase 文档的一致性。
+description: 显式调用。由 review skill 调用，用于审查代码与 task、plan、testcase 文档的一致性。
 ---
 
 # Reviewer Doc Consistency

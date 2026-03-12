@@ -1,10 +1,12 @@
 {
-    "version": "1.1.0",
+    "version": "2.0.0",
     "commands": [
         "commands/init.md",
         "commands/remember.md"
     ],
-    "rules": [],
+    "rules": [
+        "rules/agentos-kernel.mdc"
+    ],
     "hooks": {
         "files": [
             "hooks.json",
@@ -42,6 +44,9 @@
     },
     "references": {
         "about-lingxi": [
+            "skills/about-lingxi/references/LingXi-AgentOS-Architecture-Blueprint.md",
+            "skills/about-lingxi/references/AgentOS-IPC-Protocols.md",
+            "skills/about-lingxi/references/AgentOS-Memory-System-Requirements.md",
             "skills/about-lingxi/references/architecture.md",
             "skills/about-lingxi/references/component-guides.md",
             "skills/about-lingxi/references/core-values.md",
@@ -60,6 +65,10 @@
             "skills/workspace-bootstrap/references/workflow-skeleton.json",
             "skills/workspace-bootstrap/references/INDEX.default.md",
             "skills/workspace-bootstrap/references/memory-note-template.default.md",
+            "skills/workspace-bootstrap/references/WAL_BUFFER.default.md",
+            "skills/workspace-bootstrap/references/heartbeat-control.default.json",
+            "skills/workspace-bootstrap/references/heartbeat-transcript-index.default.json",
+            "skills/workspace-bootstrap/references/MEMORY_JOURNAL.default.jsonl",
             "skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs"
         ],
         "taste-recognition": [
@@ -126,6 +135,13 @@
         ".cursor/.lingxi/memory/share",
         ".cursor/.lingxi/os",
         ".cursor/.lingxi/os/sessions"
+    ],
+    "workflowIndexFiles": [
+        ".cursor/.lingxi/memory/INDEX.md",
+        ".cursor/.lingxi/os/WAL_BUFFER.md",
+        ".cursor/.lingxi/os/heartbeat-control.json",
+        ".cursor/.lingxi/os/heartbeat-transcript-index.json",
+        ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl"
     ],
     "gitignoreEntries": [
         "# Local workspace for temp code clones, generated artifacts, etc.",

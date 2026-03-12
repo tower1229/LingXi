@@ -1,6 +1,6 @@
 ---
 name: memory-govern
-description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模型补全未索引条目），可选全库主动治理。仅支持手动或显式调用（如 /memory-govern、同步记忆索引），勿根据语义自动加载。
+description: 显式调用。记忆库治理：同步 INDEX 与 notes，可选全库主动治理。
 ---
 
 # Memory Govern
@@ -16,9 +16,9 @@ description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模
 - `--skip-govern`：执行阶段 1（同步 + 模型补全未索引），跳过阶段 2（全库治理）。
 - `--root`：指定 memory 根目录，默认 `.cursor/.lingxi/memory`（相对项目根）。
 
-## 执行流程 (AgentOS 适配)
+## 执行流程
 
-在 AgentOS 架构下，本 Skill 作为一个常规的业务 Skill，由主 Agent 调度执行，但**不涉及 `HOT_RAM.md` 的队列流转**，因为它是一个独立的运维命令。
+本 Skill 作为一个常规的业务 Skill，由主 Agent 调度执行，但**不涉及 `HOT_RAM.md` 的队列流转**，因为它是一个独立的运维命令。
 
 ### 阶段 1：同步
 

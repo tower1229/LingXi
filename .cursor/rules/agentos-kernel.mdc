@@ -12,7 +12,7 @@ alwaysApply: true
 
 Your "memory" of the conversation history is considered volatile and unreliable.
 [CRITICAL]: Upon receiving ANY message from the user, before you analyze the request or invoke any Subagents, your ABSOLUTE FIRST ACTION must be to invoke your file reading tools to read your System State (`.cursor/.lingxi/os/sessions/[your_session_id]/HOT_RAM.md`).
-If the file does not exist, you must initialize it according to the schema in `docs/agentos/AgentOS-IPC-Protocols.md`. 
+If the file does not exist, you must initialize it according to the schema in `.cursor/skills/about-lingxi/references/AgentOS-IPC-Protocols.md`. 
 You are FORBIDDEN from generating any subjective response until you have ingested the `HOT_RAM.md` file for this turn. This file contains your contextual memory and your dynamic Task Queue. You **must** obey `HOT_RAM.md` unconditionally.
 
 ## 📜 Law 2: Absolute Separation of Concerns & Fast-Path (职能隔离与短路直通)

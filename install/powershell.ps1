@@ -335,7 +335,7 @@ if (Test-Path ".gitignore") {
 } else {
   @(
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".cursor/.lingxi/workspace/",
+    ".cursor/.lingxi/os/",
     "",
     "# OS / IDE",
     ".DS_Store",

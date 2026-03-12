@@ -1,6 +1,6 @@
 ---
 name: reviewer-security
-description: 安全审查专家，主动检查安全漏洞、注入风险、敏感信息暴露等。由 review skill 显式调用，用于审查代码中的安全问题。
+description: 显式调用。由 review skill 调用，用于审查代码中的安全问题。
 ---
 
 # Reviewer Security

@@ -1,6 +1,6 @@
 ---
 name: taste-recognition
-description: 从用户输入或行为中识别可沉淀的「品味」（场景下的原则与选择），产出结构化 payload。所有记忆写入必须先经本 Skill；仅当产出 payload 时由主 Agent 将 payload 压入 HOT_RAM.md 的 [POST-PROCESSING QUEUE] 中等待后置处理。
+description: 显式调用。从用户输入或行为中识别可沉淀的「品味」，产出结构化 payload。由主 Agent 将 payload 压入 HOT_RAM.md 的 [POST-PROCESSING QUEUE] 中。
 ---
 
 # 品味识别（Taste Recognition）

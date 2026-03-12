@@ -1,6 +1,6 @@
 ---
 name: vet
-description: 工作流步骤：审查 task 文档。仅支持手动或显式调用（如 /vet），勿根据语义自动加载。
+description: 显式调用。工作流步骤：审查 task 文档。
 ---
 
 # Vet

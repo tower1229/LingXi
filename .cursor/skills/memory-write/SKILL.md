@@ -1,6 +1,6 @@
 ---
 name: memory-write
-description: 由 lingxi-memory-write 调用，执行 payloads 校验 → 映射生成 note → 治理 → 门控 → 直接文件写入；写入路径为 memory/project/ 与 memory/share/（由 payload.apply 决定）。
+description: 显式调用。由 lingxi-memory-write 调用，执行 payloads 校验、映射生成 note、治理、门控及直接文件写入。
 ---
 
 # Memory Write

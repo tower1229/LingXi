@@ -1,6 +1,6 @@
 ---
 name: build
-description: 工作流步骤：按 task/plan 实现与测试。仅支持手动或显式调用（如 /build），勿根据语义自动加载。
+description: 显式调用。工作流步骤：按 task/plan 实现与测试。
 ---
 
 # Build
