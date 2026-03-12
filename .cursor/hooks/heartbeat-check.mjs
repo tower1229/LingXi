@@ -22,17 +22,39 @@ const INDEX_VERSION = 1;
 const IMPROVEMENT_THRESHOLD_HOURS = 24;
 
 function resolveTranscriptRoot(projectRoot) {
-  const explicitRoot =
-    process.env.CURSOR_AGENT_TRANSCRIPTS_DIR?.trim() ||
-    process.env.LINGXI_TRANSCRIPT_ROOT?.trim();
+  // 1. 最高优先级：环境变量接管
+  const explicitRoot = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR?.trim() || process.env.LINGXI_TRANSCRIPT_ROOT?.trim();
   if (explicitRoot) return explicitRoot;
+
   const home = process.env.HOME || process.env.USERPROFILE || "";
   if (!home) return "";
-  const normalizedProjectPath = path.resolve(projectRoot).replace(/^[\\/]+/, "");
-  const workspaceSlug = normalizedProjectPath
-    .replace(/[\\/]/g, "-")
-    .replace(/[^A-Za-z0-9._-]/g, "-");
-  return path.join(home, ".cursor", "projects", workspaceSlug, "agent-transcripts");
+  
+  // 2. Windows 和 Mac 的兼容预处理替换
+  let normalizedProjectPath = path.resolve(projectRoot);
+  // 处理 Windows 独有如 "C:\" (会变成 c--xxx)
+  if (process.platform === 'win32') {
+     normalizedProjectPath = normalizedProjectPath.replace(/^([a-zA-Z]):[\\/]/, "$1--");
+  } else {
+     normalizedProjectPath = normalizedProjectPath.replace(/^[\\/]+/, "");
+  }
+  
+  const workspaceSlug = normalizedProjectPath.replace(/[\\/]/g, "-").replace(/[^A-Za-z0-9._-]/g, "-");
+  const targetDir = path.join(home, ".cursor", "projects", workspaceSlug, "agent-transcripts");
+  
+  // 3. Fallback 校验：如果严格预测的路径不存在，尝试模糊扫描后缀目录
+  if (!fs.existsSync(targetDir)) {
+      const baseName = path.basename(projectRoot);
+      const projDir = path.join(home, ".cursor", "projects");
+      if (fs.existsSync(projDir)) {
+          const candidates = fs.readdirSync(projDir, { withFileTypes: true })
+            .filter(dir => dir.isDirectory() && dir.name.endsWith(`-${baseName}`))
+            .map(dir => path.join(projDir, dir.name, "agent-transcripts"))
+            .filter(p => fs.existsSync(p));
+          if (candidates.length > 0) return candidates[0]; // 提供容错匹配
+      }
+  }
+  
+  return targetDir;
 }
 
 function listTranscriptFiles(transcriptRoot) {
@@ -224,6 +246,23 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
+      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
+    };
+  }
+
+  // 【修复点】：如果是因为锁过期（说明上游任务挂掉未完成），且存在排队中的提炼任务，则先“复活”它们，不触发新的更新
+  if (lockStale && control.pending_distillation && Array.isArray(control.pending_distillation.candidate_ids) && control.pending_distillation.candidate_ids.length > 0) {
+    const resurrected_ids = control.pending_distillation.candidate_ids;
+    // 重新续期锁并返回
+    control.heartbeat = { running: true, started_at: nowIso, run_id: currentConversationId || null };
+    try {
+      writeControlFile(controlPath, control);
+    } catch (err) {
+      console.error("[heartbeat-check] write resurrected control failed:", err.message);
+    }
+    return {
+      trigger_heartbeat: true,
+      candidate_ids: resurrected_ids,
       trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
