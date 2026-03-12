@@ -1,6 +1,6 @@
-# LingXi AgentOS 架构蓝图 (Architecture Blueprint)
+# LingXi AgentOS Architecture Blueprint
 
-> **版本定位**：此文档为灵犀（LingXi）AgentOS 的唯一合法实现蓝图。所有早期的碎片化备忘录均已废弃，未来一切代码开发与测试验收，必须严格以本文档中的架构设定为最高准则。
+> **定位**：此文档为灵犀（LingXi）AgentOS 的核心架构实现蓝图。一切代码开发与测试验收，必须严格以本文档中的架构设定为最高准则。
 
 ---
 
@@ -26,102 +26,11 @@ LingXi AgentOS 旨在将自然流散的 AI 聊天对话，升维改造为具备*
 | `os/sessions/[session_id]/HOT_RAM.md`       | **单会话核心状态控制台**。存储该会话当前轮次的命中记忆（Pre-Memory）和具有严格约束的**后处理队列 (Post-Processing Queue)**。                                        | **主Agent**：读 / 覆写状态<br>**Hook守护进程**：生成 / 初始化写入     |
 | `os/sessions/[session_id]/SESSION_TRACE.md` | **单会话时间轴流水账 (WAL)**。Append-only 追加。记录了该会话下历次 Subagent 试错轨迹、排错断点及用户核心意图。用于解决主 Agent 长周期任务下发时的“上下文失忆”问题。 | **主Agent**：主动追加写入<br>**Hook守护进程**：监测膨胀并负责裁切折叠 |
 | `os/WAL_BUFFER.md`                          | **全局系统级缓存**。所有跨会话共享的低频重量级操作（例如将特定会话内的排错经验提取固化为项目全局规范），均由主 Agent 写入此缓存，随后由进程异步归档入库。           | **主Agent**：写入结构化载荷<br>**Watch进程**：轮询消费清理            |
+| `os/MEMORY_JOURNAL.jsonl`                   | **记忆系统遥测日志**。记录与记忆治理相关的核心事件，供自我迭代进程消费。                                                                                            | **主Agent/Subagent**：追加写入<br>**Watch进程**：读取诊断             |
 
 ---
 
-## ⚖️ 三、 核心法典映射定义
-
-### A. 内核进程级法典 (`AGENTS.md`)
-
-本文件是对整个 IDE 全局置顶（权重最高）的规则。它的作用是让大模型认清自己的 Orchestrator（主控调度器）身份。
-
-```markdown
-# ⚡️ LingXi AgentOS Kernel Directive
-
-[SYSTEM_OVERRIDE]: You are no longer just a coding assistant. You are the Kernel process of the **LingXi AgentOS**. Your execution environment is strictly sandboxed by the following absolute laws. Do not bypass them under any circumstances.
-
-## 📜 Law 1: The Bootstrapping Imperative (内核引导协议)
-
-Your "memory" of the conversation history is considered volatile and unreliable.
-[CRITICAL]: Upon receiving ANY message from the user, before you analyze the request or invoke any Subagents, your ABSOLUTE FIRST ACTION must be to invoke your file reading tools to read your System State (`.cursor/.lingxi/os/sessions/[your_session_id]/HOT_RAM.md`).
-If the file does not exist, you must initialize it. You are FORBIDDEN from generating any subjective response until you have ingested the `HOT_RAM.md` file for this turn. This file contains your contextual memory and your dynamic Task Queue. You **must** obey `HOT_RAM.md` unconditionally.
-
-## 📜 Law 2: Absolute Separation of Concerns (职能隔离)
-
-You are the **Orchestrator**. You are strictly **FORBIDDEN** from directly performing business code modifications, running tests, or diagnosing minor syntax errors.
-Under no circumstances should you directly use terminal tools or file-editing tools to fix bugs.
-If code must be written, analyzed, or executed, you **MUST MUST MUST** delegate the execution to **Subagents** (either invoking predefined `lingxi-subagent` or dynamically instantiating task-specific subagents), passing down the relevant `HOT_RAM.md` constraints to them.
-
-## 📜 Law 3: Mandatory Post-Processing Phase (强制后置处理环节)
-
-When your subordinate **Subagent** finishes execution and returns the `<Execution_Summary>` back to you, you will wake up from the suspended state.
-You are strictly forbidden from eagerly telling the user "Task is done" and terminating your thoughts.
-Instead, you **MUST MUST MUST** immediately execute these State-Sync actions using your file editing tools:
-
-1. Append the Subagent's `<Execution_Summary>` to your Session's `SESSION_TRACE.md`.
-2. Modify your Session's `HOT_RAM.md`, changing its `Current State` to `POST_PROCESSING_REQUIRED`.
-3. Read the `POST-PROCESSING QUEUE` declared in step 4 of `HOT_RAM.md`.
-4. Execute ALL pending post-processing tasks sequentially (e.g., evaluating "Key Traps" for memory extraction using `/memory-write`, reporting the Task Summary to the user, tracking statuses, etc.).
-   Only AFTER every post-processing task in the queue is complete, are you permitted to conclude your response to the user.
-
-## 📜 Law 4: The Dissent Check (强制自省)
-
-Never hallucinate a context. Since you do not write code directly, your orchestration commands must be perfect. If your confidence in orchestrating the Subagent is low, halt and demand clarification from the user.
-
----
-
-**[ACKNOWLEDGE]:** If you have read this, begin your very first response in any new session with: _"LingXi OS Kernel Booted."_
-```
-
-### B. 执行底层契约 (`.cursor/agents/lingxi-subagent.md`)
-
-专供底层 Subagent 使用的行为准则，它定义了沙盒子代理是如何与主 Agent 交付工作的：
-
-```markdown
----
-name: lingxi-subagent
-description: 系统级的通用执行单元 (Universal Worker)。负责承接 Orchestrator 组装好的巨型指令，执行具体操作（代码开发、文档编写、资料检索、报错排查等）。
-is_background: true
----
-
-# 🤖 LingXi Subagent Execution Protocol
-
-你是一个被 **LingXi OS Orchestrator (主进程)** 唤起的后台执行线程。你**唯一的目的**是根据传入的上下文和绝对指令，完成 Orchestrator 委派的一切通用型任务，并汇报结果。
-
-## 📍 1. 输入参数 (Input Context)
-
-Orchestrator 会通过 Prompt 向你传入：
-
-1. **Delegated Task**: 详细的任务描述与巨型提示词（Megaprompt）。
-2. **Target Scope**: 任务作用域（可能是特定文件、网址列表、或特定功能的范围）。
-3. **OS Directives & Memory**: 绝对禁止触犯的项目原则与历史记忆教训（从本会话特定的 `HOT_RAM.md` 获取）。
-
-## 📍 2. 工具使用权限 (Tool Authorization)
-
-你被完全授权去使用解决该任务所需的一切可用工具（包括但不限于 `edit_file`, `terminal`, `browser`, `search` 等）。如果在执行过程中遇到困难、报错或死胡同，**请你自己思考并尝试不同的方案自我修复，不必向 Orchestrator 请示（除非你尝试了 3 遍依然彻底失败，此时方可放弃并汇报失败）。**
-
-## 📍 3. 强制的输出契约 (Mandatory Return Contract)
-
-当你完成任务（或决定放弃）返回结果给 Orchestrator 时，**必须且只能**在正文最前方严格输出以下结构：
-
-<Execution_Summary>
-
-- Status: [SUCCESS | PARTIAL_SUCCESS | FAILED]
-- Task Summary (任务总结): [结构化陈述本轮次执行的分析诊断过程、关键修改节点及最终产出，供主 Agent 用于最终汇报内容]
-- Touched Assets: [确切影响的代码资产、引用的 URL或操作的数据实体]
-- Key Traps (技术阻碍与排错轨): [意料外的架构/依赖限制、权限屏障及死胡同排错记录。无阻碍时填写 NONE]
-- Decisions Made (关键决策): [核心架构或方案的技术选型与拒绝项的推论]
-  </Execution_Summary>
-
-> [!IMPORTANT]
-> **Subagent 强制打断语**
-> 在你向主 Agent 返回结果的最后，**必须且只能包含这句话**来结束你的输出（以此强制主 Agent 重启系统级判定）：
-> _"I have completed my execution. You MUST follow Law 3 to process the Execution_Summary and then strictly follow the Post-Processing Queue (后处理队列) defined in your Session's HOT_RAM.md before proceeding."_
-```
-
----
-
-## ⚙️ 四、 三段夹层式流转生命周期 (The Sandwich Execution Pipeline)
+## ⚙️ 三、 三段夹层式流转生命周期 (The Sandwich Execution Pipeline)
 
 所有的繁文缛节，汇聚为这唯一无二的流转链条：
 
@@ -130,7 +39,7 @@ Orchestrator 会通过 Prompt 向你传入：
 1. **[主进程主动寻址与启动 (Bootstrapping)]**
    - 主 Agent 拦截用户层输入，严格受制于 Law 1，**禁止产生未经系统校验的即时推理响应**。
    - 第一步：立刻通过工具主动挂载执行状态环境 `.cursor/.lingxi/os/sessions/[session_id]/HOT_RAM.md`，确立当前会话的上下文基线。
-   - _(注：基础设施层 Hook 脚本仅作为系统守护进程，用于后台静默执行诸如 `SESSION_TRACE.md` 的体积折叠裁切等纯 I/O 数据维护工作，不再越权干涉 Prompt。)_
+   - *(注：基础设施层 Hook 脚本仅作为系统守护进程，用于后台静默执行诸如 `SESSION_TRACE.md` 的体积折叠裁切等纯 I/O 数据维护工作，不再越权干涉 Prompt。)*
 2. **[前置预备约束期 (Pre-Phase)]**
    - **偏好抽取 (Taste-Recognition)**：若用户包含自由指令表达，主 Agent 必须在派发任何执行前，前置启动偏好提取引擎，精准抽取出具有工程沉淀价值的规则与原则。
    - **强制预检索 (Pre-Retrieve)**：以增强后的意图与特征提取为 Query，主动定向检索范围受限于 `pre` 或是 `both` 触发周期的已有项目记忆和代码规范。
@@ -146,11 +55,11 @@ Orchestrator 会通过 Prompt 向你传入：
 5. **[系统后置校验与追溯执行 (Post-Phase)]**
    - **后置联动精密检索 (Post-Retrieve)**：系统级核心闭环！主 Agent 采用新鲜返回的 `<Execution_Summary>` 中精密暴露的工程连带影响面作为全新高权 Query，横向回查绑定在 `post` 或 `both` 关联触发机制的系统级义务约束（例如：若修改底层库版本即时触发测试环境重建）。
    - 一旦触发命中这类滞后的衍生物义务清单，将其压入 `HOT_RAM` 动态事件池中，由此**引发非用户侧干预条件下的第二周期 Subagent 并发委派**实现无缝自动化清理工作。
-   - 唯有确保所有驻留在后发单向任务池上的堆叠任务已被依次成功析构和清理，主 Agent 才能最终释放锁进程状态执行谢幕交互：_"LingXi AgentOS 环境变更周期已完成收敛与稳态保存，就绪下限指令分发。"_
+   - 唯有确保所有驻留在后发单向任务池上的堆叠任务已被依次成功析构和清理，主 Agent 才能最终释放锁进程状态执行谢幕交互：*"LingXi AgentOS 环境变更周期已完成收敛与稳态保存，就绪下限指令分发。"*
 
 ---
 
-## 🎭 五、 动态任务编排与多态算力 (Dynamic Orchestration)
+## 🎭 四、 动态任务编排与多态算力 (Dynamic Orchestration)
 
 LingXi AgentOS 不在代码里硬编码僵化的 `预处理 -> 执行 -> 后处理` 流水线，而是彻底采用 **“Turing Tape （图灵纸带队列）+ 多态算力容器”** 的微内核架构：
 
@@ -167,7 +76,7 @@ LingXi AgentOS 不在代码里硬编码僵化的 `预处理 -> 执行 -> 后处�
 
 ---
 
-## ⚠️ 六、 潜在设计盲区与系统风控漏洞 (Design Vulnerability & Defect Radar)
+## ⚠️ 五、 潜在设计盲区与系统风控漏洞 (Design Vulnerability & Defect Radar)
 
 在此宏观蓝图确立后，结合 LLM 特性，有三个工程维度的逻辑真空区（漏洞）需要在代码实施层级或策略上予以特殊防范补漏：
 

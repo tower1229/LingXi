@@ -1,263 +1,92 @@
-# 组件选择指南
+# LingXi OS 组件选择与开发指南 (Component Guides)
 
 ## 概述
 
-基于 Cursor 官方文档的组件能力边界和适用场景，提供组件选择指南。
+基于 Cursor 官方文档的组件能力边界和 LingXi AgentOS 架构，提供组件选择与开发指南。在 AgentOS 架构下，组件的职责被严格剥离。
 
 ## 组件对比
 
-| 组件         | 设计目标                          | 适用场景               | 限制                         |
-| ------------ | --------------------------------- | ---------------------- | ---------------------------- |
-| **Command**  | 可复用的工作流，单一用途          | 单一用途、可重复的操作 | 不需要单独的上下文窗口       |
-| **Skill**    | 教会 Agent 如何执行特定领域的任务 | 特定领域知识和工作流   | 与主 Agent 共享上下文窗口    |
-| **Rule**     | 系统级指令，持久、可重用的上下文  | 系统级约束规则         | 作用于提示级别，Always Apply |
-| **Hook**     | 观察、控制和扩展 agent 循环       | 自动化、门控、审计     | 脚本执行，必须快速执行       |
-| **Subagent** | 专门 AI 助手，可委派任务          | 独立上下文、并行任务   | 启动开销和 Token 消耗更高    |
+| 组件         | 设计目标                          | 在 LingXi OS 中的角色                                        | 限制                         |
+| ------------ | --------------------------------- | ------------------------------------------------------------ | ---------------------------- |
+| **Command**  | 可复用的工作流，单一用途          | **辅助入口**。如 `/remember`, `/init`。                      | 不需要单独的上下文窗口       |
+| **Skill**    | 教会 Agent 如何执行特定领域的任务 | **显式调用的专业工具**。如 `task`, `plan`, `memory-retrieve`。 | 与主 Agent 共享上下文窗口    |
+| **Rule**     | 系统级指令，持久、可重用的上下文  | **内核法典**。`.cursor/rules/agentos-kernel.mdc` 是唯一核心。 | 作用于提示级别，Always Apply |
+| **Hook**     | 观察、控制和扩展 agent 循环       | **异步守护进程触发器**。仅用于触发 Watchdog 检查。           | 脚本执行，必须快速执行       |
+| **Subagent** | 专门 AI 助手，可委派任务          | **隔离的算力容器**。主 Agent 必须将复杂任务委派给它们。      | 启动开销和 Token 消耗更高    |
 
-## Commands 指南
+---
 
-### 设计目标（官方定义）
-
-- 创建**可复用的工作流**，在聊天输入框中使用简单的 `/` 前缀触发
-- 有助于在团队内规范流程并提升常见任务的效率
-
-### 能力边界
-
-**技术特性**：
-
-- 纯 Markdown 文件：存放在 `.cursor/commands/` 或 `~/.cursor/commands/`
-- 支持参数：命令名之后的内容会包含在模型提示中
-- 自动发现：Cursor 自动扫描命令目录
-
-**适用场景**：
-
-- ✅ 单一用途、可重复的操作（如生成变更日志、格式化等）
-- ✅ 代码审查清单
-- ✅ 安全审计流程
-- ✅ 创建 PR 的标准流程
-- ✅ 新功能设置模板
-
-**不适合的场景**：
-
-- ❌ 需要上下文隔离的复杂任务（应用 Subagents）
-- ❌ 复杂的业务逻辑（应用 Skills）
-- ❌ 质量资产（应用 Memory 记忆系统）
-
-**限制**：
-
-- 单一用途，不需要单独的上下文窗口
-- 任务可以一次性完成
-- 不需要并行执行
+## 1. Rules (全局法典)
 
 ### 在灵犀中的应用
+LingXi OS 摒弃了零散的 Rules，将所有核心约束收敛于唯一的内核文件：
+- **`agentos-kernel.mdc`**：这是整个 IDE 全局置顶（`alwaysApply: true`）的规则。它的作用是让大模型认清自己的 Orchestrator（主控调度器）身份，强制其遵守引导协议 (Law 1)、职能隔离 (Law 2)、后置处理 (Law 3) 和强制自省 (Law 4)。
 
-- `/remember`：记忆写入
-- 会话提炼由**心跳自动触发**（新会话时若距上次提炼超过 30 分钟，按 transcript 增量自动入队最多 3 个候选会话，由后台 lingxi-session-distill 子代理提炼并写入记忆）；无需用户主动执行提炼命令。
-- **自我迭代**由 **24h 心跳**自动触发（新会话时若距上次 24h 诊断超过 24 小时，主 Agent 在步骤 A 发起 lingxi-self-iterate 后台子代理执行诊断与仅 low risk 的自动改进，主会话不等待）。
-- `/init`：项目初始化（init command 承载主逻辑，Step 0 委托 `workspace-bootstrap`；init-checklists 作为 command 附录）
+---
 
-## Skills 指南
+## 2. Commands (辅助入口)
 
-### 设计目标（官方定义）
-
-- 可移植、受版本控制的包，用于**教会 Agent 如何执行特定领域的任务**
-- Agent 会根据上下文决定何时使用（基于 description 匹配）
-- 扩展 AI Agent 的专业能力和专业知识
-
-### 能力边界
-
-**技术特性**：
-
-- 平台要求：需要 **Cursor Nightly** 版本
-- 自动发现：从 `.cursor/skills/` 或 `~/.cursor/skills/` 加载
-- Agent 自动匹配：根据 description 判断何时使用
-- 手动调用：在对话中输入 `/` 搜索技能名称
-
-**适用场景**：
-
-- ✅ 特定领域的知识和工作流
-- ✅ 阶段 Playbook
-- ✅ 专业知识：需要特定领域的知识和工作流
-
-**不适合的场景**：
-
-- ❌ 需要独立上下文窗口的长时间任务（应用 Subagents）
-
-**限制**：
-
-- 需要明确的 description 以便 Agent 匹配
-- 不应过长（保持精炼）
-- 与主 Agent 共享上下文窗口
+### 设计目标
+- 创建**可复用的工作流**，在聊天输入框中使用简单的 `/` 前缀触发。
+- 单一用途、可重复的操作。
 
 ### 在灵犀中的应用
+- **`/remember`**：用户主动触发记忆写入。调用 `taste-recognition` 识别后压入 `HOT_RAM.md` 队列。
+- **`/init`**：初始化项目上下文。
 
-**工作流 Skills**：
+---
 
-- `task`：需求分析、提纯、放大和任务文档生成（含可判定验收标准）
-- `plan`：任务规划、测试设计和文档生成
-- `build`：代码实现、测试编写和执行
-- `review`：多维度审查和交付质量保证
+## 3. Skills (专业技能)
 
-**工具类 Skills**：
-
-- `about-lingxi`：快速了解灵犀的背景知识
-- `ask-questions`：统一 ask-questions 交互协议（`question_id + option id` 模板、重试与取消语义；label 仅展示）
-
-**审查类 Skills**：
-
-- `reviewer-doc-consistency`：文档一致性审查
-- `reviewer-security`：安全审查
-- `reviewer-performance`：性能审查
-- `reviewer-e2e`：端到端测试审查
-
-## Hooks 指南
-
-### 设计目标（官方定义）
-
-- 通过自定义脚本**观察、控制和扩展 agent 循环**
-- 在 agent 循环中定义的各阶段之前或之后运行
-- 允许运行时自定义 agent 行为
-
-### 能力边界
-
-**技术特性**：
-
-- 配置文件：`hooks.json` 文件
-- 脚本语言：Node.js 或其他可执行脚本
-- 触发时机：在 agent 循环的特定阶段之前或之后
-- 同步执行：脚本执行会阻塞主流程（必须快速执行）
-
-**适用场景**：
-
-- ✅ 输入门控：校验 prompt 格式
-- ✅ 命令拦截：阻止危险命令
-- ✅ 自动归档：对话结束时自动归档
-- ✅ 审计日志：记录命令执行和响应
-- ✅ Git 集成：自动提交和分支管理
-- ✅ 格式化：编辑后运行代码格式化工具
-- ✅ 安全检查：扫描敏感信息、阻止高风险操作
-
-**不适合的场景**：
-
-- ❌ 复杂的业务逻辑（应在 Skills 中）
-- ❌ 需要 AI 推理的任务（应在 Skills 或 Subagents 中）
-- ❌ 长时间运行的任务（会阻塞主流程）
-
-**限制**：
-
-- 需要编写脚本（Node.js 或其他可执行脚本）
-- 有性能开销（每次触发都会执行）
-- 错误处理需要谨慎（避免阻塞主流程）
-- 脚本必须可执行且有必要的权限
+### 设计目标
+- 可移植、受版本控制的包，用于**教会 Agent 如何执行特定领域的任务**。
 
 ### 在灵犀中的应用
+在 AgentOS 架构下，Skill **不再自动拦截和干预核心业务逻辑**（如自动写记忆），而是作为被主 Agent 或用户**显式调用**的工具。
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入执行顺序 XML 约定：步骤 A（环境按需注入心跳子代理）、步骤 B（检索审计）、步骤 C（主流程），并注入 conversation_id 传入约定；**不注入**记忆沉淀约定。并执行**心跳检查**：若距上次会话提炼 >30 分钟则注入「会话提炼心跳」约定（主 Agent 步骤 A 调用 lingxi-session-distill）；若距上次 24h 诊断 >24 小时则注入「自我迭代心跳」约定（主 Agent 步骤 A 调用 lingxi-self-iterate）。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物；其他审计/门控为可选。
-- **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由用户通过 Command（/remember）或**心跳自动会话提炼**显式触发，不在每次 stop 时追加提示
+**工作流 Skills**（用户显式触发）：
+- `task`：需求分析、提纯、放大和任务文档生成。
+- `plan`：任务规划、测试设计和文档生成。
+- `build`：代码实现、测试编写和执行。
+- `review`：多维度审查和交付质量保证。
 
-## Subagents 指南
+**系统级 Skills**（主 Agent 显式调用）：
+- `taste-recognition`：从输入中识别可沉淀的「品味」，产出 payload 压入后处理队列。
+- `memory-retrieve`：执行 Pre-Phase 和 Post-Phase 的记忆检索。
+- `memory-write`：由 `lingxi-memory-write` 子代理调用，执行实际的文件写入。
 
-### 设计目标（官方定义）
+**审查类 Skills**（由 `review` 显式调用）：
+- `reviewer-doc-consistency`, `reviewer-security`, `reviewer-performance`, `reviewer-e2e`。
 
-- 专门 AI 助手，可以**委派任务**
-- 每个子代理都有**独立的上下文窗口**
-- 可以**并行执行**工作
+---
 
-### 能力边界
+## 4. Subagents (隔离算力容器)
 
-**技术特性**：
-
-- 目录结构：子代理定义存储在 `.cursor/agents/` 或 `.cursor/subagents/` 目录中
-- 独立上下文：每个子代理有独立的上下文窗口
-- 并行执行：多个子代理可以并行运行
-- 自动匹配：Agent 根据 description 字段自动匹配调用
-
-**适用场景**：
-
-- ✅ 长时间的研究类任务（隔离上下文）
-- ✅ 需要并行运行多个工作流
-- ✅ 任务在多个步骤中需要专业领域知识
-- ✅ 对工作结果进行独立验证
-- ✅ 需要静默处理，不干扰主对话的任务
-
-**不适合的场景**：
-
-- ❌ 单一用途的简单任务（应用 Commands 或 Skills）
-- ❌ 可以一次性完成的任务（应用 Skills）
-
-**限制**：
-
-- 启动开销：每个子代理需要单独收集自己的上下文
-- Token 消耗：多个上下文同时运行，消耗更高
-- 延迟：对于简单任务可能比主代理更慢
-- 并行运行 5 个子代理 ≈ 单个 agent 约 5 倍的 tokens
+### 设计目标
+- 专门 AI 助手，可以**委派任务**。每个子代理都有**独立的上下文窗口**。
 
 ### 在灵犀中的应用
+Subagent 是 AgentOS 架构中执行“脏活累活”的核心。主 Agent 严禁直接修改代码，必须委派给 Subagent。
 
-- **lingxi-memory-write**（`.cursor/agents/lingxi-memory-write.md`）：承担**记忆写入**。通过**显式调用**使用；**仅接受** taste-recognition skill 产出的 **payloads 数组**（扩展 payload：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。**apply=team** 时由 memory-write skill 写入 **memory/share/**（团队级），否则写入 **memory/project/**（项目级）。**主动记忆捕获**由用户通过 `/remember` 触发；**会话提炼**由心跳自动触发（lingxi-session-distill 后台子代理）；**工作流品味嗅探**由 task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，经 taste-recognition 产出 payload（source=choice）后调用；`/init` 在初始化时可将确认草稿可选写入（初始化额外产物）。主 Agent 先调用 taste-recognition 产出 payload（单条或批量），组成 payloads 数组后调用 lingxi-memory-write。子代理在独立上下文中完成校验并调用 **memory-write** skill → 治理 → 门控与**直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。
-- **lingxi-session-distill**（`.cursor/agents/lingxi-session-distill.md`）：**会话提炼**。由 30min 心跳触发时主 Agent 在步骤 A 调用，传入 candidate_ids 与 enqueued_by；在后台对入队会话做 taste-recognition 提炼并调用 lingxi-memory-write 写入，主会话不等待。
-- **lingxi-self-iterate**（`.cursor/agents/lingxi-self-iterate.md`）：**自我迭代**。由 24h 心跳触发时主 Agent 在步骤 A 调用（run_in_background=true），在后台执行诊断与仅 low risk 的自动改进（如记忆改进提案与应用）；当前实现已包含 INDEX 漂移探针（`INDEX.md` 行数与 note 文件数对比）并产出诊断信号，主会话不等待、不插入确认，仅消费简报。
-- 审查类任务通过 Reviewer Skills 实现，由 **review** skill 显式调用，共享上下文以降低 token 消耗。
+- **`lingxi-subagent`**：通用算力容器。主 Agent 将业务任务（如写代码、排错）打包成 Megaprompt 交给它。它在独立沙盒中执行，完成后必须返回严格的 `<Execution_Summary>` XML 结构。
+- **`lingxi-memory-write`**：特权子代理。专门负责在后置收敛阶段消费 `HOT_RAM.md` 中的记忆写入队列，执行高复杂度的数据合并与防冲突门控。
+- **`lingxi-session-distill`**：会话提炼子代理。由主 Agent 在消费 `WAL_BUFFER.md` 时显式唤起，负责读取历史对话并提炼记忆。
 
-## 选择决策矩阵
+---
 
-> 说明：本节提供基于 Cursor 官方定义的能力边界。若要评估"在灵犀项目中该如何取舍"（成本、稳定性、门控、降级等），请结合 `references/evaluation-criteria.md` 中的灵犀实践判据；价值对齐见 `references/core-values.md`。
+## 5. Hooks & Watchdog (异步守护进程)
 
-### 需求类型 → 推荐组件
-
-| 需求类型             | 推荐组件 | 理由（基于官方定义）                                     |
-| -------------------- | -------- | -------------------------------------------------------- |
-| 单一用途、可重复操作 | Command  | 官方定义：单一用途，不需要单独的上下文窗口               |
-| 特定领域知识和工作流 | Skill    | 官方定义：教会 Agent 如何执行特定领域的任务              |
-| 系统级约束规则       | Rule     | 官方定义：系统级指令，在提示级别提供持久、可重用的上下文 |
-| 自动化、门控、审计   | Hook     | 官方定义：通过自定义脚本观察、控制和扩展 agent 循环      |
-| 独立上下文、并行任务 | Subagent | 官方定义：专门 AI 助手，独立的上下文窗口，可以并行执行   |
-
-### 性能考虑
-
-| 组件     | 性能开销                                    | 适用场景             |
-| -------- | ------------------------------------------- | -------------------- |
-| Command  | 低                                          | 简单、可重复的操作   |
-| Skill    | 低（共享上下文）                            | 特定领域知识和工作流 |
-| Hook     | 低（脚本执行快速）                          | 自动化、门控、审计   |
-| Subagent | 高（独立上下文，启动开销和 Token 消耗更高） | 独立上下文、并行任务 |
-
-## Rules 指南
-
-> **注意**：本文档描述 Cursor 官方的 Rules 功能。灵犀当前通过 **sessionStart hook**（`.cursor/hooks/session-init.mjs`）注入约定实现每轮记忆检索与最小注入，不使用 Rules 作为该触发器；其他质量资产仍主要通过记忆库（`memory/project/`、`memory/share/` + `INDEX.md`）治理与复用。
-
-### 设计目标（官方定义）
-
-- 提供**系统级指令**，在提示级别提供持久、可重用的上下文
-- 将提示词、脚本等内容打包，便于在团队内管理和共享工作流
-- 支持从对话中生成规则（`/Generate Cursor Rules` 命令）
-
-### 能力边界
-
-**存储位置**：
-
-1. **Project Rules**（`.cursor/rules/`）：存储在项目目录中，版本控制
-2. **User Rules**（Cursor 设置）：在 Cursor 设置中全局定义，跨项目应用
-3. **AGENTS.md**（项目根目录）：作为 `.cursor/rules/` 的简化替代方案
-
-**适用场景**：
-
-- ✅ 沉淀与代码库相关的领域知识
-- ✅ 自动化项目特定的工作流或模板
-- ✅ 统一风格或架构决策
-- ❌ 不适合：单一用途的简单任务（应用 Commands）
-
-**限制**：
-
-- 应控制在 500 行以内
-- 应聚焦、可操作、范围明确
-- Always Apply 规则必须极精炼（< 50 行，总计 < 150 行）
+### 设计目标
+- 通过自定义脚本**观察、控制和扩展 agent 循环**。
 
 ### 在灵犀中的应用
+LingXi OS 放弃了使用 Hook 强行注入 Prompt 的做法，转而将其作为**纯粹的异步任务守护进程**。
 
-**灵犀当前未使用 Rules**（项目内无 `.cursor/rules/`、无 `AGENTS.md`）。
+1. **`post-command.mjs` (Hook)**：
+   - 注册于 `.cursor/hooks.json` 的 `afterAgentResponse` 和 `stop` 事件。
+   - 作用极简：仅仅是调用后端的 Node.js 脚本 `heartbeat-check.mjs`，不阻塞主流程，不注入任何上下文。
 
-## 参考
-
-- **Rules 指南**：`references/rules-guide.md`（详细技术参考）
-- **Cursor 官方文档**：Commands、Skills、Hooks、Subagents、Rules 的能力边界
+2. **`heartbeat-check.mjs` (Watchdog)**：
+   - 真正的异步调度器。
+   - **会话提炼 (30min)**：若距上次提炼超过 30 分钟，将 `[SESSION_DISTILL]` 任务写入全局缓存 `.cursor/.lingxi/os/WAL_BUFFER.md`，等待主 Agent 在下一轮后处理时消费。
+   - **自我迭代 (24h)**：若距上次诊断超过 24 小时，Watchdog **直接在后台 `exec` 执行** `lingxi-self-iterate` 相关的 Node.js 脚本（读取 `MEMORY_JOURNAL.jsonl`，生成提案），不占用大模型 API 额度，结果直接写入日志。
