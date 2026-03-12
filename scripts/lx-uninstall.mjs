@@ -28,7 +28,9 @@ function loadManifest() {
     process.exit(1);
   }
   try {
-    return JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }));
+    const raw = fs.readFileSync(manifestPath, { encoding: "utf8" });
+    const normalized = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+    return JSON.parse(normalized);
   } catch (e) {
     console.error("[lx-uninstall] 安装清单 JSON 解析失败:", e.message);
     process.exit(1);
