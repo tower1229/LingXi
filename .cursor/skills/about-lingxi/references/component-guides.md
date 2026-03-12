@@ -152,7 +152,7 @@
 
 ### 在灵犀中的应用
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入执行顺序约定：步骤 A（心跳子代理）、步骤 B（检索审计）、步骤 C（主流程）以及**步骤 D（仅当步骤 C 有文件写入时触发的 post 检索）**，并注入 conversation_id 传入约定；**不注入**记忆沉淀约定。并执行**心跳检查**：若距上次会话提炼 >30 分钟则注入「会话提炼心跳」约定（主 Agent 步骤 A 调用 lingxi-session-distill）；若距上次 24h 诊断 >24 小时则注入「自我迭代心跳」约定（主 Agent 步骤 A 调用 lingxi-self-iterate）。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物；其他审计/门控为可选。
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入执行顺序 XML 约定：步骤 A（环境按需注入心跳子代理）、步骤 B（检索审计）、步骤 C（主流程），并注入 conversation_id 传入约定；**不注入**记忆沉淀约定。并执行**心跳检查**：若距上次会话提炼 >30 分钟则注入「会话提炼心跳」约定（主 Agent 步骤 A 调用 lingxi-session-distill）；若距上次 24h 诊断 >24 小时则注入「自我迭代心跳」约定（主 Agent 步骤 A 调用 lingxi-self-iterate）。**主动记忆捕获**由用户通过 /remember 触发；**会话提炼**由心跳自动触发；/init 在初始化时可选写入，为初始化额外产物；其他审计/门控为可选。
 - **不使用 stop hook 的 followup_message 做沉淀触发**：stop 若返回 followup_message，会在模型每次响应后向对话显式追加一条系统 prompt，严重干扰对话流；灵犀以「静默」为原则，沉淀由用户通过 Command（/remember）或**心跳自动会话提炼**显式触发，不在每次 stop 时追加提示
 
 ## Subagents 指南

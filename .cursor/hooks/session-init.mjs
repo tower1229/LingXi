@@ -7,23 +7,26 @@
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
-const BASE_CONTEXT = `【本回合执行顺序】本约定在整场会话中持续有效，每轮独立、不继承上一轮。**无论用户本轮回合输入为何（含仅 command/skill 调用），均须按以下顺序执行，无例外。**
-
-- **步骤 A**（若存在下方「会话提炼心跳」或「自我迭代心跳」）：先执行其 mcp_task 步骤（后台，无需等待），再进入步骤 B。
-- **步骤 B**（记忆提取约定）：执行下方「记忆提取约定」二选一，写审计（performed 或 skipped），**禁止未写审计即作答**。
-- **步骤 C**：作答与实施。
-- **步骤 D**（执行后记忆检查，条件触发）：**仅当本轮步骤 C 中执行了文件写入操作**（StrReplace/Write/Delete 中的任一）时，在主要实施完成后、最终回复前，以「本轮实际变更摘要」为 query，以 **post 模式**再执行一次 \`/memory-retrieve\`；对命中的 \`trigger_timing=post\` 或 \`both\` 的记忆**立即评估并执行对应义务**（如同步更新测试、递增版本号等）。步骤 D 无需额外写审计，正常走 memory-retrieve 的审计流程。
-
-【记忆提取约定】每轮必须二选一：
-- **仅 command/skill 调用**（满足以下任一条件）：不执行 memory-retrieve，写入 \`memory.retrieve.skipped\`（含 query、reason: "仅 command/skill 调用"）：
-  - 用户消息仅为一条零参数命令（如 \`/task\`、\`/review\`、\`/start-tuning\`）；
-  - 用户消息为一条**携带参数的命令**（如 \`/remember <内容>\`、\`/task <描述>\`），参数内容是命令的形式输入，而非独立的用户意图表达；判断依据：消息以已知命令前缀开头且其后内容为该命令的直接参数。
-- **否则**（存在独立的用户自由输入，如命令后附带了与命令无关的分析/提问）：先执行 \`/memory-retrieve <当前用户消息>\`；执行后写入 \`memory.retrieve.performed\`（必含 query、hits、adopted、rejected、semantic_called、keyword_called、candidate_read_count、decision）。
-
-若执行了检索且命中（top 0–2）：必须先对每条命中做 \`adopt\`/\`reject\`/\`ask\` 决策；仅对 adopt 做一行极简提示，reject 不展示；若依据某条记忆做方案选择，表述中自然引用来源（如 \`[MEM-003]\`）。未记录 performed 或 skipped 时审计系统会追加 \`memory.retrieve.missing\`（不阻断主流程）。
-
+const BASE_CONTEXT_FOOTER = `
 【conversation_id 传入约定】调用 lingxi-memory-write 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
+
+function buildDynamicBaseContext(trigger_heartbeat, trigger_improvement) {
+  let stepA = (trigger_heartbeat || trigger_improvement) ? 
+    `  <rule id="A" condition="If [会话提炼心跳] or [自我迭代心跳] context is provided below">Invoke subagent using mcp_task in the background, no need to wait.</rule>\n` : "";
+
+  return `<execution_protocol>
+  <description>This protocol is effective for the entire session. Each turn is independent. Regardless of the user's input, you MUST execute in the following order. NO EXCEPTIONS.</description>
+${stepA}  <rule id="B">Memory Retrieval Agreement (Must choose one):
+    - [Skip]: If the user message is ONLY a command (like \`/task\`) or a command with parameters (like \`/remember <content>\`) without independent user intent, DO NOT execute memory-retrieve. Write \`memory.retrieve.skipped\` to audit.
+    - [Perform]: Otherwise, FIRST execute \`/memory-retrieve <current user message>\`. Then write \`memory.retrieve.performed\` to audit.
+    PROHIBITION: DO NOT start answering or doing requests before writing the audit log for step B!
+    Decision: If there are hits (top 0-2), you must make an adopt/reject/ask decision for each. Only give a one-line prompt for adopt, don't show reject. Cite the source (e.g., [MEM-003]) naturally when used.
+  </rule>
+  <rule id="C">Make responses and implement the user requests.</rule>
+</execution_protocol>` + BASE_CONTEXT_FOOTER;
+}
+
 
 function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId) {
   if (!trigger_heartbeat || !candidate_ids || candidate_ids.length === 0) return "";
@@ -55,7 +58,7 @@ async function main() {
   );
   const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId);
   const improvementContext = buildImprovementContext(trigger_improvement_diagnosis);
-  const additional_context = BASE_CONTEXT + heartbeatContext + improvementContext;
+  const additional_context = buildDynamicBaseContext(trigger_heartbeat, trigger_improvement_diagnosis) + heartbeatContext + improvementContext;
   writeStdoutJson({
     continue: true,
     additional_context,

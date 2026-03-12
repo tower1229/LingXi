@@ -12,7 +12,7 @@
 **职责**：在会话开始时注入约定并执行心跳检查。
 
 1. **注入约定**  
-   - 注入执行顺序约定：步骤 A（心跳子代理）、步骤 B（检索审计）、步骤 C（主流程），以及**步骤 D（仅当步骤 C 有文件写入时触发 post 检索）**；并注入调用 lingxi-memory-write 时传入 conversation_id 的约定。
+   - 注入执行顺序约定：步骤 A（心跳子代理，仅符合条件时注入）、步骤 B（检索审计）和主流程（步骤 C）；并注入调用 lingxi-memory-write 时传入 conversation_id 的约定。
 
 2. **心跳检查**  
    脚本读取 `.cursor/.lingxi/workspace/heartbeat-control.json` 与 transcript 增量索引（`heartbeat-transcript-index.json`），并视情况向当轮上下文追加约定：

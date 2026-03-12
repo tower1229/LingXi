@@ -478,69 +478,21 @@ function buildPayload(input) {
 }
 
 /**
- * 轮转审计日志文件：当文件超过大小限制时，删除总条数一半的旧日志
+ * 轮转审计日志文件：当文件超过大小限制时，采用标准原子重命名法轮转。
  */
-function acquireRotateLock(lockPath) {
-  try {
-    return fs.openSync(lockPath, "wx");
-  } catch (err) {
-    if (err?.code === "EEXIST") return null;
-    throw err;
-  }
-}
-
-function releaseRotateLock(lockFd, lockPath) {
-  if (typeof lockFd === "number") {
-    try {
-      fs.closeSync(lockFd);
-    } catch {}
-  }
-  try {
-    fs.unlinkSync(lockPath);
-  } catch {}
-}
-
 function rotateAuditFile(auditPath) {
-  const lockPath = `${auditPath}${ROTATE_LOCK_SUFFIX}`;
-  const lockFd = acquireRotateLock(lockPath);
-  if (lockFd === null) {
-    return;
-  }
-
   try {
     const stats = fs.statSync(auditPath, { throwIfNoEntry: false });
     if (!stats || stats.size < MAX_FILE_SIZE) {
       return; // 无需轮转
     }
 
-    // 读取所有日志行
-    const content = fs.readFileSync(auditPath, { encoding: "utf8" });
-    const lines = content.split("\n").filter((line) => line.trim().length > 0);
+    const bakPath = auditPath + '.1';
+    if (fs.existsSync(bakPath)) fs.unlinkSync(bakPath);
 
-    // 计算需要保留的行数（保留后一半）
-    const totalLines = lines.length;
-    const keepLines = Math.ceil(totalLines / 2); // 保留后一半，向上取整
-
-    if (keepLines >= totalLines) {
-      // 如果保留行数等于总行数，说明只有1行或0行，无需清理
-      return;
-    }
-
-    // 保留后一半的行
-    const linesToKeep = lines.slice(-keepLines);
-    const newContent = linesToKeep.join("\n") + "\n";
-
-    // 写回文件（使用唯一临时文件避免并发覆盖）
-    const tempPath = `${auditPath}.${process.pid}.${Date.now()}.${Math.random()
-      .toString(16)
-      .slice(2)}.tmp`;
-    fs.writeFileSync(tempPath, newContent, { encoding: "utf8" });
-    fs.renameSync(tempPath, auditPath);
+    fs.renameSync(auditPath, bakPath);
   } catch (err) {
-    // 轮转失败不影响主流程，静默降级
     console.error("[append-memory-audit] Rotation failed:", err.message);
-  } finally {
-    releaseRotateLock(lockFd, lockPath);
   }
 }
 

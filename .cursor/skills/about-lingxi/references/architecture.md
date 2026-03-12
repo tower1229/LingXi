@@ -50,7 +50,7 @@ Skills 承载详细的工作流指导，按职责分为：
   - **准入口径**：由 taste-recognition 在识别与升维流程内统一执行（Exclusions 前置拦截，Inclusion 语义综合判定）。
   - **手动记忆**：用户主动发起，经 taste-recognition 转为 payload 后以 **payloads 数组**交由 lingxi-memory-write。
   - **记忆写入**：由 **Subagent lingxi-memory-write**（`.cursor/agents/lingxi-memory-write.md`）在独立上下文中执行；**仅接受** taste-recognition skill 产出的扩展品味 **payloads 数组**（必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence），不产候选；完成校验后调用 **memory-write** skill（`.cursor/skills/memory-write/SKILL.md`）执行映射 → 治理 → 门控 → **直接文件写入**（memory/project/、memory/share/ + INDEX），主对话收简报。升维（价值判定与模式靠拢）在 taste-recognition 完成，判定不写时不产出 payload、不调用 lingxi-memory-write。
-- **记忆提取**：由 `memory-retrieve`（Skill）承担，采用**双时机检索**：步骤 C 在回答/实施前执行 `pre` 检索（对 `memory/project/`、`memory/share/` 做语义+关键词双路径混合检索，并集加权合并，取 top 0–2 最小注入）；若步骤 C 发生文件写入，则步骤 D 以“本轮实际变更摘要”执行 `post` 检索，并对 `TriggerTiming=post|both` 的记忆立即履约。命中后主 Agent 需完成 `adopt/reject/ask` 决策，并遵循“仅对 adopt 一行极简提示、reject 不展示”的低打扰输出约束，且在采用时自然引用记忆来源。
+- **记忆提取**：由 `memory-retrieve`（Skill）承担。通过在结构化 XML Prompt 的约定中严格执行：作答前必须由步骤 B 执行检索（对 `memory/project/`、`memory/share/` 做语义+关键词双路径混合检索，并集加权合并，取 top 0–2 最小注入）。命中后主 Agent 需完成 `adopt/reject/ask` 决策，并遵循“仅对 adopt 一行极简提示、reject 不展示”的低打扰输出约束，且在采用时自然引用记忆来源。
 
 #### 工具类 Skills（提供辅助能力）
 
@@ -74,7 +74,7 @@ Skills 承载详细的工作流指导，按职责分为：
    - **数据流**：taste-recognition（识别 → 模式靠拢 → 升维判定）→ 仅对判定为写的条目标产扩展 payload；**主 Agent 仅当 payloads 非空时**调用 lingxi-memory-write；lingxi-memory-write 校验后调用 **memory-write** skill 执行：按 payload 映射生成 note → 治理（TopK）→ 门控 → 直接读写 `memory/project/`、`memory/share/` 与 `memory/INDEX.md`，主对话收简报。判定不写时不产出 payload、不调用 lingxi-memory-write。
    - **触发**：用户通过 `/remember` 主动发起记忆捕获；**会话提炼**由**心跳**自动触发（新会话时若距上次提炼超过 30 分钟，按 transcript 增量入队最多 3 个候选会话，由 lingxi-session-distill 后台子代理提炼）；**工作流内置品味嗅探**（task/plan/build/review 等 **skill** 环节在情境驱动时经 ask-questions 收集用户选择，payload source=choice）同样产生沉淀；`/init` 在初始化时可将确认草稿可选写入，为初始化额外产物。sessionStart hook 仅注入记忆提取约定及 conversation_id 传入约定。
    - **门控**：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。
-2. **记忆提取**：采用“步骤 C 的 pre 检索 + 步骤 D 的 post 检索（条件触发）”。步骤 D 仅在本轮发生文件写入时触发，并结合 `TriggerTiming` 执行执行后义务（如补测试、版本递增）。
+2. **记忆提取**：每轮通过 sessionStart 使用 XML `<execution_protocol>` 约束自动执行核心的前置检索与决策。
 3. **记忆共享机制**（跨项目复用）：
    - **共享目录**：`.cursor/.lingxi/memory/share/`（推荐作为 git submodule）
    - **识别**：Audience 为 project（项目级）或 team（团队级）；**团队级=写入 memory/share/**，**项目级=写入 memory/project/**；Portability 为 project-only / cross-project。
@@ -84,7 +84,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 ### Hooks（sessionStart 记忆注入 + 心跳检查 + 可选审计/门控）
 
-- **sessionStart**（`session-init.mjs`）：在会话开始时注入执行顺序约定（步骤 A/B/C，及“发生文件写入时触发步骤 D post 检索”）与 conversation_id 传入约定；并执行**心跳检查**（读 `heartbeat-control.json` 与 transcript 增量索引）。若距上次会话提炼超过 30 分钟且锁可用，则入队待提炼会话并注入「会话提炼心跳」约定，主 Agent 在步骤 A 调用 **lingxi-session-distill** 后台子代理；若距上次 24h 诊断超过 24 小时，则注入「自我迭代心跳」约定，主 Agent 在步骤 A 调用 **lingxi-self-iterate** 后台子代理。两种心跳均在后台执行，主会话无需等待。
+- **sessionStart**（`session-init.mjs`）：在会话开始时注入执行顺序约定（基于 XML 结构的步骤 A/B/C）与 conversation_id 传入约定；并执行**心跳检查**（读 `heartbeat-control.json` 与 transcript 增量索引）。若距上次会话提炼超过 30 分钟且锁可用，则入队待提炼会话并动态注入「会话提炼心跳」约束（作为步骤 A），主 Agent 调用 **lingxi-session-distill** 后台子代理；若距上次 24h 诊断超过 24 小时，则动态注入「自我迭代心跳」约束（步骤 A），调用 **lingxi-self-iterate**。两种心跳均在后台执行，主会话无需等待。不满足触发条件时，步骤 A 在 Prompt 中被省略。
 - **不使用 stop hook 的 followup_message 触发沉淀**：该方式会在模型每次响应后显式追加一条 prompt，严重干扰对话；灵犀追求尽可能「静默」执行，沉淀由用户通过 Command（/remember）或**心跳自动会话提炼**触发，而非在每次 stop 时追加系统提示
 
 ## 目录结构
