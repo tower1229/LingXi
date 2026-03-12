@@ -206,7 +206,7 @@ get_json_array() {
     return 1
   fi
   if command -v jq &> /dev/null; then
-    jq -r ".$key[]" "$MANIFEST_PATH" 2>/dev/null || return 1
+    jq -r --arg key "$key" '.[$key][]' "$MANIFEST_PATH" 2>/dev/null || return 1
   elif [ -n "$PYTHON_CMD" ]; then
     $PYTHON_CMD -c "
 import sys
@@ -238,7 +238,7 @@ get_json_object_array() {
     return 1
   fi
   if command -v jq &> /dev/null; then
-    jq -r ".$key.$subkey[]" "$MANIFEST_PATH" 2>/dev/null || return 1
+    jq -r --arg key "$key" --arg subkey "$subkey" '.[$key][$subkey][]' "$MANIFEST_PATH" 2>/dev/null || return 1
   elif [ -n "$PYTHON_CMD" ]; then
     $PYTHON_CMD -c "
 import sys
@@ -388,6 +388,10 @@ success "已下载 agents ($agent_count 个文件)"
 ref_count=0
 if command -v jq &> /dev/null; then
   for ref_key in $(jq -r '.references | keys[]' "$MANIFEST_PATH" 2>/dev/null); do
+    if ! ref_items=$(jq -r --arg key "$ref_key" '.references[$key][]' "$MANIFEST_PATH" 2>/dev/null); then
+      error "解析 references.$ref_key 失败，请检查安装清单格式"
+      exit 1
+    fi
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
@@ -396,7 +400,7 @@ if command -v jq &> /dev/null; then
         exit 1
       fi
       ref_count=$((ref_count + 1))
-    done < <(get_json_object_array "references" "$ref_key")
+    done <<< "$ref_items"
   done
 elif [ -n "$PYTHON_CMD" ]; then
   for ref_key in $($PYTHON_CMD -c "
