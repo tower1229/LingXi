@@ -66,11 +66,11 @@ Kind 与内容类型（偏好、决策经验、领域知识等）的对应见 ta
 - 治理判定为 `merge` 时，追加审计事件 `memory.merge.diagnosed`。
 - 治理判定为 `dedupe` 时，追加审计事件 `memory.dedupe.applied`；仅建议去重未执行时记 `memory.dedupe.suggested`。
 - 当治理判定为 `new` 且已识别存在高相关候选（TopK 中任一候选的 same_subject 或 same_conclusion 为 true，但因其他原因未触发 merge/dedupe）时，**必须**记录 `memory.new.created_but_related_exists`（用于碎片化诊断）；此为强制要求，不得省略。
-- `memory.merge.diagnosed` 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`action_plan[]`，并建议附带 `merge_kind` 与 `governance_context`。
+- `memory.merge.diagnosed` 事件必填字段：`note_id`、`source`、`diagnosis_tags[]`、`primary_tag`、`action_plan[]`，并建议附带 `merge_kind` 与 `governance_context`。写入 `MEMORY_JOURNAL.jsonl`。
 - 一致性约束：
   - `primary_tag` 必须属于 `diagnosis_tags[]`。
   - `governance_context` 字段与枚举约束见 `references/governance-context-schema.md`。
-- 校验失败不阻断主链路：降级写入 `memory.merge.invalid`（含 `reason` 与可选 `invalid_event`）。
+- 校验失败不阻断主链路：降级写入 `memory.merge.invalid`（含 `reason` 与可选 `invalid_event`）至 `MEMORY_JOURNAL.jsonl`。
 
 ## 用户门控（ask-questions）
 
@@ -84,13 +84,9 @@ dedupe 为低风险可自动执行；merge/replace 时必须通过 ask-questions
 
 ## 记忆审计（写入后必须执行）
 
-每次新建/更新/删除 note 或更新 INDEX 后，在项目根执行：
+每次新建/更新/删除 note 或更新 INDEX 后，必须向 `.cursor/.lingxi/os/MEMORY_JOURNAL.jsonl` 追加一条 JSON 记录（使用 Shell 工具执行 `echo` 或使用文件追加写入能力）。
 
-```bash
-node .cursor/hooks/append-memory-audit.mjs '<JSON>'
-```
-
-JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_deleted | memory_index_updated）、`ts`（脚本自动生成）、`conversation_id`、`generation_id`、`note_id`、`operation`、`source`、`file`（note 相对路径）。
+JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_deleted | memory_index_updated）、`ts`（ISO 8601 时间戳）、`conversation_id`、`generation_id`、`note_id`、`operation`、`source`、`file`（note 相对路径）。
 
 ## 写入实现约束
 
@@ -112,7 +108,7 @@ JSON 字段：`event`（memory_note_created | memory_note_updated | memory_note_
 2. 更新 note 的 Meta 字段：`Audience: team`、`Portability: cross-project`；
 3. 更新 `INDEX.md` 中对应行的 `File` 列（由 `memory/project/` 改为 `memory/share/`）、`Audience` 列；
 4. 删除原 `memory/project/MEM-xxx.md` 文件；
-5. 执行写入审计：追加 `memory_note_updated` 事件记录迁移。
+5. 执行写入审计：向 `MEMORY_JOURNAL.jsonl` 追加 `memory_note_updated` 事件记录迁移。
 
 **注意**：升级为 team 级后，该记忆将跨项目可见（若 `memory/share/` 以 git submodule 形式共享）。升级前应确认内容不包含项目特定细节（如具体路径、API 密钥命名等）。
 

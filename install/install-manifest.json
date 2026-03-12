@@ -8,11 +8,9 @@
     "hooks": {
         "files": [
             "hooks.json",
-            "hooks/session-init.mjs",
+            "hooks/post-command.mjs",
             "hooks/heartbeat-check.mjs",
-            "hooks/_hook-utils.mjs",
-            "hooks/append-memory-audit.mjs",
-            "hooks/lingxi-audit.mjs"
+            "hooks/_hook-utils.mjs"
         ]
     },
     "skills": [
@@ -126,11 +124,12 @@
         ".cursor/.lingxi/memory",
         ".cursor/.lingxi/memory/project",
         ".cursor/.lingxi/memory/share",
-        ".cursor/.lingxi/workspace"
+        ".cursor/.lingxi/os",
+        ".cursor/.lingxi/os/sessions"
     ],
     "gitignoreEntries": [
         "# Local workspace for temp code clones, generated artifacts, etc.",
-        ".cursor/.lingxi/workspace/"
+        ".cursor/.lingxi/os/"
     ],
     "scripts": [
         "lx-uninstall.mjs"

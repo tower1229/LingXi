@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "transcripts": {
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\fbedc02c-8df1-484f-ace2-0c796a4d3e4b\\fbedc02c-8df1-484f-ace2-0c796a4d3e4b.jsonl": {
+      "mtimeMs": 1772344008298.0386,
+      "conversationId": "fbedc02c-8df1-484f-ace2-0c796a4d3e4b",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\f1240a14-f07a-4c33-8d42-ef7e3da1fb1a\\f1240a14-f07a-4c33-8d42-ef7e3da1fb1a.jsonl": {
+      "mtimeMs": 1772268439839.1995,
+      "conversationId": "f1240a14-f07a-4c33-8d42-ef7e3da1fb1a",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\9b703413-73ef-494b-87f9-bd5be8801a0c\\9b703413-73ef-494b-87f9-bd5be8801a0c.jsonl": {
+      "mtimeMs": 1772337921903.4006,
+      "conversationId": "9b703413-73ef-494b-87f9-bd5be8801a0c",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\647ab2f5-0591-4320-876a-9d959a5565e5.jsonl": {
+      "mtimeMs": 1772271139555.6687,
+      "conversationId": "647ab2f5-0591-4320-876a-9d959a5565e5",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\9879ca8d-f80a-4a72-84ec-d5d870f46c9a.jsonl": {
+      "mtimeMs": 1772269366478.697,
+      "conversationId": "9879ca8d-f80a-4a72-84ec-d5d870f46c9a",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\9b770c79-6bc3-4ecb-8d73-ffb08a0d1e40.jsonl": {
+      "mtimeMs": 1772271136437.4402,
+      "conversationId": "9b770c79-6bc3-4ecb-8d73-ffb08a0d1e40",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\a03a7b8b-5131-404e-a38c-beda12907bca.jsonl": {
+      "mtimeMs": 1772271020890.204,
+      "conversationId": "a03a7b8b-5131-404e-a38c-beda12907bca",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\20ac3719-0c42-4382-967e-21385c648f51\\20ac3719-0c42-4382-967e-21385c648f51.jsonl": {
+      "mtimeMs": 1772337596430.2778,
+      "conversationId": "20ac3719-0c42-4382-967e-21385c648f51",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\024db728-d3cd-428f-ac7d-fe6cbbf73636\\024db728-d3cd-428f-ac7d-fe6cbbf73636.jsonl": {
+      "mtimeMs": 1772271449177.5276,
+      "conversationId": "024db728-d3cd-428f-ac7d-fe6cbbf73636",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    },
+    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\024db728-d3cd-428f-ac7d-fe6cbbf73636\\subagents\\043b685f-5ade-4a1a-8a4f-dec78800c3e1.jsonl": {
+      "mtimeMs": 1772271446929.535,
+      "conversationId": "043b685f-5ade-4a1a-8a4f-dec78800c3e1",
+      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    }
+  }
+}

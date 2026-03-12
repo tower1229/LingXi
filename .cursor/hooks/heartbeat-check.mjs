@@ -1,20 +1,17 @@
 #!/usr/bin/env node
 /**
- * 心跳检查脚本：在 sessionStart 时由 session-init 调用。
- * 读 heartbeat-control.json 与 transcript 增量索引，判断是否距上次会话提炼超过 30 分钟；
- * 若是且锁可用，则从 transcript 增量中选出最多 3 个未提炼会话（按 mtime 倒序），
- * 写入 pending_distillation 与锁，返回 trigger_heartbeat 与 candidate_ids。
- * 同时判断是否需要触发 24h 低频诊断（trigger_improvement_diagnosis）。
- * 主 Agent 据此调用后台会话提炼子代理，无需等待。
- *
- * heartbeat.running：首次入队时设为 true；仅会话提炼子代理在收尾步骤会置为 false。
- * 若因锁超时（LOCK_STALE_MINUTES）重新入队，本脚本不再占用锁（running 写为 false），避免子代理未被调用时锁一直为 true。
+ * AgentOS Watchdog 守护进程：在 post-command hook 中调用。
+ * 职责：
+ * 1. 轮询 WAL_BUFFER.md，如果发现 PENDING OPERATIONS，则静默唤起对应的 Subagent 消费。
+ * 2. 检查会话提炼心跳（30分钟）和自我迭代心跳（24小时），若触发则向 WAL_BUFFER.md 写入任务。
  */
 import fs from "node:fs";
 import path from "node:path";
+import { exec } from "node:child_process";
 
-const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
-const HEARTBEAT_TRANSCRIPT_INDEX_REL = ".cursor/.lingxi/workspace/heartbeat-transcript-index.json";
+const WAL_BUFFER_REL = ".cursor/.lingxi/os/WAL_BUFFER.md";
+const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/os/heartbeat-control.json";
+const HEARTBEAT_TRANSCRIPT_INDEX_REL = ".cursor/.lingxi/os/heartbeat-transcript-index.json";
 const THRESHOLD_MINUTES = 30;
 const LOCK_STALE_MINUTES = 5;
 const MAX_CANDIDATES = 3;
@@ -169,14 +166,14 @@ function collectTranscriptCandidates({
 }
 
 /**
- * 执行心跳检查。可被 session-init 调用。
+ * 执行心跳检查并将任务写入 WAL_BUFFER.md。可被 post-command hook 调用。
  * @param {string} projectRoot - 项目根目录
- * @param {string} [currentConversationId] - 当前会话 id（sessionStart 入参），用于排除当前会话与写 run_id
- * @returns {{ trigger_heartbeat: boolean, candidate_ids: string[], trigger_improvement_diagnosis: boolean }}
+ * @param {string} [currentConversationId] - 当前会话 id
  */
 export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const controlPath = path.join(projectRoot, HEARTBEAT_CONTROL_REL);
   const indexPath = path.join(projectRoot, HEARTBEAT_TRANSCRIPT_INDEX_REL);
+  const walBufferPath = path.join(projectRoot, WAL_BUFFER_REL);
   const transcriptRoot = resolveTranscriptRoot(projectRoot);
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
@@ -213,7 +210,9 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const alreadyPromptedThisSession = !!currentConversationId && promptedSessionId === currentConversationId;
   const triggerImprovementDiagnosis = triggerImprovementByTime && !alreadyPromptedThisSession;
 
-  // 24h 诊断在同一会话内只提示一次，避免主流程每轮重复触发 self-iterate。
+  let walAppends = [];
+
+  // 24h 诊断触发
   if (triggerImprovementDiagnosis && currentConversationId) {
     const nextControl = {
       ...control,
@@ -223,6 +222,7 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     try {
       writeControlFile(controlPath, nextControl);
       control = nextControl;
+      walAppends.push(`- [ ] \`[SELF_ITERATE]\`: {"session_id": "${currentConversationId}"}`);
     } catch (err) {
       console.error("[heartbeat-check] write improvement prompt marker failed:", err.message);
     }
@@ -242,99 +242,90 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const lockStale = startedAt > 0 && now - startedAt > lockStaleMs;
   const canAcquireLock = !running || lockStale;
 
-  if (!shouldTriggerByTime || !canAcquireLock) {
-    return {
-      trigger_heartbeat: false,
-      candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
-  }
+  if (shouldTriggerByTime && canAcquireLock && transcriptRoot && fs.existsSync(transcriptRoot)) {
+    const transcriptIndex = readTranscriptIndex(indexPath);
+    const { candidate_ids, nextIndex } = collectTranscriptCandidates({
+      transcriptRoot,
+      index: transcriptIndex,
+      processedSet,
+      currentConversationId,
+      nowIso,
+    });
 
-  // 【修复点】：如果是因为锁过期（说明上游任务挂掉未完成），且存在排队中的提炼任务，则先“复活”它们，不触发新的更新
-  if (lockStale && control.pending_distillation && Array.isArray(control.pending_distillation.candidate_ids) && control.pending_distillation.candidate_ids.length > 0) {
-    const resurrected_ids = control.pending_distillation.candidate_ids;
-    // 重新续期锁并返回
-    control.heartbeat = { running: true, started_at: nowIso, run_id: currentConversationId || null };
-    try {
-      writeControlFile(controlPath, control);
-    } catch (err) {
-      console.error("[heartbeat-check] write resurrected control failed:", err.message);
+    if (candidate_ids.length > 0) {
+      try {
+        writeTranscriptIndex(indexPath, nextIndex);
+        const holdLock = !lockStale;
+        const next = {
+          ...control,
+          last_distillation_completed_at: control.last_distillation_completed_at,
+          heartbeat: {
+            running: holdLock,
+            started_at: holdLock ? nowIso : null,
+            run_id: holdLock ? (currentConversationId || null) : null,
+          },
+          pending_distillation: {
+            candidate_ids,
+            enqueued_at: nowIso,
+            enqueued_by: currentConversationId || null,
+          },
+          processed_conversation_ids: control.processed_conversation_ids,
+        };
+        writeControlFile(controlPath, next);
+        walAppends.push(`- [ ] \`[SESSION_DISTILL]\`: {"candidate_ids": ${JSON.stringify(candidate_ids)}, "enqueued_by": "${currentConversationId}"}`);
+      } catch (err) {
+        console.error("[heartbeat-check] write transcript index/control failed:", err.message);
+      }
     }
-    return {
-      trigger_heartbeat: true,
-      candidate_ids: resurrected_ids,
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
   }
 
-  if (!transcriptRoot || !fs.existsSync(transcriptRoot)) {
-    return {
-      trigger_heartbeat: false,
-      candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
+  // 将触发的任务写入 WAL_BUFFER.md
+  if (walAppends.length > 0 && fs.existsSync(walBufferPath)) {
+    try {
+      let walContent = fs.readFileSync(walBufferPath, "utf8");
+      walContent += "\n" + walAppends.join("\n") + "\n";
+      fs.writeFileSync(walBufferPath, walContent, "utf8");
+    } catch (err) {
+      console.error("[heartbeat-check] write to WAL_BUFFER failed:", err.message);
+    }
   }
 
-  const transcriptIndex = readTranscriptIndex(indexPath);
-  const { candidate_ids, nextIndex } = collectTranscriptCandidates({
-    transcriptRoot,
-    index: transcriptIndex,
-    processedSet,
-    currentConversationId,
-    nowIso,
-  });
-
-  try {
-    writeTranscriptIndex(indexPath, nextIndex);
-  } catch (err) {
-    console.error("[heartbeat-check] write transcript index failed:", err.message);
-    return {
-      trigger_heartbeat: false,
-      candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
+  // Watchdog 核心逻辑：扫描 WAL_BUFFER.md，处理无需大模型的纯脚本任务
+  if (fs.existsSync(walBufferPath)) {
+    try {
+      const walContent = fs.readFileSync(walBufferPath, "utf8");
+      const lines = walContent.split('\n');
+      let modified = false;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // 注意：[SESSION_DISTILL] 任务现在由主 Agent 的 HOT_RAM.md 队列消费，Watchdog 不再处理它。
+        
+        if (line.startsWith('- [ ] `[SELF_ITERATE]`')) {
+          const payloadStr = line.substring(line.indexOf('{'), line.lastIndexOf('}') + 1);
+          const payload = JSON.parse(payloadStr);
+          
+          // 标记为处理中
+          lines[i] = line.replace('- [ ]', '- [x]');
+          modified = true;
+          
+          // 异步唤起后台进程执行 iterate (纯脚本任务)
+          const proposalScript = path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs");
+          const applyScript = path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs");
+          if (fs.existsSync(proposalScript) && fs.existsSync(applyScript)) {
+            exec(`node "${proposalScript}" --window-hours 24 && node "${applyScript}" --approve-all`, (error) => {
+              if (error) console.error("[watchdog] iterate failed:", error);
+            });
+          }
+        }
+      }
+      
+      if (modified) {
+        fs.writeFileSync(walBufferPath, lines.join('\n'), "utf8");
+      }
+    } catch (err) {
+      console.error("[watchdog] process WAL_BUFFER failed:", err.message);
+    }
   }
-
-  if (candidate_ids.length === 0) {
-    return {
-      trigger_heartbeat: false,
-      candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
-  }
-
-  // 若因锁超时重新入队，不再占用 running 锁，避免子代理从未被调用时 running 一直为 true
-  const holdLock = !lockStale;
-  const next = {
-    ...control,
-    last_distillation_completed_at: control.last_distillation_completed_at,
-    heartbeat: {
-      running: holdLock,
-      started_at: holdLock ? nowIso : null,
-      run_id: holdLock ? (currentConversationId || null) : null,
-    },
-    pending_distillation: {
-      candidate_ids,
-      enqueued_at: nowIso,
-      enqueued_by: currentConversationId || null,
-    },
-    processed_conversation_ids: control.processed_conversation_ids,
-  };
-
-  try {
-    writeControlFile(controlPath, next);
-  } catch (err) {
-    console.error("[heartbeat-check] write control failed:", err.message);
-    return {
-      trigger_heartbeat: false,
-      candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-    };
-  }
-
-  return {
-    trigger_heartbeat: true,
-    candidate_ids,
-    trigger_improvement_diagnosis: triggerImprovementDiagnosis,
-  };
 }

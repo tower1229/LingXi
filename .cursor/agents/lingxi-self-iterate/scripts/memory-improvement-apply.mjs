@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const DEFAULT_PROPOSAL_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
-const DEFAULT_QUEUE_REL = ".cursor/.lingxi/workspace/improvement-actions.queue.json";
-const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
+const DEFAULT_PROPOSAL_REL = ".cursor/.lingxi/os/improvement-proposal.json";
+const DEFAULT_QUEUE_REL = ".cursor/.lingxi/os/improvement-actions.queue.json";
+const APPEND_AUDIT_REL = ".cursor/hooks/post-command.mjs";
 
 function readArg(name, fallback = "") {
   const args = process.argv.slice(2);
@@ -26,12 +26,9 @@ function ensureDir(filePath) {
 }
 
 function appendAudit(projectRoot, payload) {
-  const scriptPath = path.join(projectRoot, APPEND_AUDIT_REL);
-  spawnSync("node", [scriptPath, JSON.stringify(payload)], {
-    cwd: projectRoot,
-    env: { ...process.env, CURSOR_PROJECT_DIR: projectRoot },
-    encoding: "utf8",
-  });
+  const journalPath = path.join(projectRoot, ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl");
+  payload.ts = new Date().toISOString();
+  fs.appendFileSync(journalPath, JSON.stringify(payload) + "\n", "utf8");
 }
 
 function parseActionIds(value) {

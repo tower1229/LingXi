@@ -7,11 +7,11 @@ import {
   validateMergeKind,
 } from "../../../skills/memory-write/scripts/governance-context-validator.mjs";
 
-const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
-const DEFAULT_JSON_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
-const DEFAULT_MD_REL = ".cursor/.lingxi/workspace/memory-diagnostics.md";
-const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
-const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
+const AUDIT_REL = ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl";
+const DEFAULT_JSON_REL = ".cursor/.lingxi/os/improvement-proposal.json";
+const DEFAULT_MD_REL = ".cursor/.lingxi/os/memory-diagnostics.md";
+const APPEND_AUDIT_REL = ".cursor/hooks/post-command.mjs";
+const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/os/heartbeat-control.json";
 const INDEX_REL = ".cursor/.lingxi/memory/INDEX.md";
 const PROJECT_MEMORY_REL = ".cursor/.lingxi/memory/project";
 const SHARE_MEMORY_REL = ".cursor/.lingxi/memory/share";
@@ -312,13 +312,10 @@ function writeDiagnosticsMd(outputPath, proposal, indexDrift) {
 }
 
 function appendAudit(projectRoot, payload) {
-  const scriptPath = path.join(projectRoot, APPEND_AUDIT_REL);
-  const run = spawnSync("node", [scriptPath, JSON.stringify(payload)], {
-    cwd: projectRoot,
-    env: { ...process.env, CURSOR_PROJECT_DIR: projectRoot },
-    encoding: "utf8",
-  });
-  return run.status === 0;
+  const journalPath = path.join(projectRoot, ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl");
+  payload.ts = new Date().toISOString();
+  fs.appendFileSync(journalPath, JSON.stringify(payload) + "\n", "utf8");
+  return true;
 }
 
 function markImprovementCycle(projectRoot, tsIso) {
