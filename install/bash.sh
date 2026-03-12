@@ -63,7 +63,7 @@ fi
 # 检查命令是否存在
 check_command() {
   if ! command -v "$1" &> /dev/null; then
-    error "$1 未安装，请先安装 $1"
+    error "$1 is required but not installed"
     exit 1
   fi
 }
@@ -115,7 +115,6 @@ download_file() {
   local dir
   dir="$(dirname "$local_path")"
   mkdir -p "$dir"
-  info "下载: ${remote_path}"
   local max_retries=3
   local retry=0
   while [ $retry -lt $max_retries ]; do
@@ -124,10 +123,10 @@ download_file() {
     fi
     retry=$((retry + 1))
     if [ $retry -lt $max_retries ]; then
-      warning "下载失败，重试中 ($retry/$max_retries)..."
+      warning "Download failed, retrying ($retry/$max_retries)..."
       sleep 1
     else
-      error "下载失败: $url (已重试 $max_retries 次)"
+      error "Download failed: $url (retried $max_retries times)"
       return 1
     fi
   done
@@ -141,9 +140,9 @@ load_manifest() {
   local manifest_path
   manifest_path=$(mktemp)
 
-  info "下载安装清单..."
+  info "Downloading install manifest..."
   if ! curl -fsSL -o "$manifest_path" -- "$manifest_url"; then
-    error "下载安装清单失败: $manifest_url"
+    error "Failed to download install manifest: $manifest_url"
     exit 1
   fi
 
@@ -153,22 +152,22 @@ load_manifest() {
   # 验证 JSON 格式
   if command -v jq &> /dev/null; then
     if ! jq empty "$manifest_path" 2>/dev/null; then
-      error "下载的 JSON 清单格式无效"
+      error "Invalid JSON in downloaded manifest"
       rm -f "$manifest_path"
       exit 1
     fi
     return 0
   elif [ -n "$PYTHON_CMD" ]; then
     if ! $PYTHON_CMD -c "import json; json.load(open(r'$MANIFEST_PATH_FOR_PYTHON'))" 2>/dev/null; then
-      error "下载的 JSON 清单格式无效"
+      error "Invalid JSON in downloaded manifest"
       rm -f "$manifest_path"
       exit 1
     fi
     return 0
   else
-    error "需要 jq 或 Python 3 来解析 JSON 清单文件"
-    error "请安装 jq: https://stedolan.github.io/jq/download/"
-    error "或安装 Python 3: https://www.python.org/downloads/"
+    error "jq or Python 3 is required to parse the manifest"
+    error "Install jq: https://stedolan.github.io/jq/download/"
+    error "Or install Python 3: https://www.python.org/downloads/"
     rm -f "$manifest_path"
     exit 1
   fi
@@ -202,7 +201,7 @@ except Exception:
 get_json_array() {
   local key=$1
   if [ -z "${MANIFEST_PATH:-}" ] || [ ! -f "$MANIFEST_PATH" ]; then
-    error "清单文件不存在，无法解析"
+    error "Manifest file not found"
     return 1
   fi
   if command -v jq &> /dev/null; then
@@ -224,7 +223,7 @@ except Exception as e:
   sys.exit(1)
 " 2>/dev/null || return 1
   else
-    error "需要 jq 或 Python 3 来解析 JSON"
+    error "jq or Python 3 is required to parse JSON"
     return 1
   fi
 }
@@ -234,7 +233,7 @@ get_json_object_array() {
   local key=$1
   local subkey=$2
   if [ -z "${MANIFEST_PATH:-}" ] || [ ! -f "$MANIFEST_PATH" ]; then
-    error "清单文件不存在，无法解析"
+    error "Manifest file not found"
     return 1
   fi
   if command -v jq &> /dev/null; then
@@ -256,7 +255,7 @@ except Exception as e:
   sys.exit(1)
 " 2>/dev/null || return 1
   else
-    error "需要 jq 或 Python 3 来解析 JSON"
+    error "jq or Python 3 is required to parse JSON"
     return 1
   fi
 }
@@ -265,10 +264,10 @@ except Exception as e:
 load_manifest
 
 LINGXI_VERSION=$(get_json_string "version")
-[ -z "$LINGXI_VERSION" ] && LINGXI_VERSION="(未知)"
+[ -z "$LINGXI_VERSION" ] && LINGXI_VERSION="(unknown)"
 
-info "开始安装 LíngXī..."
-info "从 GitHub 下载文件: ${REPO_OWNER}/${REPO_NAME}"
+info "Installing LingXi..."
+info "Source: ${REPO_OWNER}/${REPO_NAME}"
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
@@ -276,12 +275,12 @@ LINGXI_EXISTS=false
 
 if [ -d ".cursor" ]; then
   CURSOR_EXISTS=true
-  warning ".cursor 目录已存在"
+  warning ".cursor already exists"
 fi
 
 if [ -d ".cursor/.lingxi" ]; then
   LINGXI_EXISTS=true
-  warning ".cursor/.lingxi 目录已存在"
+  warning ".cursor/.lingxi already exists"
 fi
 
 # 询问是否继续（合并安装模式）
@@ -289,114 +288,114 @@ response="n"
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   if [ "$AUTO_CONFIRM" = true ]; then
     response="y"
-    info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
+    info "Auto-confirm enabled: merge install mode"
   else
     echo ""
-    info "检测到已有目录，将以合并模式安装："
-    info " - 保留您现有的文件（plans 等）"
-    info " - 仅添加/更新灵犀需要的文件"
+    info "Existing .cursor data detected. Merge install mode:"
+    info " - Keep your non-LingXi files"
+    info " - Overwrite LingXi files to latest version"
     echo ""
 
     if [ "$IS_INTERACTIVE_TERMINAL" = true ]; then
-      read -p "是否继续？ (y/N): " -n 1 -r response
+      read -p "Continue? (y/N): " -n 1 -r response
       echo ""
     elif [ -e /dev/tty ] && [ -r /dev/tty ]; then
-      read -p "是否继续？ (y/N): " -n 1 -r response < /dev/tty
+      read -p "Continue? (y/N): " -n 1 -r response < /dev/tty
       echo ""
     fi
     if [[ ! "$response" =~ ^[yY]$ ]]; then
-      info "安装已取消"
+      info "Install cancelled"
       exit 0
     fi
   fi
 fi
 
 # 创建 .cursor 目录结构
-info "创建 .cursor 目录结构..."
+info "Preparing directories..."
 mkdir -p .cursor/commands .cursor/skills .cursor/rules .cursor/hooks .cursor/agents
 
 # 下载 commands（清单中路径相对 .cursor/，下载到 .cursor/）
-info "下载 commands..."
+info "Downloading commands..."
 command_count=0
 while IFS= read -r cmd; do
   [ -z "$cmd" ] && continue
   cmd="${cmd//$'\r'/}"
   if ! download_file ".cursor/${cmd}" ".cursor/${cmd}"; then
-    error "安装失败"
+    error "Install failed"
     exit 1
   fi
   command_count=$((command_count + 1))
 done < <(get_json_array "commands")
-success "已下载 commands ($command_count 个文件)"
+success "Commands downloaded ($command_count files)"
 
 # 下载 rules
-info "下载 rules..."
+info "Downloading rules..."
 rule_count=0
 while IFS= read -r rule; do
   [ -z "$rule" ] && continue
   rule="${rule//$'\r'/}"
   if ! download_file ".cursor/${rule}" ".cursor/${rule}"; then
-    error "安装失败"
+    error "Install failed"
     exit 1
   fi
   rule_count=$((rule_count + 1))
 done < <(get_json_array "rules")
-success "已下载 rules ($rule_count 个文件)"
+success "Rules downloaded ($rule_count files)"
 
 # 下载 hooks
-info "下载 hooks..."
+info "Downloading hooks..."
 hook_count=0
 while IFS= read -r hook_file; do
   [ -z "$hook_file" ] && continue
   hook_file="${hook_file//$'\r'/}"
   if ! download_file ".cursor/${hook_file}" ".cursor/${hook_file}"; then
-    error "安装失败"
+    error "Install failed"
     exit 1
   fi
   hook_count=$((hook_count + 1))
 done < <(get_json_object_array "hooks" "files")
-success "已下载 hooks ($hook_count 个文件)"
+success "Hooks downloaded ($hook_count files)"
 
 # 下载 skills（仅 SKILL.md）
-info "下载 skills..."
+info "Downloading skills..."
 skill_count=0
 while IFS= read -r skill; do
   [ -z "$skill" ] && continue
   skill="${skill//$'\r'/}"
   if ! download_file ".cursor/${skill}" ".cursor/${skill}"; then
-    error "安装失败"
+    error "Install failed"
     exit 1
   fi
   skill_count=$((skill_count + 1))
 done < <(get_json_array "skills")
 
 # 下载 agents
-info "下载 agents..."
+info "Downloading agents..."
 agent_count=0
 while IFS= read -r agent_file; do
   [ -z "$agent_file" ] && continue
   agent_file="${agent_file//$'\r'/}"
   if ! download_file ".cursor/${agent_file}" ".cursor/${agent_file}"; then
-    error "安装失败"
+    error "Install failed"
     exit 1
   fi
   agent_count=$((agent_count + 1))
 done < <(get_json_object_array "agents" "files")
-success "已下载 agents ($agent_count 个文件)"
+success "Agents downloaded ($agent_count files)"
 
 # 下载 references（按 skill 分组）
 ref_count=0
 if command -v jq &> /dev/null; then
   for ref_key in $(jq -r '.references | keys[]' "$MANIFEST_PATH" 2>/dev/null); do
     if ! ref_items=$(jq -r --arg key "$ref_key" '.references[$key][]' "$MANIFEST_PATH" 2>/dev/null); then
-      error "解析 references.$ref_key 失败，请检查安装清单格式"
+      error "Failed to parse references.$ref_key in manifest"
       exit 1
     fi
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
       if ! download_file ".cursor/${ref_file}" ".cursor/${ref_file}"; then
-        error "安装失败"
+        error "Install failed"
         exit 1
       fi
       ref_count=$((ref_count + 1))
@@ -423,18 +422,18 @@ except Exception as e:
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
       if ! download_file ".cursor/${ref_file}" ".cursor/${ref_file}"; then
-        error "安装失败"
+        error "Install failed"
         exit 1
       fi
       ref_count=$((ref_count + 1))
     done < <(get_json_object_array "references" "$ref_key")
   done
 else
-  error "需要 jq 或 Python 3 来解析 JSON references"
+  error "jq or Python 3 is required to parse JSON references"
   exit 1
 fi
 
-success "已下载 skills ($skill_count 个核心 skills + $ref_count 个引用文件)"
+success "Skills downloaded ($skill_count core + $ref_count reference files)"
 
 # 下载 scripts（清单中 scripts 数组，远程路径 scripts/xxx，本地 scripts/xxx）
 if command -v jq &> /dev/null; then
@@ -443,13 +442,13 @@ if command -v jq &> /dev/null; then
     [ -z "$script_file" ] && continue
     script_file="${script_file//$'\r'/}"
     if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
-      error "安装 scripts 失败"
+      error "Failed to install scripts"
       exit 1
     fi
     script_count=$((script_count + 1))
   done < <(jq -r '.scripts[]?' "$MANIFEST_PATH" 2>/dev/null || true)
   if [ "$script_count" -gt 0 ]; then
-    success "已下载 scripts ($script_count 个文件)"
+    success "Scripts downloaded ($script_count files)"
   fi
 elif [ -n "$PYTHON_CMD" ]; then
   script_count=0
@@ -457,7 +456,7 @@ elif [ -n "$PYTHON_CMD" ]; then
     [ -z "$script_file" ] && continue
     script_file="${script_file//$'\r'/}"
     if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
-      error "安装 scripts 失败"
+      error "Failed to install scripts"
       exit 1
     fi
     script_count=$((script_count + 1))
@@ -469,7 +468,7 @@ for x in d.get('scripts', []):
   print(x)
 " 2>/dev/null || true)
   if [ "$script_count" -gt 0 ]; then
-    success "已下载 scripts ($script_count 个文件)"
+    success "Scripts downloaded ($script_count files)"
   fi
 fi
 
@@ -477,7 +476,7 @@ fi
 mkdir -p install
 if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then
   cp "$MANIFEST_PATH" install/install-manifest.json
-  success "已保存安装清单到 install/install-manifest.json"
+  success "Saved manifest to install/install-manifest.json"
 fi
 
 # 合并 packageScripts 到用户 package.json
@@ -485,7 +484,7 @@ if [ -f "package.json" ] && [ -f "install/install-manifest.json" ]; then
   if command -v jq &> /dev/null; then
     if jq -e '.packageScripts' install/install-manifest.json &>/dev/null; then
       jq '.scripts += input.packageScripts' package.json install/install-manifest.json > package.json.tmp && mv package.json.tmp package.json
-      success "已合并 lx: 脚本到 package.json"
+      success "Merged lx scripts into package.json"
     fi
   elif [ -n "$PYTHON_CMD" ]; then
     $PYTHON_CMD -c "
@@ -499,21 +498,21 @@ if ps:
   p.setdefault('scripts', {}).update(ps)
   with open('package.json', 'w', encoding='utf-8') as f:
     json.dump(p, f, ensure_ascii=False, indent=2)
-" 2>/dev/null && success "已合并 lx: 脚本到 package.json"
+" 2>/dev/null && success "Merged lx scripts into package.json"
   fi
 fi
 
 # 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-info "初始化工作区骨架（.cursor/.lingxi/）..."
+info "Bootstrapping .cursor/.lingxi..."
 if command -v node &>/dev/null; then
   if node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
-    success "已通过 workspace-bootstrap 创建目录与模板"
+    success "Workspace bootstrap completed"
   else
-    error "workspace-bootstrap 执行失败"
+    error "workspace-bootstrap failed"
     exit 1
   fi
 else
-  info "未检测到 Node.js，从清单创建目录并从模板复制..."
+  info "Node.js not found; using manifest fallback"
   while IFS= read -r dir; do
     [ -z "$dir" ] && continue
     dir="${dir//$'\r'/}"
@@ -521,9 +520,9 @@ else
   done < <(get_json_array "workflowDirectories")
   if [ -f ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
     cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".cursor/.lingxi/memory/INDEX.md"
-    success "已创建目录与模板（无 Node.js 模式）"
+    success "Workspace bootstrap completed (no Node.js mode)"
   else
-    error "模板文件不存在，请确保 skills 已完整下载"
+    error "Template file missing; ensure skills were downloaded"
     exit 1
   fi
 fi
@@ -555,7 +554,7 @@ EOF
 fi
 
 # 更新 .gitignore
-info "更新 .gitignore..."
+info "Updating .gitignore..."
 GITIGNORE_ENTRIES=()
 while IFS= read -r entry; do
   entry="${entry//$'\r'/}"
@@ -577,9 +576,9 @@ if [ -f ".gitignore" ]; then
     for entry in "${GITIGNORE_ENTRIES[@]}"; do
       [ -n "$entry" ] && echo "$entry" >> .gitignore
     done
-    success "已更新 .gitignore"
+    success ".gitignore updated"
   else
-    info ".gitignore 已包含相关条目，跳过更新"
+    info ".gitignore already contains required entries"
   fi
 else
   cat > .gitignore << 'GITIGNOREEOF'
@@ -590,35 +589,20 @@ else
 .DS_Store
 Thumbs.db
 GITIGNOREEOF
-  success "已创建 .gitignore"
+  success ".gitignore created"
 fi
 
 # 输出成功信息
 echo ""
-success "安装完成！"
-if [ -n "$LINGXI_VERSION" ] && [ "$LINGXI_VERSION" != "(未知)" ]; then
-  info "已安装版本: ${LINGXI_VERSION}"
+success "Install complete"
+if [ -n "$LINGXI_VERSION" ] && [ "$LINGXI_VERSION" != "(unknown)" ]; then
+  info "Version: ${LINGXI_VERSION}"
 fi
 echo ""
-info "已安装的文件："
-echo " - .cursor/commands/ ($command_count 个命令)"
-echo " - .cursor/rules/ ($rule_count 个规则)"
-echo " - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
-echo " - .cursor/agents/ ($agent_count 个文件)"
-echo " - .cursor/.lingxi/ 目录结构"
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
-  echo ""
-  info "✓ 已保留您现有的文件（合并安装模式）"
+  info "Merge mode: kept non-LingXi files and updated LingXi files"
 fi
-echo ""
-info "下一步："
-echo " 1. 在 Cursor 中打开项目"
-echo " 2. 运行 /init 初始化项目（推荐）"
-echo " 3. 运行 /task <需求描述> 创建第一个任务"
-echo " 4. 查看 README.md 了解完整工作流"
-echo ""
-info "更多信息：https://github.com/${REPO_OWNER}/${REPO_NAME}"
-info "仓库地址：git@github.com:${REPO_OWNER}/${REPO_NAME}.git"
+info "Next: run /init in Cursor"
 
 # 清理临时文件
 if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then

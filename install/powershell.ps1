@@ -52,8 +52,6 @@ function Download-File {
   )
   # 旧版写法：URL 直接拼接，不在此处 -replace（避免正则 \ 报错）；调用方保证 RemotePath 仅含 /
   $url = "${BaseUrl}/${RemotePath}"
-  Write-Info "下载: $RemotePath"
-
   $dir = Split-Path -Parent $LocalPath
   if (-not (Test-Path $dir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -67,10 +65,10 @@ function Download-File {
     } catch {
       $retryCount++
       if ($retryCount -lt $MaxRetries) {
-        Write-Warning "下载失败，重试中 ($retryCount/$MaxRetries)..."
+        Write-Warning "Download failed, retrying ($retryCount/$MaxRetries)..."
         Start-Sleep -Seconds 1
       } else {
-        Write-Error "下载失败: $url (已重试 $MaxRetries 次)"
+        Write-Error "Download failed: $url (retried $MaxRetries times)"
         Write-Error $_.Exception.Message
         return $false
       }
@@ -82,13 +80,13 @@ function Download-File {
 # 读取安装清单（从 GitHub 下载）
 function Load-Manifest {
   $manifestUrl = "${BaseUrl}/install/install-manifest.json"
-  Write-Info "下载安装清单..."
+  Write-Info "Downloading install manifest..."
 
   try {
     $manifestContent = Invoke-WebRequest -Uri $manifestUrl -UseBasicParsing -ErrorAction Stop | Select-Object -ExpandProperty Content
     return $manifestContent | ConvertFrom-Json
   } catch {
-    Write-Error "下载安装清单失败: $manifestUrl"
+    Write-Error "Failed to download install manifest: $manifestUrl"
     Write-Error $_.Exception.Message
     exit 1
   }
@@ -97,42 +95,42 @@ function Load-Manifest {
 # 加载清单
 $Manifest = Load-Manifest
 
-Write-Info "开始安装 LíngXī..."
-Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
+Write-Info "Installing LingXi..."
+Write-Info "Source: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
 $LingxiExists = Test-Path ".cursor\.lingxi"
 
 if ($CursorExists) {
-  Write-Warning ".cursor 目录已存在"
+  Write-Warning ".cursor already exists"
 }
 
 if ($LingxiExists) {
-  Write-Warning ".cursor\.lingxi 目录已存在"
+  Write-Warning ".cursor\.lingxi already exists"
 }
 
 # 询问是否继续（合并安装模式）
 if ($CursorExists -or $LingxiExists) {
   if ($AutoConfirm) {
     $response = "y"
-    Write-Info "自动确认：将以合并模式安装（保留现有文件，仅添加/更新灵犀文件）"
+    Write-Info "Auto-confirm enabled: merge install mode"
   } else {
     Write-Host ""
-    Write-Info "检测到已有目录，将以合并模式安装："
-    Write-Info " - 保留您现有的文件（plans 等）"
-    Write-Info " - 仅添加/更新灵犀需要的文件"
+    Write-Info "Existing .cursor data detected. Merge install mode:"
+    Write-Info " - Keep your non-LingXi files"
+    Write-Info " - Overwrite LingXi files to latest version"
     Write-Host ""
-    $response = Read-Host "是否继续？ (y/N)"
+    $response = Read-Host "Continue? (y/N)"
     if ($response -ne "y" -and $response -ne "Y") {
-      Write-Info "安装已取消"
+      Write-Info "Install cancelled"
       exit 0
     }
   }
 }
 
 # 创建 .cursor 目录结构
-Write-Info "创建 .cursor 目录结构..."
+Write-Info "Preparing directories..."
 New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
@@ -140,73 +138,73 @@ New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor\agents" | Out-Null
 
 # 下载 commands（清单路径用 /；远程路径传 .cursor/xxx，本地用 .Replace 转 \，避免 -replace 正则报错）
-Write-Info "下载 commands..."
+Write-Info "Downloading commands..."
 $commandCount = 0
 foreach ($cmd in $Manifest.commands) {
   $remotePath = ".cursor/" + $cmd.Replace('\', '/')
   $localFile = ".cursor\" + $cmd.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "安装失败"
+    Write-Error "Install failed"
     exit 1
   }
   $commandCount++
 }
-Write-Success "已下载 commands ($commandCount 个文件)"
+Write-Success "Commands downloaded ($commandCount files)"
 
 # 下载 rules
-Write-Info "下载 rules..."
+Write-Info "Downloading rules..."
 $ruleCount = 0
 foreach ($rule in $Manifest.rules) {
   $remotePath = ".cursor/" + $rule.Replace('\', '/')
   $localFile = ".cursor\" + $rule.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "安装失败"
+    Write-Error "Install failed"
     exit 1
   }
   $ruleCount++
 }
-Write-Success "已下载 rules ($ruleCount 个文件)"
+Write-Success "Rules downloaded ($ruleCount files)"
 
 # 下载 hooks
-Write-Info "下载 hooks..."
+Write-Info "Downloading hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {
   $remotePath = ".cursor/" + $hookFile.Replace('\', '/')
   $localFile = ".cursor\" + $hookFile.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "安装失败"
+    Write-Error "Install failed"
     exit 1
   }
   $hookCount++
 }
-Write-Success "已下载 hooks ($hookCount 个文件)"
+Write-Success "Hooks downloaded ($hookCount files)"
 
 # 下载 skills
-Write-Info "下载 skills..."
+Write-Info "Downloading skills..."
 $skillCount = 0
 foreach ($skill in $Manifest.skills) {
   $remotePath = ".cursor/" + $skill.Replace('\', '/')
   $localFile = ".cursor\" + $skill.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "安装失败"
+    Write-Error "Install failed"
     exit 1
   }
   $skillCount++
 }
 
 # 下载 agents
-Write-Info "下载 agents..."
+Write-Info "Downloading agents..."
 $agentCount = 0
 foreach ($agentFile in $Manifest.agents.files) {
   $remotePath = ".cursor/" + $agentFile.Replace('\', '/')
   $localFile = ".cursor\" + $agentFile.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "安装失败"
+    Write-Error "Install failed"
     exit 1
   }
   $agentCount++
 }
-Write-Success "已下载 agents ($agentCount 个文件)"
+Write-Success "Agents downloaded ($agentCount files)"
 
 # 下载引用文件
 $refCount = 0
@@ -215,34 +213,34 @@ foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
     $remotePath = ".cursor/" + $refFile.Replace('\', '/')
     $localFile = ".cursor\" + $refFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "安装失败"
+      Write-Error "Install failed"
       exit 1
     }
     $refCount++
   }
 }
 
-Write-Success "已下载 skills ($skillCount 个核心 skills + $refCount 个引用文件)"
+Write-Success "Skills downloaded ($skillCount core + $refCount reference files)"
 
 # 下载 scripts（清单中 scripts 数组）
 if ($Manifest.scripts -and $Manifest.scripts.Count -gt 0) {
-  Write-Info "下载 scripts..."
+  Write-Info "Downloading scripts..."
   New-Item -ItemType Directory -Force -Path "scripts" | Out-Null
   foreach ($scriptFile in $Manifest.scripts) {
     $remotePath = "scripts/" + $scriptFile.Replace('\', '/')
     $localFile = "scripts\" + $scriptFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "安装 scripts 失败"
+      Write-Error "Failed to install scripts"
       exit 1
     }
   }
-  Write-Success "已下载 scripts ($($Manifest.scripts.Count) 个文件)"
+  Write-Success "Scripts downloaded ($($Manifest.scripts.Count) files)"
 }
 
 # 将安装清单保存到用户项目，供卸载脚本读取
 New-Item -ItemType Directory -Force -Path "install" | Out-Null
 $Manifest | ConvertTo-Json -Depth 100 | Set-Content -Path "install\install-manifest.json" -Encoding UTF8
-Write-Success "已保存安装清单到 install/install-manifest.json"
+Write-Success "Saved manifest to install/install-manifest.json"
 
 # 合并 packageScripts 到用户 package.json
 if ((Test-Path "package.json") -and $Manifest.packageScripts) {
@@ -252,22 +250,22 @@ if ((Test-Path "package.json") -and $Manifest.packageScripts) {
     $pkg.scripts | Add-Member -MemberType NoteProperty -Name $key -Value $Manifest.packageScripts.$key -Force
   }
   $pkg | ConvertTo-Json -Depth 100 | Set-Content -Path "package.json" -Encoding UTF8
-  Write-Success "已合并 lx: 脚本到 package.json"
+  Write-Success "Merged lx scripts into package.json"
 }
 
 # 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-Write-Info "初始化工作区骨架（.cursor/.lingxi/）..."
+Write-Info "Bootstrapping .cursor/.lingxi..."
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
   $bootstrapScript = ".cursor\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
   & node $bootstrapScript
   if ($LASTEXITCODE -ne 0) {
-    Write-Error "workspace-bootstrap 执行失败"
+    Write-Error "workspace-bootstrap failed"
     exit 1
   }
-  Write-Success "已通过 workspace-bootstrap 创建目录与模板"
+  Write-Success "Workspace bootstrap completed"
 } else {
-  Write-Info "未检测到 Node.js，从清单创建目录并从模板复制..."
+  Write-Info "Node.js not found; using manifest fallback"
   foreach ($dir in $Manifest.workflowDirectories) {
     $winPath = $dir.Replace('/', '\')
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
@@ -277,9 +275,9 @@ if ($nodeCmd) {
     $indexTarget = ".cursor\.lingxi\memory\INDEX.md"
     New-Item -ItemType Directory -Force -Path (Split-Path $indexTarget) | Out-Null
     Copy-Item -Path $indexDefault -Destination $indexTarget -Force
-    Write-Success "已创建目录与模板（无 Node.js 模式）"
+    Write-Success "Workspace bootstrap completed (no Node.js mode)"
   } else {
-    Write-Error "模板文件不存在，请确保 skills 已完整下载"
+    Write-Error "Template file missing; ensure skills were downloaded"
     exit 1
   }
 }
@@ -311,7 +309,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 }
 
 # 更新 .gitignore
-Write-Info "更新 .gitignore..."
+Write-Info "Updating .gitignore..."
 $GitignoreEntries = $Manifest.gitignoreEntries
 
 if (Test-Path ".gitignore") {
@@ -330,9 +328,9 @@ if (Test-Path ".gitignore") {
     foreach ($entry in $GitignoreEntries) {
       if ($entry -ne "") { Add-Content -Path ".gitignore" -Value $entry }
     }
-    Write-Success "已更新 .gitignore"
+    Write-Success ".gitignore updated"
   } else {
-    Write-Info ".gitignore 已包含相关条目，跳过更新"
+    Write-Info ".gitignore already contains required entries"
   }
 } else {
   @(
@@ -343,32 +341,17 @@ if (Test-Path ".gitignore") {
     ".DS_Store",
     "Thumbs.db"
   ) | Out-File -FilePath ".gitignore" -Encoding UTF8
-  Write-Success "已创建 .gitignore"
+  Write-Success ".gitignore created"
 }
 
 # 输出成功信息
 Write-Host ""
-Write-Success "安装完成！"
+Write-Success "Install complete"
 if ($Manifest.version) {
-  Write-Info "已安装版本: $($Manifest.version)"
+  Write-Info "Version: $($Manifest.version)"
 }
 Write-Host ""
-Write-Info "已安装的文件："
-Write-Host " - .cursor/commands/ ($commandCount 个命令)"
-Write-Host " - .cursor/rules/ ($ruleCount 个规则)"
-Write-Host " - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
-Write-Host " - .cursor/agents/ ($agentCount 个文件)"
-Write-Host " - .cursor/.lingxi/ 目录结构"
 if ($CursorExists -or $LingxiExists) {
-  Write-Host ""
-  Write-Info "✓ 已保留您现有的文件（合并安装模式）"
+  Write-Info "Merge mode: kept non-LingXi files and updated LingXi files"
 }
-Write-Host ""
-Write-Info "下一步："
-Write-Host " 1. 在 Cursor 中打开项目"
-Write-Host " 2. 运行 /init 初始化项目（推荐）"
-Write-Host " 3. 运行 /task <需求描述> 创建第一个任务"
-Write-Host " 4. 查看 README.md 了解完整工作流"
-Write-Host ""
-Write-Info "更多信息：https://github.com/${RepoOwner}/${RepoName}"
-Write-Info "仓库地址：git@github.com:${RepoOwner}/${RepoName}.git"
+Write-Info "Next: run /init in Cursor"
