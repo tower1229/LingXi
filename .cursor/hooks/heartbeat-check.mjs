@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AgentOS Watchdog 守护进程：在 post-command hook 中调用。
+ * AgentOS Watchdog 守护进程：由 beforeSubmitPrompt hook（heartbeat-trigger.mjs）调用。
  * 职责：
  * 1. 轮询 WAL_BUFFER.md，如果发现 PENDING OPERATIONS，则静默唤起对应的 Subagent 消费。
  * 2. 检查会话提炼心跳（30分钟）和自我迭代心跳（24小时），若触发则向 WAL_BUFFER.md 写入任务。
@@ -8,6 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { exec } from "node:child_process";
+import { appendWalTask, getPendingTasks, parseWalLine, markWalLineChecked } from "./wal-utils.mjs";
 
 const WAL_BUFFER_REL = ".cursor/.lingxi/os/WAL_BUFFER.md";
 const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/os/heartbeat-control.json";
@@ -19,38 +20,34 @@ const INDEX_VERSION = 1;
 const IMPROVEMENT_THRESHOLD_HOURS = 24;
 
 function resolveTranscriptRoot(projectRoot) {
-  // 1. 最高优先级：环境变量接管
   const explicitRoot = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR?.trim() || process.env.LINGXI_TRANSCRIPT_ROOT?.trim();
   if (explicitRoot) return explicitRoot;
 
   const home = process.env.HOME || process.env.USERPROFILE || "";
   if (!home) return "";
-  
-  // 2. Windows 和 Mac 的兼容预处理替换
+
   let normalizedProjectPath = path.resolve(projectRoot);
-  // 处理 Windows 独有如 "C:\" (会变成 c--xxx)
-  if (process.platform === 'win32') {
-     normalizedProjectPath = normalizedProjectPath.replace(/^([a-zA-Z]):[\\/]/, "$1--");
+  if (process.platform === "win32") {
+    normalizedProjectPath = normalizedProjectPath.replace(/^([a-zA-Z]):[\\/]/, "$1--");
   } else {
-     normalizedProjectPath = normalizedProjectPath.replace(/^[\\/]+/, "");
+    normalizedProjectPath = normalizedProjectPath.replace(/^[\\/]+/, "");
   }
-  
+
   const workspaceSlug = normalizedProjectPath.replace(/[\\/]/g, "-").replace(/[^A-Za-z0-9._-]/g, "-");
   const targetDir = path.join(home, ".cursor", "projects", workspaceSlug, "agent-transcripts");
-  
-  // 3. Fallback 校验：如果严格预测的路径不存在，尝试模糊扫描后缀目录
+
   if (!fs.existsSync(targetDir)) {
-      const baseName = path.basename(projectRoot);
-      const projDir = path.join(home, ".cursor", "projects");
-      if (fs.existsSync(projDir)) {
-          const candidates = fs.readdirSync(projDir, { withFileTypes: true })
-            .filter(dir => dir.isDirectory() && dir.name.endsWith(`-${baseName}`))
-            .map(dir => path.join(projDir, dir.name, "agent-transcripts"))
-            .filter(p => fs.existsSync(p));
-          if (candidates.length > 0) return candidates[0]; // 提供容错匹配
-      }
+    const baseName = path.basename(projectRoot);
+    const projDir = path.join(home, ".cursor", "projects");
+    if (fs.existsSync(projDir)) {
+      const candidates = fs.readdirSync(projDir, { withFileTypes: true })
+        .filter((dir) => dir.isDirectory() && dir.name.endsWith(`-${baseName}`))
+        .map((dir) => path.join(projDir, dir.name, "agent-transcripts"))
+        .filter((p) => fs.existsSync(p));
+      if (candidates.length > 0) return candidates[0];
+    }
   }
-  
+
   return targetDir;
 }
 
@@ -88,10 +85,7 @@ function readTranscriptIndex(indexPath) {
     if (!parsed || typeof parsed !== "object") return emptyIndex;
     return {
       version: INDEX_VERSION,
-      transcripts:
-        parsed.transcripts && typeof parsed.transcripts === "object"
-          ? parsed.transcripts
-          : {},
+      transcripts: parsed.transcripts && typeof parsed.transcripts === "object" ? parsed.transcripts : {},
     };
   } catch {
     return emptyIndex;
@@ -166,14 +160,11 @@ function collectTranscriptCandidates({
 }
 
 /**
- * 执行心跳检查并将任务写入 WAL_BUFFER.md。可被 post-command hook 调用。
- * @param {string} projectRoot - 项目根目录
- * @param {string} [currentConversationId] - 当前会话 id
+ * 阶段一：按条件判断 30min/24h，向 WAL 写入任务，更新 control（锁/时间）。不读 WAL 消费。
  */
-export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
+function runHeartbeatEnqueue(projectRoot, currentConversationId = "") {
   const controlPath = path.join(projectRoot, HEARTBEAT_CONTROL_REL);
   const indexPath = path.join(projectRoot, HEARTBEAT_TRANSCRIPT_INDEX_REL);
-  const walBufferPath = path.join(projectRoot, WAL_BUFFER_REL);
   const transcriptRoot = resolveTranscriptRoot(projectRoot);
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
@@ -187,7 +178,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     last_improvement_cycle_at: null,
     last_improvement_prompted_session_id: null,
     last_improvement_prompted_at: null,
-    pending_distillation: null,
     processed_conversation_ids: [],
   };
   if (fs.existsSync(controlPath)) {
@@ -199,35 +189,32 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     }
   }
 
+  // 24h 诊断触发
   const lastImprovementAt = control.last_improvement_cycle_at
     ? new Date(control.last_improvement_cycle_at).getTime()
     : 0;
-  const triggerImprovementByTime =
-    lastImprovementAt === 0 || now - lastImprovementAt > improvementThresholdMs;
-  const promptedSessionId = typeof control.last_improvement_prompted_session_id === "string"
-    ? control.last_improvement_prompted_session_id
-    : "";
+  const triggerImprovementByTime = lastImprovementAt === 0 || now - lastImprovementAt > improvementThresholdMs;
+  const promptedSessionId =
+    typeof control.last_improvement_prompted_session_id === "string" ? control.last_improvement_prompted_session_id : "";
   const alreadyPromptedThisSession = !!currentConversationId && promptedSessionId === currentConversationId;
   const triggerImprovementDiagnosis = triggerImprovementByTime && !alreadyPromptedThisSession;
 
-  let walAppends = [];
-
-  // 24h 诊断触发
   if (triggerImprovementDiagnosis && currentConversationId) {
-    const nextControl = {
-      ...control,
-      last_improvement_prompted_session_id: currentConversationId,
-      last_improvement_prompted_at: nowIso,
-    };
     try {
+      const nextControl = {
+        ...control,
+        last_improvement_prompted_session_id: currentConversationId,
+        last_improvement_prompted_at: nowIso,
+      };
       writeControlFile(controlPath, nextControl);
       control = nextControl;
-      walAppends.push(`- [ ] \`[SELF_ITERATE]\`: {"session_id": "${currentConversationId}"}`);
+      appendWalTask(projectRoot, "SELF_ITERATE", { session_id: currentConversationId });
     } catch (err) {
       console.error("[heartbeat-check] write improvement prompt marker failed:", err.message);
     }
   }
 
+  // 30min 会话提炼触发
   const processedSet = new Set(
     Array.isArray(control.processed_conversation_ids) ? control.processed_conversation_ids : []
   );
@@ -264,68 +251,81 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
             started_at: holdLock ? nowIso : null,
             run_id: holdLock ? (currentConversationId || null) : null,
           },
-          pending_distillation: {
-            candidate_ids,
-            enqueued_at: nowIso,
-            enqueued_by: currentConversationId || null,
-          },
           processed_conversation_ids: control.processed_conversation_ids,
         };
+        delete next.pending_distillation;
         writeControlFile(controlPath, next);
-        walAppends.push(`- [ ] \`[SESSION_DISTILL]\`: {"candidate_ids": ${JSON.stringify(candidate_ids)}, "enqueued_by": "${currentConversationId}"}`);
+        appendWalTask(projectRoot, "SESSION_DISTILL", {
+          candidate_ids,
+          enqueued_by: currentConversationId || "",
+        });
       } catch (err) {
         console.error("[heartbeat-check] write transcript index/control failed:", err.message);
       }
     }
   }
+}
 
-  // 将触发的任务写入 WAL_BUFFER.md
-  if (walAppends.length > 0 && fs.existsSync(walBufferPath)) {
-    try {
-      let walContent = fs.readFileSync(walBufferPath, "utf8");
-      walContent += "\n" + walAppends.join("\n") + "\n";
-      fs.writeFileSync(walBufferPath, walContent, "utf8");
-    } catch (err) {
-      console.error("[heartbeat-check] write to WAL_BUFFER failed:", err.message);
-    }
-  }
+/**
+ * 阶段二：读 WAL，解析未勾选任务，按 TYPE 分发（如 SELF_ITERATE → exec 脚本，仅在成功回调中勾选 WAL）。
+ */
+function runHeartbeatConsume(projectRoot) {
+  const walBufferPath = path.join(projectRoot, WAL_BUFFER_REL);
+  const controlPath = path.join(projectRoot, HEARTBEAT_CONTROL_REL);
 
-  // Watchdog 核心逻辑：扫描 WAL_BUFFER.md，处理无需大模型的纯脚本任务
-  if (fs.existsSync(walBufferPath)) {
-    try {
-      const walContent = fs.readFileSync(walBufferPath, "utf8");
-      const lines = walContent.split('\n');
-      let modified = false;
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        
-        // 注意：[SESSION_DISTILL] 任务现在由主 Agent 的 HOT_RAM.md 队列消费，Watchdog 不再处理它。
-        
-        if (line.startsWith('- [ ] `[SELF_ITERATE]`')) {
-          const payloadStr = line.substring(line.indexOf('{'), line.lastIndexOf('}') + 1);
-          const payload = JSON.parse(payloadStr);
-          
-          // 标记为处理中
-          lines[i] = line.replace('- [ ]', '- [x]');
-          modified = true;
-          
-          // 异步唤起后台进程执行 iterate (纯脚本任务)
-          const proposalScript = path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs");
-          const applyScript = path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs");
-          if (fs.existsSync(proposalScript) && fs.existsSync(applyScript)) {
-            exec(`node "${proposalScript}" --window-hours 24 && node "${applyScript}" --approve-all`, (error) => {
-              if (error) console.error("[watchdog] iterate failed:", error);
-            });
+  if (!fs.existsSync(walBufferPath)) return;
+
+  try {
+    const walContent = fs.readFileSync(walBufferPath, "utf8");
+    const lines = walContent.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const parsed = parseWalLine(lines[i]);
+      if (!parsed || parsed.checked || parsed.type !== "SELF_ITERATE") continue;
+
+      const lineIndex = i;
+      const proposalScript = path.join(
+        projectRoot,
+        ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"
+      );
+      const applyScript = path.join(
+        projectRoot,
+        ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
+      );
+      if (!fs.existsSync(proposalScript) || !fs.existsSync(applyScript)) continue;
+
+      exec(
+        `node "${proposalScript}" --window-hours 24 && node "${applyScript}" --approve-all`,
+        (error) => {
+          if (!error) {
+            markWalLineChecked(lines, lineIndex);
+            fs.writeFileSync(walBufferPath, lines.join("\n"), "utf8");
+          } else {
+            console.error("[watchdog] iterate failed:", error);
+            try {
+              if (fs.existsSync(controlPath)) {
+                const raw = fs.readFileSync(controlPath, "utf8");
+                const control = JSON.parse(raw);
+                control.last_improvement_failed_at = new Date().toISOString();
+                fs.writeFileSync(controlPath, JSON.stringify(control, null, 2), "utf8");
+              }
+            } catch (e) {
+              console.error("[watchdog] write last_improvement_failed_at failed:", e.message);
+            }
           }
         }
-      }
-      
-      if (modified) {
-        fs.writeFileSync(walBufferPath, lines.join('\n'), "utf8");
-      }
-    } catch (err) {
-      console.error("[watchdog] process WAL_BUFFER failed:", err.message);
+      );
+      break; // 每轮只处理一条 SELF_ITERATE，避免并发写 WAL
     }
+  } catch (err) {
+    console.error("[watchdog] process WAL_BUFFER failed:", err.message);
   }
+}
+
+/**
+ * 执行心跳检查：先入队再消费。可被 heartbeat-trigger hook 调用。
+ */
+export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
+  runHeartbeatEnqueue(projectRoot, currentConversationId);
+  runHeartbeatConsume(projectRoot);
 }

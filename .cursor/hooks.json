@@ -1,14 +1,9 @@
 {
     "version": 1,
     "hooks": {
-        "afterAgentResponse": [
+        "beforeSubmitPrompt": [
             {
-                "command": "node .cursor/hooks/post-command.mjs"
-            }
-        ],
-        "stop": [
-            {
-                "command": "node .cursor/hooks/post-command.mjs"
+                "command": "node .cursor/hooks/heartbeat-trigger.mjs"
             }
         ]
     }

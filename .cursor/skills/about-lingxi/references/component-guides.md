@@ -82,9 +82,9 @@ Subagent 是 AgentOS 架构中执行“脏活累活”的核心。主 Agent 严�
 ### 在灵犀中的应用
 LingXi OS 放弃了使用 Hook 强行注入 Prompt 的做法，转而将其作为**纯粹的异步任务守护进程**。
 
-1. **`post-command.mjs` (Hook)**：
-   - 注册于 `.cursor/hooks.json` 的 `afterAgentResponse` 和 `stop` 事件。
-   - 作用极简：仅仅是调用后端的 Node.js 脚本 `heartbeat-check.mjs`，不阻塞主流程，不注入任何上下文。
+1. **`heartbeat-trigger.mjs` (心跳触发 Hook)**：
+   - 注册于 `.cursor/hooks.json` 的 **`beforeSubmitPrompt`** 事件（用户每次提交消息时触发，不依赖 Agent 响应完成）。
+   - 作用极简：仅调用 `heartbeat-check.mjs`，不阻塞主流程、不注入上下文；使心跳与「用户使用」对齐，触发更及时。
 
 2. **`heartbeat-check.mjs` (Watchdog)**：
    - 真正的异步调度器。

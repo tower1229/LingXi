@@ -10,7 +10,7 @@ import {
 const AUDIT_REL = ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl";
 const DEFAULT_JSON_REL = ".cursor/.lingxi/os/improvement-proposal.json";
 const DEFAULT_MD_REL = ".cursor/.lingxi/os/memory-diagnostics.md";
-const APPEND_AUDIT_REL = ".cursor/hooks/post-command.mjs";
+const APPEND_AUDIT_REL = ".cursor/hooks/heartbeat-trigger.mjs";
 const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/os/heartbeat-control.json";
 const INDEX_REL = ".cursor/.lingxi/memory/INDEX.md";
 const PROJECT_MEMORY_REL = ".cursor/.lingxi/memory/project";

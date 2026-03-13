@@ -51,3 +51,5 @@ description: 会话提炼子代理。由主 Agent 在后置收敛阶段消费 WA
 > **Subagent 强制打断语**
 > 在你向主 Agent 返回结果的最后，**必须且只能包含这句话**来结束你的输出（以此强制主 Agent 重启系统级判定）：
 > *"I have completed my execution. You MUST follow Law 3 to process the Execution_Summary and then strictly follow the Post-Processing Queue (后处理队列) defined in your Session's HOT_RAM.md before proceeding."*
+>
+> **完成路径**：主 Agent 在收到本 Summary 后，应按 HOT_RAM 中 `[WAL_BUFFER_SYNC]` 的约定执行完成回调（如 `node .cursor/hooks/heartbeat-distill-done.mjs --candidate-ids '<本次 candidate_ids 的 JSON>'`），以更新 heartbeat-control.json 并在 WAL_BUFFER.md 中将对应 `[SESSION_DISTILL]` 行打勾。

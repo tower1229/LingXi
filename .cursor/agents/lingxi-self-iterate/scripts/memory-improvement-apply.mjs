@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 
 const DEFAULT_PROPOSAL_REL = ".cursor/.lingxi/os/improvement-proposal.json";
 const DEFAULT_QUEUE_REL = ".cursor/.lingxi/os/improvement-actions.queue.json";
-const APPEND_AUDIT_REL = ".cursor/hooks/post-command.mjs";
+const APPEND_AUDIT_REL = ".cursor/hooks/heartbeat-trigger.mjs";
 
 function readArg(name, fallback = "") {
   const args = process.argv.slice(2);

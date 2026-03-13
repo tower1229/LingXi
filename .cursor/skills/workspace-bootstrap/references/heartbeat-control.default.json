@@ -5,9 +5,9 @@
     "started_at": null,
     "run_id": null
   },
-  "pending_distillation": null,
   "processed_conversation_ids": [],
   "last_improvement_cycle_at": null,
   "last_improvement_prompted_session_id": null,
-  "last_improvement_prompted_at": null
+  "last_improvement_prompted_at": null,
+  "last_improvement_failed_at": null
 }

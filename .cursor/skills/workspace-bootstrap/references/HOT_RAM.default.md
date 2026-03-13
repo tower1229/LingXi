@@ -39,5 +39,5 @@ _(空)_
 > **注意**：`[POST_RETRIEVE]`、`[WAL_BUFFER_SYNC]` 和 `[USER_REPORT]` 是每次状态机流转固有的默认任务，必须始终存在于队列中。
 
 - [ ] `[POST_RETRIEVE]`: 主 Agent 必须以 Subagent 返回的 `Touched Assets` 为 Query，调用 `memory-retrieve` (Post 模式) 检查是否触发滞后义务。若检索到新义务，必须将其作为新 Checkbox 追加到本队列下方。
-- [ ] `[WAL_BUFFER_SYNC]`: 主 Agent 必须读取 `.cursor/.lingxi/os/WAL_BUFFER.md`，如果发现有未处理的 `- [ ] \`[SESSION_DISTILL]\`` 任务，主 Agent 必须调用 `lingxi-session-distill` Subagent 去执行提炼，执行完毕后在 `WAL_BUFFER.md` 中将其打勾。
+- [ ] `[WAL_BUFFER_SYNC]`: 主 Agent 必须读取 `.cursor/.lingxi/os/WAL_BUFFER.md`，如果发现有未处理的 `- [ ] \`[SESSION_DISTILL]\`` 任务，主 Agent 必须调用 `lingxi-session-distill` Subagent 去执行提炼。**执行完毕后**必须更新状态：在项目根目录执行 `node .cursor/hooks/heartbeat-distill-done.mjs --candidate-ids '<本次处理的 candidate_ids 的 JSON 字符串>'`（将本次任务 payload 中的 candidate_ids 序列化为 JSON 传入），以更新 `heartbeat-control.json`（last_distillation_completed_at、processed_conversation_ids、heartbeat.running）并在 `WAL_BUFFER.md` 中将该行打勾。
 - [ ] `[USER_REPORT]`: 队列中所有其他任务消费完毕（打勾）后，向用户汇报最终执行结果。

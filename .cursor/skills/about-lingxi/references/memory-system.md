@@ -27,7 +27,7 @@
 
 1. **前置品味识别 (Taste-Recognition)**：在响应包含自由描述的用户输入时，主 Agent 在 `IDLE` 状态下，必须在执行核心任务之前，先调用 `taste-recognition` 自动嗅探并提取具有长期记忆价值的内容（如偏好、约束、局部决策），产出 Payload 压入 `HOT_RAM.md` 后处理队列。
 2. **主动记忆录入 (`/remember`)**：用户主动发起，经 `taste-recognition` 识别后转为 Payload 压入 `HOT_RAM.md` 队列。
-3. **高频心跳蒸馏 (30min Session Distill)**：由 `post-command` 触发 Watchdog 检查。若距上次提炼超过 30 分钟，Watchdog 将提炼任务写入 `WAL_BUFFER.md`。主 Agent 在后处理阶段消费 `WAL_BUFFER.md` 时，唤起 `lingxi-session-distill` 子代理，拉取近期对话流水静默提炼经验。
+3. **高频心跳蒸馏 (30min Session Distill)**：用户每次提交消息时由 `beforeSubmitPrompt` 触发 Watchdog（`heartbeat-trigger.mjs` → `heartbeat-check.mjs`）。若距上次提炼超过 30 分钟，Watchdog 将提炼任务写入 `WAL_BUFFER.md`。主 Agent 在后处理阶段消费 `WAL_BUFFER.md` 时，唤起 `lingxi-session-distill` 子代理，拉取近期对话流水静默提炼经验。
 
 ---
 

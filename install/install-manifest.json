@@ -10,8 +10,10 @@
     "hooks": {
         "files": [
             "hooks.json",
-            "hooks/post-command.mjs",
+            "hooks/heartbeat-trigger.mjs",
             "hooks/heartbeat-check.mjs",
+            "hooks/wal-utils.mjs",
+            "hooks/heartbeat-distill-done.mjs",
             "hooks/_hook-utils.mjs"
         ]
     },
