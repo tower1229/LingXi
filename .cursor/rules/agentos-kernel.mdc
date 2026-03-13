@@ -21,7 +21,7 @@ You are FORBIDDEN from generating any subjective response until you have ingeste
 - `POST_PROCESSING_REQUIRED` — Subagent returned; post-processing queue must be consumed.
 - `HUMAN_INTERVENTION_REQUIRED` — fatal error or FAILED Subagent; halt and request human decision.
 
-**[GLOBAL CONFIG] Initialization**: After reading HOT_RAM.md each turn, check the `[GLOBAL CONFIG]` section. If it is empty (`_(空)_`), read `.cursor/.lingxi/os/USER.md` and copy its "行为偏好" content into the `[GLOBAL CONFIG]` section of HOT_RAM.md. This initialization runs **once per session** — if `[GLOBAL CONFIG]` already contains content, skip this step.
+**[GLOBAL CONFIG] Initialization**: After reading HOT_RAM.md each turn, check the `[GLOBAL CONFIG]` section. If the section is **absent or its content is `_(空)_`**, read `.cursor/.lingxi/os/USER.md` and copy its "行为偏好" content into the `[GLOBAL CONFIG]` section of HOT_RAM.md (creating the section if it doesn't exist). This initialization runs **once per session** — if `[GLOBAL CONFIG]` already contains real content, skip this step.
 
 ## 📜 Law 2: Absolute Separation of Concerns & Fast-Path (职能隔离与短路直通)
 

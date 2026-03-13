@@ -17,22 +17,22 @@ model: inherit
 
 ## 职责边界（实现逻辑）
 
-- **仅接受** 主 Agent 传入的 **payloads 数组**（扩展结构：必填 7 字段 + layer；可选 l0OneLiner、l1OneLiner、patternHint、patternConfidence）。
+- **仅接受** 主 Agent 传入的 **payloads 数组**（元素须符合 `taste-recognition` 的**品味 Payload 规范**，见 `.cursor/skills/taste-recognition/SKILL.md`）。
 - **不做升维**：不执行价值判定、评分卡或模式靠拢；升维（写/不写、L0/L1、设计模式靠拢）均在 taste-recognition 完成。
-- **执行链路**：校验 payloads 格式与必填项 → **调用 memory-write skill**（`.cursor/skills/memory-write/SKILL.md`）执行映射、治理、门控与直接文件写入（memory/project/、memory/share/ + INDEX）→ 组装并返回 `<Execution_Summary>`。
+- **执行链路**：校验 payloads 格式与必填项 → 分流路由（`user-config` → USER.md，`memory` → memory-write skill）→ 组装并返回 `<Execution_Summary>`。
 
 ## 输入约定（父代理必须传入）
 
-- **payloads**（必填，数组）：一组或多组品味 payload，每项为扩展结构：必填 7 字段（scene, principles, choice, evidence, source, confidence, apply）+ **layer**（enum：`L0` | `L1` | `L0+L1`）；可选 `l0OneLiner`、`l1OneLiner`、`patternHint`、`patternConfidence`。任一项必填缺失或类型/枚举非法时拒收并返回 FAILED。
+- **payloads**（必填，数组）：一组或多组品味 payload，每项须符合 `taste-recognition/SKILL.md` 中**品味 Payload 规范**定义的完整结构（含所有必填字段）。任一必填字段缺失或枚举值非法时，整批拒收并返回 FAILED。
 - **conversation_id**（按需）：当前会话 ID，用于记忆审计与会话级关联；传入 memory-write 时一并传递。
 
 ## 职责（按顺序执行）
 
-1. **输入校验**：校验 payloads 为非空数组，逐条校验每项必填字段（7 字段 + layer + destination）及可选字段类型/枚举；任一条必填缺失或类型/枚举不符则拒收，在 Summary 中返回 FAILED。
+1. **输入校验**：校验 payloads 为非空数组，逐条按**品味 Payload 规范**（见 `taste-recognition/SKILL.md`）校验所有必填字段及可选字段的枚举合法性；任一必填字段缺失或枚举值非法时，整批拒收并在 Summary 中返回 FAILED。
 2. **分流路由**：根据每条 payload 的 `destination` 和 `source` 字段决定写入路径：
    - `destination: user-config` + `source: remember` → 直接将内容追加写入 `.cursor/.lingxi/os/USER.md` 的"行为偏好"区块，**无需门控**。
    - `destination: user-config` + `source: extract` / `heartbeat` / `choice` / `init` → 向用户展示待写内容，获得明确确认后再写入 `USER.md`，**需要门控**。
-   - `destination: memory`（或字段缺省）→ 进入下一步，调用 `memory-write` skill，按现有 `confidence` 门控逻辑处理。
+   - `destination: memory` → 进入下一步，调用 `memory-write` skill，按现有 `confidence` 门控逻辑处理。
 3. **调用 memory-write**：将 `destination: memory` 的 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `.cursor/skills/memory-write/references/write-protocol.md`，note 结构见 `.cursor/skills/memory-write/references/memory-note-template.md`。
 4. **回传主对话 (强制契约)**：根据所有写入路径的处理结果，你**必须且只能**在正文最前方严格输出以下结构：
 

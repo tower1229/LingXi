@@ -45,7 +45,7 @@ description: 显式调用。从用户输入或行为中识别可沉淀的「品�
 
 **门控**（下游 lingxi-memory-write）：merge/replace 一律 questions；new 时 `confidence === "high"` 可静默写入，medium/low 必须 questions。
 
-**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "remember", "confidence": "high", "apply": "team", "layer": "L1", "l1OneLiner": "引用能力时优先自然语言短引用，避免暴露实现路径" }`
+**示例**：`{ "scene": "文档中引用 Skill 时", "principles": ["短引用", "完整路径"], "choice": "短引用", "evidence": "不要写完整路径", "source": "remember", "confidence": "high", "apply": "team", "layer": "L1", "destination": "memory", "l1OneLiner": "引用能力时优先自然语言短引用，避免暴露实现路径" }`
 
 ## References
 

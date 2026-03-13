@@ -38,7 +38,7 @@
 4. **若无可沉淀**：静默返回，不产出 payload，不调用 lingxi-memory-write。
 5. **若有可沉淀**：抽取 scene、principles、choice、evidence；**模式靠拢**（参考 references/pattern-catalog.md），若匹配则更新 principles/choice 或设置 patternHint、patternConfidence。类型与 Kind 对应见 content-types.md。
 6. **升维判定**：按 references/elevation-rules.md 做升维判定（含按内容类型的评分指引），计算 T 与 D1–D4；若 T≤3 或触犯例外不写 → **不产出该条**，不加入 payloads。
-7. **产出 payload**：对建议写入的条目标注 layer、可选 l0OneLiner/l1OneLiner；产出符合扩展 payload 规范的 JSON；同一轮多条组成 payloads 数组。
+7. **产出 payload**：对建议写入的条目标注 layer 和 destination（必填），可选 l0OneLiner/l1OneLiner；产出符合品味 Payload 规范的 JSON；同一轮多条组成 payloads 数组。
 8. **主 Agent 行为**：**仅当 payloads 非空时**调用 lingxi-memory-write 并传入 payloads 数组；禁止将原始用户消息或对话片段作为 lingxi-memory-write 的输入。
 
 ## 与环节品味嗅探的关系
