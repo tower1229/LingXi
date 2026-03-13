@@ -22,8 +22,8 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 **详细流程、背景知识结构、输出格式与注意事项均在 `references/` 目录。** 需要深度调优、设计决策或完整检查清单时再按需读取；日常使用以本短说明为准，避免首屏信息过载。
 
-- 核心价值与架构：`references/core-values.md`、`references/architecture-blueprint.md`、`references/memory-system.md`
-- AgentOS 核心设计：`references/architecture-blueprint.md`、`references/ipc-protocols.md`、`references/memory-system.md`
+- 核心价值与架构：`references/core-values.md`、`references/architecture.md`、`references/memory-system.md`
+- AgentOS 核心设计：`references/architecture.md`、`references/ipc-protocols.md`、`references/memory-system.md`
 - 设计原则与评价：`references/design-principles.md`、`references/evaluation-criteria.md`
 - 组件与工程实践：`references/component-guides.md`、`references/engineering-practices.md`、`references/optimization-checklist.md`
 - 工具与外部规范：`references/cursor-agent-tools.md`、`references/cursor-learn-courses-summary.md`；外部 URL 见 references 内说明
