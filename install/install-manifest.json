@@ -17,6 +17,14 @@
             "hooks/_hook-utils.mjs"
         ]
     },
+    "heartbeatPlugins": {
+        "files": [
+            "heartbeat-plugins/registry.mjs",
+            "heartbeat-plugins/session-distill.mjs",
+            "heartbeat-plugins/self-iterate.mjs",
+            "heartbeat-plugins/README.md"
+        ]
+    },
     "skills": [
         "skills/about-lingxi/SKILL.md",
         "skills/task/SKILL.md",

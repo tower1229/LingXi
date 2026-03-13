@@ -35,7 +35,7 @@ graph TD
     subgraph 守护层 [四、守护层 Daemon Layer - 心跳机制]
         Hooks(心跳触发: beforeSubmitPrompt)
         Watchdog(heartbeat-check 调度与执行)
-        Apps(30min 会话提炼入队 / 24h 自我迭代)
+        Plugins(heartbeat-plugins 注册表: SESSION_DISTILL / SELF_ITERATE)
     end
 
     User <--> MainAgent
@@ -94,15 +94,28 @@ graph TD
 
 ### 4. 守护层 (Daemon Layer / Heartbeat)
 
-**定位**：守护层的**主体是心跳机制**。由 Hook 在用户每次提交消息时触发、Watchdog（`heartbeat-check.mjs`）执行，不阻塞主对话；基于心跳目前实现了两类应用：**30 分钟自动会话提炼**与 **24 小时自我迭代**，二者均通过写入或消费 `WAL_BUFFER.md` 与主 Agent 或后台脚本协同。
+**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`.cursor/heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）** 与 **24 小时自我迭代（SELF_ITERATE）**。
 
-**核心机理**：
+**心跳机制结构**：
 
-- **心跳机制 (Heartbeat)**：`beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 `heartbeat-check.mjs`，与用户使用节奏对齐、触发及时。Watchdog 只做两件事：**按条件向 WAL 写入任务**；**扫描 WAL 并执行可由脚本直接完成的任务**（如 24h 自我迭代），不注入主会话上下文、不占用大模型额度。
-- **30 分钟会话提炼**：若距上次提炼完成超过 30 分钟，Watchdog 将 `[SESSION_DISTILL]` 任务（含候选会话 id）写入 `WAL_BUFFER.md`，并更新 `heartbeat-control.json` 等状态。主 Agent 在后续轮次的后处理阶段读取 WAL，若发现未处理的 `[SESSION_DISTILL]` 则唤起 **lingxi-session-distill** 子代理；子代理从历史对话（agent-transcripts）中提炼可沉淀经验，产出 payload 经 memory-write 写入记忆层，实现**从情节到语义的自动化沉淀**。
-- **24 小时自我迭代**：若距上次诊断超过 24 小时，Watchdog 将 `[SELF_ITERATE]` 任务写入 WAL，并在扫描 WAL 时**直接在后台 `exec`** 执行 `lingxi-self-iterate` 的 Node 脚本（如 memory-improvement-proposal + apply），读取 `MEMORY_JOURNAL.jsonl` 等做低风险诊断与改进，结果写入日志，不经过主 Agent。
+- **触发链**：`beforeSubmitPrompt` → `heartbeat-trigger.mjs` → `runHeartbeatCheck`（先入队再消费），与用户使用节奏对齐。
+- **插件目录**：`.cursor/heartbeat-plugins/` 下每个插件一个 `.mjs` 文件，通过 `registry.mjs` 注册；Watchdog 按注册表顺序调用各插件的 `shouldEnqueue(env)`，若有 payload 则入队并更新 control。
+- **入队阶段 (runHeartbeatEnqueue)**：按注册表依次调用插件的 `shouldEnqueue`；根据 `heartbeat-control.json` 与插件逻辑判断是否满足条件，若满足则通过 `appendWalTask` 向 WAL 追加未勾选任务行，并更新 control（锁、时间、processed 等）。**不在此阶段读 WAL 或执行任务**。
+- **消费阶段 (runHeartbeatConsume)**：读取 WAL，用统一解析得到未勾选任务，按任务类型查注册表分发。仅 **Watchdog 可直接执行**的类型（如 SELF_ITERATE）在本阶段 `exec` 并勾选；需主 Agent 参与的类型（如 SESSION_DISTILL）只入队，由主 Agent 在后处理中消费。
+- **WAL 契约**：任务行格式为 `- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`，TYPE 含 `SESSION_DISTILL`、`SELF_ITERATE` 等；写入与解析由 `.cursor/hooks/wal-utils.mjs` 提供，与 `.cursor/skills/workspace-bootstrap/references/wal-schema.md` 一致。
 
-**架构优势**：心跳与用户行为绑定，主流程无感；30min 提炼由主 Agent 消费 WAL 后唤起子代理，24h 迭代由 Watchdog 纯脚本执行，职责清晰、可扩展；记忆可持续沉淀，支撑“心有灵犀”的长期价值。
+**30 分钟会话提炼**：
+
+- **入队**：若距上次提炼完成超过 30 分钟且持有锁，Watchdog 根据 transcript 索引与 `processed_conversation_ids` 计算待提炼会话（排除当前会话与已处理，按 mtime 取前 N 条，条数上限由实现约束），将 `candidate_ids` 与 `enqueued_by` 写入一条 `[SESSION_DISTILL]` 任务到 WAL，并更新 control 的锁与 transcript 索引；**候选列表仅存在于 WAL 的 payload 中**，control 不再保存待提炼列表副本。
+- **消费**：主 Agent 在后处理阶段读取 WAL，若发现未勾选的 `[SESSION_DISTILL]`，则唤起 **lingxi-session-distill** 子代理并传入该行 payload；子代理从历史对话（agent-transcripts）中提炼可沉淀经验，产出 payload 经 memory-write 写入记忆层。
+- **完成路径**：子代理返回后，主 Agent 按 HOT_RAM 约定调用 `heartbeat-distill-done.mjs`（传入本次 `candidate_ids`），更新 `heartbeat-control.json`（`last_distillation_completed_at`、合并 `processed_conversation_ids`、清空 `heartbeat.running`），并在 WAL 中将该 `[SESSION_DISTILL]` 行勾选为已完成，实现**从情节到语义的闭环**。
+
+**24 小时自我迭代**：
+
+- **入队**：若距上次诊断超过 24 小时，Watchdog 将一条 `[SELF_ITERATE]` 任务（含 `session_id`）写入 WAL，并更新 control 的提示标记。
+- **消费**：Watchdog 在消费阶段扫描 WAL，对未勾选的 `[SELF_ITERATE]` 在后台 `exec` 执行 `lingxi-self-iterate` 的 Node 脚本（如 memory-improvement-proposal + apply），读取 `MEMORY_JOURNAL.jsonl` 等做低风险诊断与改进；**仅在 exec 成功回调中**将对应 WAL 行勾选并写回，失败时不勾选（下次扫描可重试），并将 `last_improvement_failed_at` 写入 control 便于排查。每轮最多处理一条，避免并发写 WAL。
+
+**架构优势**：心跳与用户行为绑定，主流程无感；入队与消费分离、WAL 为唯一队列与契约，职责清晰、易扩展；30min 由主 Agent 消费并完成路径脚本收尾，24h 由 Watchdog 纯脚本执行且仅成功时勾选，语义明确；记忆可持续沉淀，支撑“心有灵犀”的长期价值。
 
 ---
 

@@ -179,6 +179,22 @@ foreach ($hookFile in $Manifest.hooks.files) {
 }
 Write-Success "Hooks downloaded ($hookCount files)"
 
+# 下载 heartbeat-plugins
+if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
+  Write-Info "Downloading heartbeat plugins..."
+  $pluginCount = 0
+  foreach ($pluginFile in $Manifest.heartbeatPlugins.files) {
+    $remotePath = ".cursor/" + $pluginFile.Replace('\', '/')
+    $localFile = ".cursor\" + $pluginFile.Replace('/', '\')
+    if (-not (Download-File $remotePath $localFile)) {
+      Write-Error "Install failed"
+      exit 1
+    }
+    $pluginCount++
+  }
+  Write-Success "Heartbeat plugins downloaded ($pluginCount files)"
+}
+
 # 下载 skills
 Write-Info "Downloading skills..."
 $skillCount = 0

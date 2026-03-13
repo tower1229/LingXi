@@ -356,6 +356,20 @@ while IFS= read -r hook_file; do
 done < <(get_json_object_array "hooks" "files")
 success "Hooks downloaded ($hook_count files)"
 
+# 下载 heartbeat-plugins
+info "Downloading heartbeat plugins..."
+plugin_count=0
+while IFS= read -r plugin_file; do
+  [ -z "$plugin_file" ] && continue
+  plugin_file="${plugin_file//$'\r'/}"
+  if ! download_file ".cursor/${plugin_file}" ".cursor/${plugin_file}"; then
+    error "Install failed"
+    exit 1
+  fi
+  plugin_count=$((plugin_count + 1))
+done < <(get_json_object_array "heartbeatPlugins" "files")
+success "Heartbeat plugins downloaded ($plugin_count files)"
+
 # 下载 skills（仅 SKILL.md）
 info "Downloading skills..."
 skill_count=0

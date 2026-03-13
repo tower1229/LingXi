@@ -45,6 +45,7 @@ function collectPathsToDelete(manifest) {
   (manifest.commands || []).forEach((p) => out.push(".cursor/" + p));
   (manifest.skills || []).forEach((p) => out.push(".cursor/" + p));
   (manifest.hooks?.files || []).forEach((p) => out.push(".cursor/" + p));
+  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push(".cursor/" + p));
   (manifest.agents?.files || []).forEach((p) => out.push(".cursor/" + p));
 
   const refs = manifest.references || {};

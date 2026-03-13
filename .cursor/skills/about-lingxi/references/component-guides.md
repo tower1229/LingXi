@@ -87,6 +87,6 @@ LingXi OS 放弃了使用 Hook 强行注入 Prompt 的做法，转而将其作�
    - 作用极简：仅调用 `heartbeat-check.mjs`，不阻塞主流程、不注入上下文；使心跳与「用户使用」对齐，触发更及时。
 
 2. **`heartbeat-check.mjs` (Watchdog)**：
-   - 真正的异步调度器。
-   - **会话提炼 (30min)**：若距上次提炼超过 30 分钟，将 `[SESSION_DISTILL]` 任务写入全局缓存 `.cursor/.lingxi/os/WAL_BUFFER.md`，等待主 Agent 在下一轮后处理时消费。
-   - **自我迭代 (24h)**：若距上次诊断超过 24 小时，Watchdog **直接在后台 `exec` 执行** `lingxi-self-iterate` 相关的 Node.js 脚本（读取 `MEMORY_JOURNAL.jsonl`，生成提案），不占用大模型 API 额度，结果直接写入日志。
+   - 真正的异步调度器；从 `.cursor/heartbeat-plugins/registry.mjs` 加载插件，按注册表执行入队与消费。
+   - **会话提炼 (30min)**：由插件 `session-distill.mjs` 判定，若距上次提炼超过 30 分钟则将 `[SESSION_DISTILL]` 任务写入 `.cursor/.lingxi/os/WAL_BUFFER.md`，由主 Agent 后处理消费。
+   - **自我迭代 (24h)**：由插件 `self-iterate.mjs` 判定，若距上次诊断超过 24 小时则入队；Watchdog 在消费阶段**直接在后台 `exec` 执行** `lingxi-self-iterate` 的 Node 脚本，不占用大模型 API 额度。
