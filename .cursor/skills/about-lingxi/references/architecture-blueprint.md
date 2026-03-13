@@ -1,94 +1,119 @@
-# LingXi AgentOS Architecture Blueprint
+# 灵犀（LingXi）架构概览 (Architecture Overview)
 
-> **定位**：此文档为灵犀（LingXi）AgentOS 的核心架构实现蓝图。一切代码开发与测试验收，必须严格以本文档中的架构设定为最高准则。
-
----
-
-## 🧭 一、 架构目标与理念
-
-LingXi AgentOS 旨在将自然流散的 AI 聊天对话，升维改造为具备**确定性状态机**和**多线程并发安全**的后台批处理系统。
-其工程核心理念如下：
-
-1. **无锁隔离 (Session Isolation)**：所有状态和长下文都以用户的会话窗口 (`session_id`) 为边界隔离，绝无全局锁死与多开串台。
-2. **读写分离与职责剥离 (Orchestrator-Worker)**：主 Agent 仅负责大盘调度与状态扭转，具体的代码实体操作、环境分析等高复杂性执行均下放给专用 Subagent 隔离执行。
-3. **强制后置收敛 (Post-Processing Guarantee)**：大模型禁止以模糊推断直接结案响应，生命周期必须经过“意图解析 -> 沙盒执行 -> 文件状态同步 -> 经验提取与收尾”的完整刚性闭环。
-4. **主进程主动引导 (Active Bootstrapping)**：放弃依赖外部 Hook 强行注入系统指令的不稳定做法，全面拥抱“主 Agent 被法典约束，在响应任何用户输入前必须首步主动读取环境状态文件”的硬核自洽解法。
+> **定位**：本文档是对灵犀（LingXi）现有 AgentOS 工程体系的顶层设计解释。作为整个 `about-lingxi` 知识体系的“骨架”，其它具体机制与原则均依附于此架构的四个层级展开。
 
 ---
 
-## 🗂️ 二、 系统物理组成与空间规划
+## 🧭 一、 AgentOS 四层架构模型
 
-所有 AgentOS 的状态生命周期文件均放置在专用的沙盒目录：**`.cursor/.lingxi/os/`**。
-在并发体系下，其数据层级分布如下：
+灵犀的本质是一个基于文件系统运行的 **Agent 操作系统 (AgentOS)**。与传统应用开发类似，系统遵循清晰的分层架构（高度契合 OpenClaw 倡导的理念）。通过抽象出四层模型，实现了高内聚、低耦合的系统运作：
 
-| 文件物理路径                                | 定位与生命周期                                                                                                                                                      | 读写权限                                                              |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `os/USER.md`                                | **用户全局行为配置**。存储始终生效的行为偏好（称呼、语言、输出风格等）。由 workspace-bootstrap 初始化，每次会话启动时由主 Agent 注入 HOT_RAM 的 `[GLOBAL CONFIG]` 区块。 | **主Agent**：只读注入<br>**lingxi-memory-write**：追加写入            |
-| `os/sessions/[session_id]/HOT_RAM.md`       | **单会话核心状态控制台**。存储该会话当前轮次的命中记忆（Pre-Memory）和具有严格约束的**后处理队列 (Post-Processing Queue)**。                                        | **主Agent**：读 / 覆写状态<br>**Hook守护进程**：生成 / 初始化写入     |
-| `os/sessions/[session_id]/SESSION_TRACE.md` | **单会话时间轴流水账 (WAL)**。Append-only 追加。记录了该会话下历次 Subagent 试错轨迹、排错断点及用户核心意图。用于解决主 Agent 长周期任务下发时的“上下文失忆”问题。 | **主Agent**：主动追加写入<br>**Hook守护进程**：监测膨胀并负责裁切折叠 |
-| `os/WAL_BUFFER.md`                          | **全局系统级缓存**。所有跨会话共享的低频重量级操作（例如将特定会话内的排错经验提取固化为项目全局规范），均由主 Agent 写入此缓存，随后由进程异步归档入库。           | **主Agent**：写入结构化载荷<br>**Watch进程**：轮询消费清理            |
-| `os/MEMORY_JOURNAL.jsonl`                   | **记忆系统遥测日志**。记录与记忆治理相关的核心事件，供自我迭代进程消费。                                                                                            | **主Agent/Subagent**：追加写入<br>**Watch进程**：读取诊断             |
+```mermaid
+graph TD
+    classDef layer fill:#f9f9f9,stroke:#333,stroke-width:2px;
+
+    User((用户))
+
+    subgraph 调度层 [一、 调度层 Orchestrator Layer - 🧠 大脑]
+        MainAgent(主 Agent)
+    end
+
+    subgraph 执行层 [二、 执行层 Execution Layer - 🦾 手脚]
+        Subagents(Subagents 算力集群)
+    end
+
+    subgraph 记忆层 [三、 记忆层 Memory Layer - 💾 存储]
+        StateFile(运行状态文件 HOT_RAM/TRACE)
+        Knowledge(长期知识资产 / INDEX)
+    end
+
+    subgraph 守护层 [四、 守护层 Daemon Layer - 🫀 心跳/监控]
+        Hooks(系统 Hooks)
+        Watchdog(心跳与状态自愈)
+        Distill(静默经验提炼)
+    end
+
+    User <--> MainAgent
+    MainAgent -- 1. 挂载上下文/检索 --> StateFile
+    MainAgent -- 2. 委派具体任务 --> Subagents
+    Subagents -- 3. 操作工程环境 --> Workspace[(代码工作区)]
+    Subagents -- 4. 返回契约 (Summary) --> MainAgent
+    MainAgent -- 5. 更新状态与后处理队列 --> StateFile
+    Hooks -- 6. 定时触发或命令触发 --> Watchdog
+    Watchdog -. 检修自愈与后台任务 .-> StateFile
+    
+    class 调度层,执行层,记忆层,守护层 layer;
+```
+
+### 1. 调度层 (Orchestrator Layer)
+*   **定位**：系统的大脑与宏观指挥官（即主 Agent）。
+*   **核心职责**：统揽全局，负责理解用户意图、规划全局路径、委派底层能力，并在任务结束后收敛和校验状态。
+*   **内置逻辑与机理**：
+    *   **确定性管道 (Deterministic Pipeline)**：将开放式对话收束为“前置约束 -> 任务委派 -> 状态回收 -> 追加后置义务”的精密流水线。
+    *   **后置收敛 (Post-Processing)**：不以输出几句话作为结束，而是以“工作流节点状态的稳态闭环”为收敛标准（如必须整理报错日志后才算结束）。
+
+### 2. 执行层 (Execution Layer)
+*   **定位**：提供隔离算力的专用执行插件集合（各路 Subagents 等工具）。
+*   **核心职责**：在独立的沙盒中完成脏活累活（如大跨度代码重构、测试排查、深层索引搜索），保障主干对话（调度层）视窗的纯净与焦点不散。
+*   **具象体现**：**主从解耦 (Orchestrator-Worker)** 的实际落脚点。调度层只交代“做什么以及约束”，执行层负责“干活”并向调度层返回强约束规范的“执行摘要与影响记录 (Summary)”。
+
+### 3. 记忆层 (Memory Layer)
+*   **定位**：AgentOS 运行的基础数据实体与底座，涵盖短期状态寄存与长期知识库。
+*   **核心职责**：持久化知识资产，确保上下文精准隔离并沉淀项目全局规范。
+*   **工程实现**：**状态文件化 (File-as-State)**。灵犀以此作为 OS 的基石，全面采用物理文件实现 IPC（进程间通信）并留存快照：
+    *   `HOT_RAM.md` (动态寄存器：指示当前进行到的状态机步骤、排队队列)。
+    *   `SESSION_TRACE.md` (时间轴流水账：高保真追踪底层执行轨迹与回溯点)。
+    *   `memory/` (长效资产目录：持久化的最佳实践规范与经验法则)。
+
+### 4. 守护层 (Daemon / Heartbeat Layer)
+*   **定位**：游离于用户前台直接交互之外的后台自动机与维保网络。
+*   **核心职责**：如同“心跳系统”，凭借周期性或事件触发的 Hooks 静默维护系统的鲁棒性与健康度，无须人工干预也能保障长期可用。
+*   **涵盖机制**：
+    *   **心跳与挂载自愈 (Watchdog)**：防范中断或异常造成的 `HOT_RAM` 与实际流水日志不同步，在用户察觉前强制修复脏状态。
+    *   **静默提炼 (Distillation)**：在生命周期边缘定时整合低密度的历史日志记录，提取为高信噪比、可复用的长期经验记忆。
 
 ---
 
-## ⚙️ 三、 三段夹层式流转生命周期 (The Sandwich Execution Pipeline)
+## 🔁 二、 基于四层架构的数据流转
 
-所有的繁文缛节，汇聚为这唯一无二的流转链条：
+有了四层的分段结构，灵犀处理日常繁复指令的链路，即成为一条精密且高容错的工程数据管道：
 
-**【入口点】用户输入**：触发系统响应的自然语言指令。
+```mermaid
+sequenceDiagram
+    participant O as 调度层 (Orchestrator)
+    participant M as 记忆层 (Memory)
+    participant E as 执行层 (Subagents)
+    participant D as 守护层 (Daemon)
 
-1. **[主进程主动寻址与启动 (Bootstrapping)]**
-   - 主 Agent 拦截用户层输入，严格受制于 Law 1，**禁止产生未经系统校验的即时推理响应**。
-   - 第一步：立刻通过工具主动挂载执行状态环境 `.cursor/.lingxi/os/sessions/[session_id]/HOT_RAM.md`，确立当前会话的上下文基线。
-   - *(注：基础设施层 Hook 脚本仅作为系统守护进程，用于后台静默执行诸如 `SESSION_TRACE.md` 的体积折叠裁切等纯 I/O 数据维护工作，不再越权干涉 Prompt。)*
-2. **[前置预备约束期 (Pre-Phase)]**
-   - **偏好抽取 (Taste-Recognition)**：若用户包含自由指令表达，主 Agent 必须在派发任何执行前，前置启动偏好提取引擎，精准抽取出具有工程沉淀价值的规则与原则。
-   - **强制预检索 (Pre-Retrieve)**：以增强后的意图与特征提取为 Query，主动定向检索范围受限于 `pre` 或是 `both` 触发周期的已有项目记忆和代码规范。
-   - 主 Agent 将原始意图、最新提取原则聚合所有召回的“高优约束条令”，编译为主控级指令树载荷 (Megaprompt)，等待委派。
-3. **[隔离沙盒执行期 (Execution Phase)]**
-   - 主 Agent 发起底层设备层面互操作调用，将组装好的 Megaprompt 委派给相应的 `lingxi-subagent` 工具执行。
-   - Subagent 实例化于独立的沙盒执行环境中，自主开启终端、调度分析命令和执行代码层面的实际修改。整个复杂高耗时排错过程彻底剥离于主聊天进程视窗，确保主干对话层不被执行日志信息污染。
-   - Subagent 运行结束，按契约标准向主进程返回含有**精准业务破坏半径、修改链路**的结构体 `<Execution_Summary>`，并附带用于重启状态循环跳跃点的硬件级打断命令词（Mandatory Contract）。
-4. **[状态机收敛与同步 (State-Sync)]**
-   - 主 Agent 解析到底层唤醒打断语后，放弃生成推测性回答，从而被动转入操作系统接管角色：
-     - 利用文件编排级原子追加 (`Append`)，将 Summary 记录至 `SESSION_TRACE.md` 的末端以供审计回溯和长期决策推论。
-     - 即时覆写单例环境指针 `HOT_RAM.md`，强制扭转状态寄存器切换至 `POST_PROCESSING_REQUIRED`。
-5. **[系统后置校验与追溯执行 (Post-Phase)]**
-   - **后置联动精密检索 (Post-Retrieve)**：系统级核心闭环！主 Agent 采用新鲜返回的 `<Execution_Summary>` 中精密暴露的工程连带影响面作为全新高权 Query，横向回查绑定在 `post` 或 `both` 关联触发机制的系统级义务约束（例如：若修改底层库版本即时触发测试环境重建）。
-   - 一旦触发命中这类滞后的衍生物义务清单，将其压入 `HOT_RAM` 动态事件池中，由此**引发非用户侧干预条件下的第二周期 Subagent 并发委派**实现无缝自动化清理工作。
-   - 唯有确保所有驻留在后发单向任务池上的堆叠任务已被依次成功析构和清理，主 Agent 才能最终释放锁进程状态执行谢幕交互：*"LingXi AgentOS 环境变更周期已完成收敛与稳态保存，就绪下限指令分发。"*
+    Note over O,D: 新一轮对话指令抵达
+    O->>M: 1. 读取 HOT_RAM，校准当前稳态度
+    O->>M: 2. 预检索 (Pre-Retrieve)：提炼前置工程约束
+    M-->>O: 载入防坑指南与规范
+    O->>E: 3. 组装并派发被约束的任务 (Megaprompt)
+    Note over E: 执行层沙盒化作业
+    E-->>O: 4. 返回带格式的 Summary (含影响面)
+    O->>M: 5. 覆写寄存器状态，追加 Trace 轨迹日志
+    O->>M: 6. 滞后检索 (Post-Retrieve)
+    M-->>O: 若命中规则，追加后置任务 (如要求同步改则同步)
+    O-->>D: 7. 执行生命周期结束，可能唤起后台 Hooks
+    D->>M: 8. [静默] 心跳自检与长期经验提炼归档
+```
 
 ---
 
-## 🎭 四、 动态任务编排与多态算力 (Dynamic Orchestration)
+## 📚 三、 架构骨架下的文档系统映射
 
-LingXi AgentOS 不在代码里硬编码僵化的 `预处理 -> 执行 -> 后处理` 流水线，而是彻底采用 **“Turing Tape （图灵纸带队列）+ 多态算力容器”** 的微内核架构：
+本文档是整个 `about-lingxi` 的顶层心智模型骨头。围绕此模型的血肉与羽毛，全部展开在旁侧的文档中：
 
-1. **`HOT_RAM.md` 即动态编排队列**
-   主 Agent 拥有基于执行情况**动态规划路径**的能力。如果在某一环发生了不可预知的架构阻碍，主 Agent 可以凭空在 `HOT_RAM.md` 的队列中插入全新的待办事项（如：`-[ ] 执行修复数据库迁移`），所有的步骤最终被平铺成一个单向的清单 (Checklist) 驱动引擎。
+1. **指向调度层 (Orchestrator)**：
+   - 探寻策略与评价准则：参见 `design-principles.md`、`evaluation-criteria.md`。
+   - 法典规则约束：参见 `rules-guide.md`。
+2. **指向执行层 (Execution)**：
+   - 组件实现与协作范式：参见 `component-guides.md`、`workflow-output-principles.md`。
+3. **指向记忆层 (Memory)**：
+   - 沉淀检索机制及索引结构：参见 `memory-system.md`。
+   - 文件协议细化：参见 `ipc-protocols.md`。
+4. **指向守护层 (Daemon)**：
+   - Hooks 挂载、稳定性兜底及工程代码实践：参见 `engineering-practices.md` 及其它源码实现规范。
 
-2. **`lingxi-subagent` 只是通用算力容器**
-   `lingxi-subagent` 不是某类特定的写死角色的 Agent。在 `HOT_RAM.md` 队列的牵引下，它可以被主进程利用 Megaprompt 进行反复的“多态实例化”：
-   - **前置复用**：扫描全局目录生成接口 JSON 描述档（预处理）。
-   - **执行复用**：修改 `Login.tsx` 页面逻辑（干脏活）。
-   - **后置决策复用**：根据执行后的代码破坏范围，独立推断并修改 `package.json` 的 SemVer 语义化版本号（二次委派）。
-
-在这套读写分离、主从隔离的队列环之下，主进程永远保持了“高高在上的纯粹调度者”身份（规避了被巨量代码污染上下文和焦点漂移），将所有的逻辑脏活与边界推断，全部下放给了可随时抛弃和重用的 Subagent 算力集群。
-
----
-
-## ⚠️ 五、 潜在设计盲区与系统风控漏洞 (Design Vulnerability & Defect Radar)
-
-在此宏观蓝图确立后，结合 LLM 特性，有三个工程维度的逻辑真空区（漏洞）需要在代码实施层级或策略上予以特殊防范补漏：
-
-1. **Subagent 委派重试引发的无限死循环 (The Retry Amplification Bug)**
-   - **现象**：若 Subagent 在遇到权限不足或编译错误经历了 `3次` 沙盒内容错常试探后按契约标准抛回 `FAILED` 状态，主 Agent 基于被设定的尽职调度倾向，极易触发“原地继续修复”判决。直接基于同样错误的上下文重新包装任务回传 Subagent，诱发进程间死锁且耗光全局 Token 限额。
-   - **修补应对**：强行规定当 `<Execution_Summary>` 的 Status 为 `FAILED` 时，主 Agent **必须**切换挂起状态至 `HUMAN_INTERVENTION_REQUIRED` 寻求人工决策（或提供选项策略分支），严禁在无外源输入发生参数变化的情境下盲目委派回重试池。
-
-2. **状态机文件操作熔断引发的不可逆状态撕裂 (State-Sync Mismatch)**
-   - **现象**：当流转至第 4 步（状态机自我拉平）时，若由于大量并发文件修改或 Cursor 编辑工具调用故障/响应超时导致执行中断。欠缺类似传统关系型数据库事务锁（ACID 原子性）保障，主 Agent 可能只成功写入 `SESSION_TRACE.md` 追加审计线索，却未更改单例配置指针 `HOT_RAM.md` 写入新状态。造成任务队列不匹配以及长期记忆断点问题。
-   - **修补应对**：需要独立出独立系统的外围状态自检进程 (Watchdog)，针对 `SESSION_TRACE` 文件指纹变化与 `HOT_RAM` 状态不同步现象，在用户界面的状态感知或次轮触发前执行回流恢复协议。
-
-3. **后置检索阶段的雪崩式递归衍生链 (Avalanche Obligation Recursive Chains)**
-   - **现象**：业务极度延展时，若 `Post-Retrieve` 扫出了必须协同变更需求 `A` （修改核心依赖声明），当新代理修改结束后反馈回的二阶 `<Execution_Summary>` 基于判定将再度击中 `Post-Retrieve` （要求其重写编译手册 `B` ）。缺乏逃逸判断则极易造成 Agent 的子代深重嵌套与任务面恶性膨胀、失去控制端点。
-   - **修补应对**：必须确立在 `HOT_RAM.md` 调控参数中预设严格判定：即所谓的单向执行限制原则。强制规定事件处理栈最大深度或**严禁后置校验后派生的产出对象被再次作为 query 送入全记忆库**，彻底切断长尾衍生连环调用可能。
+> **结语**：这套四层架构彻底让自然语言的开放式推断降级并规范为确定性的状态机循环。无论是二次开发本工作流还是模型在理解工程项目，皆应从这四个立体切面看待 Agent 行动：用调度层思考、用执行层干活、写在记忆层、依托守护层保活。
