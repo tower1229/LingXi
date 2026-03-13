@@ -28,9 +28,13 @@ model: inherit
 
 ## 职责（按顺序执行）
 
-1. **输入校验**：校验 payloads 为非空数组，逐条校验每项必填字段（7 字段 + layer）及可选字段类型/枚举；任一条必填缺失或类型/枚举不符则拒收，在 Summary 中返回 FAILED。
-2. **调用 memory-write**：将 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `.cursor/skills/memory-write/references/write-protocol.md`，note 结构见 `.cursor/skills/memory-write/references/memory-note-template.md`。
-3. **回传主对话 (强制契约)**：根据 memory-write 返回结果，你**必须且只能**在正文最前方严格输出以下结构：
+1. **输入校验**：校验 payloads 为非空数组，逐条校验每项必填字段（7 字段 + layer + destination）及可选字段类型/枚举；任一条必填缺失或类型/枚举不符则拒收，在 Summary 中返回 FAILED。
+2. **分流路由**：根据每条 payload 的 `destination` 和 `source` 字段决定写入路径：
+   - `destination: user-config` + `source: remember` → 直接将内容追加写入 `.cursor/.lingxi/os/USER.md` 的"行为偏好"区块，**无需门控**。
+   - `destination: user-config` + `source: extract` / `heartbeat` / `choice` / `init` → 向用户展示待写内容，获得明确确认后再写入 `USER.md`，**需要门控**。
+   - `destination: memory`（或字段缺省）→ 进入下一步，调用 `memory-write` skill，按现有 `confidence` 门控逻辑处理。
+3. **调用 memory-write**：将 `destination: memory` 的 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `.cursor/skills/memory-write/references/write-protocol.md`，note 结构见 `.cursor/skills/memory-write/references/memory-note-template.md`。
+4. **回传主对话 (强制契约)**：根据所有写入路径的处理结果，你**必须且只能**在正文最前方严格输出以下结构：
 
 ```xml
 <Execution_Summary>

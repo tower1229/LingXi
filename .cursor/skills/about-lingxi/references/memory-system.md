@@ -11,6 +11,14 @@
 - `memory/project/`：项目级记忆文件（语义 + 关键词混合检索的主搜索面）
 - `memory/share/`：跨项目共享记忆（推荐 git submodule）
 
+记忆系统在整体上分为 **三层**，对应不同的访问模式：
+
+| 层 | 文件 | 内容类型 | 访问方式 | 对哪些 Tier 生效 |
+|---|---|---|---|---|
+| **User Config Layer** | `.cursor/.lingxi/os/USER.md` | 行为偏好（称呼、语言、输出风格） | 会话初始化时全量注入 HOT_RAM，零检索 | 所有 Tier（1/2/3）|
+| **Memory Layer（语义记忆库）** | `memory/project/` + `memory/share/` | 项目规范、技术决策、历史教训 | 按任务相关性语义检索（Pre/Post） | Tier-3 + 项目特异性 Tier-1 |
+| **Session Episodic（情节缓存）** | `sessions/[id]/SESSION_TRACE.md` | 本会话执行历史 | 主 Agent 主动读取 | 按需，跨轮上下文连续性 |
+
 ---
 
 ## 📥 一、 记忆提取与摄入 (Ingestion)

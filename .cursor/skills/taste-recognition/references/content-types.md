@@ -8,7 +8,7 @@
 
 | 类型 | 定义与边界 | 对应 Note Kind | 典型 scene/choice/evidence 特征 | 常用 apply |
 |------|------------|----------------|----------------------------------|------------|
-| **偏好 (Preference)** | 在特定情境下「要/不要」的稳定选择（风格、工具、表述、流程偏好），可无深层理由。 | principle / heuristic | scene=情境；choice=选中的做法；evidence=用户原文「喜欢/习惯/就用 X」。 | project |
+| **偏好 (Preference)** | 在特定情境下「要/不要」的稳定选择（风格、工具、表述、流程偏好），可无深层理由。**`destination` 路由规则**：若偏好对象是 Agent 自身的行为方式（称呼、语言、输出格式、回答风格等）→ `destination: user-config`；若偏好对象是技术选型或项目规范 → `destination: memory`（默认）。 | principle / heuristic | scene=情境；choice=选中的做法；evidence=用户原文「喜欢/习惯/就用 X」。 | project |
 | **决策经验 (Decision)** | 在若干选项中做过取舍，且带有情境、理由、备选与结果（或预期）。 | decision | scene=决策所处情境；principles=备选；choice=最终选择；evidence=理由或结果。 | project |
 | **领域知识 (Domain)** | 某领域的术语、概念、约定、最佳实践、常见坑与排障路径（可验证、可复用）。 | tech / reference | scene=使用该知识的场景；choice=核心事实或规则；evidence=原文或引用。 | project |
 | **产品/业务知识 (Product/Business)** | 产品语义、业务规则、验收标准、边界条件、与竞品的差异。 | business / reference | scene=需求/验收/边界讨论；choice=规则或标准；evidence=固化表述。 | project |

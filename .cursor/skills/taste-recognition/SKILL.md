@@ -19,7 +19,7 @@ description: 显式调用。从用户输入或行为中识别可沉淀的「品�
 2. **模式靠拢**：对可沉淀条目标抽 scene、principles、choice、evidence 后，参考 [references/pattern-catalog.md](references/pattern-catalog.md) 尝试将用户选择映射到常见设计模式；若匹配则更新 principles/choice 或填写 patternHint、patternConfidence。
 3. **价值判定（升维）**：对（可能已模式升维的）内容按 [references/elevation-rules.md](references/elevation-rules.md) 做升维判定，得到总分 T 与 layer。判定时同时吸收 Inclusion 语义：actionable（可执行）、stable（稳定）、repeated-or-broad-rule（重复信号或用户明确通用规则）、non-sensitive（非敏感）；若 T≤3 或触犯例外则**不写**该条——不产出该条、不加入 payloads。
 4. **产出**：对判定为写的条目标注 layer、可选 l0OneLiner/l1OneLiner，产出符合扩展 payload 规范的 JSON。
-5. **主 Agent 行为**：**仅当 payloads 非空时**将 payload 序列化为 JSON 字符串，并以 `- [ ] [MEMORY_WRITE]: <json>` 的格式追加到 `HOT_RAM.md` 的 `[POST-PROCESSING QUEUE]` 中。
+5. **主 Agent 行为**：**仅当 payloads 非空时**将 payload 序列化为 JSON 字符串，并以 `- [ ] [MEMORY_WRITE]: <json>` 的格式追加到 `HOT_RAM.md` 的 `[POST-PROCESSING QUEUE]` 中。下游 `lingxi-memory-write` 将根据每条 payload 的 `destination + source` 组合执行分流路由（`user-config` → USER.md，`memory` → 语义记忆库）。
 
 本 Skill 不直接调用 lingxi-memory-write，不读写记忆库；禁止用原始对话或草稿直接调 lingxi-memory-write。
 
@@ -37,6 +37,7 @@ description: 显式调用。从用户输入或行为中识别可沉淀的「品�
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 memory/project/，团队级=写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由本 Skill 按 references/elevation-rules.md 填写。 |
+| `destination` | enum | 是 | `user-config` \| `memory`。决定写入目标：`user-config` 写入 `USER.md`（行为偏好类，如称呼/语言/输出风格）；`memory` 写入语义记忆库（技术规范/项目决策等，默认值）。 |
 | `l0OneLiner` | string | 否 | 当 layer 为 L0 或 L0+L1 时建议填写；下游直接用于 note 的 L0 句/事实句。 |
 | `l1OneLiner` | string | 否 | 当 layer 为 L1 或 L0+L1 时建议填写；下游直接用于 note 的 L1 句/原则句。 |
 | `patternHint` | string | 否 | 设计模式名称（与 references/pattern-catalog.md 一致）；匹配到模式时填写。 |

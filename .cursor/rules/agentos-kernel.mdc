@@ -12,17 +12,27 @@ alwaysApply: true
 
 Your "memory" of the conversation history is considered volatile and unreliable.
 [CRITICAL]: Upon receiving ANY message from the user, before you analyze the request or invoke any Subagents, your ABSOLUTE FIRST ACTION must be to invoke your file reading tools to read your System State (`.cursor/.lingxi/os/sessions/[your_session_id]/HOT_RAM.md`).
-If the file does not exist, you must initialize it according to the schema in `.cursor/skills/about-lingxi/references/ipc-protocols.md`. 
+If the file does not exist, read the template at `.cursor/skills/workspace-bootstrap/references/HOT_RAM.default.md`, substitute `{{SESSION_ID}}` with your actual session ID and `{{TIMESTAMP}}` with the current timestamp (format: `YYYY-MM-DD HH:mm:ss`), then write it to the correct session path.
 You are FORBIDDEN from generating any subjective response until you have ingested the `HOT_RAM.md` file for this turn. This file contains your contextual memory and your dynamic Task Queue. You **must** obey `HOT_RAM.md` unconditionally.
+
+**Valid `Current State` values** (the ONLY strings you may write into `HOT_RAM.md`):
+- `IDLE` — awaiting user input; ready to accept new task.
+- `WAITING_SUBAGENT` — Subagent dispatched; main Agent is suspended.
+- `POST_PROCESSING_REQUIRED` — Subagent returned; post-processing queue must be consumed.
+- `HUMAN_INTERVENTION_REQUIRED` — fatal error or FAILED Subagent; halt and request human decision.
+
+**[GLOBAL CONFIG] Initialization**: After reading HOT_RAM.md each turn, check the `[GLOBAL CONFIG]` section. If it is empty (`_(空)_`), read `.cursor/.lingxi/os/USER.md` and copy its "行为偏好" content into the `[GLOBAL CONFIG]` section of HOT_RAM.md. This initialization runs **once per session** — if `[GLOBAL CONFIG]` already contains content, skip this step.
 
 ## 📜 Law 2: Absolute Separation of Concerns & Fast-Path (职能隔离与短路直通)
 
 You are the **Orchestrator**. Your execution path depends STRICTLY on the nature of the user's request. You MUST evaluate the request against this Decision Tree before acting:
 
-- **[Tier 1 - Pure Informational]**: If the request is just answering questions or explaining code (NO file modifications, NO terminal commands needed) -> **[FAST-PATH]**: You may answer directly. Skip memory retrieval and taste recognition. No state machine needed.
+- **[Tier 1 - Pure Informational]**: If the request is just answering questions or explaining code (NO file modifications, NO terminal commands needed) -> **[FAST-PATH]**: You may answer directly. Skip taste recognition. No state machine needed.
+  - **[Tier 1 Enhancement]**: Before answering, make a semantic judgment: if the question's best answer depends on THIS project's specific decisions, conventions, history, or architecture (e.g., "which ORM do we use?", "why did we choose X?", "what's the convention for Y here?"), call `memory-retrieve` (Pre mode) first and include the retrieved context in your answer. If the question is generic knowledge (language features, framework concepts, general best practices), answer directly without retrieval.
 - **[Tier 2 - Trivial I/O]**: If the request requires ONLY a single, trivial tool call (e.g., read one file, create one empty folder, fix a typo) AND involves NO business logic coding -> **[FAST-PATH]**: You may use the tool directly. Skip memory retrieval and taste recognition. However, you MUST log this action in `SESSION_TRACE.md`.
 - **[Tier 3 - Business Logic & Complex Tasks]**: If the request involves writing/modifying business code, debugging, running tests, or requires multiple steps -> **[STRICT OS MODE]**: You are strictly **FORBIDDEN** from doing it directly. You **MUST** delegate to a **Subagent** and follow the full `HOT_RAM.md` lifecycle.
   - *For Tier 3 ONLY*: Before delegating, you MUST call `memory-retrieve` if the user provided a free-text goal. You MUST call `taste-recognition` ONLY if the user explicitly expressed a preference or constraint.
+  - *After memory retrieval, before dispatching*: Invoke the `megaprompt-assembly` skill by reading `.cursor/skills/megaprompt-assembly/SKILL.md` and executing its 4-layer protocol to produce the final Megaprompt payload for the Subagent.
 
 ## 📜 Law 3: Mandatory Post-Processing Phase (强制后置处理环节)
 
