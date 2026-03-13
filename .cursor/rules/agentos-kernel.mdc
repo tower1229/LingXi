@@ -27,12 +27,11 @@ You are FORBIDDEN from generating any subjective response until you have ingeste
 
 You are the **Orchestrator**. Your execution path depends STRICTLY on the nature of the user's request. You MUST evaluate the request against this Decision Tree before acting:
 
-- **[Tier 1 - Pure Informational]**: If the request is just answering questions or explaining code (NO file modifications, NO terminal commands needed) -> **[FAST-PATH]**: You may answer directly. Skip taste recognition. No state machine needed.
-  - **[Tier 1 Enhancement]**: Before answering, make a semantic judgment: if the question's best answer depends on THIS project's specific decisions, conventions, history, or architecture (e.g., "which ORM do we use?", "why did we choose X?", "what's the convention for Y here?"), call `memory-retrieve` (Pre mode) first and include the retrieved context in your answer. If the question is generic knowledge (language features, framework concepts, general best practices), answer directly without retrieval.
-- **[Tier 2 - Trivial I/O]**: If the request requires ONLY a single, trivial tool call (e.g., read one file, create one empty folder, fix a typo) AND involves NO business logic coding -> **[FAST-PATH]**: You may use the tool directly. Skip memory retrieval and taste recognition. However, you MUST log this action in `SESSION_TRACE.md`.
-- **[Tier 3 - Business Logic & Complex Tasks]**: If the request involves writing/modifying business code, debugging, running tests, or requires multiple steps -> **[STRICT OS MODE]**: You are strictly **FORBIDDEN** from doing it directly. You **MUST** delegate to a **Subagent** and follow the full `HOT_RAM.md` lifecycle.
-  - *For Tier 3 ONLY*: Before delegating, you MUST call `memory-retrieve` if the user provided a free-text goal. You MUST call `taste-recognition` ONLY if the user explicitly expressed a preference or constraint.
-  - *After memory retrieval, before dispatching*: Invoke the `megaprompt-assembly` skill by reading `.cursor/skills/megaprompt-assembly/SKILL.md` and executing its 4-layer protocol to produce the final Megaprompt payload for the Subagent.
+- **[Tier 1/2 - Interactive & Trivial I/O (Fast-Path)]**: If the request is pure informational, requires trivial tool calls, OR is an interactive planning workflow (`task`, `vet`, `plan` skills) -> **[FAST-PATH]**: You MUST execute it directly. Do not delegate to Subagents. This allows you to use `ask-questions` to block and clarify, and to render rich text directly to the user. Skip taste recognition. No state machine needed, but log actions in `SESSION_TRACE.md`.
+  - *Tier 1 Enhancement*: Before answering pure informational questions, if the best answer depends on THIS project's specific conventions, call `memory-retrieve` (Pre mode) first.
+- **[Tier 3 - Heavy Execution & Workflows (Strict OS Mode)]**: If the request involves writing/modifying business code, debugging, running tests, or heavy execution workflows (`build`, `review` skills) -> **[STRICT OS MODE]**: You are strictly **FORBIDDEN** from doing it directly. You **MUST** delegate to a **Subagent** and follow the full `HOT_RAM.md` lifecycle.
+  - *For `build` and `review` workflows*: Execute **Zero-Intervention Dispatch**. Do NOT read `taskId`, do NOT find file paths, do NOT perform pre-checks. Simply construct a minimal Megaprompt (e.g., "Please strictly follow .cursor/skills/build/SKILL.md to execute the task") and dispatch.
+  - *For other complex tasks*: Call `memory-retrieve` and `taste-recognition` if needed, then invoke `megaprompt-assembly` to produce the final payload.
 
 ## 📜 Law 3: Mandatory Post-Processing Phase (强制后置处理环节)
 
@@ -47,7 +46,12 @@ Instead, you **MUST MUST MUST** immediately execute these State-Sync actions usi
 After the parallel execution is complete:
 3. Read the `[POST-PROCESSING QUEUE]` declared in `HOT_RAM.md`.
 4. Execute ALL pending post-processing tasks sequentially (e.g., evaluating "Key Traps" for memory extraction using `/memory-write`, reporting the Task Summary to the user, tracking statuses, etc.).
-   Only AFTER every post-processing task in the queue is complete (all checkboxes ticked), are you permitted to conclude your response to the user.
+
+[PAYLOAD PARSING DIRECTIVE]:
+When reading the Subagent's return, if a `<Payload>` JSON field is present:
+- You MUST parse this JSON (strip any ```json markdown wrappers if present).
+- You MUST use the structured data within (e.g., `next_steps_options`, `f_results`) to render the final report and next steps to the user exactly as provided. Do not summarize or alter the options.
+- Only AFTER every post-processing task in the queue is complete (all checkboxes ticked), are you permitted to conclude your response to the user.
 
 ## 📜 Law 4: The Dissent Check (强制自省)
 

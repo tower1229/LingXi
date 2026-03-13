@@ -68,9 +68,9 @@
 
 ### 说明
 
-Subagent 执行完毕后，必须在返回给主 Agent 的文本最前方严格输出此 XML 结构，包含：`Status`、`Task_Summary`、`Touched_Assets`、`Key_Traps`、`Decisions_Made`。
+Subagent 执行完毕后，必须在返回给主 Agent 的文本最前方严格输出此 XML 结构，包含：`Status`、`Task_Summary`、`Touched_Assets`、`Key_Traps`、`Decisions_Made`，以及可选的机器可读结构化载荷 `Payload` (JSON)。
 
-主 Agent 以此作为状态扭转和后置检索的唯一数据源。
+主 Agent 以此作为状态扭转、后置检索和渲染 UI 的唯一数据源。
 
 ---
 

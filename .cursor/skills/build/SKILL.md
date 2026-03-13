@@ -83,3 +83,24 @@ description: 显式调用。工作流步骤：按 task/plan 实现与测试。
 
 - **产物**：代码与测试变更；无单独文档产物（review 文档由 review skill 产出）。
 - 品味嗅探规则：`references/taste-sniff-rules.md`
+
+## 强制的 Payload 输出契约
+
+当你作为 Subagent 执行本任务完毕，返回 `<Execution_Summary>` 时，必须在 `<Payload>` 字段中输出以下严格格式的 JSON。主 Agent 将依赖此 JSON 渲染 UI：
+
+```json
+{
+  "workflow_type": "build",
+  "next_steps_options": [
+    "A. 执行 review skill",
+    "B. /remember 沉淀",
+    "C. 先改代码再 review",
+    "D. 其他/跳过"
+  ],
+  "data": {
+    "tests_passed": 12,
+    "tests_failed": 0,
+    "fallback_to_manual": false
+  }
+}
+```

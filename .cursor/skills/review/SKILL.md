@@ -7,7 +7,7 @@ description: 显式调用。工作流步骤：交付审查。
 
 ## 意图
 
-独立验收审计：基于 task 验收标准复核实现与证据，按需求编号（F1, F2, ...）给出 Pass/Fail 与证据引用，产出 review 报告。不在 review 阶段新增需求或改范围；缺口回退 build 修复。能力：读 task/plan/testcase 与变更代码、Run shell 执行测试、显式调用 reviewer-*（含 Browser 用于 E2E）。
+独立验收审计：基于 task 验收标准复核实现与证据，按需求编号（F1, F2, ...）给出 Pass/Fail 与证据引用，产出 review 报告。不在 review 阶段新增需求或改范围；缺口回退 build 修复。能力：读 task/plan/testcase 与变更代码、Run shell 执行测试、显式调用 reviewer-\*（含 Browser 用于 E2E）。
 
 ## 关键约束
 
@@ -63,10 +63,11 @@ description: 显式调用。工作流步骤：交付审查。
    - **多维度审查结果**：将 reviewer-doc-consistency / reviewer-security / reviewer-performance / reviewer-e2e 返回的 **Markdown 整块**按 spec 对应关系插入模板对应小节（### 3–4、### 8–9）；E2E 的「场景执行结果」表放入「E2E 测试执行结果」表位置。若存在 `REVIEWER_JSON` 块，可先解析用于汇总统计或审计，写入报告时以 Markdown 内容为准。
 
 10. **结论与下一步建议（必须）**
-   - 给出通过/需修复/拒绝结论。
-   - 只要存在证据缺失/不可验证或任一 F=Fail，结论不得为“通过”，并回退 build 修复。
-   - 只要完成审查（无论是否写入文件），末尾必须输出「下一步可尝试（选一项）」+ A/B/C/D。
-   - 选项仅允许：修复后再执行 review skill、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
+
+- 给出通过/需修复/拒绝结论。
+- 只要存在证据缺失/不可验证或任一 F=Fail，结论不得为“通过”，并回退 build 修复。
+- 只要完成审查（无论是否写入文件），末尾必须输出「下一步可尝试（选一项）」+ A/B/C/D。
+- 选项仅允许：修复后再执行 review skill、本任务已交付/无后续、运行测试后再 review、`/remember`、暂不修/其他。
 
 ## 使用场景
 
@@ -83,3 +84,26 @@ description: 显式调用。工作流步骤：交付审查。
 
 - **产物**：`.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
 - **报告模板**：`references/review-report-template.md`；**子维度输出规范**：`references/reviewer-output-spec.md`；品味嗅探规则：`references/taste-sniff-rules.md`
+
+## 强制的 Payload 输出契约
+
+当你作为 Subagent 执行本审查任务完毕，返回 `<Execution_Summary>` 时，必须在 `<Payload>` 字段中输出以下严格格式的 JSON。主 Agent 将依赖此 JSON 渲染 UI：
+
+```json
+{
+  "workflow_type": "review",
+  "next_steps_options": [
+    "A. 修复后再执行 review skill",
+    "B. 本任务已交付/无后续",
+    "C. 运行测试后再 review",
+    "D. 暂不修/其他"
+  ],
+  "data": {
+    "conclusion": "需修复",
+    "f_results": [
+      { "id": "F1", "pass": true, "evidence": "test_auth.ts line 45" },
+      { "id": "F2", "pass": false, "evidence": "缺少边界校验" }
+    ]
+  }
+}
+```
