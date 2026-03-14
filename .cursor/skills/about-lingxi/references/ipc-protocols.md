@@ -1,7 +1,6 @@
-# LingXi AgentOS IPC Protocols (进程间通信协议)
+# 灵犀 AgentOS IPC 协议 (IPC Protocols)
 
-> **定位**：本文档是 LingXi AgentOS 进程间通信协议的**说明性文档**，供理解架构时参考。
-> 各协议的**权威实现**均已分散至对应的核心文件，以实现精细化上下文管理。下文各节均注明了权威位置。
+> **定位**：本文档定义灵犀进程间/组件间通信的**契约**：HOT_RAM 结构、Execution Summary、Megaprompt 组装标准，以及 WAL 与 wal-schema/wal-utils 的对应关系。满足「契约唯一」：同一类交互只在一处约定格式与解析，实现见各节所指权威位置。
 
 ---
 
@@ -105,6 +104,21 @@ Append-only 追加日志，记录该会话下历次 Subagent 的执行摘要、�
 
 **物理路径**：`.cursor/.lingxi/os/WAL_BUFFER.md`
 
-**权威实现**：
+**格式与解析契约**（契约唯一）：
+
+- **行格式**：`- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`；TYPE 如 `SESSION_DISTILL`、`SELF_ITERATE`，与 `.cursor/heartbeat-plugins/` 插件 `id` 一致。
+- **权威定义**：`.cursor/skills/workspace-bootstrap/references/wal-schema.md`（格式与 payload 结构）
+- **权威实现**：`.cursor/hooks/wal-utils.mjs`（`parseWalLine`、`getPendingTasks`、`appendWalTask`、`markWalLineChecked`）
+
+**其他**：
+
 - **初始化模板** → `.cursor/skills/workspace-bootstrap/references/WAL_BUFFER.default.md`
-- **消费规则** → `.cursor/rules/agentos-kernel.mdc` Law 3（`[WAL_BUFFER_SYNC]` 队列项）
+- **消费规则** → `.cursor/rules/agentos-kernel.mdc` Law 3（`[WAL_BUFFER_SYNC]` 队列项）；主 Agent 在后处理阶段消费未勾选的 `[SESSION_DISTILL]` 等，Watchdog 消费 `[SELF_ITERATE]`。详见 `architecture.md` 守护层。
+
+---
+
+## 关联导航
+
+- **上游**：`architecture.md`（记忆层、守护层、执行层）、`design-principles.md`（契约唯一、后置闭环）
+- **下游**：`memory-system.md`（HOT_RAM/WAL 在记忆中的角色）、`.cursor/skills/megaprompt-assembly/SKILL.md`（Megaprompt 组装）、`.cursor/skills/workspace-bootstrap/references/wal-schema.md`
+- **同层**：`memory-system.md`（记忆与 WAL 提炼路径）

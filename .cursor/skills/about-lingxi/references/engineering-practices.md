@@ -19,6 +19,7 @@
 - 索引文件（如 `INDEX.md`）作为 SSoT，其他文件引用而非复制
 - 经验索引作为经验的 SSoT，避免重复定义
 - 质量资产（记忆系统）作为项目规范的 SSoT
+- **契约唯一**：同一类交互的格式与解析只在一处约定——WAL 以 wal-schema.md、wal-utils.mjs 为准；Subagent 输出以 `<Execution_Summary>` 为准；HOT_RAM 结构与行为以 ipc-protocols、workspace-bootstrap 模板为准（详见 `design-principles.md` §6、`ipc-protocols.md`）
 
 **检查点**：
 
@@ -38,10 +39,11 @@
 
 **在 workflow 中的应用**：
 
-- Skills 负责特定领域的任务（task、plan、build、review 等）
+- Skills 负责特定领域的任务（task、vet、plan、build、review 等）
 - 记忆系统负责质量资产（团队级标准/经验和项目级经验）
-- Hooks 负责自动化流程
-- Subagents 负责独立任务
+- Hooks 负责自动化流程（如心跳触发）；heartbeat-plugins 负责具体心跳应用
+- Subagents 负责独立任务（执行层隔离）
+- 上述与 `architecture.md` 调度/执行/记忆/守护四层对应
 
 **检查点**：
 
@@ -130,6 +132,7 @@
 - 索引一致性检查（Fail Fast 验证）
 - 阶段推进前的可推进判据检查
 - 经验匹配的早期验证
+- HOT_RAM 合法状态校验（IDLE | WAITING_SUBAGENT | POST_PROCESSING_REQUIRED | HUMAN_INTERVENTION_REQUIRED）；后处理消费前必须先同步状态（见 `lifecycle-flow.md`）
 
 **检查点**：
 
@@ -160,6 +163,7 @@
 - 明确的阶段推进协议（菜单选项）
 - 明确的确认机制（`/remember ...` 或用户选择存储目标）
 - 明确的索引和引用关系
+- HOT_RAM 状态机与合法状态显式；`[POST-PROCESSING QUEUE]` 显式消费、无隐式分支；双轨决策（Tier 1/2/3）显式分支（见 `lifecycle-flow.md`、`agentos-kernel.mdc`）
 
 **检查点**：
 
@@ -245,9 +249,10 @@
 
 **在 workflow 中的应用**：
 
-- Skills 可以扩展，而不需要修改命令文件（2.0 中命令独立，通过 description 匹配自动激活）
+- Skills 可以扩展，而不需要修改命令文件（通过 description 匹配自动激活）
 - Rules 可以添加，而不需要修改现有 Rules
 - 经验可以积累，而不需要修改核心机制
+- heartbeat-plugins 通过 registry.mjs 注册新插件即可扩展，无需修改 heartbeat-check.mjs 主循环（见 `architecture.md` 守护层）
 
 **检查点**：
 
@@ -283,12 +288,12 @@
 
 **原则**：将系统组织为清晰的层次，每层有明确的职责。
 
-**在 workflow 中的应用**：
+**在 workflow 中的应用**（与 `architecture.md` 四层一致）：
 
-- 命令层（Commands）：用户交互入口
-- 技能层（Skills）：业务逻辑和规则
-- 数据层（Data）：索引、经验、计划等
-- 基础设施层（Infrastructure）：Hooks、Subagents 等
+- **调度层**：主 Agent 决策、双轨（Fast-Path / Strict OS）、状态读写、后处理队列消费
+- **执行层**：Subagents、Megaprompt 与 `<Execution_Summary>` 契约
+- **记忆层**：HOT_RAM、SESSION_TRACE、USER、memory/、INDEX、WAL_BUFFER（情节 / 语义 / IPC）
+- **守护层**：beforeSubmitPrompt → heartbeat-trigger → heartbeat-check；heartbeat-plugins 注册表，入队与消费分离
 
 **检查点**：
 
@@ -302,9 +307,9 @@
 
 **在 workflow 中的应用**：
 
-- 文件命名约定（001.task.<标题>.md、001.plan.<标题>.md）
-- 目录结构约定（.cursor/.lingxi/tasks/、.cursor/skills/）
-- 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
+- 文件命名约定（001.task.<标题>.md、001.plan.<标题>.md 等）
+- 目录结构约定：`.cursor/.lingxi/tasks/`（工作流产物）、`.cursor/.lingxi/os/`（HOT_RAM、WAL、heartbeat-control、USER、sessions）、`.cursor/.lingxi/memory/`（INDEX、project/、share/）、`.cursor/skills/`、`.cursor/heartbeat-plugins/`（单文件插件与 registry）；详见 `architecture.md`、`ipc-protocols.md`、workspace-bootstrap 模板
+- 索引与契约格式约定：统一索引 `.cursor/.lingxi/memory/INDEX.md`；WAL、HOT_RAM、Execution_Summary 以 ipc-protocols、wal-schema 为准
 
 **检查点**：
 
@@ -318,8 +323,8 @@
 
 **在 workflow 中的应用**：
 
-- 基础工作流（task → plan → work → review）
-- 逐步增加能力（audit、archive、experience）
+- 基础工作流 task → vet → plan → build → review；可伸缩、按需切入任意阶段（详见 `lifecycle-flow.md`、`architecture.md`）
+- 逐步增加能力：记忆与提炼路径、心跳插件（SESSION_DISTILL、SELF_ITERATE 等）通过注册表扩展
 - 保持向后兼容
 
 **检查点**：
@@ -353,6 +358,7 @@
 - 明确的阶段状态反馈
 - 索引和经验的可见性
 - 决策和变更的可追溯性
+- HOT_RAM、SESSION_TRACE 状态可见；WAL 任务可追溯；`[POST-PROCESSING QUEUE]` 显式清单，后处理消费顺序可审计（见 `lifecycle-flow.md`）
 
 **检查点**：
 
@@ -392,8 +398,10 @@
 
 **原则**：根据项目阶段和实际需求，做出合理的权衡决策。
 
-## 参考
+---
 
-- **项目设计原则**：`docs/01-concepts/key-principles.md`
-- **核心价值指引**：`references/core-values.md`
-- **技术能力边界**：各组件指南（Commands、Rules、Skills、Hooks、Subagents）
+## 关联导航
+
+- **上游**：`core-values.md`、`design-principles.md`、`architecture.md`
+- **下游**：`memory-system.md`、`ipc-protocols.md`、`lifecycle-flow.md`
+- **同层**：具体实现约定见 `architecture.md` 守护层；调优全维度勾选见 `optimization-checklist.md`，按层级调优见 `optimization-guide.md`

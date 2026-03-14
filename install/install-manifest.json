@@ -54,18 +54,16 @@
     },
     "references": {
         "about-lingxi": [
-            "skills/about-lingxi/references/architecture-blueprint.md",
+            "skills/about-lingxi/references/architecture.md",
+            "skills/about-lingxi/references/lifecycle-flow.md",
             "skills/about-lingxi/references/ipc-protocols.md",
-            "skills/about-lingxi/references/component-guides.md",
             "skills/about-lingxi/references/core-values.md",
-            "skills/about-lingxi/references/cursor-agent-tools.md",
             "skills/about-lingxi/references/cursor-learn-courses-summary.md",
             "skills/about-lingxi/references/design-principles.md",
             "skills/about-lingxi/references/engineering-practices.md",
-            "skills/about-lingxi/references/evaluation-criteria.md",
             "skills/about-lingxi/references/memory-system.md",
             "skills/about-lingxi/references/optimization-checklist.md",
-            "skills/about-lingxi/references/rules-guide.md",
+            "skills/about-lingxi/references/optimization-guide.md",
             "skills/about-lingxi/references/workflow-output-principles.md"
         ],
         "workspace-bootstrap": [

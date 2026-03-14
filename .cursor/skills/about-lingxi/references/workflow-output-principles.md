@@ -138,3 +138,11 @@ task/plan/build/review/vet 在产生产物（写入文档或输出审查结果�
 
 - 「已调用 lingxi-memory-write 子代理完成写入。」「记忆已写入记忆库。」—— 暴露内部实现与冗余确认。
 - 写入成功后长段复述记忆内容—— 非决策输出应精简。
+
+---
+
+## 关联导航
+
+- **上游**：`design-principles.md`（静默成功原则）、`architecture.md`（工作流与四层）
+- **下游**：各工作流 Skill 的 SKILL.md（下一步建议格式与正反例）
+- **同层**：`design-principles.md`（静默成功原则）、`optimization-guide.md`（调优时的输出与静默检查）

@@ -44,7 +44,7 @@
 - **流程**：模型识别需要能力 → 生成工具名 + 参数（JSON）→ 应用执行 → 结果回填上下文 → 模型继续。
 - **成本**：工具定义与结果都占 token；大量工具调用会更快占满窗口并增加成本。MCP 可扩展外部工具。
 
-**灵犀参考**：灵犀依赖 Cursor 内置工具（Semantic search、Grep、Read/Edit、Terminal、Browser 等）；Skills 描述中可引导「何时用哪种工具」；参考 [cursor-agent-tools.md](cursor-agent-tools.md)。
+**灵犀参考**：灵犀依赖 Cursor 内置工具（Semantic search、Grep、Read/Edit、Terminal、Browser 等）；Skills 描述中可引导「何时用哪种工具」；能力边界以 Cursor 官方文档为准。
 
 ### 1.6 代理（Agents）
 
@@ -195,3 +195,11 @@
 - [审查和测试](https://cursor.com/cn/learn/reviewing-testing)
 - [自定义 Agent](https://cursor.com/cn/learn/customizing-agents)
 - [综合运用](https://cursor.com/cn/learn/putting-it-together)
+
+---
+
+## 关联导航
+
+- **上游**：Cursor 官方学习路径（见上链接）
+- **下游**：`design-principles.md`（灵犀对模型行为的约束）、`architecture.md`、`optimization-guide.md`
+- **同层**：外部参考，按需查阅

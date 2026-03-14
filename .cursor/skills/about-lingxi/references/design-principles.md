@@ -88,13 +88,14 @@
 
 ### 6. 单一事实来源（SSoT）
 
-**核心思想**：每个信息片段应该只在一个地方定义和维护。
+**核心思想**：每个信息片段应该只在一个地方定义和维护；同一类交互的格式与解析也只在一处约定，避免多处定义不一致。
 
 **应用**：
 
 - INDEX.md 是经验的单一事实来源，其他文件引用而非复制
 - 经验索引作为经验的 SSoT，避免重复定义
 - 质量资产（记忆系统）作为项目规范的 SSoT
+- 协议与契约的格式与解析：WAL 以 wal-schema.md 与 wal-utils.mjs 为准；Subagent 输出以 `<Execution_Summary>` 为准；HOT_RAM 结构以 ipc-protocols.md 为准
 
 ### 7. 关注点分离（SoC）
 
@@ -117,7 +118,12 @@
 - 目录结构约定（`.cursor/.lingxi/tasks/`、`.cursor/skills/`）
 - 索引格式约定（统一索引 `.cursor/.lingxi/memory/INDEX.md`）
 
-## 参考
+稳定的「预处理－执行－后处理」任务处理流程由上述原则下的工程手段保障（如状态落盘、调度与执行分离、后处理队列显式消费、契约单点定义等），具体见 `architecture.md` 与 `lifecycle-flow.md`。
 
-- **核心价值指引**：`references/core-values.md`
-- **静默成功与工作流输出约束**：`references/workflow-output-principles.md`
+---
+
+## 关联导航
+
+- **上游**：`core-values.md`（Why / How）、`architecture.md`（四层与工作流）
+- **下游**：`ipc-protocols.md`（契约与格式约定）、`workflow-output-principles.md`（输出与静默）、`architecture.md` 与 `lifecycle-flow.md`（SoC 与管道的实现）
+- **同层**：`core-values.md`（价值与原则对应）

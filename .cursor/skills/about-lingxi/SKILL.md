@@ -24,6 +24,6 @@ description: 当需要了解灵犀的背景知识、架构设计、核心机制�
 
 - 核心价值与架构：`references/core-values.md`、`references/architecture.md`、`references/memory-system.md`
 - AgentOS 核心设计：`references/architecture.md`、`references/ipc-protocols.md`、`references/memory-system.md`
-- 设计原则与评价：`references/design-principles.md`、`references/evaluation-criteria.md`
-- 组件与工程实践：`references/component-guides.md`、`references/engineering-practices.md`、`references/optimization-checklist.md`
-- 工具与外部规范：`references/cursor-agent-tools.md`、`references/cursor-learn-courses-summary.md`；外部 URL 见 references 内说明
+- 设计原则与评价：`references/design-principles.md`
+- 组件与工程实践：`references/engineering-practices.md`、`references/optimization-checklist.md`、`references/optimization-guide.md`
+- 外部与课程摘要：`references/cursor-learn-courses-summary.md`；外部 URL 见 references 内说明

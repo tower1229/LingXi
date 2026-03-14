@@ -155,19 +155,19 @@ graph TD
 ### 2.3 延伸阅读
 
 - **输出与静默契约**：`workflow-output-principles.md`
-- **组件与入口**：`component-guides.md`（工作流 Skills、Commands、Subagents 分工）
-- **各步细节**：task / plan / build / review / vet 的 `SKILL.md`
+- **各步细节与入口**：task / plan / build / review / vet 的 `SKILL.md`；调度与管道见 `lifecycle-flow.md`
 
 ---
 
 ## 三、架构骨架下的文档映射
 
-本文档是整个 `about-lingxi` 的顶层心智模型，其它文档按层级与主题挂靠如下：
+本文档是整个 `about-lingxi` 的顶层心智模型；**references 目录的文档索引**以本节与 `SKILL.md` 的 References 定位为准，按层级与主题挂靠如下：
 
-1. **指向调度层**：`design-principles.md`、`evaluation-criteria.md`、`rules-guide.md`
-2. **指向执行层**：`component-guides.md`、`cursor-agent-tools.md`
+1. **指向调度层**：`design-principles.md`、`lifecycle-flow.md`
+2. **指向执行层**：`lifecycle-flow.md`
 3. **指向记忆层**：`memory-system.md`、`ipc-protocols.md`
 4. **指向守护层**：`engineering-practices.md` 及心跳相关实现
-5. **指向工作流**：`workflow-output-principles.md`、`component-guides.md`（工作流 Skills 与 Commands）、各工作流 Skill 的 `SKILL.md`
+5. **指向工作流**：`workflow-output-principles.md`、`lifecycle-flow.md`、各工作流 Skill 的 `SKILL.md`
+6. **调优与外部**：`optimization-guide.md`、`optimization-checklist.md`（按层级调优）；`cursor-learn-courses-summary.md`（外部课程摘要，按需参阅）
 
 > **结语**：灵犀架构的核心是**用调度层思考、用执行层干活、写在记忆层、依托守护层保活**；开发工作流则是在此之上的可伸缩管道，从需求到交付均可追溯、可跳过、可组合。这是一套既便于人理解、又便于 AI 在约束内自我驱动的工程框架。
