@@ -170,4 +170,29 @@ graph TD
 5. **指向工作流**：`workflow-output-principles.md`、`lifecycle-flow.md`、各工作流 Skill 的 `SKILL.md`
 6. **调优与外部**：`optimization-guide.md`、`optimization-checklist.md`（按层级调优）；`cursor-learn-courses-summary.md`（外部课程摘要，按需参阅）
 
-> **结语**：灵犀架构的核心是**用调度层思考、用执行层干活、写在记忆层、依托守护层保活**；开发工作流则是在此之上的可伸缩管道，从需求到交付均可追溯、可跳过、可组合。这是一套既便于人理解、又便于 AI 在约束内自我驱动的工程框架。
+> **结语**：灵犀架构的核心是**用调度层思考、用执行层干活、写在记忆层、依托守护层保活**；开发工作流则在此之上。灵犀内的工作流 Skill、心跳插件、Rules、记忆层、about-lingxi 文档等均可被**自我迭代**在评估后发现并修改或扩展，标准与可改边界以本 SKILL 及 refs 为准；24h 心跳等触发诊断与低风险自动改进，更大范围或高风险变更仅提案或经人工确认。详见第四节。
+
+---
+
+## 四、可迭代实体与自我迭代
+
+灵犀的一切均可**动态发现与更新**：工作流 Skill 执行若持续触发某类问题，经评估可直接修改对应 Skill；用户需要依赖心跳的任务，可直接实现心跳插件并注册。以下为可被自我迭代发现、评估与修改的**可迭代实体**及其与四层/工作流的关系；**信号—标准—动作**统一模型与**风险与门控**原则见 `engineering-practices.md`「自我迭代的风险与门控」。
+
+### 4.1 可迭代实体一览
+
+| 实体类型 | 路径或清单 | 契约/格式的权威 ref | 典型变更 | 默认风险 | 可自动执行 |
+|----------|------------|---------------------|----------|----------|------------|
+| 工作流 Skill | `.cursor/skills/{task,vet,plan,build,review,...}/` | 各 SKILL.md、`lifecycle-flow.md` | 改描述、改步骤、增 refs | 描述 low、步骤 medium | 仅 low（如描述微调） |
+| 其他 Skill | `.cursor/skills/*/`（含 about-lingxi） | 各 SKILL.md、skill-creator refs | 改描述、增 references | low / medium | 仅 low |
+| Commands | `.cursor/commands/` | 各 command 的 .md | 改说明、改入口 | medium | 否 |
+| Rules | `.cursor/rules/` | `agentos-kernel.mdc` 等 | 改规则内容 | high | 否 |
+| 心跳插件 | `.cursor/heartbeat-plugins/*.mjs`、`registry.mjs` | `architecture.md` 守护层、`.cursor/heartbeat-plugins/README.md` | 新增插件、注册 | 新增 low | 仅新增并注册（low） |
+| Hooks | `.cursor/hooks/` | `architecture.md` 守护层 | 改主循环逻辑 | high | 否 |
+| Agents | `.cursor/agents/` | 各 agent 的 .md | 改说明、改步骤 | medium | 否 |
+| 记忆层 | `memory/`、INDEX、USER、WAL、HOT_RAM 等 | `memory-system.md`、`ipc-protocols.md`、`memory-write` write-protocol | note 增删改、INDEX 同步、治理策略 | 按协议 low，改契约 high | 当前 24h 仅执行协议内 low risk |
+| about-lingxi refs | `.cursor/skills/about-lingxi/references/*.md` | 本节、`architecture.md` 文档映射 | 改内容、增章节 | 内容 low | 仅内容（low） |
+| 安装清单 | `install/install-manifest.json` 等 | install 文档 | 增删路径、版本 | high | 否 |
+
+- **信号**：按实体类型/层级分类（如记忆层 MEMORY_JOURNAL、工作流执行结果、心跳执行结果、ref 与架构一致性检查等）；诊断时仅加载与该类实体相关的 refs。
+- **标准**：唯一来源为 about-lingxi 指向的 refs（core-values、design-principles、architecture、engineering-practices、ipc-protocols、各组件 README 等）；自我迭代不得引用 refs 之外的“标准”。
+- **动作**：对可迭代实体的写操作；是否可自动执行由上表及 `engineering-practices.md` 风险与门控原则决定。

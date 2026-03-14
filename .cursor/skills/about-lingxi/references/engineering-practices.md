@@ -400,8 +400,46 @@
 
 ---
 
+## Rules 被模型忽略时的缓解措施
+
+当通过 `.cursor/rules/` 明确约定了行为（如 AgentOS 内核逻辑），但模型执行时仍可能忽略时，可采取以下缓解措施（SSoT：规则文件本身 + 本小节）：
+
+1. **把「每轮首步」提到规则最前、做成不可跳过的预检**
+   - 在规则正文**紧接标题后**增加独立的 **TURN PRE-FLIGHT**（或等价）区块，用简短编号步骤写明「本轮第一个工具调用必须是什么」。
+   - 避免把关键动作埋在长段落的中间或文末；模型更容易遵守出现在规则前部的、结构清晰的 checklist。
+
+2. **用「动作 + 禁止」双重约束**
+   - 明确写「Before any other tool call or reply… you MUST complete: 1… 2…」。
+   - 同时写「You are FORBIDDEN to … until …」，用禁止式语言强化边界。
+
+3. **保持关键规则简短、可扫读**
+   - 若某条 rule 很长，把「每轮必做」的 3～5 步单独成块放在最前，其余细节用「详见 Law N」引用，避免首屏被长文字冲淡。
+
+4. **与生命周期文档一致**
+   - `lifecycle-flow.md`、`agentos-kernel.mdc` 中对「每轮入口」的描述保持一致；规则为权威执行依据，refs 为展开说明。
+
+5. **守护层可选的二次提醒（若产品支持）**
+   - 若 Cursor 的 Hook（如 `beforeSubmitPrompt`）支持向上下文注入简短提醒，可在守护层增加「本轮请先执行 TURN PRE-FLIGHT」类提示，作为规则之外的冗余保障；实现前需确认 Hook 能力与注入位置。
+
+**检查点**：
+- [ ] 关键「每轮首步」是否出现在规则前部、且为独立区块？
+- [ ] 是否同时使用了「MUST 完成」与「FORBIDDEN until」表述？
+- [ ] 规则与 lifecycle-flow / architecture 中入口描述是否一致？
+
+---
+
+## 自我迭代的风险与门控
+
+自我迭代可发现并修改灵犀核心文件（工作流 Skill、心跳插件、记忆层、about-lingxi refs 等），标准与可改边界以 `architecture.md` 第四节「可迭代实体一览」及本原则为准。
+
+- **可自动执行**：仅当变更可由「契约 + 现有 refs」自动校验、且回滚容易时，视为低风险并允许自动执行（例如改 Skill 描述、新增心跳插件并注册、记忆层内按 write-protocol 的 low risk 动作）。具体实体与风险见 `architecture.md` 可迭代实体一览表。
+- **仅提案或人工确认**：涉及决策逻辑、全局 Rules、Hooks 主循环、安装清单、或变更契约/格式定义的，不自动执行；自我迭代产出改进提案或写入待人工队列，由人确认后执行。
+- **执行约定**：自我迭代执行时，仅自动执行符合上两条的低风险动作；诊断与改进产出须注明所依据的标准与出处（如 architecture §4、engineering-practices §SSoT）。
+
+---
+
 ## 关联导航
 
 - **上游**：`core-values.md`、`design-principles.md`、`architecture.md`
 - **下游**：`memory-system.md`、`ipc-protocols.md`、`lifecycle-flow.md`
-- **同层**：具体实现约定见 `architecture.md` 守护层；调优全维度勾选见 `optimization-checklist.md`，按层级调优见 `optimization-guide.md`
+- **同层**：具体实现约定见 `architecture.md` 守护层；可迭代实体一览与信号—标准—动作见 `architecture.md` §4；调优全维度勾选见 `optimization-checklist.md`，按层级调优见 `optimization-guide.md`
