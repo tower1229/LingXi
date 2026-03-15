@@ -13,8 +13,8 @@
   - 适用于 Windows 环境  
   - 从 GitHub 下载并安装
 
-- **`install-manifest.json`** — 安装清单  
-  - 定义要安装的 plugin 内容（commands、skills、hooks、agents、references、scripts）、IDE 适配文件（`.cursor-plugin/`、`.claude-plugin/`、`.claude/hooks.json`）、workflow 目录/模板/gitignore 条目；安装时会复制到用户项目 `install/install-manifest.json` 供卸载脚本读取。
+- **`install-manifest.json`** — 安装清单
+  - 定义要安装的内容（commands、skills、hooks、agents、references、scripts）、IDE 适配文件（`.cursor-plugin/`、`.claude-plugin/`、`.claude/hooks.json`）、workflow 目录/模板/gitignore 条目；安装时会复制到用户项目 `install/install-manifest.json` 供卸载脚本读取。
 
 - **`test-install.sh`** — 本地测试脚本（开发用）  
   - 在仓库根目录启动 HTTP 服务，模拟远程源  
@@ -53,7 +53,7 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
   npm run lx:uninstall
   ```
 
-脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径（含 `.lingxi/`、`plugin/`、IDE 适配文件、scripts）；未列入清单的 `.cursor`、`scripts` 等内容会保留。  
+脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径（含 `.lingxi/`、根目录下的配置和代码文件、IDE 适配文件、scripts）；未列入清单的 `.cursor`、`scripts` 等内容会保留。  
 非交互式环境（如 CI）下请加 `--yes` 跳过确认：`yarn lx:uninstall --yes` 或 `npm run lx:uninstall -- --yes`。
 
 ### 本地测试（开发用）

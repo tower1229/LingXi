@@ -184,7 +184,7 @@ graph TD
 |----------|------------|---------------------|----------|----------|------------|
 | 工作流 Skill | `skills/{task,vet,plan,build,review,...}/` | 各 SKILL.md、`lifecycle-flow.md` | 改描述、改步骤、增 refs | 描述 low、步骤 medium | 仅 low（如描述微调） |
 | 其他 Skill | `skills/*/`（含 about-lingxi） | 各 SKILL.md、skill-creator refs | 改描述、增 references | low / medium | 仅 low |
-| Commands | `plugin/commands/` | 各 command 的 .md | 改说明、改入口 | medium | 否 |
+| Commands | `commands/` | 各 command 的 .md | 改说明、改入口 | medium | 否 |
 | Rules | `rules/` | `agentos-kernel.mdc` 等 | 改规则内容 | high | 否 |
 | 心跳插件 | `heartbeat-plugins/*.mjs`、`registry.mjs` | `architecture.md` 守护层、`heartbeat-plugins/README.md` | 新增插件、注册 | 新增 low | 仅新增并注册（low） |
 | Hooks | `hooks/` | `architecture.md` 守护层 | 改主循环逻辑 | high | 否 |

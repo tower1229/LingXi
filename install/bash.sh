@@ -310,17 +310,17 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   fi
 fi
 
-# 创建 plugin 与 .cursor 目录结构
+# 创建目录结构
 info "Preparing directories..."
-mkdir -p commands skills plugin/rules hooks agents .cursor
+mkdir -p commands skills hooks agents heartbeat-plugins .cursor
 
-# 下载 commands（清单中路径相对 plugin/，下载到 plugin/）
+# 下载 commands
 info "Downloading commands..."
 command_count=0
 while IFS= read -r cmd; do
   [ -z "$cmd" ] && continue
   cmd="${cmd//$'\r'/}"
-  if ! download_file "plugin/${cmd}" "plugin/${cmd}"; then
+  if ! download_file "${cmd}" "${cmd}"; then
     error "Install failed"
     exit 1
   fi
@@ -334,7 +334,7 @@ rule_count=0
 while IFS= read -r rule; do
   [ -z "$rule" ] && continue
   rule="${rule//$'\r'/}"
-  if ! download_file "plugin/${rule}" "plugin/${rule}"; then
+  if ! download_file "${rule}" ""${rule}"; then
     error "Install failed"
     exit 1
   fi
@@ -354,7 +354,7 @@ while IFS= read -r hook_file; do
       exit 1
     fi
   else
-    if ! download_file "plugin/${hook_file}" "plugin/${hook_file}"; then
+    if ! download_file "${hook_file}" ""${hook_file}"; then
       error "Install failed"
       exit 1
     fi
@@ -369,7 +369,7 @@ plugin_count=0
 while IFS= read -r plugin_file; do
   [ -z "$plugin_file" ] && continue
   plugin_file="${plugin_file//$'\r'/}"
-  if ! download_file "plugin/${plugin_file}" "plugin/${plugin_file}"; then
+  if ! download_file "${plugin_file}" ""${plugin_file}"; then
     error "Install failed"
     exit 1
   fi
@@ -383,7 +383,7 @@ skill_count=0
 while IFS= read -r skill; do
   [ -z "$skill" ] && continue
   skill="${skill//$'\r'/}"
-  if ! download_file "plugin/${skill}" "plugin/${skill}"; then
+  if ! download_file "${skill}" ""${skill}"; then
     error "Install failed"
     exit 1
   fi
@@ -396,7 +396,7 @@ agent_count=0
 while IFS= read -r agent_file; do
   [ -z "$agent_file" ] && continue
   agent_file="${agent_file//$'\r'/}"
-  if ! download_file "plugin/${agent_file}" "plugin/${agent_file}"; then
+  if ! download_file "${agent_file}" ""${agent_file}"; then
     error "Install failed"
     exit 1
   fi
@@ -415,7 +415,7 @@ if command -v jq &> /dev/null; then
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
-      if ! download_file "plugin/${ref_file}" "plugin/${ref_file}"; then
+      if ! download_file "${ref_file}" ""${ref_file}"; then
         error "Install failed"
         exit 1
       fi
@@ -442,7 +442,7 @@ except Exception as e:
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
-      if ! download_file "plugin/${ref_file}" "plugin/${ref_file}"; then
+      if ! download_file "${ref_file}" ""${ref_file}"; then
         error "Install failed"
         exit 1
       fi

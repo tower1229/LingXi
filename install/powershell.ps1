@@ -129,21 +129,22 @@ if ($CursorExists -or $LingxiExists) {
   }
 }
 
-# 创建 plugin 与 .cursor 目录结构
+# 创建目录结构
 Write-Info "Preparing directories..."
-New-Item -ItemType Directory -Force -Path "plugin\commands" | Out-Null
-New-Item -ItemType Directory -Force -Path "plugin\skills" | Out-Null
-New-Item -ItemType Directory -Force -Path "plugin\rules" | Out-Null
-New-Item -ItemType Directory -Force -Path "plugin\hooks" | Out-Null
-New-Item -ItemType Directory -Force -Path "plugin\agents" | Out-Null
+New-Item -ItemType Directory -Force -Path "commands" | Out-Null
+New-Item -ItemType Directory -Force -Path "skills" | Out-Null
+New-Item -ItemType Directory -Force -Path "hooks" | Out-Null
+New-Item -ItemType Directory -Force -Path "agents" | Out-Null
+New-Item -ItemType Directory -Force -Path "heartbeat-plugins" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor" | Out-Null
+New-Item -ItemType Directory -Force -Path ".claude" | Out-Null
 
-# 下载 commands（清单路径相对 plugin/，远程与本地均用 plugin/）
+# 下载 commands
 Write-Info "Downloading commands..."
 $commandCount = 0
 foreach ($cmd in $Manifest.commands) {
-  $remotePath = "plugin/" + $cmd.Replace('\', '/')
-  $localFile = "plugin\" + $cmd.Replace('/', '\')
+  $remotePath = $cmd.Replace('\', '/')
+  $localFile = $cmd.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -156,8 +157,8 @@ Write-Success "Commands downloaded ($commandCount files)"
 Write-Info "Downloading rules..."
 $ruleCount = 0
 foreach ($rule in $Manifest.rules) {
-  $remotePath = "plugin/" + $rule.Replace('\', '/')
-  $localFile = "plugin\" + $rule.Replace('/', '\')
+  $remotePath = $rule.Replace('\', '/')
+  $localFile = $rule.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -166,16 +167,16 @@ foreach ($rule in $Manifest.rules) {
 }
 Write-Success "Rules downloaded ($ruleCount files)"
 
-# 下载 hooks（hooks.json 写入 .cursor/，其余写入 hooks/）
+# 下载 hooks（hooks.json 写入 .cursor/ 或 .claude/，其余写入 hooks/）
 Write-Info "Downloading hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {
   if ($hookFile -eq "hooks.json") {
-    $remotePath = ".cursor/hooks.json"
-    $localFile = ".cursor\hooks.json"
+    $remotePath = ".claude/hooks.json"
+    $localFile = ".claude\hooks.json"
   } else {
-    $remotePath = "plugin/" + $hookFile.Replace('\', '/')
-    $localFile = "plugin\" + $hookFile.Replace('/', '\')
+    $remotePath = $hookFile.Replace('\', '/')
+    $localFile = $hookFile.Replace('/', '\')
   }
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
@@ -190,8 +191,8 @@ if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
   Write-Info "Downloading heartbeat plugins..."
   $pluginCount = 0
   foreach ($pluginFile in $Manifest.heartbeatPlugins.files) {
-    $remotePath = "plugin/" + $pluginFile.Replace('\', '/')
-    $localFile = "plugin\" + $pluginFile.Replace('/', '\')
+    $remotePath = $pluginFile.Replace('\', '/')
+    $localFile = $pluginFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
       Write-Error "Install failed"
       exit 1
@@ -205,8 +206,8 @@ if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
 Write-Info "Downloading skills..."
 $skillCount = 0
 foreach ($skill in $Manifest.skills) {
-  $remotePath = "plugin/" + $skill.Replace('\', '/')
-  $localFile = "plugin\" + $skill.Replace('/', '\')
+  $remotePath = $skill.Replace('\', '/')
+  $localFile = $skill.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -218,8 +219,8 @@ foreach ($skill in $Manifest.skills) {
 Write-Info "Downloading agents..."
 $agentCount = 0
 foreach ($agentFile in $Manifest.agents.files) {
-  $remotePath = "plugin/" + $agentFile.Replace('\', '/')
-  $localFile = "plugin\" + $agentFile.Replace('/', '\')
+  $remotePath = $agentFile.Replace('\', '/')
+  $localFile = $agentFile.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -232,8 +233,8 @@ Write-Success "Agents downloaded ($agentCount files)"
 $refCount = 0
 foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
   foreach ($refFile in $Manifest.references.$refKey) {
-    $remotePath = "plugin/" + $refFile.Replace('\', '/')
-    $localFile = "plugin\" + $refFile.Replace('/', '\')
+    $remotePath = $refFile.Replace('\', '/')
+    $localFile = $refFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
       Write-Error "Install failed"
       exit 1

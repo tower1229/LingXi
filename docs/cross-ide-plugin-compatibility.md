@@ -21,7 +21,7 @@
 
 | 字段 | Cursor | Claude Code |
 |------|--------|-------------|
-| 清单目录 | `.cursor-plugin/` | `.claude-plugin/` |
+| 清单目录 | `.cursor-根目录/` | `.claude-根目录/` |
 | 清单文件名 | `plugin.json` | `plugin.json` |
 | 必填字段 | `name` | `name` |
 | 自定义组件路径 | 支持（`skills`, `agents`, `hooks` 等字段） | 支持（同字段名） |
@@ -89,7 +89,7 @@ paths:              # Claude Code 读取
 
 ```
 LingXi/
-├── .cursor-plugin/plugin.json    ← 清单，指向 .cursor/ 下各目录
+├── .cursor-根目录/plugin.json    ← 清单，指向 .cursor/ 下各目录
 └── .cursor/
     ├── skills/                   ← Plugin 内容（应共享）
     ├── agents/                   ← Plugin 内容（应共享）
@@ -114,21 +114,21 @@ LingXi/
 
 | 文件 | 硬编码的路径（当前） |
 |------|------------|
-| `plugin/hooks/heartbeat-check.mjs` | `.lingxi/os/WAL_BUFFER.md`、`heartbeat-control.json`、`heartbeat-transcript-index.json` |
-| `plugin/hooks/wal-utils.mjs` | `.lingxi/os/WAL_BUFFER.md`、`plugin/skills/workspace-bootstrap/references/WAL_BUFFER.default.md` |
-| `plugin/hooks/heartbeat-distill-done.mjs` | `.lingxi/os/heartbeat-control.json`、`WAL_BUFFER.md` |
-| `plugin/heartbeat-plugins/self-iterate.mjs` | `.lingxi/os/heartbeat-control.json`、`plugin/agents/lingxi-self-iterate/scripts/` |
-| `plugin/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs` | `.lingxi/os/` 下多个文件、`.lingxi/memory/` |
-| `plugin/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs` | `.lingxi/os/improvement-*.json` |
-| `plugin/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs` | `.lingxi/` 下所有骨架文件路径 |
-| `plugin/skills/task/scripts/latest-task-id.mjs` | `.lingxi/tasks/` |
-| `plugin/skills/task/scripts/next-task-id.mjs` | `.lingxi/tasks/` |
-| `plugin/skills/memory-govern/SKILL.md` | `.lingxi/memory`（文档引用） |
-| `plugin/skills/workspace-bootstrap/references/HOT_RAM.default.md` | `.lingxi/os/WAL_BUFFER.md`（文档引用） |
+| `hooks/heartbeat-check.mjs` | `.lingxi/os/WAL_BUFFER.md`、`heartbeat-control.json`、`heartbeat-transcript-index.json` |
+| `hooks/wal-utils.mjs` | `.lingxi/os/WAL_BUFFER.md`、`skills/workspace-bootstrap/references/WAL_BUFFER.default.md` |
+| `hooks/heartbeat-distill-done.mjs` | `.lingxi/os/heartbeat-control.json`、`WAL_BUFFER.md` |
+| `heartbeat-plugins/self-iterate.mjs` | `.lingxi/os/heartbeat-control.json`、`agents/lingxi-self-iterate/scripts/` |
+| `agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs` | `.lingxi/os/` 下多个文件、`.lingxi/memory/` |
+| `agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs` | `.lingxi/os/improvement-*.json` |
+| `skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs` | `.lingxi/` 下所有骨架文件路径 |
+| `skills/task/scripts/latest-task-id.mjs` | `.lingxi/tasks/` |
+| `skills/task/scripts/next-task-id.mjs` | `.lingxi/tasks/` |
+| `skills/memory-govern/SKILL.md` | `.lingxi/memory`（文档引用） |
+| `skills/workspace-bootstrap/references/HOT_RAM.default.md` | `.lingxi/os/WAL_BUFFER.md`（文档引用） |
 
-**注意**：`heartbeat-trigger.mjs` 和 `heartbeat-distill-done.mjs` 已使用 `process.env.CURSOR_PROJECT_DIR || process.cwd()` 动态解析项目根；脚本位于 `plugin/hooks/`，项目根为 `path.resolve(scriptDir, "../..")`。
+**注意**：`heartbeat-trigger.mjs` 和 `heartbeat-distill-done.mjs` 已使用 `process.env.CURSOR_PROJECT_DIR || process.cwd()` 动态解析项目根；脚本位于 `hooks/`，项目根为 `path.resolve(scriptDir, "../..")`。
 
-`_hook-utils.mjs` 中的 `getProjectRootFromHookScriptUrl()` 基于 `plugin/hooks/` 相对位置（`path.resolve(scriptDir, "../..")`）解析项目根。
+`_hook-utils.mjs` 中的 `getProjectRootFromHookScriptUrl()` 基于 `hooks/` 相对位置（`path.resolve(scriptDir, "../..")`）解析项目根。
 
 ---
 
@@ -136,9 +136,9 @@ LingXi/
 
 ### 4.1 设计原则
 
-- **内容层**（`plugin/`）：plugin 分发的静态资产，两个 IDE 完全共享，不含任何 IDE 目录名
+- **内容层**（`根目录/`）：plugin 分发的静态资产，两个 IDE 完全共享，不含任何 IDE 目录名
 - **运行时层**（`.lingxi/`）：灵犀自定义的运行时数据目录，从项目根直接存放，不隶属任何 IDE 目录
-- **IDE 适配层**（`.cursor-plugin/`、`.claude-plugin/`、`.cursor/`、`.claude/`）：仅存放 IDE 专有配置文件
+- **IDE 适配层**（`.cursor-根目录/`、`.claude-根目录/`、`.cursor/`、`.claude/`）：仅存放 IDE 专有配置文件
 
 ### 4.2 新目录结构
 
@@ -147,7 +147,7 @@ LingXi/
 │
 ├── # ── 内容层（Plugin 分发资产，两个 IDE 完全共享）─────────────
 │
-├── plugin/
+├── 根目录/
 │   ├── skills/
 │   │   ├── about-lingxi/SKILL.md
 │   │   ├── memory-retrieve/SKILL.md
@@ -211,11 +211,11 @@ LingXi/
 │
 ├── # ── IDE 适配层（各 IDE 专有，仅含配置）──────────────────────
 │
-├── .cursor-plugin/
-│   └── plugin.json                ← Cursor 清单，指向 plugin/ 目录
+├── .cursor-根目录/
+│   └── plugin.json                ← Cursor 清单，指向 根目录/ 目录
 │
-├── .claude-plugin/
-│   └── plugin.json                ← Claude Code 清单，指向 plugin/ 目录
+├── .claude-根目录/
+│   └── plugin.json                ← Claude Code 清单，指向 根目录/ 目录
 │
 ├── .cursor/
 │   └── hooks.json                 ← Cursor 专有 hook 配置（camelCase 事件名）
@@ -226,7 +226,7 @@ LingXi/
 
 ### 4.3 两个清单文件
 
-**`.cursor-plugin/plugin.json`：**
+**`.cursor-根目录/plugin.json`：**
 ```json
 {
   "name": "lingxi",
@@ -238,15 +238,15 @@ LingXi/
   "homepage": "https://github.com/tower1229/LingXi",
   "repository": "https://github.com/tower1229/LingXi",
   "logo": "assets/logo.svg",
-  "skills":   "plugin/skills",
-  "agents":   "plugin/agents",
-  "commands": "plugin/commands",
-  "rules":    "plugin/rules",
+  "skills":   "根目录/skills",
+  "agents":   "根目录/agents",
+  "commands": "根目录/commands",
+  "rules":    "根目录/rules",
   "hooks":    ".cursor/hooks.json"
 }
 ```
 
-**`.claude-plugin/plugin.json`：**
+**`.claude-根目录/plugin.json`：**
 ```json
 {
   "name": "lingxi",
@@ -258,10 +258,10 @@ LingXi/
   "homepage": "https://github.com/tower1229/LingXi",
   "repository": "https://github.com/tower1229/LingXi",
   "logo": "assets/logo.svg",
-  "skills":   "plugin/skills",
-  "agents":   "plugin/agents",
-  "commands": "plugin/commands",
-  "rules":    "plugin/rules",
+  "skills":   "根目录/skills",
+  "agents":   "根目录/agents",
+  "commands": "根目录/commands",
+  "rules":    "根目录/rules",
   "hooks":    ".claude/hooks.json"
 }
 ```
@@ -275,7 +275,7 @@ LingXi/
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "node plugin/hooks/heartbeat-trigger.mjs"
+        "command": "node 根目录/hooks/heartbeat-trigger.mjs"
       }
     ]
   }
@@ -289,7 +289,7 @@ LingXi/
     "UserPromptSubmit": [
       {
         "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/plugin/hooks/heartbeat-trigger.mjs"
+        "command": "${CLAUDE_PLUGIN_ROOT}/根目录/hooks/heartbeat-trigger.mjs"
       }
     ]
   }
@@ -300,7 +300,7 @@ LingXi/
 
 ### 4.5 运行时路径常量统一修改
 
-将所有脚本中的 `.cursor/.lingxi/` 替换为 `.lingxi/`，`.cursor/skills/` 替换为 `plugin/skills/`，`.cursor/agents/` 替换为 `plugin/agents/`。以 `heartbeat-check.mjs` 为例：
+将所有脚本中的 `.cursor/.lingxi/` 替换为 `.lingxi/`，`.cursor/skills/` 替换为 `skills/`，`.cursor/agents/` 替换为 `agents/`。以 `heartbeat-check.mjs` 为例：
 
 ```javascript
 // 修改前
@@ -322,7 +322,7 @@ const DEFAULT_WAL_REL = ".cursor/skills/workspace-bootstrap/references/WAL_BUFFE
 
 // 修改后
 const WAL_BUFFER_REL  = ".lingxi/os/WAL_BUFFER.md";
-const DEFAULT_WAL_REL = "plugin/skills/workspace-bootstrap/references/WAL_BUFFER.default.md";
+const DEFAULT_WAL_REL = "根目录/skills/workspace-bootstrap/references/WAL_BUFFER.default.md";
 ```
 
 以 `self-iterate.mjs` 为例：
@@ -335,7 +335,7 @@ const proposalScript = path.join(projectRoot, ".cursor/agents/lingxi-self-iterat
 // 修改后
 const HEARTBEAT_CONTROL_REL = ".lingxi/os/heartbeat-control.json";
 // execCommand 中：
-const proposalScript = path.join(projectRoot, "plugin/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs");
+const proposalScript = path.join(projectRoot, "根目录/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs");
 ```
 
 `_hook-utils.mjs` 中的 `getProjectRootFromHookScriptUrl()` 需更新层级计算：
@@ -344,8 +344,8 @@ const proposalScript = path.join(projectRoot, "plugin/agents/lingxi-self-iterate
 // 注释：.cursor/hooks/xxx.mjs -> project root is two levels up
 return path.resolve(scriptDir, "../..");
 
-// 修改后（脚本在 plugin/hooks/）
-// 注释：plugin/hooks/xxx.mjs -> project root is two levels up
+// 修改后（脚本在 根目录/hooks/）
+// 注释：根目录/hooks/xxx.mjs -> project root is two levels up
 return path.resolve(scriptDir, "../..");   // 层级数不变，路径语义变了
 ```
 
@@ -378,37 +378,37 @@ Thumbs.db
 
 ## 5. 需要逐一修改的文件清单
 
-### 5.1 路径常量修改（`.cursor/.lingxi/` → `.lingxi/`，`.cursor/skills/` → `plugin/skills/` 等）
+### 5.1 路径常量修改（`.cursor/.lingxi/` → `.lingxi/`，`.cursor/skills/` → `skills/` 等）
 
 | 文件 | 修改内容 |
 |------|---------|
-| `plugin/hooks/heartbeat-check.mjs` | 3 个路径常量（WAL、heartbeat-control、transcript-index）|
-| `plugin/hooks/wal-utils.mjs` | 2 个路径常量（WAL、default WAL 骨架）|
-| `plugin/hooks/heartbeat-distill-done.mjs` | 2 个路径常量（heartbeat-control、WAL）|
-| `plugin/heartbeat-plugins/self-iterate.mjs` | 1 个路径常量（heartbeat-control）+ execCommand 中 2 个脚本路径 |
-| `plugin/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs` | 7 个路径常量（os/ 和 memory/ 下各文件）|
-| `plugin/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs` | 3 个路径常量 |
-| `plugin/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs` | 骨架文件映射表中所有路径 |
-| `plugin/skills/task/scripts/latest-task-id.mjs` | `.lingxi/tasks/` |
-| `plugin/skills/task/scripts/next-task-id.mjs` | 同上 |
+| `hooks/heartbeat-check.mjs` | 3 个路径常量（WAL、heartbeat-control、transcript-index）|
+| `hooks/wal-utils.mjs` | 2 个路径常量（WAL、default WAL 骨架）|
+| `hooks/heartbeat-distill-done.mjs` | 2 个路径常量（heartbeat-control、WAL）|
+| `heartbeat-plugins/self-iterate.mjs` | 1 个路径常量（heartbeat-control）+ execCommand 中 2 个脚本路径 |
+| `agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs` | 7 个路径常量（os/ 和 memory/ 下各文件）|
+| `agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs` | 3 个路径常量 |
+| `skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs` | 骨架文件映射表中所有路径 |
+| `skills/task/scripts/latest-task-id.mjs` | `.lingxi/tasks/` |
+| `skills/task/scripts/next-task-id.mjs` | 同上 |
 
 ### 5.2 文档引用修改
 
 | 文件 | 修改内容 |
 |------|---------|
-| `plugin/skills/memory-govern/SKILL.md` | 路径示例 `.lingxi/memory` |
-| `plugin/skills/workspace-bootstrap/references/HOT_RAM.default.md` | 文档中的路径引用 |
-| `plugin/skills/about-lingxi/references/` 下相关 refs | 架构描述中的目录路径 |
+| `skills/memory-govern/SKILL.md` | 路径示例 `.lingxi/memory` |
+| `skills/workspace-bootstrap/references/HOT_RAM.default.md` | 文档中的路径引用 |
+| `skills/about-lingxi/references/` 下相关 refs | 架构描述中的目录路径 |
 
 ### 5.3 Hook 配置调用路径
 
-`plugin/skills/workspace-bootstrap/references/HOT_RAM.default.md` 中有对 heartbeat-distill-done 的调用示例：
+`skills/workspace-bootstrap/references/HOT_RAM.default.md` 中有对 heartbeat-distill-done 的调用示例：
 ```
 # 修改前
 node .cursor/hooks/heartbeat-distill-done.mjs ...
 
 # 修改后
-node plugin/hooks/heartbeat-distill-done.mjs ...
+node 根目录/hooks/heartbeat-distill-done.mjs ...
 ```
 
 ---
@@ -428,17 +428,17 @@ node plugin/hooks/heartbeat-distill-done.mjs ...
 
 ### 阶段 1：目录重构（前置必做）
 
-1. 创建 `plugin/` 目录，将 `.cursor/skills/`、`.cursor/agents/`、`.cursor/commands/`、`.cursor/rules/`、`.cursor/hooks/`、`.cursor/heartbeat-plugins/` 移入
+1. 创建 `根目录/` 目录，将 `.cursor/skills/`、`.cursor/agents/`、`.cursor/commands/`、`.cursor/rules/`、`.cursor/hooks/`、`.cursor/heartbeat-plugins/` 移入
 2. 将 `.cursor/.lingxi/` 目录移动并重命名为项目根下的 `.lingxi/`
 3. 按第 5 节清单逐一修改所有硬编码路径常量
-4. 更新 `.cursor-plugin/plugin.json` 中的路径指向（`plugin/skills` 等）
-5. 更新 `.cursor/hooks.json` 中的脚本调用路径（`node plugin/hooks/heartbeat-trigger.mjs`）
+4. 更新 `.cursor-根目录/plugin.json` 中的路径指向（`根目录/skills` 等）
+5. 更新 `.cursor/hooks.json` 中的脚本调用路径（`node 根目录/hooks/heartbeat-trigger.mjs`）
 6. 更新 `.gitignore`（`.lingxi/workspace/`）
 7. 本地回归测试：heartbeat 触发、HOT_RAM 读写、WAL 入队消费
 
 ### 阶段 2：Claude Code 适配（重构完成后）
 
-8. 新增 `.claude-plugin/plugin.json`（参考 4.3）
+8. 新增 `.claude-根目录/plugin.json`（参考 4.3）
 9. 新增 `.claude/hooks.json`（参考 4.4，PascalCase 事件名 + `${CLAUDE_PLUGIN_ROOT}` 路径）
 10. `agentos-kernel.md` frontmatter 追加 `paths` 字段（参考 4.6）
 11. 对显式触发类 Skills 追加 `disable-model-invocation: true`
@@ -457,7 +457,7 @@ node plugin/hooks/heartbeat-distill-done.mjs ...
 |---------|--------|------|
 | 路径常量替换 | ~9 个脚本 | 批量查找替换，字符串替换，无逻辑改动 |
 | 文档路径引用 | ~5 个 md 文件 | 示例路径更新 |
-| 新增清单文件 | 1 | `.claude-plugin/plugin.json` |
+| 新增清单文件 | 1 | `.claude-根目录/plugin.json` |
 | 新增 hooks 配置 | 1 | `.claude/hooks.json` |
 | frontmatter 追加 | 1 | `agentos-kernel.md` 加 `paths` 字段 |
 | 目录移动 | 6 个目录 | skills、agents、commands、rules、hooks、heartbeat-plugins |

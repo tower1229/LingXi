@@ -3,8 +3,8 @@
  *
  * Scans well-known convention paths and verifies they are listed in the manifest:
  *   - skills/*\/SKILL.md  → manifest.skills
- *   - plugin/agents\/*.md        → manifest.agents.files
- *   - plugin/hooks\/*.mjs        → manifest.hooks.files
+ *   - agents\/*.md        → manifest.agents.files
+ *   - hooks\/*.mjs        → manifest.hooks.files
  *
  * This catches the reverse of the existence check: files present in repo but
  * missing from the manifest (would not be distributed to users).
@@ -17,7 +17,7 @@ import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const PLUGIN_DIR = path.join(REPO_ROOT, "plugin");
+// 文件已迁移到根目录，不再使用 plugin/ 前缀
 
 function loadManifest() {
   const raw = fs.readFileSync(path.join(REPO_ROOT, "install", "install-manifest.json"), "utf8");
@@ -26,7 +26,7 @@ function loadManifest() {
 
 /** Collect all SKILL.md paths as manifest-relative strings, e.g. "skills/foo/SKILL.md" */
 function scanSkills() {
-  const skillsDir = path.join(PLUGIN_DIR, "skills");
+  const skillsDir = path.join(REPO_ROOT, "skills");
   return fs
     .readdirSync(skillsDir)
     .filter((name) => {
@@ -38,7 +38,7 @@ function scanSkills() {
 
 /** Collect top-level agent .md files, e.g. "agents/lingxi-foo.md" */
 function scanAgents() {
-  const agentsDir = path.join(PLUGIN_DIR, "agents");
+  const agentsDir = path.join(REPO_ROOT, "agents");
   return fs
     .readdirSync(agentsDir)
     .filter((f) => f.endsWith(".md") && fs.statSync(path.join(agentsDir, f)).isFile())
@@ -47,7 +47,7 @@ function scanAgents() {
 
 /** Collect hook .mjs files (top-level only), e.g. "hooks/session-init.mjs" */
 function scanHooks() {
-  const hooksDir = path.join(PLUGIN_DIR, "hooks");
+  const hooksDir = path.join(REPO_ROOT, "hooks");
   return fs
     .readdirSync(hooksDir)
     .filter((f) => f.endsWith(".mjs") && fs.statSync(path.join(hooksDir, f)).isFile())

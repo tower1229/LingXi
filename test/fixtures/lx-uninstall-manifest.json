@@ -7,8 +7,8 @@
   "references": {},
   "scripts": ["lx-uninstall.mjs"],
   "ideAdapterFiles": [
-    ".cursor-plugin/plugin.json",
-    ".claude-plugin/plugin.json",
+    ".cursor-./plugin.json",
+    ".claude-./plugin.json",
     ".claude/hooks.json"
   ],
   "manifestCopyPath": "install/install-manifest.json"
