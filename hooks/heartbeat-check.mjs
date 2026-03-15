@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { exec } from "node:child_process";
-import { appendWalTask, parseWalLine, markWalLineChecked } from "./wal-utils.mjs";
+import { appendWalTask, parseWalLine, markWalLineChecked, acquireLock, releaseLock } from "./wal-utils.mjs";
 import { getRegisteredApps } from "../heartbeat-plugins/registry.mjs";
 
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
@@ -282,41 +282,87 @@ function runHeartbeatEnqueue(projectRoot, currentConversationId = "") {
 
 /**
  * 阶段二：读 WAL，解析未勾选任务，按 TYPE 查注册表；watchdog 应用执行 execCommand，成功则勾选 WAL，失败则调用 onFailure。
+ * 使用带锁的 modifyWalWithLock 确保并发安全。
  */
 function runHeartbeatConsume(projectRoot) {
   const walBufferPath = path.join(projectRoot, WAL_BUFFER_REL);
+  const lockPath = path.join(projectRoot, ".lingxi/os/.wal.lock");
   if (!fs.existsSync(walBufferPath)) return;
 
   const appsById = Object.fromEntries(getRegisteredApps().map((a) => [a.id, a]));
 
+  // 读取并解析 WAL
+  let walContent;
+  let lines;
   try {
-    const walContent = fs.readFileSync(walBufferPath, "utf8");
-    const lines = walContent.split("\n");
-
-    for (let i = 0; i < lines.length; i++) {
-      const parsed = parseWalLine(lines[i]);
-      if (!parsed || parsed.checked) continue;
-
-      const app = appsById[parsed.type];
-      if (!app || app.consumer !== "watchdog" || typeof app.execCommand !== "function") continue;
-
-      const cmd = app.execCommand(projectRoot, parsed.payload);
-      if (!cmd) continue;
-
-      const lineIndex = i;
-      exec(cmd, (error) => {
-        if (!error) {
-          markWalLineChecked(lines, lineIndex);
-          fs.writeFileSync(walBufferPath, lines.join("\n"), "utf8");
-        } else {
-          console.error("[watchdog]", app.id, "failed:", error);
-          if (typeof app.onFailure === "function") app.onFailure(projectRoot, parsed.payload);
-        }
-      });
-      break; // 每轮只处理一条 watchdog 任务
-    }
+    walContent = fs.readFileSync(walBufferPath, "utf8");
+    lines = walContent.split("\n");
   } catch (err) {
-    console.error("[watchdog] process WAL_BUFFER failed:", err.message);
+    console.error("[watchdog] read WAL failed:", err.message);
+    return;
+  }
+
+  // 查找待处理任务
+  let taskToProcess = null;
+  let taskLineIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const parsed = parseWalLine(lines[i]);
+    if (!parsed || parsed.checked) continue;
+    const app = appsById[parsed.type];
+    if (app && app.consumer === "watchdog" && typeof app.execCommand === "function") {
+      const cmd = app.execCommand(projectRoot, parsed.payload);
+      if (cmd) {
+        taskToProcess = { app, payload: parsed.payload, cmd };
+        taskLineIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (!taskToProcess) return;
+
+  // 获取锁并执行
+  if (!acquireLock(lockPath)) {
+    console.error("[watchdog] failed to acquire lock");
+    return;
+  }
+
+  try {
+    // 重新读取（确保最新）
+    const latestContent = fs.readFileSync(walBufferPath, "utf8");
+    const latestLines = latestContent.split("\n");
+    const parsed = parseWalLine(latestLines[taskLineIndex]);
+    if (!parsed || parsed.checked) return;
+
+    // 执行命令
+    exec(taskToProcess.cmd, (error) => {
+      // 释放锁
+      releaseLock(lockPath);
+
+      if (!error) {
+        // 重新获取锁来写入
+        if (acquireLock(lockPath, 2000)) {
+          try {
+            const content = fs.readFileSync(walBufferPath, "utf8");
+            const linesToWrite = content.split("\n");
+            markWalLineChecked(linesToWrite, taskLineIndex);
+            fs.writeFileSync(walBufferPath, linesToWrite.join("\n"), "utf8");
+          } catch (e) {
+            console.error("[watchdog] write WAL failed:", e.message);
+          } finally {
+            releaseLock(lockPath);
+          }
+        }
+      } else {
+        console.error("[watchdog]", taskToProcess.app.id, "failed:", error);
+        if (typeof taskToProcess.app.onFailure === "function") {
+          taskToProcess.app.onFailure(projectRoot, taskToProcess.payload);
+        }
+      }
+    });
+  } catch (err) {
+    releaseLock(lockPath);
+    console.error("[watchdog] consume error:", err.message);
   }
 }
 
