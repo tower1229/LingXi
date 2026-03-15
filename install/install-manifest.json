@@ -9,7 +9,8 @@
     ],
     "hooks": {
         "files": [
-            "hooks.json",
+            ".claude/hooks.json",
+            ".cursor/hooks.json",
             "hooks/heartbeat-trigger.mjs",
             "hooks/heartbeat-check.mjs",
             "hooks/wal-utils.mjs",
@@ -160,7 +161,7 @@
         ".lingxi/workspace/"
     ],
     "scripts": [
-        "lx-uninstall.mjs"
+        "scripts/lx-uninstall.mjs"
     ],
     "packageScripts": {
         "lx:uninstall": "node scripts/lx-uninstall.mjs"

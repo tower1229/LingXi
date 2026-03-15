@@ -87,8 +87,19 @@ function extractMjsImports(content, filePath) {
 }
 
 function resolvePath(basePath, link) {
-  // Handle various link formats
-  let resolved = path.resolve(path.dirname(basePath), link);
+  // Handle various link formats - normalize slashes for cross-platform
+  const normalizedLink = link.replace(/\\/g, '/');
+
+  // Check if it's a root-relative path (starts with skill/ or commands/ etc.)
+  let resolved;
+  if (normalizedLink.startsWith('skills/') || normalizedLink.startsWith('commands/') ||
+      normalizedLink.startsWith('agents/') || normalizedLink.startsWith('rules/') ||
+      normalizedLink.startsWith('hooks/') || normalizedLink.startsWith('heartbeat-plugins/')) {
+    resolved = path.join(ROOT, normalizedLink);
+  } else {
+    // Relative path from current file
+    resolved = path.resolve(path.dirname(basePath), normalizedLink);
+  }
   // Try adding extensions
   if (!fs.existsSync(resolved)) {
     const exts = ['.md', '.mjs', '.js', '.json', '/SKILL.md', '/index.mjs', '/index.js'];
