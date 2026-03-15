@@ -29,7 +29,7 @@ async function runSessionInit(projectRoot, conversationId) {
 
   const templatePath = path.join(
     projectRoot,
-    "plugin", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"
+    "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"
   );
 
   try {
