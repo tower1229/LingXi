@@ -10,7 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const SCRIPT_PATH = path.join(
   REPO_ROOT,
-  "plugin",
   "agents",
   "lingxi-self-iterate",
   "scripts",

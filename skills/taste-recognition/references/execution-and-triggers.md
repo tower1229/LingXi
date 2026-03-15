@@ -47,4 +47,4 @@
 
 ## 引用与映射
 
-Payload → note 的映射规则、门控细节：见 references/payload-to-note.md。下游契约：plugin/agents/lingxi-memory-write.md（仅接受 **payloads 数组**，不产候选）。
+Payload → note 的映射规则、门控细节：见 references/payload-to-note.md。下游契约：agents/lingxi-memory-write.md（仅接受 **payloads 数组**，不产候选）。

@@ -100,5 +100,5 @@
 ## 关联导航
 
 - **上游**：`architecture.md`（记忆层与守护层）、`design-principles.md`（状态文件化、SSoT）
-- **下游**：`ipc-protocols.md`（HOT_RAM 结构、后处理队列）、`engineering-practices.md`（心跳与完成路径）、`plugin/skills/workspace-bootstrap/references/wal-schema.md`（WAL 契约）
+- **下游**：`ipc-protocols.md`（HOT_RAM 结构、后处理队列）、`engineering-practices.md`（心跳与完成路径）、`skills/workspace-bootstrap/references/wal-schema.md`（WAL 契约）
 - **同层**：`core-values.md`（心有灵犀）

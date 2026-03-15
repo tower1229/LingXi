@@ -41,11 +41,11 @@ export default {
   execCommand(projectRoot, _payload) {
     const proposalScript = path.join(
       projectRoot,
-      "plugin/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"
+      "agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"
     );
     const applyScript = path.join(
       projectRoot,
-      "plugin/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
+      "agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
     );
     return `node "${proposalScript}" --window-hours 24 && node "${applyScript}" --approve-all`;
   },

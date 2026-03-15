@@ -308,7 +308,7 @@
 **在 workflow 中的应用**：
 
 - 文件命名约定（001.task.<标题>.md、001.plan.<标题>.md 等）
-- 目录结构约定：`.lingxi/tasks/`（工作流产物）、`.lingxi/os/`（HOT_RAM、WAL、heartbeat-control、USER、sessions）、`.lingxi/memory/`（INDEX、project/、share/）、`plugin/skills/`、`plugin/heartbeat-plugins/`（单文件插件与 registry）；详见 `architecture.md`、`ipc-protocols.md`、workspace-bootstrap 模板
+- 目录结构约定：`.lingxi/tasks/`（工作流产物）、`.lingxi/os/`（HOT_RAM、WAL、heartbeat-control、USER、sessions）、`.lingxi/memory/`（INDEX、project/、share/）、`skills/`、`heartbeat-plugins/`（单文件插件与 registry）；详见 `architecture.md`、`ipc-protocols.md`、workspace-bootstrap 模板
 - 索引与契约格式约定：统一索引 `.lingxi/memory/INDEX.md`；WAL、HOT_RAM、Execution_Summary 以 ipc-protocols、wal-schema 为准
 
 **检查点**：
@@ -402,7 +402,7 @@
 
 ## Rules 被模型忽略时的缓解措施
 
-当通过 `plugin/rules/` 明确约定了行为（如 AgentOS 内核逻辑），但模型执行时仍可能忽略时，可采取以下缓解措施（SSoT：规则文件本身 + 本小节）：
+当通过 `rules/` 明确约定了行为（如 AgentOS 内核逻辑），但模型执行时仍可能忽略时，可采取以下缓解措施（SSoT：规则文件本身 + 本小节）：
 
 1. **把「每轮首步」提到规则最前、做成不可跳过的预检**
    - 在规则正文**紧接标题后**增加独立的 **TURN PRE-FLIGHT**（或等价）区块，用简短编号步骤写明「本轮第一个工具调用必须是什么」。

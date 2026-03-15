@@ -115,7 +115,7 @@
 **应用**：
 
 - 文件命名约定（`001.task.<标题>.md`、`001.plan.<标题>.md`）
-- 目录结构约定（`.lingxi/tasks/`、`plugin/skills/`）
+- 目录结构约定（`.lingxi/tasks/`、`skills/`）
 - 索引格式约定（统一索引 `.lingxi/memory/INDEX.md`）
 
 稳定的「预处理－执行－后处理」任务处理流程由上述原则下的工程手段保障（如状态落盘、调度与执行分离、后处理队列显式消费、契约单点定义等），具体见 `architecture.md` 与 `lifecycle-flow.md`。

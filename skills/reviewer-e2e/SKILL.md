@@ -144,4 +144,4 @@ e. **验证结果**：
 
 ### 7. 输出与静默
 
-遵循 [workflow-output-principles](plugin/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**（含场景执行结果表与可选 REVIEWER_JSON）。优先使用 `@browser` + 自然语言描述，让 Agent 解析执行；不显式调用底层工具方法；利用截图与控制台监控识别问题。
+遵循 [workflow-output-principles](skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**（含场景执行结果表与可选 REVIEWER_JSON）。优先使用 `@browser` + 自然语言描述，让 Agent 解析执行；不显式调用底层工具方法；利用截图与控制台监控识别问题。

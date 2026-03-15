@@ -1,6 +1,6 @@
 # 心跳插件目录 (Heartbeat Plugins)
 
-本目录为灵犀心跳系统的**专用插件目录**：每个插件一个独立 `.mjs` 文件，通过 `registry.mjs` 注册进心跳，由 `plugin/hooks/heartbeat-check.mjs` 在入队/消费阶段调用。
+本目录为灵犀心跳系统的**专用插件目录**：每个插件一个独立 `.mjs` 文件，通过 `registry.mjs` 注册进心跳，由 `hooks/heartbeat-check.mjs` 在入队/消费阶段调用。
 
 ## 插件契约
 

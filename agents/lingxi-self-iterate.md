@@ -18,9 +18,9 @@ description: 自我迭代统一子代理。聚合 24h 心跳诊断与低风险�
 ## 执行流程（统一）
 
 1. 执行提案生成（含回放评测指标）：
-   - `node plugin/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs --window-hours 24`
+   - `node agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs --window-hours 24`
 2. 执行自动改进：
-   - `node plugin/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs --approve-all`
+   - `node agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs --approve-all`
 3. 记录执行简报（proposal_id/findings/actions/metrics/applied/failed/skipped）。
 
 ## 约束

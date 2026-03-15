@@ -22,7 +22,7 @@ description: 显式调用。记忆库治理：同步 INDEX 与 notes，可选全
 
 ### 阶段 1：同步
 
-1. **调用脚本**：在项目根执行 `node plugin/skills/memory-govern/scripts/memory-index-sync.mjs [--root <memoryRoot>]`。脚本会：
+1. **调用脚本**：在项目根执行 `node skills/memory-govern/scripts/memory-index-sync.mjs [--root <memoryRoot>]`。脚本会：
    - 扫描 `memory/project/`、`memory/share/` 与 `memory/INDEX.md`；
    - **直接删除**孤儿索引行（INDEX 中有但对应 note 文件不存在），并写回 INDEX；
    - 向 **stdout** 输出一行 JSON，不向 stdout 输出其他内容；错误与警告可写 stderr。

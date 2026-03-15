@@ -4,4 +4,4 @@
 
 - **Payload 规范与示例**：见本 Skill 的 `SKILL.md` 内「品味 Payload 规范」。
 - **payload → note 映射、门控规则**：见本目录 `payload-to-note.md`。
-- **lingxi-memory-write 输入契约**：`plugin/agents/lingxi-memory-write.md`（仅接受 **payloads 数组**，不产候选，校验 → 映射 → 治理 → 门控 → 写入）。
+- **lingxi-memory-write 输入契约**：`agents/lingxi-memory-write.md`（仅接受 **payloads 数组**，不产候选，校验 → 映射 → 治理 → 门控 → 写入）。

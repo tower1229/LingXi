@@ -94,15 +94,15 @@ graph TD
 
 ### 4. 守护层 (Daemon Layer / Heartbeat)
 
-**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`plugin/heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）** 与 **24 小时自我迭代（SELF_ITERATE）**。
+**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）** 与 **24 小时自我迭代（SELF_ITERATE）**。
 
 **心跳机制结构**：
 
 - **触发链**：`beforeSubmitPrompt` → `heartbeat-trigger.mjs` → `runHeartbeatCheck`（先入队再消费），与用户使用节奏对齐。
-- **插件目录**：`plugin/heartbeat-plugins/` 下每个插件一个 `.mjs` 文件，通过 `registry.mjs` 注册；Watchdog 按注册表顺序调用各插件的 `shouldEnqueue(env)`，若有 payload 则入队并更新 control。
+- **插件目录**：`heartbeat-plugins/` 下每个插件一个 `.mjs` 文件，通过 `registry.mjs` 注册；Watchdog 按注册表顺序调用各插件的 `shouldEnqueue(env)`，若有 payload 则入队并更新 control。
 - **入队阶段 (runHeartbeatEnqueue)**：按注册表依次调用插件的 `shouldEnqueue`；根据 `heartbeat-control.json` 与插件逻辑判断是否满足条件，若满足则通过 `appendWalTask` 向 WAL 追加未勾选任务行，并更新 control（锁、时间、processed 等）。**不在此阶段读 WAL 或执行任务**。
 - **消费阶段 (runHeartbeatConsume)**：读取 WAL，用统一解析得到未勾选任务，按任务类型查注册表分发。仅 **Watchdog 可直接执行**的类型（如 SELF_ITERATE）在本阶段 `exec` 并勾选；需主 Agent 参与的类型（如 SESSION_DISTILL）只入队，由主 Agent 在后处理中消费。
-- **WAL 契约**：任务行格式为 `- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`，TYPE 含 `SESSION_DISTILL`、`SELF_ITERATE` 等；写入与解析由 `plugin/hooks/wal-utils.mjs` 提供，与 `plugin/skills/workspace-bootstrap/references/wal-schema.md` 一致。
+- **WAL 契约**：任务行格式为 `- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`，TYPE 含 `SESSION_DISTILL`、`SELF_ITERATE` 等；写入与解析由 `hooks/wal-utils.mjs` 提供，与 `skills/workspace-bootstrap/references/wal-schema.md` 一致。
 
 **30 分钟会话提炼**：
 
@@ -182,15 +182,15 @@ graph TD
 
 | 实体类型 | 路径或清单 | 契约/格式的权威 ref | 典型变更 | 默认风险 | 可自动执行 |
 |----------|------------|---------------------|----------|----------|------------|
-| 工作流 Skill | `plugin/skills/{task,vet,plan,build,review,...}/` | 各 SKILL.md、`lifecycle-flow.md` | 改描述、改步骤、增 refs | 描述 low、步骤 medium | 仅 low（如描述微调） |
-| 其他 Skill | `plugin/skills/*/`（含 about-lingxi） | 各 SKILL.md、skill-creator refs | 改描述、增 references | low / medium | 仅 low |
+| 工作流 Skill | `skills/{task,vet,plan,build,review,...}/` | 各 SKILL.md、`lifecycle-flow.md` | 改描述、改步骤、增 refs | 描述 low、步骤 medium | 仅 low（如描述微调） |
+| 其他 Skill | `skills/*/`（含 about-lingxi） | 各 SKILL.md、skill-creator refs | 改描述、增 references | low / medium | 仅 low |
 | Commands | `plugin/commands/` | 各 command 的 .md | 改说明、改入口 | medium | 否 |
-| Rules | `plugin/rules/` | `agentos-kernel.mdc` 等 | 改规则内容 | high | 否 |
-| 心跳插件 | `plugin/heartbeat-plugins/*.mjs`、`registry.mjs` | `architecture.md` 守护层、`plugin/heartbeat-plugins/README.md` | 新增插件、注册 | 新增 low | 仅新增并注册（low） |
-| Hooks | `plugin/hooks/` | `architecture.md` 守护层 | 改主循环逻辑 | high | 否 |
-| Agents | `plugin/agents/` | 各 agent 的 .md | 改说明、改步骤 | medium | 否 |
+| Rules | `rules/` | `agentos-kernel.mdc` 等 | 改规则内容 | high | 否 |
+| 心跳插件 | `heartbeat-plugins/*.mjs`、`registry.mjs` | `architecture.md` 守护层、`heartbeat-plugins/README.md` | 新增插件、注册 | 新增 low | 仅新增并注册（low） |
+| Hooks | `hooks/` | `architecture.md` 守护层 | 改主循环逻辑 | high | 否 |
+| Agents | `agents/` | 各 agent 的 .md | 改说明、改步骤 | medium | 否 |
 | 记忆层 | `memory/`、INDEX、USER、WAL、HOT_RAM 等 | `memory-system.md`、`ipc-protocols.md`、`memory-write` write-protocol | note 增删改、INDEX 同步、治理策略 | 按协议 low，改契约 high | 当前 24h 仅执行协议内 low risk |
-| about-lingxi refs | `plugin/skills/about-lingxi/references/*.md` | 本节、`architecture.md` 文档映射 | 改内容、增章节 | 内容 low | 仅内容（low） |
+| about-lingxi refs | `skills/about-lingxi/references/*.md` | 本节、`architecture.md` 文档映射 | 改内容、增章节 | 内容 low | 仅内容（low） |
 | 安装清单 | `install/install-manifest.json` 等 | install 文档 | 增删路径、版本 | high | 否 |
 
 - **信号**：按实体类型/层级分类（如记忆层 MEMORY_JOURNAL、工作流执行结果、心跳执行结果、ref 与架构一致性检查等）；诊断时仅加载与该类实体相关的 refs。

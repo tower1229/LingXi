@@ -11,7 +11,7 @@ description: 显式调用。工作流步骤：产出 plan 与 testcase。
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node plugin/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
+- **taskId**：指定则用该编号的 task；省略则执行 `node skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
 - **F→T 映射**：任务清单中每任务必须标注关联需求（F 编号）；文件变更清单含测试文件与实现文件，对应 Txa/Txb。
 - **先测再实现**：可单元测试的单元拆成 Txa（编写该单元测试）、Txb（实现该单元），Txb 依赖 Txa，顺序上先 Txa 再 Txb。
 - **testcase**：调用 testcase-designer skill 产出；命名 `001.testcase.<标题>.md`；每条 F（验证方式不为空）均需 TC 或手工/rubric 覆盖。
@@ -20,7 +20,7 @@ description: 显式调用。工作流步骤：产出 plan 与 testcase。
 ## 完整执行流程（关键步骤不省略）
 
 1. **读取输入与定位**
-   - 扫描 `.lingxi/tasks/`；指定 taskId 用指定编号，省略时执行 `node plugin/skills/task/scripts/latest-task-id.mjs`。
+   - 扫描 `.lingxi/tasks/`；指定 taskId 用指定编号，省略时执行 `node skills/task/scripts/latest-task-id.mjs`。
    - 读取 `<taskId>.task.*.md`；找不到文件时必须终止并给出可执行修复建议。
 
 2. **目标回放与边界锁定**
@@ -64,4 +64,4 @@ description: 显式调用。工作流步骤：产出 plan 与 testcase。
 ## 产物与 References
 
 - **产物**：`.lingxi/tasks/<taskId>.plan.<标题>.md`、`.lingxi/tasks/<taskId>.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
-- **模板**：`references/plan-doc-template.md`；testcase-designer 见 `plugin/skills/testcase-designer/SKILL.md`；品味嗅探规则：`references/taste-sniff-rules.md`
+- **模板**：`references/plan-doc-template.md`；testcase-designer 见 `skills/testcase-designer/SKILL.md`；品味嗅探规则：`references/taste-sniff-rules.md`

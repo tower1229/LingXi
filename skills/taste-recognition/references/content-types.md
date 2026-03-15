@@ -58,4 +58,4 @@ Note 的 **Kind** 枚举（见 memory-note-template）：`principle` | `heuristi
 - 可沉淀情形与用户信号示例： [references/execution-and-triggers.md](execution-and-triggers.md) 步骤 3
 - 升维按类型评分指引： [references/elevation-rules.md](elevation-rules.md)
 - 模式靠拢： [references/pattern-catalog.md](pattern-catalog.md)
-- Note 结构： `plugin/skills/memory-write/references/memory-note-template.md`
+- Note 结构： `skills/memory-write/references/memory-note-template.md`

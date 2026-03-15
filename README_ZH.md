@@ -104,4 +104,4 @@ git submodule update --remote --merge
 
 ## 相关文档
 
-- [核心组件架构](plugin/skills/about-lingxi/references/architecture-blueprint.md)
+- [核心组件架构](skills/about-lingxi/references/architecture.md)

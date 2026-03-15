@@ -106,7 +106,7 @@ convert_path_for_python() {
   fi
 }
 
-# 下载单个文件（远程路径与本地路径均相对项目根，如 plugin/commands/init.md）
+# 下载单个文件（远程路径与本地路径均相对项目根，如 commands/init.md）
 # 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
@@ -312,7 +312,7 @@ fi
 
 # 创建 plugin 与 .cursor 目录结构
 info "Preparing directories..."
-mkdir -p plugin/commands plugin/skills plugin/rules plugin/hooks plugin/agents .cursor
+mkdir -p commands skills plugin/rules hooks agents .cursor
 
 # 下载 commands（清单中路径相对 plugin/，下载到 plugin/）
 info "Downloading commands..."
@@ -342,7 +342,7 @@ while IFS= read -r rule; do
 done < <(get_json_array "rules")
 success "Rules downloaded ($rule_count files)"
 
-# 下载 hooks（hooks.json 写入 .cursor/，其余写入 plugin/hooks/）
+# 下载 hooks（hooks.json 写入 .cursor/，其余写入 hooks/）
 info "Downloading hooks..."
 hook_count=0
 while IFS= read -r hook_file; do
@@ -563,7 +563,7 @@ fi
 # 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
 info "Bootstrapping .lingxi..."
 if command -v node &>/dev/null; then
-  if node plugin/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
+  if node skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
     success "Workspace bootstrap completed"
   else
     error "workspace-bootstrap failed"
@@ -576,8 +576,8 @@ else
     dir="${dir//$'\r'/}"
     mkdir -p "$dir"
   done < <(get_json_array "workflowDirectories")
-  if [ -f "plugin/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
-    cp "plugin/skills/workspace-bootstrap/references/INDEX.default.md" ".lingxi/memory/INDEX.md"
+  if [ -f "skills/workspace-bootstrap/references/INDEX.default.md" ]; then
+    cp "skills/workspace-bootstrap/references/INDEX.default.md" ".lingxi/memory/INDEX.md"
     success "Workspace bootstrap completed (no Node.js mode)"
   else
     error "Template file missing; ensure skills were downloaded"

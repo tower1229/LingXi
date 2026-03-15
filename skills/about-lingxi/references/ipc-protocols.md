@@ -9,10 +9,10 @@
 **物理路径**：`.lingxi/os/USER.md`
 
 **权威实现**：
-- **初始化模板** → `plugin/skills/workspace-bootstrap/references/USER.default.md`
-- **注入时机与规则** → `plugin/rules/agentos-kernel.md` Law 1（`[GLOBAL CONFIG] Initialization`）
-- **写入逻辑（分流路由）** → `plugin/agents/lingxi-memory-write.md`（步骤 2 分流路由）
-- **内容识别（行为偏好判定）** → `plugin/skills/taste-recognition/references/content-types.md`（偏好类型的 `destination` 路由规则）
+- **初始化模板** → `skills/workspace-bootstrap/references/USER.default.md`
+- **注入时机与规则** → `rules/agentos-kernel.md` Law 1（`[GLOBAL CONFIG] Initialization`）
+- **写入逻辑（分流路由）** → `agents/lingxi-memory-write.md`（步骤 2 分流路由）
+- **内容识别（行为偏好判定）** → `skills/taste-recognition/references/content-types.md`（偏好类型的 `destination` 路由规则）
 
 ### 说明
 
@@ -33,8 +33,8 @@
 **物理路径**：`.lingxi/os/sessions/[session_id]/HOT_RAM.md`
 
 **权威实现**：
-- **行为规则**（主 Agent 何时读写、状态转换逻辑、合法 State 值）→ `plugin/rules/agentos-kernel.md` Law 1
-- **初始化模板**（Markdown 格式）→ `plugin/skills/workspace-bootstrap/references/HOT_RAM.default.md`
+- **行为规则**（主 Agent 何时读写、状态转换逻辑、合法 State 值）→ `rules/agentos-kernel.md` Law 1
+- **初始化模板**（Markdown 格式）→ `skills/workspace-bootstrap/references/HOT_RAM.default.md`
 
 ### 说明
 
@@ -48,7 +48,7 @@
 
 ## 2. Megaprompt 组装协议
 
-**权威实现** → `plugin/rules/megaprompt-assembly.mdc`
+**权威实现** → `rules/megaprompt-assembly.mdc`
 
 ### 说明
 
@@ -63,7 +63,7 @@
 
 ## 3. 隔离执行返回契约：`<Execution_Summary>`
 
-**权威实现** → `plugin/agents/lingxi-subagent.md`（§3 强制输出契约）
+**权威实现** → `agents/lingxi-subagent.md`（§3 强制输出契约）
 
 ### 说明
 
@@ -78,7 +78,7 @@ Subagent 执行完毕后，必须在返回给主 Agent 的文本最前方严格�
 **物理路径**：`.lingxi/os/sessions/[session_id]/SESSION_TRACE.md`
 
 **权威实现**：
-- **追加时机与内容要求** → `plugin/rules/agentos-kernel.md` Law 3（Step 1）
+- **追加时机与内容要求** → `rules/agentos-kernel.md` Law 3（Step 1）
 - **折叠规范**（语义压缩保留结构化摘要）→ Watchdog 守护进程约定（待实现）
 
 ### 说明
@@ -106,19 +106,19 @@ Append-only 追加日志，记录该会话下历次 Subagent 的执行摘要、�
 
 **格式与解析契约**（契约唯一）：
 
-- **行格式**：`- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`；TYPE 如 `SESSION_DISTILL`、`SELF_ITERATE`，与 `plugin/heartbeat-plugins/` 插件 `id` 一致。
-- **权威定义**：`plugin/skills/workspace-bootstrap/references/wal-schema.md`（格式与 payload 结构）
-- **权威实现**：`plugin/hooks/wal-utils.mjs`（`parseWalLine`、`getPendingTasks`、`appendWalTask`、`markWalLineChecked`）
+- **行格式**：`- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`；TYPE 如 `SESSION_DISTILL`、`SELF_ITERATE`，与 `heartbeat-plugins/` 插件 `id` 一致。
+- **权威定义**：`skills/workspace-bootstrap/references/wal-schema.md`（格式与 payload 结构）
+- **权威实现**：`hooks/wal-utils.mjs`（`parseWalLine`、`getPendingTasks`、`appendWalTask`、`markWalLineChecked`）
 
 **其他**：
 
-- **初始化模板** → `plugin/skills/workspace-bootstrap/references/WAL_BUFFER.default.md`
-- **消费规则** → `plugin/rules/agentos-kernel.md` Law 3（`[WAL_BUFFER_SYNC]` 队列项）；主 Agent 在后处理阶段消费未勾选的 `[SESSION_DISTILL]` 等，Watchdog 消费 `[SELF_ITERATE]`。详见 `architecture.md` 守护层。
+- **初始化模板** → `skills/workspace-bootstrap/references/WAL_BUFFER.default.md`
+- **消费规则** → `rules/agentos-kernel.md` Law 3（`[WAL_BUFFER_SYNC]` 队列项）；主 Agent 在后处理阶段消费未勾选的 `[SESSION_DISTILL]` 等，Watchdog 消费 `[SELF_ITERATE]`。详见 `architecture.md` 守护层。
 
 ---
 
 ## 关联导航
 
 - **上游**：`architecture.md`（记忆层、守护层、执行层）、`design-principles.md`（契约唯一、后置闭环）
-- **下游**：`memory-system.md`（HOT_RAM/WAL 在记忆中的角色）、`plugin/skills/megaprompt-assembly/SKILL.md`（Megaprompt 组装）、`plugin/skills/workspace-bootstrap/references/wal-schema.md`
+- **下游**：`memory-system.md`（HOT_RAM/WAL 在记忆中的角色）、`skills/megaprompt-assembly/SKILL.md`（Megaprompt 组装）、`skills/workspace-bootstrap/references/wal-schema.md`
 - **同层**：`memory-system.md`（记忆与 WAL 提炼路径）

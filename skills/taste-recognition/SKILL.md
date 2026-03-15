@@ -53,4 +53,4 @@ description: 显式调用。从用户输入或行为中识别可沉淀的「品�
 - **触发点与输入表、执行步骤、与环节品味嗅探的关系**：[references/execution-and-triggers.md](references/execution-and-triggers.md)
 - **升维规则（写/不写 + layer）**：[references/elevation-rules.md](references/elevation-rules.md)
 - **设计模式目录（模式靠拢参考）**：[references/pattern-catalog.md](references/pattern-catalog.md)
-- Payload → note 映射与门控细节：`references/payload-to-note.md`；下游契约：`plugin/agents/lingxi-memory-write.md`
+- Payload → note 映射与门控细节：`references/payload-to-note.md`；下游契约：`agents/lingxi-memory-write.md`

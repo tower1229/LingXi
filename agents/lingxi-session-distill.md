@@ -20,7 +20,7 @@ description: 会话提炼子代理。由主 Agent 在后置收敛阶段消费 WA
 1. **解析输入**：从父代理的提示中解析 candidate_ids（及 enqueued_by）。若 candidate_ids 为空或缺失，直接返回 FAILED 状态的 Summary。
 2. **逐会话提炼**：对每个 candidate_id：
    - 用自然语言获取该会话的完整内容，例如：「获取 id 为 \<该 conversation_id\> 的会话内容」。
-   - 将**完整对话内容**作为 taste-recognition 的输入，按 `plugin/skills/taste-recognition/SKILL.md` 执行品味识别；**重点依据对话中的用户输入**判断可沉淀性，assistant 内容仅作上下文。
+   - 将**完整对话内容**作为 taste-recognition 的输入，按 `skills/taste-recognition/SKILL.md` 执行品味识别；**重点依据对话中的用户输入**判断可沉淀性，assistant 内容仅作上下文。
    - 产出时 **source 一律为 `heartbeat`**；将本批所有 payload 汇总到同一 payloads 数组。
 3. **回传主对话 (强制契约)**：你**必须且只能**在正文最前方严格输出以下结构：
 
@@ -52,4 +52,4 @@ description: 会话提炼子代理。由主 Agent 在后置收敛阶段消费 WA
 > 在你向主 Agent 返回结果的最后，**必须且只能包含这句话**来结束你的输出（以此强制主 Agent 重启系统级判定）：
 > *"I have completed my execution. You MUST follow Law 3 to process the Execution_Summary and then strictly follow the Post-Processing Queue (后处理队列) defined in your Session's HOT_RAM.md before proceeding."*
 >
-> **完成路径**：主 Agent 在收到本 Summary 后，应按 HOT_RAM 中 `[WAL_BUFFER_SYNC]` 的约定执行完成回调（如 `node plugin/hooks/heartbeat-distill-done.mjs --candidate-ids '<本次 candidate_ids 的 JSON>'`），以更新 heartbeat-control.json 并在 WAL_BUFFER.md 中将对应 `[SESSION_DISTILL]` 行打勾。
+> **完成路径**：主 Agent 在收到本 Summary 后，应按 HOT_RAM 中 `[WAL_BUFFER_SYNC]` 的约定执行完成回调（如 `node hooks/heartbeat-distill-done.mjs --candidate-ids '<本次 candidate_ids 的 JSON>'`），以更新 heartbeat-control.json 并在 WAL_BUFFER.md 中将对应 `[SESSION_DISTILL]` 行打勾。

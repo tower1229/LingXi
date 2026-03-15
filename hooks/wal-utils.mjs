@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
-const DEFAULT_WAL_REL = "plugin/skills/workspace-bootstrap/references/WAL_BUFFER.default.md";
+const DEFAULT_WAL_REL = "skills/workspace-bootstrap/references/WAL_BUFFER.default.md";
 
 const LINE_REGEX = /^- \[([ x])\] `\[([^\]]+)\]`:?\s*(.+)$/;
 

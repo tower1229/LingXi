@@ -17,7 +17,7 @@ model: inherit
 
 ## 职责边界（实现逻辑）
 
-- **仅接受** 主 Agent 传入的 **payloads 数组**（元素须符合 `taste-recognition` 的**品味 Payload 规范**，见 `plugin/skills/taste-recognition/SKILL.md`）。
+- **仅接受** 主 Agent 传入的 **payloads 数组**（元素须符合 `taste-recognition` 的**品味 Payload 规范**，见 `skills/taste-recognition/SKILL.md`）。
 - **不做升维**：不执行价值判定、评分卡或模式靠拢；升维（写/不写、L0/L1、设计模式靠拢）均在 taste-recognition 完成。
 - **执行链路**：校验 payloads 格式与必填项 → 分流路由（`user-config` → USER.md，`memory` → memory-write skill）→ 组装并返回 `<Execution_Summary>`。
 
@@ -33,7 +33,7 @@ model: inherit
    - `destination: user-config` + `source: remember` → 直接将内容追加写入 `.lingxi/os/USER.md` 的"行为偏好"区块，**无需门控**。
    - `destination: user-config` + `source: extract` / `heartbeat` / `choice` / `init` → 向用户展示待写内容，获得明确确认后再写入 `USER.md`，**需要门控**。
    - `destination: memory` → 进入下一步，调用 `memory-write` skill，按现有 `confidence` 门控逻辑处理。
-3. **调用 memory-write**：将 `destination: memory` 的 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `plugin/skills/memory-write/references/write-protocol.md`，note 结构见 `plugin/skills/memory-write/references/memory-note-template.md`。
+3. **调用 memory-write**：将 `destination: memory` 的 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `skills/memory-write/references/write-protocol.md`，note 结构见 `skills/memory-write/references/memory-note-template.md`。
 4. **回传主对话 (强制契约)**：根据所有写入路径的处理结果，你**必须且只能**在正文最前方严格输出以下结构：
 
 ```xml

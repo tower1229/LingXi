@@ -26,5 +26,5 @@
 
 ## 参考
 
-- 内容类型与 Kind 映射：`plugin/skills/taste-recognition/references/content-types.md`
-- 记忆系统机制：`plugin/skills/about-lingxi/references/memory-system.md`
+- 内容类型与 Kind 映射：`skills/taste-recognition/references/content-types.md`
+- 记忆系统机制：`skills/about-lingxi/references/memory-system.md`

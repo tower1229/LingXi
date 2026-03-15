@@ -104,4 +104,4 @@ In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync 
 
 ## Related docs
 
-- [Core Architecture](plugin/skills/about-lingxi/references/architecture-blueprint.md)
+- [Core Architecture](skills/about-lingxi/references/architecture.md)

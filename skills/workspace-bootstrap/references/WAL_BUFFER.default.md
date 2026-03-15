@@ -9,7 +9,7 @@
 ## 📥 [PENDING OPERATIONS] (待处理操作池)
 
 <!-- 
-格式规范见 plugin/skills/workspace-bootstrap/references/wal-schema.md
+格式规范见 skills/workspace-bootstrap/references/wal-schema.md
 行格式：- [ ] `[TYPE]`: <JSON> 或 - [x] `[TYPE]`: <JSON>
 类型：SESSION_DISTILL（30min 会话提炼）、SELF_ITERATE（24h 自我迭代）等
 -->

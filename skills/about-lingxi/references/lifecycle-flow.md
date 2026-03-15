@@ -69,5 +69,5 @@
 ## 关联导航
 
 - **上游**：`architecture.md`（调度层、双轨、管道）、`design-principles.md`（后置闭环、主从解耦）
-- **下游**：`ipc-protocols.md`（HOT_RAM 结构、Megaprompt、Execution_Summary）、`memory-system.md`（后处理中的记忆与 WAL）、`plugin/rules/agentos-kernel.md`（权威规则）
+- **下游**：`ipc-protocols.md`（HOT_RAM 结构、Megaprompt、Execution_Summary）、`memory-system.md`（后处理中的记忆与 WAL）、`rules/agentos-kernel.md`（权威规则）
 - **同层**：`architecture.md`（工作流与四层关系）、`workflow-output-principles.md`（输出契约）

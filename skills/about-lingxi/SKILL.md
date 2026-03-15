@@ -36,10 +36,10 @@ description: 仅在涉及灵犀架构、工作流、记忆系统、守护层、�
 |------|-------------------------|----------|
 | **快速了解灵犀** | 本页「一页纸入门」即可；需摘要时再加载 `core-values.md` + `architecture.md` | 用 1～3 句话说明四层 + 双轨 + 关键路径，并给出可深入 refs |
 | **设计新功能 / 选组件** | `architecture.md` + `lifecycle-flow.md`；涉及记忆则加 `memory-system.md` 或 `ipc-protocols.md` | 标明涉及哪一层、建议用哪个 Command/Skill/Hook，若有文档需同步则列出 |
-| **改守护层 / 心跳** | `architecture.md`（守护层一节）+ `engineering-practices.md`（OCP/分层）；实现约定见 plugin/heartbeat-plugins/README | 确认入队与消费分离、WAL 契约、插件注册方式；列出可能需改动的文件 |
+| **改守护层 / 心跳** | `architecture.md`（守护层一节）+ `engineering-practices.md`（OCP/分层）；实现约定见 heartbeat-plugins/README | 确认入队与消费分离、WAL 契约、插件注册方式；列出可能需改动的文件 |
 | **调优 / 效果与性能** | `optimization-guide.md`；需清单勾选时加 `optimization-checklist.md` | 按层级给出调优点与建议；若做评估则给出通过项、需调整项、权衡 |
 | **方案评估 / 质量评估** | `core-values.md` + `design-principles.md` + `engineering-practices.md` | 价值对齐（心有灵犀 / AI Native / 称心如意）+ 架构层级影响 + 工程实践要点 + 建议下一步 |
-| **自我迭代（诊断与改进）** | 按本轮实体类型：记忆层 → `memory-system.md` + memory-write 的 write-protocol、governance-context-schema；守护层 → `architecture.md` 守护层 + `plugin/heartbeat-plugins/README.md`；工作流/Skill/refs → `architecture.md` §4 可迭代实体一览 + `design-principles.md` + `engineering-practices.md`（含自我迭代的风险与门控）。优先 1～2 篇 + 必含 architecture §4 | 标明涉及实体类型与层级；诊断与改进**须注明所依据的标准与出处**（如 architecture §4、engineering-practices SSoT）；仅执行 refs 中约定为低风险且可自动执行的动作；结果写回审计 |
+| **自我迭代（诊断与改进）** | 按本轮实体类型：记忆层 → `memory-system.md` + memory-write 的 write-protocol、governance-context-schema；守护层 → `architecture.md` 守护层 + `heartbeat-plugins/README.md`；工作流/Skill/refs → `architecture.md` §4 可迭代实体一览 + `design-principles.md` + `engineering-practices.md`（含自我迭代的风险与门控）。优先 1～2 篇 + 必含 architecture §4 | 标明涉及实体类型与层级；诊断与改进**须注明所依据的标准与出处**（如 architecture §4、engineering-practices SSoT）；仅执行 refs 中约定为低风险且可自动执行的动作；结果写回审计 |
 
 ---
 

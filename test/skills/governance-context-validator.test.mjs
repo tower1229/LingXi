@@ -9,7 +9,7 @@ import {
   MERGE_KINDS,
   normalizeGovernanceContext,
   validateMergeKind,
-} from "../../plugin/skills/memory-write/scripts/governance-context-validator.mjs";
+} from "../../skills/memory-write/scripts/governance-context-validator.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");

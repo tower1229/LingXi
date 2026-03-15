@@ -11,7 +11,7 @@ description: 显式调用。工作流步骤：按 task/plan 实现与测试。
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node plugin/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
+- **taskId**：指定则用该编号的 task；省略则执行 `node skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
 - **Task-driven 无 testcase（硬门控，优先于所有其他步骤）**：无论 task 中验证方式是否包含 unit/integration，**testcase 文档都是 Task-driven 模式的必需前置输入**。若不存在 `<taskId>.testcase.*.md`，必须先调用 testcase-designer 生成并写入；生成失败、未写入、或未通过 F→TC 覆盖与验证方式一致性校验时，必须立即终止，**不得进入编码循环**。testcase-designer 的调用与 TDD 循环是两件独立的事：前者产出 testcase 文档（始终必须）；后者仅在 unit/integration 单元时执行。
 - **先测再实现（TDD）**：仅对验证方式为 `unit` 或 `integration` 的单元。每单元：先仅编写该单元测试（基于 testcase/task 文档输入/输出/边界）→ 运行确认失败/基线 → 只通过修改实现使通过，不改测试 → 通过后再下一单元。不通过改测试通过验收。
 - **manual/rubric**：不写自动化测试；在 testcase 文档中产出可执行清单（步骤+预期结果）与证据占位，交付前完成并保留证据。
@@ -20,7 +20,7 @@ description: 显式调用。工作流步骤：按 task/plan 实现与测试。
 ## 完整执行流程（关键步骤不省略）
 
 1. **模式检测（自动）**
-   - 指定 taskId 时使用该编号；省略时执行 `node plugin/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
+   - 指定 taskId 时使用该编号；省略时执行 `node skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。
    - 查找 `<taskId>.plan.*.md`：存在为 Plan-driven，不存在为 Task-driven。
 
 2. **读取输入**

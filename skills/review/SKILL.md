@@ -11,7 +11,7 @@ description: 显式调用。工作流步骤：交付审查。
 
 ## 关键约束
 
-- **taskId**：指定则用该编号的 task；省略则执行 `node plugin/skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
+- **taskId**：指定则用该编号的 task；省略则执行 `node skills/task/scripts/latest-task-id.mjs` 获取最新任务编号。脚本失败则输出错误并终止。
 - **按 F 输出审计结果（必须）**：在写入 review 文档前，对 task 中每个 F 独立复核；按该 F 的验收标准与验证方式判定 Pass/Fail，填写证据引用；写入报告的「按需求编号的验收结果」表（见 references 模板）。证据缺失或不可验证时该 F 必须判定为 Fail，不得判 Pass。
 - **维度启用**：文档一致性始终启用（reviewer-doc-consistency）；安全/性能/E2E 由语义分析 task 与变更代码判断是否启用，依赖 LLM 语义理解不关键词匹配。
 - **测试脚本质量**：执行测试前必须完成测试脚本质量检查（覆盖、断言、隔离、边界、一行为一测试）；不合格则补充/修正后再执行。
@@ -22,7 +22,7 @@ description: 显式调用。工作流步骤：交付审查。
 
 1. **读取输入**
    - 扫描 `.lingxi/tasks/`。
-   - 指定 taskId 用指定编号；省略时执行 `node plugin/skills/task/scripts/latest-task-id.mjs` 获取最新编号。
+   - 指定 taskId 用指定编号；省略时执行 `node skills/task/scripts/latest-task-id.mjs` 获取最新编号。
    - 脚本失败必须终止并输出错误。
    - 读取 `<taskId>.task.*.md`、可选 `<taskId>.plan.*.md`、`<taskId>.testcase.*.md` 与变更文件列表。
 

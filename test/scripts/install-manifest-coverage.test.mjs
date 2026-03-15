@@ -2,7 +2,7 @@
  * Structural coverage check for install/install-manifest.json.
  *
  * Scans well-known convention paths and verifies they are listed in the manifest:
- *   - plugin/skills/*\/SKILL.md  → manifest.skills
+ *   - skills/*\/SKILL.md  → manifest.skills
  *   - plugin/agents\/*.md        → manifest.agents.files
  *   - plugin/hooks\/*.mjs        → manifest.hooks.files
  *

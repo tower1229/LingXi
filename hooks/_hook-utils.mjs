@@ -19,7 +19,7 @@ export function writeStdoutJson(obj) {
 export function getProjectRootFromHookScriptUrl(scriptUrl) {
   const scriptPath = new URL(scriptUrl).pathname;
   const scriptDir = path.dirname(scriptPath);
-  // plugin/hooks/xxx.mjs -> project root is two levels up from hooks/
+  // hooks/xxx.mjs -> project root is two levels up from hooks/
   return path.resolve(scriptDir, "../..");
 }
 

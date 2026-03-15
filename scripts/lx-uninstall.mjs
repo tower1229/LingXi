@@ -42,16 +42,17 @@ function collectPathsToDelete(manifest) {
 
   out.push(LINGXI_RUNTIME);
 
-  (manifest.commands || []).forEach((p) => out.push("plugin/" + p));
-  (manifest.skills || []).forEach((p) => out.push("plugin/" + p));
-  (manifest.hooks?.files || []).forEach((p) => out.push(p === "hooks.json" ? ".cursor/hooks.json" : "plugin/" + p));
-  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push("plugin/" + p));
-  (manifest.agents?.files || []).forEach((p) => out.push("plugin/" + p));
-  (manifest.rules || []).forEach((p) => out.push("plugin/" + p));
+  // 文件已在根目录下，不再需要 plugin/ 前缀
+  (manifest.commands || []).forEach((p) => out.push(p));
+  (manifest.skills || []).forEach((p) => out.push(p));
+  (manifest.hooks?.files || []).forEach((p) => out.push(p === "hooks.json" ? ".claude/hooks.json" : p));
+  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push(p));
+  (manifest.agents?.files || []).forEach((p) => out.push(p));
+  (manifest.rules || []).forEach((p) => out.push(p));
 
   const refs = manifest.references || {};
   for (const key of Object.keys(refs)) {
-    (refs[key] || []).forEach((p) => out.push("plugin/" + p));
+    (refs[key] || []).forEach((p) => out.push(p));
   }
 
   (manifest.scripts || []).forEach((p) => out.push("scripts/" + p));

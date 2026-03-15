@@ -37,4 +37,4 @@
 - **写入**：使用 `appendWalTask(projectRoot, type, payload)` 追加一行未勾选任务。
 - **解析**：使用 `parseWalLines(content)` 得到 `{ type, payload, checked }[]`，或 `getPendingTasks(content)` 得到未勾选任务列表。
 
-实现见 `plugin/hooks/wal-utils.mjs`。
+实现见 `hooks/wal-utils.mjs`。

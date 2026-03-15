@@ -11,7 +11,7 @@ description: 显式调用。工作流步骤：产出 task 文档。
 
 ## 关键约束
 
-- **任务编号**：执行 `node plugin/skills/task/scripts/next-task-id.mjs` 获取三位数编号（项目根目录）；标题最多 10 中文字符或 20 英文字符，特殊字符替换为下划线。
+- **任务编号**：执行 `node skills/task/scripts/next-task-id.mjs` 获取三位数编号（项目根目录）；标题最多 10 中文字符或 20 英文字符，特殊字符替换为下划线。
 - **Fail Fast**：信息汇总前若必要信息缺失（功能目标、目标用户/核心场景等），用 ask-questions 一次性澄清后再写入；无有效选择时重试当前问题。
 - **功能需求表（每条 F）**：必填验收标准（可二值判定）、验证方式（unit/integration/e2e/manual/rubric）、边界/异常（至少 1–2 条）、证据形式、优先级。
 - **下一步建议**：只要写入了 task 文档，必须在当轮回复末尾输出「**下一步可尝试（选一项）**」+ 四项 A/B/C/D；允许集合：执行 vet skill、执行 plan skill、执行 build skill、补充/修改 task、其他/跳过。用户回复 A/B/C/D 视为选择该选项。
@@ -23,7 +23,7 @@ description: 显式调用。工作流步骤：产出 task 文档。
    - 识别本次需求涉及的现有模块、潜在依赖和技术可行性。
 
 2. **任务编号和标题生成**
-   - 执行 `node plugin/skills/task/scripts/next-task-id.mjs` 获取三位数编号（在项目根目录执行）。
+   - 执行 `node skills/task/scripts/next-task-id.mjs` 获取三位数编号（在项目根目录执行）。
    - 脚本非 0 退出（如达到上限）时，必须提示用户归档旧任务后再继续。
    - 标题从需求提取核心关键词，长度受限（10 中文或 20 英文）；非法字符替换为下划线。
 

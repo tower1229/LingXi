@@ -166,7 +166,7 @@ foreach ($rule in $Manifest.rules) {
 }
 Write-Success "Rules downloaded ($ruleCount files)"
 
-# 下载 hooks（hooks.json 写入 .cursor/，其余写入 plugin/hooks/）
+# 下载 hooks（hooks.json 写入 .cursor/，其余写入 hooks/）
 Write-Info "Downloading hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {

@@ -46,7 +46,7 @@ description: 显式调用。由 review skill 调用，用于审查代码中的�
 
 ### 5. 输出与静默
 
-遵循 [workflow-output-principles](plugin/skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**。
+遵循 [workflow-output-principles](skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**。
 
 ### 6. 降级处理
 

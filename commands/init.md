@@ -61,7 +61,7 @@ args: []
 
 ### Step 3) 缺失项补齐（ask-questions-first）
 
-所有用户选择统一通过 ask-questions 协议执行（参见 `plugin/skills/ask-questions/SKILL.md`）：
+所有用户选择统一通过 ask-questions 协议执行（参见 `skills/ask-questions/SKILL.md`）：
 
 - 先问 `next_action`：`confirm` / `supplement` / `deep_dive`
 - `supplement`：仅列出当前缺失的 Must 项，多选后逐项收集（每次只问一项，1-3 行）
