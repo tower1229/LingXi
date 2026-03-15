@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const SCRIPT_PATH = path.join(
   REPO_ROOT,
-  ".cursor",
+  "plugin",
   "agents",
   "lingxi-self-iterate",
   "scripts",
@@ -54,8 +54,8 @@ describe("memory-improvement-proposal script", () => {
 
   it("generates proposal json and diagnostics md", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    fs.mkdirSync(workspace, { recursive: true });
+    const osDir = path.join(tmpDir, ".lingxi", "os");
+    fs.mkdirSync(osDir, { recursive: true });
     const now = new Date().toISOString();
     const audit = [
       {
@@ -69,7 +69,7 @@ describe("memory-improvement-proposal script", () => {
         action_plan: [],
       },
     ];
-    fs.writeFileSync(path.join(workspace, "audit.log"), audit.map((r) => JSON.stringify(r)).join("\n") + "\n", "utf8");
+    fs.writeFileSync(path.join(osDir, "MEMORY_JOURNAL.jsonl"), audit.map((r) => JSON.stringify(r)).join("\n") + "\n", "utf8");
 
     const { code, stdout } = await runScript(tmpDir, ["--window-hours", "24"]);
     assert.strictEqual(code, 0);
@@ -80,8 +80,8 @@ describe("memory-improvement-proposal script", () => {
     assert.ok(result.summary.metrics);
     assert.ok(result.confirmation_hint);
 
-    const proposalPath = path.join(workspace, "improvement-proposal.json");
-    const mdPath = path.join(workspace, "memory-diagnostics.md");
+    const proposalPath = path.join(osDir, "improvement-proposal.json");
+    const mdPath = path.join(osDir, "memory-diagnostics.md");
     assert.ok(fs.existsSync(proposalPath));
     assert.ok(fs.existsSync(mdPath));
 
@@ -93,16 +93,18 @@ describe("memory-improvement-proposal script", () => {
     assert.strictEqual(proposal.findings.length, 1);
     assert.strictEqual(proposal.actions.length, 1);
 
-    const controlPath = path.join(workspace, "heartbeat-control.json");
+    const controlPath = path.join(osDir, "heartbeat-control.json");
+    assert.ok(fs.existsSync(controlPath));
     const control = JSON.parse(fs.readFileSync(controlPath, "utf8"));
     assert.ok(control.last_improvement_cycle_at);
   });
 
   it("includes index_drift in output with detected=false when index and files match", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
-    fs.mkdirSync(workspace, { recursive: true });
+    const osDir = path.join(tmpDir, ".lingxi", "os");
+    const memoryDir = path.join(tmpDir, ".lingxi", "memory");
+    const projectDir = path.join(memoryDir, "project");
+    fs.mkdirSync(osDir, { recursive: true });
     fs.mkdirSync(projectDir, { recursive: true });
 
     // Create INDEX.md with 1 data row and 1 note file
@@ -111,11 +113,10 @@ describe("memory-improvement-proposal script", () => {
       "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
       "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
     ].join("\n") + "\n";
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
-    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.writeFileSync(path.join(memoryDir, "INDEX.md"), indexContent, "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
 
-    fs.writeFileSync(path.join(workspace, "audit.log"), "", "utf8");
+    fs.writeFileSync(path.join(osDir, "MEMORY_JOURNAL.jsonl"), "", "utf8");
 
     const { code, stdout } = await runScript(tmpDir, ["--dry-run"]);
     assert.strictEqual(code, 0);
@@ -129,9 +130,10 @@ describe("memory-improvement-proposal script", () => {
 
   it("detects index drift when note files count differs from INDEX rows", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
-    fs.mkdirSync(workspace, { recursive: true });
+    const osDir = path.join(tmpDir, ".lingxi", "os");
+    const memoryDir = path.join(tmpDir, ".lingxi", "memory");
+    const projectDir = path.join(memoryDir, "project");
+    fs.mkdirSync(osDir, { recursive: true });
     fs.mkdirSync(projectDir, { recursive: true });
 
     // INDEX has 1 row but project dir has 2 note files → drift
@@ -140,12 +142,11 @@ describe("memory-improvement-proposal script", () => {
       "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
       "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
     ].join("\n") + "\n";
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
-    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.writeFileSync(path.join(memoryDir, "INDEX.md"), indexContent, "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-002.md"), "## Meta\n- **Id**: MEM-002\n", "utf8");
 
-    fs.writeFileSync(path.join(workspace, "audit.log"), "", "utf8");
+    fs.writeFileSync(path.join(osDir, "MEMORY_JOURNAL.jsonl"), "", "utf8");
 
     const { code, stdout } = await runScript(tmpDir, ["--dry-run"]);
     assert.strictEqual(code, 0);

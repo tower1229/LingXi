@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const SCRIPT_PATH = path.join(
   REPO_ROOT,
-  ".cursor",
+  "plugin",
   "agents",
   "lingxi-self-iterate",
   "scripts",
@@ -54,8 +54,8 @@ describe("memory-improvement-apply script", () => {
 
   it("queues only low-risk actions by default", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    fs.mkdirSync(workspace, { recursive: true });
+    const osDir = path.join(tmpDir, ".lingxi", "os");
+    fs.mkdirSync(osDir, { recursive: true });
     const proposal = {
       proposal_id: "proposal-001",
       actions: [
@@ -63,7 +63,7 @@ describe("memory-improvement-apply script", () => {
         { action_id: "action-002", note_id: "MEM-002", type: "split_note", risk: "medium" },
       ],
     };
-    fs.writeFileSync(path.join(workspace, "improvement-proposal.json"), JSON.stringify(proposal, null, 2), "utf8");
+    fs.writeFileSync(path.join(osDir, "improvement-proposal.json"), JSON.stringify(proposal, null, 2), "utf8");
 
     const { code, stdout } = await runScript(tmpDir, ["--approve-all"]);
     assert.strictEqual(code, 0);
@@ -72,7 +72,7 @@ describe("memory-improvement-apply script", () => {
     assert.strictEqual(result.applied, 1);
     assert.strictEqual(result.failed, 1);
 
-    const queuePath = path.join(workspace, "improvement-actions.queue.json");
+    const queuePath = path.join(osDir, "improvement-actions.queue.json");
     const queue = JSON.parse(fs.readFileSync(queuePath, "utf8"));
     assert.strictEqual(queue.queued_actions.length, 1);
     assert.strictEqual(queue.queued_actions[0].action_id, "action-001");
@@ -80,13 +80,13 @@ describe("memory-improvement-apply script", () => {
 
   it("is idempotent for repeated proposal_id + action_id", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    fs.mkdirSync(workspace, { recursive: true });
+    const osDir = path.join(tmpDir, ".lingxi", "os");
+    fs.mkdirSync(osDir, { recursive: true });
     const proposal = {
       proposal_id: "proposal-dup",
       actions: [{ action_id: "action-001", note_id: "MEM-001", type: "rewrite_one_liner", risk: "low" }],
     };
-    fs.writeFileSync(path.join(workspace, "improvement-proposal.json"), JSON.stringify(proposal, null, 2), "utf8");
+    fs.writeFileSync(path.join(osDir, "improvement-proposal.json"), JSON.stringify(proposal, null, 2), "utf8");
 
     const first = await runScript(tmpDir, ["--approve-all"]);
     assert.strictEqual(first.code, 0);
@@ -100,7 +100,7 @@ describe("memory-improvement-apply script", () => {
     assert.strictEqual(secondResult.applied, 0);
     assert.strictEqual(secondResult.skipped, 1);
 
-    const queuePath = path.join(workspace, "improvement-actions.queue.json");
+    const queuePath = path.join(osDir, "improvement-actions.queue.json");
     const queue = JSON.parse(fs.readFileSync(queuePath, "utf8"));
     assert.strictEqual(queue.queued_actions.length, 1);
   });

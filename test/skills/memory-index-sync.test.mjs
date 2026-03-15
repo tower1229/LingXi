@@ -12,7 +12,7 @@ import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const SCRIPT_PATH = path.join(REPO_ROOT, ".cursor", "skills", "memory-govern", "scripts", "memory-index-sync.mjs");
+const SCRIPT_PATH = path.join(REPO_ROOT, "plugin", "skills", "memory-govern", "scripts", "memory-index-sync.mjs");
 
 function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-memory-"));
