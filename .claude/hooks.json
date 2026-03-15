@@ -2,8 +2,13 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/plugin/hooks/heartbeat-trigger.mjs"
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/heartbeat-trigger.mjs"
+          }
+        ]
       }
     ]
   }
