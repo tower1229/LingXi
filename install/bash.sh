@@ -106,7 +106,7 @@ convert_path_for_python() {
   fi
 }
 
-# 下载单个文件（远程路径与本地路径均相对项目根，如 .cursor/commands/init.md）
+# 下载单个文件（远程路径与本地路径均相对项目根，如 plugin/commands/init.md）
 # 与 powershell.ps1 一致：最多重试 3 次
 download_file() {
   local remote_path="$1"
@@ -278,9 +278,9 @@ if [ -d ".cursor" ]; then
   warning ".cursor already exists"
 fi
 
-if [ -d ".cursor/.lingxi" ]; then
+if [ -d ".lingxi" ]; then
   LINGXI_EXISTS=true
-  warning ".cursor/.lingxi already exists"
+  warning ".lingxi already exists"
 fi
 
 # 询问是否继续（合并安装模式）
@@ -310,17 +310,17 @@ if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   fi
 fi
 
-# 创建 .cursor 目录结构
+# 创建 plugin 与 .cursor 目录结构
 info "Preparing directories..."
-mkdir -p .cursor/commands .cursor/skills .cursor/rules .cursor/hooks .cursor/agents
+mkdir -p plugin/commands plugin/skills plugin/rules plugin/hooks plugin/agents .cursor
 
-# 下载 commands（清单中路径相对 .cursor/，下载到 .cursor/）
+# 下载 commands（清单中路径相对 plugin/，下载到 plugin/）
 info "Downloading commands..."
 command_count=0
 while IFS= read -r cmd; do
   [ -z "$cmd" ] && continue
   cmd="${cmd//$'\r'/}"
-  if ! download_file ".cursor/${cmd}" ".cursor/${cmd}"; then
+  if ! download_file "plugin/${cmd}" "plugin/${cmd}"; then
     error "Install failed"
     exit 1
   fi
@@ -334,7 +334,7 @@ rule_count=0
 while IFS= read -r rule; do
   [ -z "$rule" ] && continue
   rule="${rule//$'\r'/}"
-  if ! download_file ".cursor/${rule}" ".cursor/${rule}"; then
+  if ! download_file "plugin/${rule}" "plugin/${rule}"; then
     error "Install failed"
     exit 1
   fi
@@ -342,15 +342,22 @@ while IFS= read -r rule; do
 done < <(get_json_array "rules")
 success "Rules downloaded ($rule_count files)"
 
-# 下载 hooks
+# 下载 hooks（hooks.json 写入 .cursor/，其余写入 plugin/hooks/）
 info "Downloading hooks..."
 hook_count=0
 while IFS= read -r hook_file; do
   [ -z "$hook_file" ] && continue
   hook_file="${hook_file//$'\r'/}"
-  if ! download_file ".cursor/${hook_file}" ".cursor/${hook_file}"; then
-    error "Install failed"
-    exit 1
+  if [ "$hook_file" = "hooks.json" ]; then
+    if ! download_file ".cursor/hooks.json" ".cursor/hooks.json"; then
+      error "Install failed"
+      exit 1
+    fi
+  else
+    if ! download_file "plugin/${hook_file}" "plugin/${hook_file}"; then
+      error "Install failed"
+      exit 1
+    fi
   fi
   hook_count=$((hook_count + 1))
 done < <(get_json_object_array "hooks" "files")
@@ -362,7 +369,7 @@ plugin_count=0
 while IFS= read -r plugin_file; do
   [ -z "$plugin_file" ] && continue
   plugin_file="${plugin_file//$'\r'/}"
-  if ! download_file ".cursor/${plugin_file}" ".cursor/${plugin_file}"; then
+  if ! download_file "plugin/${plugin_file}" "plugin/${plugin_file}"; then
     error "Install failed"
     exit 1
   fi
@@ -376,7 +383,7 @@ skill_count=0
 while IFS= read -r skill; do
   [ -z "$skill" ] && continue
   skill="${skill//$'\r'/}"
-  if ! download_file ".cursor/${skill}" ".cursor/${skill}"; then
+  if ! download_file "plugin/${skill}" "plugin/${skill}"; then
     error "Install failed"
     exit 1
   fi
@@ -389,7 +396,7 @@ agent_count=0
 while IFS= read -r agent_file; do
   [ -z "$agent_file" ] && continue
   agent_file="${agent_file//$'\r'/}"
-  if ! download_file ".cursor/${agent_file}" ".cursor/${agent_file}"; then
+  if ! download_file "plugin/${agent_file}" "plugin/${agent_file}"; then
     error "Install failed"
     exit 1
   fi
@@ -408,7 +415,7 @@ if command -v jq &> /dev/null; then
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
-      if ! download_file ".cursor/${ref_file}" ".cursor/${ref_file}"; then
+      if ! download_file "plugin/${ref_file}" "plugin/${ref_file}"; then
         error "Install failed"
         exit 1
       fi
@@ -435,7 +442,7 @@ except Exception as e:
     while IFS= read -r ref_file; do
       [ -z "$ref_file" ] && continue
       ref_file="${ref_file//$'\r'/}"
-      if ! download_file ".cursor/${ref_file}" ".cursor/${ref_file}"; then
+      if ! download_file "plugin/${ref_file}" "plugin/${ref_file}"; then
         error "Install failed"
         exit 1
       fi
@@ -486,6 +493,43 @@ for x in d.get('scripts', []):
   fi
 fi
 
+# 下载 IDE 适配层（Cursor + Claude Code 双 IDE 支持）
+if command -v jq &>/dev/null; then
+  adapter_count=0
+  while IFS= read -r adapter_path; do
+    [ -z "$adapter_path" ] && continue
+    adapter_path="${adapter_path//$'\r'/}"
+    if ! download_file "$adapter_path" "$adapter_path"; then
+      error "Failed to install IDE adapter: $adapter_path"
+      exit 1
+    fi
+    adapter_count=$((adapter_count + 1))
+  done < <(jq -r '.ideAdapterFiles[]?' "$MANIFEST_PATH" 2>/dev/null || true)
+  if [ "$adapter_count" -gt 0 ]; then
+    success "IDE adapters downloaded ($adapter_count files, Cursor + Claude Code)"
+  fi
+elif [ -n "$PYTHON_CMD" ]; then
+  adapter_count=0
+  while IFS= read -r adapter_path; do
+    [ -z "$adapter_path" ] && continue
+    adapter_path="${adapter_path//$'\r'/}"
+    if ! download_file "$adapter_path" "$adapter_path"; then
+      error "Failed to install IDE adapter: $adapter_path"
+      exit 1
+    fi
+    adapter_count=$((adapter_count + 1))
+  done < <($PYTHON_CMD -c "
+import sys, json
+with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
+  d = json.load(f)
+for x in d.get('ideAdapterFiles', []):
+  print(x)
+" 2>/dev/null || true)
+  if [ "$adapter_count" -gt 0 ]; then
+    success "IDE adapters downloaded ($adapter_count files, Cursor + Claude Code)"
+  fi
+fi
+
 # 将安装清单保存到用户项目，供卸载脚本读取
 mkdir -p install
 if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then
@@ -516,10 +560,10 @@ if ps:
   fi
 fi
 
-# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-info "Bootstrapping .cursor/.lingxi..."
+# 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
+info "Bootstrapping .lingxi..."
 if command -v node &>/dev/null; then
-  if node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
+  if node plugin/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
     success "Workspace bootstrap completed"
   else
     error "workspace-bootstrap failed"
@@ -532,8 +576,8 @@ else
     dir="${dir//$'\r'/}"
     mkdir -p "$dir"
   done < <(get_json_array "workflowDirectories")
-  if [ -f ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
-    cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".cursor/.lingxi/memory/INDEX.md"
+  if [ -f "plugin/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
+    cp "plugin/skills/workspace-bootstrap/references/INDEX.default.md" ".lingxi/memory/INDEX.md"
     success "Workspace bootstrap completed (no Node.js mode)"
   else
     error "Template file missing; ensure skills were downloaded"
@@ -542,7 +586,7 @@ else
 fi
 
 # 为 share 目录创建 .gitkeep 文件（确保空目录被 git 跟踪）
-SHARE_DIR=".cursor/.lingxi/memory/share"
+SHARE_DIR=".lingxi/memory/share"
 if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
   cat > "$SHARE_DIR/.gitkeep" << 'EOF'
 # Share Directory
@@ -551,7 +595,7 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 #
 # 使用方式：
 # 1. 添加 share 仓库（submodule）：
-# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+# git submodule add <shareRepoUrl> .lingxi/memory/share
 #
 # 2. 更新 share 仓库：
 # git submodule update --remote --merge
@@ -597,7 +641,7 @@ if [ -f ".gitignore" ]; then
 else
   cat > .gitignore << 'GITIGNOREEOF'
 # Local workspace for temp code clones, generated artifacts, etc.
-.cursor/.lingxi/os/
+.lingxi/workspace/
 
 # OS / IDE
 .DS_Store
@@ -616,7 +660,7 @@ echo ""
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   info "Merge mode: kept non-LingXi files and updated LingXi files"
 fi
-info "Next: run /init in Cursor"
+info "Next: open project in Cursor or Claude Code and run /init"
 
 # 清理临时文件
 if [ -n "${MANIFEST_PATH:-}" ] && [ -f "$MANIFEST_PATH" ]; then

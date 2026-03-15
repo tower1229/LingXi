@@ -9,7 +9,7 @@ import {
   MERGE_KINDS,
   normalizeGovernanceContext,
   validateMergeKind,
-} from "../../.cursor/skills/memory-write/scripts/governance-context-validator.mjs";
+} from "../../plugin/skills/memory-write/scripts/governance-context-validator.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
@@ -49,7 +49,7 @@ describe("governance context validator", () => {
   it("keeps validator enums in sync with JSON schema", () => {
     const schemaPath = path.join(
       REPO_ROOT,
-      ".cursor",
+      "plugin",
       "skills",
       "memory-write",
       "references",

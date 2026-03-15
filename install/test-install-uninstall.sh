@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# 安装后卸载集成测试：先执行 test-install.sh 安装到测试目录，再在该目录执行 lx:uninstall --yes，断言 .cursor/.lingxi 及清单内路径已删除。
+# 安装后卸载集成测试：先执行 test-install.sh 安装到测试目录，再在该目录执行 lx:uninstall --yes，断言 .lingxi 及清单内路径已删除。
 # 用法：./install/test-install-uninstall.sh [测试目录]
 # 若不传目录则使用临时目录（脚本结束后保留，便于检查）。
 # 依赖：bash、test-install.sh 所需环境（python3、curl、jq 或 python）。
@@ -33,12 +33,12 @@ fi
 echo ""
 echo "步骤 3/3: 断言..."
 FAIL=0
-if [ -d ".cursor/.lingxi" ]; then
-  echo "FAIL: .cursor/.lingxi 仍存在"
+if [ -d ".lingxi" ]; then
+  echo "FAIL: .lingxi 仍存在"
   FAIL=1
 fi
-if [ -f ".cursor/commands/init.md" ]; then
-  echo "FAIL: 清单内路径 .cursor/commands/init.md 仍存在"
+if [ -f "plugin/commands/init.md" ]; then
+  echo "FAIL: 清单内路径 plugin/commands/init.md 仍存在"
   FAIL=1
 fi
 if [ -f "scripts/lx-uninstall.mjs" ]; then

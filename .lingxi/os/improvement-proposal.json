@@ -1,0 +1,23 @@
+{
+  "proposal_id": "proposal-2026-03-15T02-10-14-005Z",
+  "generated_at": "2026-03-15T02:10:14.005Z",
+  "window_hours": 24,
+  "findings": [],
+  "actions": [],
+  "metrics": {
+    "duplicate_creation_rate": 0,
+    "merge_conversion_rate": 0,
+    "fragmentation_index": 0,
+    "post_injection_correction_rate": 0
+  },
+  "signal_counts": {
+    "merge_diagnosed": 0,
+    "dedupe_applied": 0,
+    "dedupe_suggested": 0,
+    "new_related_exists": 0
+  },
+  "constraints": {
+    "auto_apply_risk": "low",
+    "max_actions_per_cycle": 20
+  }
+}

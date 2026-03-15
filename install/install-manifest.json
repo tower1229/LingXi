@@ -5,7 +5,7 @@
         "commands/remember.md"
     ],
     "rules": [
-        "rules/agentos-kernel.mdc"
+        "rules/agentos-kernel.md"
     ],
     "hooks": {
         "files": [
@@ -133,24 +133,29 @@
             "skills/skill-creator/LICENSE.txt"
         ]
     },
+    "ideAdapterFiles": [
+        ".cursor-plugin/plugin.json",
+        ".claude-plugin/plugin.json",
+        ".claude/hooks.json"
+    ],
     "workflowDirectories": [
-        ".cursor/.lingxi/tasks",
-        ".cursor/.lingxi/memory",
-        ".cursor/.lingxi/memory/project",
-        ".cursor/.lingxi/memory/share",
-        ".cursor/.lingxi/os",
-        ".cursor/.lingxi/os/sessions"
+        ".lingxi/tasks",
+        ".lingxi/memory",
+        ".lingxi/memory/project",
+        ".lingxi/memory/share",
+        ".lingxi/os",
+        ".lingxi/os/sessions"
     ],
     "workflowIndexFiles": [
-        ".cursor/.lingxi/memory/INDEX.md",
-        ".cursor/.lingxi/os/WAL_BUFFER.md",
-        ".cursor/.lingxi/os/heartbeat-control.json",
-        ".cursor/.lingxi/os/heartbeat-transcript-index.json",
-        ".cursor/.lingxi/os/MEMORY_JOURNAL.jsonl"
+        ".lingxi/memory/INDEX.md",
+        ".lingxi/os/WAL_BUFFER.md",
+        ".lingxi/os/heartbeat-control.json",
+        ".lingxi/os/heartbeat-transcript-index.json",
+        ".lingxi/os/MEMORY_JOURNAL.jsonl"
     ],
     "gitignoreEntries": [
         "# Local workspace for temp code clones, generated artifacts, etc.",
-        ".cursor/.lingxi/os/"
+        ".lingxi/workspace/"
     ],
     "scripts": [
         "lx-uninstall.mjs"

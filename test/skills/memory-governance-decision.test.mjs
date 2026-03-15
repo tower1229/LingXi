@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { decideGovernance } from "../../.cursor/skills/memory-write/scripts/governance-decision.mjs";
+import { decideGovernance } from "../../plugin/skills/memory-write/scripts/governance-decision.mjs";
 
 describe("memory governance hard-threshold decision tree", () => {
   it("returns dedupe for same subject and conclusion", () => {

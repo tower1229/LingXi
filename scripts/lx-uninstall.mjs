@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 灵犀卸载脚本：按安装清单删除 .cursor/.lingxi 运行数据与灵犀核心文件。
+ * 灵犀卸载脚本：按安装清单删除 .lingxi 运行数据与灵犀核心文件。
  * 读取 install/install-manifest.json（安装时由安装程序写入），仅删除清单内路径。
  * 用法：node scripts/lx-uninstall.mjs [--yes]
  */
@@ -14,7 +14,7 @@ const projectRoot =
   process.cwd();
 
 const MANIFEST_RELATIVE = "install/install-manifest.json";
-const LINGXI_RUNTIME = ".cursor/.lingxi";
+const LINGXI_RUNTIME = ".lingxi";
 
 function resolve(p) {
   return path.join(projectRoot, p.split("/").join(path.sep));
@@ -42,18 +42,21 @@ function collectPathsToDelete(manifest) {
 
   out.push(LINGXI_RUNTIME);
 
-  (manifest.commands || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.skills || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.hooks?.files || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.agents?.files || []).forEach((p) => out.push(".cursor/" + p));
+  (manifest.commands || []).forEach((p) => out.push("plugin/" + p));
+  (manifest.skills || []).forEach((p) => out.push("plugin/" + p));
+  (manifest.hooks?.files || []).forEach((p) => out.push(p === "hooks.json" ? ".cursor/hooks.json" : "plugin/" + p));
+  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push("plugin/" + p));
+  (manifest.agents?.files || []).forEach((p) => out.push("plugin/" + p));
+  (manifest.rules || []).forEach((p) => out.push("plugin/" + p));
 
   const refs = manifest.references || {};
   for (const key of Object.keys(refs)) {
-    (refs[key] || []).forEach((p) => out.push(".cursor/" + p));
+    (refs[key] || []).forEach((p) => out.push("plugin/" + p));
   }
 
   (manifest.scripts || []).forEach((p) => out.push("scripts/" + p));
+
+  (manifest.ideAdapterFiles || []).forEach((p) => out.push(p));
 
   if (manifest.manifestCopyPath) {
     out.push(manifest.manifestCopyPath);

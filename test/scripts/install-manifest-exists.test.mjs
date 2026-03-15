@@ -12,10 +12,10 @@ import assert from "node:assert";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 
-function resolveManifestPath(manifestPath) {
-  if (manifestPath.startsWith(".cursor/")) return path.join(REPO_ROOT, manifestPath);
+function resolveManifestPath(manifestPath, isHooksJson = false) {
   if (manifestPath.startsWith("scripts/")) return path.join(REPO_ROOT, manifestPath);
-  return path.join(REPO_ROOT, ".cursor", manifestPath);
+  if (isHooksJson) return path.join(REPO_ROOT, ".cursor", "hooks.json");
+  return path.join(REPO_ROOT, "plugin", manifestPath);
 }
 
 describe("install-manifest-exists", () => {
@@ -46,34 +46,38 @@ describe("install-manifest-exists", () => {
     const missing = [];
 
     (manifest.commands || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
+      const full = resolveManifestPath(p);
       if (!fs.existsSync(full)) missing.push(full);
     });
     (manifest.rules || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
+      const full = resolveManifestPath(p);
       if (!fs.existsSync(full)) missing.push(full);
     });
     (manifest.hooks?.files || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
+      const full = resolveManifestPath(p, p === "hooks.json");
       if (!fs.existsSync(full)) missing.push(full);
     });
     (manifest.skills || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
+      const full = resolveManifestPath(p);
       if (!fs.existsSync(full)) missing.push(full);
     });
     (manifest.agents?.files || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
+      const full = resolveManifestPath(p);
       if (!fs.existsSync(full)) missing.push(full);
     });
     const refs = manifest.references || {};
     for (const key of Object.keys(refs)) {
       (refs[key] || []).forEach((p) => {
-        const full = resolveManifestPath(".cursor/" + p);
+        const full = resolveManifestPath(p);
         if (!fs.existsSync(full)) missing.push(full);
       });
     }
     (manifest.scripts || []).forEach((p) => {
       const full = path.join(REPO_ROOT, "scripts", p);
+      if (!fs.existsSync(full)) missing.push(full);
+    });
+    (manifest.ideAdapterFiles || []).forEach((p) => {
+      const full = path.join(REPO_ROOT, ...p.split("/"));
       if (!fs.existsSync(full)) missing.push(full);
     });
 

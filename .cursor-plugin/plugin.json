@@ -15,8 +15,9 @@
   "homepage": "https://github.com/tower1229/LingXi",
   "repository": "https://github.com/tower1229/LingXi",
   "logo": "assets/logo.svg",
-  "commands": ".cursor/commands",
-  "skills": ".cursor/skills",
-  "agents": ".cursor/agents",
+  "skills": "plugin/skills",
+  "agents": "plugin/agents",
+  "commands": "plugin/commands",
+  "rules": "plugin/rules",
   "hooks": ".cursor/hooks.json"
 }

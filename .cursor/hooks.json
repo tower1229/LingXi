@@ -3,7 +3,7 @@
     "hooks": {
         "beforeSubmitPrompt": [
             {
-                "command": "node .cursor/hooks/heartbeat-trigger.mjs"
+                "command": "node plugin/hooks/heartbeat-trigger.mjs"
             }
         ]
     }

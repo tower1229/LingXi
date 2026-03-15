@@ -6,5 +6,10 @@
   "agents": { "files": [] },
   "references": {},
   "scripts": ["lx-uninstall.mjs"],
+  "ideAdapterFiles": [
+    ".cursor-plugin/plugin.json",
+    ".claude-plugin/plugin.json",
+    ".claude/hooks.json"
+  ],
   "manifestCopyPath": "install/install-manifest.json"
 }

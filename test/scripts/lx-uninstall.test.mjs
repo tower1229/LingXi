@@ -29,10 +29,11 @@ function setupUninstallFixture(tmpDir) {
     "utf8"
   );
 
-  fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "tasks"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "tasks", "dummy"), "", "utf8");
-  fs.mkdirSync(path.join(tmpDir, ".cursor", "commands"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, ".cursor", "commands", "init.md"), "# init", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".lingxi", "tasks"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".lingxi", "tasks", "dummy"), "", "utf8");
+  fs.mkdirSync(path.join(tmpDir, "plugin", "commands"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, "plugin", "commands", "init.md"), "# init", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".cursor"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".cursor", "hooks.json"), "{}", "utf8");
   fs.mkdirSync(path.join(tmpDir, "scripts"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-uninstall.mjs"), "dummy", "utf8");
@@ -66,21 +67,21 @@ describe("lx-uninstall", () => {
     }
   });
 
-  it("TC-003: removes .cursor/.lingxi and manifest paths with --yes", async () => {
+  it("TC-003: removes .lingxi and manifest paths with --yes", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const lingxiPath = path.join(tmpDir, ".cursor", ".lingxi");
-    assert.ok(fs.existsSync(lingxiPath), "fixture should have .cursor/.lingxi");
+    const lingxiPath = path.join(tmpDir, ".lingxi");
+    assert.ok(fs.existsSync(lingxiPath), "fixture should have .lingxi");
 
     const { code } = await runUninstall(tmpDir);
     assert.strictEqual(code, 0, "exit code 0");
-    assert.ok(!fs.existsSync(lingxiPath), ".cursor/.lingxi should be deleted");
+    assert.ok(!fs.existsSync(lingxiPath), ".lingxi should be deleted");
   });
 
-  it("TC-004: removes only manifest-listed .cursor and scripts paths", async () => {
+  it("TC-004: removes only manifest-listed plugin and scripts paths", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const inListCommands = path.join(tmpDir, ".cursor", "commands", "init.md");
+    const inListCommands = path.join(tmpDir, "plugin", "commands", "init.md");
     const inListScripts = path.join(tmpDir, "scripts", "lx-uninstall.mjs");
     const userRule = path.join(tmpDir, ".cursor", "user-rule.md");
     const userScript = path.join(tmpDir, "scripts", "user-script.js");
@@ -109,7 +110,7 @@ describe("lx-uninstall", () => {
     tmpDir = createTempDir();
     const installDir = path.join(tmpDir, "install");
     fs.mkdirSync(installDir, { recursive: true });
-    // Manifest with no paths that exist: omit manifestCopyPath so only .cursor/.lingxi is in list (we don't create it)
+    // Manifest with no paths that exist: omit manifestCopyPath so only .lingxi is in list (we don't create it)
     fs.writeFileSync(
       path.join(installDir, "install-manifest.json"),
       JSON.stringify({

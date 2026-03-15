@@ -1,2 +1,0 @@
-{"event":"memory.improvement.proposed","proposal_id":"proposal-2026-03-13T13-44-59-524Z","findings":[],"actions":[],"metrics":{"duplicate_creation_rate":0,"merge_conversion_rate":0,"fragmentation_index":0,"post_injection_correction_rate":0},"signal_counts":{"merge_diagnosed":0,"dedupe_applied":0,"dedupe_suggested":0,"new_related_exists":0},"ts":"2026-03-13T13:44:59.526Z"}
-{"event":"memory.improvement.approved","proposal_id":"proposal-2026-03-13T13-44-59-524Z","action_ids":[],"ts":"2026-03-13T13:44:59.573Z"}

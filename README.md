@@ -67,7 +67,7 @@ Use these in lifecycle order:
 
 | Skill      | Usage                                                                                                                                                         | Description                                                                                                                                                                                                                                                                      |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **task**   | `/task <description>` or “create task…”<br><br>**Examples:**<br>`/task Add user login with email and phone`<br>`/task Improve homepage load, target LCP < 1s` | **Create task doc**<br><br>Auto task id (001, 002...) and title; creates:<br>`.cursor/.lingxi/tasks/001.task.<title>.md`<br><br>This is the core document for the whole workflow, including refined requirements, technical approach, and acceptance criteria.                   |
+| **task**   | `/task <description>` or “create task…”<br><br>**Examples:**<br>`/task Add user login with email and phone`<br>`/task Improve homepage load, target LCP < 1s` | **Create task doc**<br><br>Auto task id (001, 002...) and title; creates:<br>`.lingxi/tasks/001.task.<title>.md`<br><br>This is the core document for the whole workflow, including refined requirements, technical approach, and acceptance criteria.                   |
 | **vet**    | `/vet [taskId]` or “review task doc”<br><br>**Examples:**<br>`/vet 001`<br>`/vet` (latest task)                                                               | **Review task doc (optional)**<br><br>Multi-dimension review of the task doc to improve quality. Optional, can be run multiple times.<br><br>No file output; results and suggestions in chat only.                                                                               |
 | **plan**   | `/plan [taskId]` or “plan task…”<br><br>**Examples:**<br>`/plan 001`<br>`/plan` (latest task)                                                                 | **Task planning (optional)**<br><br>Generate plan and test-case docs from the task doc. For complex tasks; simple ones can skip.<br><br>**Tip:** Works with Cursor’s plan mode.                                                                                                  |
 | **build**  | `/build [taskId]` or “implement task…”<br><br>**Examples:**<br>`/build 001`<br>`/build` (latest task)                                                         | **Run build (optional)**<br><br>Two modes:<br>- **Plan-driven**: Follow plan when present (recommended)<br>- **Task-driven**: Agent decides from task doc when no plan<br><br>**Tip:** In plan mode you can use its built-in build and skip LingXi’s build skill.                |
@@ -84,12 +84,12 @@ Use these in lifecycle order:
 
 LingXi uses a designated share directory for team knowledge that can be reused across projects:
 
-- Share directory: `.cursor/.lingxi/memory/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `memory/project/`.
+- Share directory: `.lingxi/memory/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `memory/project/`.
 
 **1) Add share repo (submodule)**
 
 ```bash
-git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+git submodule add <shareRepoUrl> .lingxi/memory/share
 ```
 
 **2) Update share repo**
@@ -104,4 +104,4 @@ In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync 
 
 ## Related docs
 
-- [Core Architecture](.cursor/skills/about-lingxi/references/architecture-blueprint.md)
+- [Core Architecture](plugin/skills/about-lingxi/references/architecture-blueprint.md)

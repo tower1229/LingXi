@@ -100,14 +100,14 @@ Write-Info "Source: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
-$LingxiExists = Test-Path ".cursor\.lingxi"
+$LingxiExists = Test-Path ".lingxi"
 
 if ($CursorExists) {
   Write-Warning ".cursor already exists"
 }
 
 if ($LingxiExists) {
-  Write-Warning ".cursor\.lingxi already exists"
+  Write-Warning ".lingxi already exists"
 }
 
 # 询问是否继续（合并安装模式）
@@ -129,20 +129,21 @@ if ($CursorExists -or $LingxiExists) {
   }
 }
 
-# 创建 .cursor 目录结构
+# 创建 plugin 与 .cursor 目录结构
 Write-Info "Preparing directories..."
-New-Item -ItemType Directory -Force -Path ".cursor\commands" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\skills" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\rules" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\hooks" | Out-Null
-New-Item -ItemType Directory -Force -Path ".cursor\agents" | Out-Null
+New-Item -ItemType Directory -Force -Path "plugin\commands" | Out-Null
+New-Item -ItemType Directory -Force -Path "plugin\skills" | Out-Null
+New-Item -ItemType Directory -Force -Path "plugin\rules" | Out-Null
+New-Item -ItemType Directory -Force -Path "plugin\hooks" | Out-Null
+New-Item -ItemType Directory -Force -Path "plugin\agents" | Out-Null
+New-Item -ItemType Directory -Force -Path ".cursor" | Out-Null
 
-# 下载 commands（清单路径用 /；远程路径传 .cursor/xxx，本地用 .Replace 转 \，避免 -replace 正则报错）
+# 下载 commands（清单路径相对 plugin/，远程与本地均用 plugin/）
 Write-Info "Downloading commands..."
 $commandCount = 0
 foreach ($cmd in $Manifest.commands) {
-  $remotePath = ".cursor/" + $cmd.Replace('\', '/')
-  $localFile = ".cursor\" + $cmd.Replace('/', '\')
+  $remotePath = "plugin/" + $cmd.Replace('\', '/')
+  $localFile = "plugin\" + $cmd.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -155,8 +156,8 @@ Write-Success "Commands downloaded ($commandCount files)"
 Write-Info "Downloading rules..."
 $ruleCount = 0
 foreach ($rule in $Manifest.rules) {
-  $remotePath = ".cursor/" + $rule.Replace('\', '/')
-  $localFile = ".cursor\" + $rule.Replace('/', '\')
+  $remotePath = "plugin/" + $rule.Replace('\', '/')
+  $localFile = "plugin\" + $rule.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -165,12 +166,17 @@ foreach ($rule in $Manifest.rules) {
 }
 Write-Success "Rules downloaded ($ruleCount files)"
 
-# 下载 hooks
+# 下载 hooks（hooks.json 写入 .cursor/，其余写入 plugin/hooks/）
 Write-Info "Downloading hooks..."
 $hookCount = 0
 foreach ($hookFile in $Manifest.hooks.files) {
-  $remotePath = ".cursor/" + $hookFile.Replace('\', '/')
-  $localFile = ".cursor\" + $hookFile.Replace('/', '\')
+  if ($hookFile -eq "hooks.json") {
+    $remotePath = ".cursor/hooks.json"
+    $localFile = ".cursor\hooks.json"
+  } else {
+    $remotePath = "plugin/" + $hookFile.Replace('\', '/')
+    $localFile = "plugin\" + $hookFile.Replace('/', '\')
+  }
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -184,8 +190,8 @@ if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
   Write-Info "Downloading heartbeat plugins..."
   $pluginCount = 0
   foreach ($pluginFile in $Manifest.heartbeatPlugins.files) {
-    $remotePath = ".cursor/" + $pluginFile.Replace('\', '/')
-    $localFile = ".cursor\" + $pluginFile.Replace('/', '\')
+    $remotePath = "plugin/" + $pluginFile.Replace('\', '/')
+    $localFile = "plugin\" + $pluginFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
       Write-Error "Install failed"
       exit 1
@@ -199,8 +205,8 @@ if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
 Write-Info "Downloading skills..."
 $skillCount = 0
 foreach ($skill in $Manifest.skills) {
-  $remotePath = ".cursor/" + $skill.Replace('\', '/')
-  $localFile = ".cursor\" + $skill.Replace('/', '\')
+  $remotePath = "plugin/" + $skill.Replace('\', '/')
+  $localFile = "plugin\" + $skill.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -212,8 +218,8 @@ foreach ($skill in $Manifest.skills) {
 Write-Info "Downloading agents..."
 $agentCount = 0
 foreach ($agentFile in $Manifest.agents.files) {
-  $remotePath = ".cursor/" + $agentFile.Replace('\', '/')
-  $localFile = ".cursor\" + $agentFile.Replace('/', '\')
+  $remotePath = "plugin/" + $agentFile.Replace('\', '/')
+  $localFile = "plugin\" + $agentFile.Replace('/', '\')
   if (-not (Download-File $remotePath $localFile)) {
     Write-Error "Install failed"
     exit 1
@@ -226,8 +232,8 @@ Write-Success "Agents downloaded ($agentCount files)"
 $refCount = 0
 foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
   foreach ($refFile in $Manifest.references.$refKey) {
-    $remotePath = ".cursor/" + $refFile.Replace('\', '/')
-    $localFile = ".cursor\" + $refFile.Replace('/', '\')
+    $remotePath = "plugin/" + $refFile.Replace('\', '/')
+    $localFile = "plugin\" + $refFile.Replace('/', '\')
     if (-not (Download-File $remotePath $localFile)) {
       Write-Error "Install failed"
       exit 1
@@ -253,6 +259,22 @@ if ($Manifest.scripts -and $Manifest.scripts.Count -gt 0) {
   Write-Success "Scripts downloaded ($($Manifest.scripts.Count) files)"
 }
 
+# 下载 IDE 适配层（Cursor + Claude Code 双 IDE 支持）
+if ($Manifest.ideAdapterFiles -and $Manifest.ideAdapterFiles.Count -gt 0) {
+  Write-Info "Downloading IDE adapters (Cursor + Claude Code)..."
+  foreach ($adapterPath in $Manifest.ideAdapterFiles) {
+    $remotePath = $adapterPath.Replace('\', '/')
+    $localFile = $adapterPath.Replace('/', '\')
+    $dir = Split-Path $localFile
+    if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    if (-not (Download-File $remotePath $localFile)) {
+      Write-Error "Failed to install IDE adapter: $adapterPath"
+      exit 1
+    }
+  }
+  Write-Success "IDE adapters downloaded ($($Manifest.ideAdapterFiles.Count) files)"
+}
+
 # 将安装清单保存到用户项目，供卸载脚本读取
 New-Item -ItemType Directory -Force -Path "install" | Out-Null
 $Manifest | ConvertTo-Json -Depth 100 | Set-Content -Path "install\install-manifest.json" -Encoding UTF8
@@ -269,11 +291,11 @@ if ((Test-Path "package.json") -and $Manifest.packageScripts) {
   Write-Success "Merged lx scripts into package.json"
 }
 
-# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-Write-Info "Bootstrapping .cursor/.lingxi..."
+# 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
+Write-Info "Bootstrapping .lingxi..."
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
-  $bootstrapScript = ".cursor\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
+  $bootstrapScript = "plugin\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
   & node $bootstrapScript
   if ($LASTEXITCODE -ne 0) {
     Write-Error "workspace-bootstrap failed"
@@ -286,9 +308,9 @@ if ($nodeCmd) {
     $winPath = $dir.Replace('/', '\')
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
   }
-  $indexDefault = ".cursor\skills\workspace-bootstrap\references\INDEX.default.md"
+  $indexDefault = "plugin\skills\workspace-bootstrap\references\INDEX.default.md"
   if (Test-Path $indexDefault) {
-    $indexTarget = ".cursor\.lingxi\memory\INDEX.md"
+    $indexTarget = ".lingxi\memory\INDEX.md"
     New-Item -ItemType Directory -Force -Path (Split-Path $indexTarget) | Out-Null
     Copy-Item -Path $indexDefault -Destination $indexTarget -Force
     Write-Success "Workspace bootstrap completed (no Node.js mode)"
@@ -299,7 +321,7 @@ if ($nodeCmd) {
 }
 
 # 为 share 目录创建 .gitkeep 文件
-$ShareDir = ".cursor\.lingxi\memory\share"
+$ShareDir = ".lingxi\memory\share"
 if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
   @"
 # Share Directory
@@ -308,7 +330,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 #
 # 使用方式：
 # 1. 添加 share 仓库（submodule）：
-# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+# git submodule add <shareRepoUrl> .lingxi/memory/share
 #
 # 2. 更新 share 仓库：
 # git submodule update --remote --merge
@@ -351,7 +373,7 @@ if (Test-Path ".gitignore") {
 } else {
   @(
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".cursor/.lingxi/os/",
+    ".lingxi/workspace/",
     "",
     "# OS / IDE",
     ".DS_Store",
@@ -370,4 +392,4 @@ Write-Host ""
 if ($CursorExists -or $LingxiExists) {
   Write-Info "Merge mode: kept non-LingXi files and updated LingXi files"
 }
-Write-Info "Next: run /init in Cursor"
+Write-Info "Next: open project in Cursor or Claude Code and run /init"
