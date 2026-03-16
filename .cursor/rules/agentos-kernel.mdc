@@ -37,12 +37,15 @@ alwaysApply: true
 
 **FORBIDDEN：在阶段三全部完成之前，向用户输出任何"完成"类回复并结束。**
 
-**MUST 按以下顺序完成后置处理：**
+> 仅当本轮子代理状态为 `SUCCESS` 或 `PARTIAL_SUCCESS` 时才进入本阶段。  
+> 若子代理状态为 `FAILED`，**不得进入本阶段**，必须立即将 HOT_RAM `Current State` 写为 `HUMAN_INTERVENTION_REQUIRED`，停止执行，并向用户请求下一步指示。
+
+**在 SUCCESS / PARTIAL_SUCCESS 情况下，MUST 按以下顺序完成后置处理：**
 
 1. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`。
 2. 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`，**按顺序执行队列中所有未勾选项**（如 `memory-write`、WAL 消费、状态更新等），全部执行完毕并勾选完毕后方可继续。
 3. 若子代理返回含 `<Payload>` JSON：解析后将 `next_steps_options`、`f_results` 等字段**原样**呈现给用户，不得汇总或改写。
-4. 向用户输出最终回复。若本轮子代理状态为 SUCCESS 或 PARTIAL_SUCCESS，且 [POST-PROCESSING QUEUE] 中所有任务（含 [POST_RETRIEVE]、[WAL_BUFFER_SYNC]、[USER_REPORT] 及任何新增任务）均已勾选完成，则将 HOT_RAM Current State 复位为 IDLE。若子代理状态为 FAILED，则保持 HUMAN_INTERVENTION_REQUIRED，等待用户给出下一步指示。
+4. 向用户输出最终回复。若 [POST-PROCESSING QUEUE] 中所有任务（含 [POST_RETRIEVE]、[WAL_BUFFER_SYNC]、[USER_REPORT] 及任何新增任务）均已勾选完成，则将 HOT_RAM `Current State` 复位为 `IDLE`。
 
 ---
 
