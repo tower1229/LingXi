@@ -135,6 +135,21 @@
       "mtimeMs": 1771912000424.1973,
       "conversationId": "001c3cc4-e129-476f-a12b-b084212a04da",
       "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.claude/projects/-Users-zangtao-Workspace-tower1229-LingXi/5f973119-116b-494e-b71f-f2baab010a8e.jsonl": {
+      "mtimeMs": 1773623947755.7476,
+      "conversationId": "5f973119-116b-494e-b71f-f2baab010a8e",
+      "lastProcessedAt": "2026-03-16T05:30:56.277Z"
+    },
+    "/Users/zangtao/.claude/projects/-Users-zangtao-Workspace-tower1229-LingXi/6c3b38b8-94cd-42db-a3b1-85cc84b3e710.jsonl": {
+      "mtimeMs": 1773639119232.5645,
+      "conversationId": "6c3b38b8-94cd-42db-a3b1-85cc84b3e710",
+      "lastProcessedAt": "2026-03-16T05:32:00.632Z"
+    },
+    "/Users/zangtao/.claude/projects/-Users-zangtao-Workspace-tower1229-LingXi/c07bc85d-d390-4fd1-b1da-9fc5574d1399.jsonl": {
+      "mtimeMs": 1773636995019.1348,
+      "conversationId": "c07bc85d-d390-4fd1-b1da-9fc5574d1399",
+      "lastProcessedAt": "2026-03-16T05:30:56.277Z"
     }
   }
 }

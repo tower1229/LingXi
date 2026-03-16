@@ -20,3 +20,6 @@
 - [x] `[SELF_ITERATE]`: {"session_id":"37135d5f-7d6a-4d23-bbc5-8adc8d419098"}
 - [x] `[SELF_ITERATE]`: {"session_id":"c8b8f51d-aae3-4cfc-b651-cd594d6fd1b2"}
 - [ ] `[SESSION_DISTILL]`: {"candidate_ids":["7fc0f505-0cc8-46fb-9b1f-b7fe5fdf746e","190d58c0-4eb9-477b-84ee-8ac6ba43a61f","682c3280-6092-4362-a6c2-0b4306948d7c"],"enqueued_by":"test-conversation-id"}
+- [ ] `[SESSION_DISTILL]`: {"candidate_ids":["6c3b38b8-94cd-42db-a3b1-85cc84b3e710","c07bc85d-d390-4fd1-b1da-9fc5574d1399","5f973119-116b-494e-b71f-f2baab010a8e"],"enqueued_by":"test-current-conversation"}
+- [x] `[SELF_ITERATE]`: {"session_id":"test-current-conversation"}
+- [ ] `[SESSION_DISTILL]`: {"candidate_ids":["6c3b38b8-94cd-42db-a3b1-85cc84b3e710"],"enqueued_by":"current-test-conv-id"}
