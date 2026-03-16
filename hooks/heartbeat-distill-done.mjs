@@ -6,7 +6,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { parseWalLine, formatWalLine } from "./wal-utils.mjs";
+import { parseWalLine, formatWalLine, modifyWalWithLock } from "./wal-utils.mjs";
 
 const HEARTBEAT_CONTROL_REL = ".lingxi/os/heartbeat-control.json";
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
@@ -51,22 +51,32 @@ function main() {
     }
   }
 
-  if (fs.existsSync(walPath)) {
-    try {
-      const content = fs.readFileSync(walPath, "utf8");
-      const lines = content.split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        const parsed = parseWalLine(lines[i]);
-        if (parsed && !parsed.checked && parsed.type === "SESSION_DISTILL") {
-          lines[i] = formatWalLine(parsed.type, parsed.payload, true);
-          fs.writeFileSync(walPath, lines.join("\n"), "utf8");
-          break;
-        }
+  const sortedCandidateIds = [...candidateIds].sort();
+
+  const walOk = modifyWalWithLock(projectRoot, (lines) => {
+    for (let i = 0; i < lines.length; i++) {
+      const parsed = parseWalLine(lines[i]);
+      if (!parsed || parsed.checked || parsed.type !== "SESSION_DISTILL") continue;
+
+      const payloadIds = Array.isArray(parsed.payload?.candidate_ids)
+        ? [...parsed.payload.candidate_ids].sort()
+        : [];
+      const matches =
+        payloadIds.length === sortedCandidateIds.length &&
+        payloadIds.every((id, idx) => id === sortedCandidateIds[idx]);
+
+      if (matches) {
+        lines[i] = formatWalLine(parsed.type, parsed.payload, true);
+        return true;
       }
-    } catch (err) {
-      console.error("[heartbeat-distill-done] update WAL failed:", err.message);
-      process.exit(1);
     }
+    console.warn("[heartbeat-distill-done] no matching SESSION_DISTILL entry found in WAL for candidate_ids:", candidateIds);
+    return false;
+  });
+
+  if (walOk === false) {
+    console.error("[heartbeat-distill-done] update WAL failed (lock not acquired or file missing)");
+    process.exit(1);
   }
 }
 

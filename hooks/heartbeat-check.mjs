@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { exec } from "node:child_process";
-import { appendWalTask, parseWalLine, markWalLineChecked, acquireLock, releaseLock } from "./wal-utils.mjs";
+import { appendWalTask, parseWalLine, getPendingTasks, markWalLineChecked, acquireLock, releaseLock } from "./wal-utils.mjs";
 import { getRegisteredApps } from "../heartbeat-plugins/registry.mjs";
 
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
@@ -423,6 +423,29 @@ function runHeartbeatEnqueue(projectRoot, currentConversationId = "") {
     if (payload != null) {
       appendWalTask(projectRoot, app.id, payload);
       control = readControl(controlPath);
+    }
+  }
+
+  // 积压告警：统计 WAL 中未勾选的 SESSION_DISTILL 数量，超过 2 条时写入 distill_backlog 告警
+  const walBufferPath = path.join(projectRoot, WAL_BUFFER_REL);
+  if (fs.existsSync(walBufferPath)) {
+    try {
+      const walContent = fs.readFileSync(walBufferPath, "utf8");
+      const backlogCount = getPendingTasks(walContent).filter((t) => t.type === "SESSION_DISTILL").length;
+      if (backlogCount > 2) {
+        const freshControl = readControl(controlPath);
+        freshControl.distill_backlog = { count: backlogCount, detected_at: new Date().toISOString() };
+        writeControlFile(controlPath, freshControl);
+        console.warn(`[heartbeat-check] SESSION_DISTILL backlog detected: ${backlogCount} pending tasks`);
+      } else if (fs.existsSync(controlPath)) {
+        const freshControl = readControl(controlPath);
+        if (freshControl.distill_backlog) {
+          delete freshControl.distill_backlog;
+          writeControlFile(controlPath, freshControl);
+        }
+      }
+    } catch (err) {
+      console.error("[heartbeat-check] backlog check failed:", err.message);
     }
   }
 }
