@@ -17,10 +17,16 @@ export function writeStdoutJson(obj) {
 }
 
 export function getProjectRootFromHookScriptUrl(scriptUrl) {
+  // On Windows, import.meta.url pathname looks like /C:/path/to/hooks/script.mjs
+  // path.fileURLToPath handles cross-platform URL-to-path conversion correctly
   const scriptPath = new URL(scriptUrl).pathname;
-  const scriptDir = path.dirname(scriptPath);
-  // hooks/xxx.mjs -> project root is two levels up from hooks/
-  return path.resolve(scriptDir, "../..");
+  // Strip leading slash on Windows (e.g. /C:/... -> C:/...)
+  const normalizedPath = process.platform === "win32" && /^\/[A-Za-z]:/.test(scriptPath)
+    ? scriptPath.slice(1)
+    : scriptPath;
+  const scriptDir = path.dirname(normalizedPath);
+  // hooks/xxx.mjs -> project root is one level up from hooks/
+  return path.resolve(scriptDir, "..");
 }
 
 export async function fileExists(filePath) {

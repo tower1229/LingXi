@@ -9,7 +9,7 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { readStdinJson, writeStdoutJson, fileExists } from "./_hook-utils.mjs";
+import { readStdinJson, writeStdoutJson, fileExists, getProjectRootFromHookScriptUrl } from "./_hook-utils.mjs";
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
 /**
@@ -57,7 +57,21 @@ async function runSessionInit(projectRoot, conversationId) {
 
 async function main() {
   const input = await readStdinJson();
-  const projectRoot = process.env.CURSOR_PROJECT_DIR || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  // Prefer explicit env vars, then workspace_roots from hook input (Cursor 2.6+),
+  // then fall back to script-relative path resolution.
+  // On Windows, Cursor may pass workspace_roots as Unix-style paths like "/C:/path/to/project".
+  // Normalize by stripping the leading slash before a drive letter.
+  const rawWorkspaceRoot = Array.isArray(input.workspace_roots) && input.workspace_roots[0]
+    ? input.workspace_roots[0]
+    : "";
+  const workspaceRoot = process.platform === "win32" && /^\/[A-Za-z]:/.test(rawWorkspaceRoot)
+    ? rawWorkspaceRoot.slice(1)
+    : rawWorkspaceRoot;
+  const projectRoot =
+    process.env.CURSOR_PROJECT_DIR ||
+    process.env.CLAUDE_PROJECT_DIR ||
+    workspaceRoot ||
+    getProjectRootFromHookScriptUrl(import.meta.url);
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
 
   // 1. 幂等初始化会话文件

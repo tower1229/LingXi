@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh ../hooks/run-node.sh ../hooks/heartbeat-trigger.mjs"
+            "command": "node ../hooks/heartbeat-trigger.mjs"
           }
         ]
       }
