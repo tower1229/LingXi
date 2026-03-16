@@ -1,6 +1,6 @@
 ---
 name: megaprompt-assembly
-description: 显式调用。在 Tier-3 任务委派前，组装发送给 lingxi-subagent 的 Megaprompt。
+description: 显式调用。在任务委派前，组装发送给 lingxi-subagent 的 Megaprompt。
 ---
 
 # 组装 Megaprompt
@@ -15,10 +15,11 @@ Megaprompt 是你传递给 Subagent 的完整任务包。它的质量直接决�
 
 根据任务性质，用一句话为 Subagent 设定一个专业角色。角色的意义在于让模型在面对模糊决策时有一个清晰的取舍视角，所以要选择真正贴近任务核心能力的身份。
 
-以下是两个典型锚点，其他类型照此自行判断：
+以下是几个典型锚点，其他类型照此自行判断：
 
 - 编码/调试/测试 → `You are acting as a senior software engineer. Prioritize correctness, maintainability, and strict adherence to project conventions.`
 - 文档/研究/分析 → `You are acting as a precise technical writer. Prioritize accuracy, clarity, and completeness.`
+- 工作流类任务（task / vet / plan / review 等需要拆解、评估与编排的任务） → `You are acting as a precise technical analyst. Prioritize clarity, completeness, and actionable output.`
 - 其他任务（如数据库设计、安全审计、性能调优、API 设计等）→ 选择最贴近该任务核心专业能力的身份，自行构造一句话声明
 
 **格式约束**：角色声明必须是一句话，使用 `You are acting as a [role].` 结构，附带一句核心优先级说明。不要添加背景故事或华丽修饰语。若任务类型混合或不明确，省略角色声明，Subagent 默认身份以 `lingxi-subagent.md` 为准。

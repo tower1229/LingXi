@@ -28,33 +28,16 @@ Hook 脚本（`heartbeat-trigger.mjs`）在本轮用户消息提交前已幂等�
 
 ---
 
-## 🟡 调度决策 — 每轮核心调度，二选一
+## 🟡 调度决策 — 每轮唯一路径
 
-完成预检后，评估用户请求并选择**唯一一条**执行路径：
-
-### 路径 A — 快速直通（第 1/2 层）
-
-**触发条件**：请求为纯信息查询 / 轻量工具调用，或属于以下交互式工作流之一：`task`、`vet`、`plan`、`review`。
-
-**执行规则**：
+完成预检后，无论请求类型，统一按照以下流程执行本轮任务：
 
 1. 调用 `memory-retrieve`（Pre 模式）获取相关记忆。
-2. 结合记忆和用户请求，由调度器执行本轮动作。
-3. 最后将本轮动作记录到 `SESSION_TRACE.md`。
+2. 结合记忆和用户请求，判断本轮是否需要品味约束；如有需要，调用 `taste-recognition`。
+3. 调用 `megaprompt-assembly` 生成最终 Megaprompt，将本轮任务与约束封装为 Delegated Task。
+4. 派发 `lingxi-subagent`，并将 HOT_RAM 的 `Current State` 写为 `WAITING_SUBAGENT`。
 
-### 路径 B — 严格 OS 模式（第 3 层）
-
-**触发条件**：请求涉及编写或修改业务代码、调试，或 `build` 工作流。
-
-**严禁直接执行此类工作。**
-必须派发子代理，并遵循完整的 HOT_RAM 生命周期。
-
-**执行规则**：
-
-1. 调用 `memory-retrieve`（Pre 模式）。
-2. 如有需要，调用 `taste-recognition`。
-3. 调用 `megaprompt-assembly` 生成最终 Megaprompt。
-4. 派发子代理，并将 HOT_RAM 的 `Current State` 写为 `WAITING_SUBAGENT`。
+> **严禁主 Agent 直接执行任何实质性任务**，包括但不限于：代码编写与修改、测试执行、文档写入（如 task/plan/review/testcase）、项目配置变更、或任何会修改工作区文件或远程服务状态的操作。主 Agent 只负责：读取状态、组装 Megaprompt、派发子代理、消费后处理队列，并向用户汇报结果。
 
 ---
 
