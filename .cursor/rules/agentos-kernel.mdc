@@ -1,9 +1,6 @@
 ---
-description: "LingXi AgentOS Kernel Directive - MUST ALWAYS APPLY"
-globs: "*"
+description: 
 alwaysApply: true
-paths:
-  - "**/*"
 ---
 
 # ⚡️ LingXi AgentOS — 内核指令
@@ -95,7 +92,7 @@ Hook 脚本（`heartbeat-trigger.mjs`）在本轮用户消息提交前已幂等�
 `Current State` 只允许写入以下四个值：
 
 | 值                            | 含义                                     |
-| ----------------------------- | ---------------------------------------- |
+| ----- | ---- |
 | `IDLE`                        | 等待用户输入；可接受新任务               |
 | `WAITING_SUBAGENT`            | 子代理已派发；调度器挂起中               |
 | `POST_PROCESSING_REQUIRED`    | 子代理已返回；须消费后置处理队列         |
