@@ -1,55 +1,140 @@
 {
   "version": 1,
   "transcripts": {
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\fbedc02c-8df1-484f-ace2-0c796a4d3e4b\\fbedc02c-8df1-484f-ace2-0c796a4d3e4b.jsonl": {
-      "mtimeMs": 1772344008298.0386,
-      "conversationId": "fbedc02c-8df1-484f-ace2-0c796a4d3e4b",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/fa0b2e4b-811c-4ab1-9e82-1e8a13705092/fa0b2e4b-811c-4ab1-9e82-1e8a13705092.jsonl": {
+      "mtimeMs": 1772433261877.3835,
+      "conversationId": "fa0b2e4b-811c-4ab1-9e82-1e8a13705092",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\f1240a14-f07a-4c33-8d42-ef7e3da1fb1a\\f1240a14-f07a-4c33-8d42-ef7e3da1fb1a.jsonl": {
-      "mtimeMs": 1772268439839.1995,
-      "conversationId": "f1240a14-f07a-4c33-8d42-ef7e3da1fb1a",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/e9a17eb2-5263-4a68-88c8-21af65ee5a95/e9a17eb2-5263-4a68-88c8-21af65ee5a95.jsonl": {
+      "mtimeMs": 1772436565848.9463,
+      "conversationId": "e9a17eb2-5263-4a68-88c8-21af65ee5a95",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\9b703413-73ef-494b-87f9-bd5be8801a0c\\9b703413-73ef-494b-87f9-bd5be8801a0c.jsonl": {
-      "mtimeMs": 1772337921903.4006,
-      "conversationId": "9b703413-73ef-494b-87f9-bd5be8801a0c",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/e00b6526-fd71-487d-a3bd-449dc0b6c72e/e00b6526-fd71-487d-a3bd-449dc0b6c72e.jsonl": {
+      "mtimeMs": 1771997325855.374,
+      "conversationId": "e00b6526-fd71-487d-a3bd-449dc0b6c72e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\647ab2f5-0591-4320-876a-9d959a5565e5.jsonl": {
-      "mtimeMs": 1772271139555.6687,
-      "conversationId": "647ab2f5-0591-4320-876a-9d959a5565e5",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/d993b8e7-d1ea-41ee-b286-c8d90b905fb8/d993b8e7-d1ea-41ee-b286-c8d90b905fb8.jsonl": {
+      "mtimeMs": 1772422299860.8567,
+      "conversationId": "d993b8e7-d1ea-41ee-b286-c8d90b905fb8",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\9879ca8d-f80a-4a72-84ec-d5d870f46c9a.jsonl": {
-      "mtimeMs": 1772269366478.697,
-      "conversationId": "9879ca8d-f80a-4a72-84ec-d5d870f46c9a",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/af52c6a3-04a6-4962-b146-462885e904f9/af52c6a3-04a6-4962-b146-462885e904f9.jsonl": {
+      "mtimeMs": 1772434490846.8691,
+      "conversationId": "af52c6a3-04a6-4962-b146-462885e904f9",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\9b770c79-6bc3-4ecb-8d73-ffb08a0d1e40.jsonl": {
-      "mtimeMs": 1772271136437.4402,
-      "conversationId": "9b770c79-6bc3-4ecb-8d73-ffb08a0d1e40",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a7e92bf2-5f4d-4dc8-b221-e70a72fc9a21/a7e92bf2-5f4d-4dc8-b221-e70a72fc9a21.jsonl": {
+      "mtimeMs": 1771895678401.177,
+      "conversationId": "a7e92bf2-5f4d-4dc8-b221-e70a72fc9a21",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\647ab2f5-0591-4320-876a-9d959a5565e5\\subagents\\a03a7b8b-5131-404e-a38c-beda12907bca.jsonl": {
-      "mtimeMs": 1772271020890.204,
-      "conversationId": "a03a7b8b-5131-404e-a38c-beda12907bca",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a2f53f7c-296c-43c1-88f3-07f0d824122e/a2f53f7c-296c-43c1-88f3-07f0d824122e.jsonl": {
+      "mtimeMs": 1772428906133.2898,
+      "conversationId": "a2f53f7c-296c-43c1-88f3-07f0d824122e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\20ac3719-0c42-4382-967e-21385c648f51\\20ac3719-0c42-4382-967e-21385c648f51.jsonl": {
-      "mtimeMs": 1772337596430.2778,
-      "conversationId": "20ac3719-0c42-4382-967e-21385c648f51",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a2f53f7c-296c-43c1-88f3-07f0d824122e/subagents/6f24544d-bf65-4c0b-8da3-280e716d6057.jsonl": {
+      "mtimeMs": 1772426939764.1904,
+      "conversationId": "6f24544d-bf65-4c0b-8da3-280e716d6057",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\024db728-d3cd-428f-ac7d-fe6cbbf73636\\024db728-d3cd-428f-ac7d-fe6cbbf73636.jsonl": {
-      "mtimeMs": 1772271449177.5276,
-      "conversationId": "024db728-d3cd-428f-ac7d-fe6cbbf73636",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a2f53f7c-296c-43c1-88f3-07f0d824122e/subagents/b7d39959-3fbd-4150-93b9-1346ffd6fc31.jsonl": {
+      "mtimeMs": 1772423446975.409,
+      "conversationId": "b7d39959-3fbd-4150-93b9-1346ffd6fc31",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     },
-    "C:\\Users\\shixiong\\.cursor\\projects\\c-Workspace-tower1229-LingXi\\agent-transcripts\\024db728-d3cd-428f-ac7d-fe6cbbf73636\\subagents\\043b685f-5ade-4a1a-8a4f-dec78800c3e1.jsonl": {
-      "mtimeMs": 1772271446929.535,
-      "conversationId": "043b685f-5ade-4a1a-8a4f-dec78800c3e1",
-      "lastProcessedAt": "2026-03-12T13:40:15.980Z"
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a2f53f7c-296c-43c1-88f3-07f0d824122e/subagents/d0771164-272c-4e01-8c71-a941d160c794.jsonl": {
+      "mtimeMs": 1772426937401.7131,
+      "conversationId": "d0771164-272c-4e01-8c71-a941d160c794",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/a2f53f7c-296c-43c1-88f3-07f0d824122e/subagents/e1d22b24-15b3-46b0-ba3b-ddaad3e2f34f.jsonl": {
+      "mtimeMs": 1772423527479.4192,
+      "conversationId": "e1d22b24-15b3-46b0-ba3b-ddaad3e2f34f",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/9fedf052-dd0d-46c6-9a20-2d452769318e/9fedf052-dd0d-46c6-9a20-2d452769318e.jsonl": {
+      "mtimeMs": 1772090970282.5132,
+      "conversationId": "9fedf052-dd0d-46c6-9a20-2d452769318e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/7fc0f505-0cc8-46fb-9b1f-b7fe5fdf746e/7fc0f505-0cc8-46fb-9b1f-b7fe5fdf746e.jsonl": {
+      "mtimeMs": 1773027342959.6814,
+      "conversationId": "7fc0f505-0cc8-46fb-9b1f-b7fe5fdf746e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/744cb689-2f93-40af-8a21-6109e6387b72/744cb689-2f93-40af-8a21-6109e6387b72.jsonl": {
+      "mtimeMs": 1772420916542.4612,
+      "conversationId": "744cb689-2f93-40af-8a21-6109e6387b72",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/71ed03fa-81e4-47de-8f48-9fb84f977d6e/71ed03fa-81e4-47de-8f48-9fb84f977d6e.jsonl": {
+      "mtimeMs": 1772435942459.1987,
+      "conversationId": "71ed03fa-81e4-47de-8f48-9fb84f977d6e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/682c3280-6092-4362-a6c2-0b4306948d7c/682c3280-6092-4362-a6c2-0b4306948d7c.jsonl": {
+      "mtimeMs": 1772498248091.1196,
+      "conversationId": "682c3280-6092-4362-a6c2-0b4306948d7c",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/50007c1b-8d4a-42dc-aa5d-c2eafe1a5a2d/50007c1b-8d4a-42dc-aa5d-c2eafe1a5a2d.jsonl": {
+      "mtimeMs": 1772422096313.7122,
+      "conversationId": "50007c1b-8d4a-42dc-aa5d-c2eafe1a5a2d",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/4ef390aa-17d9-4436-8fd5-5ffe41acd68c/4ef390aa-17d9-4436-8fd5-5ffe41acd68c.jsonl": {
+      "mtimeMs": 1771895835025.1936,
+      "conversationId": "4ef390aa-17d9-4436-8fd5-5ffe41acd68c",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/46bb59d7-8c05-4d59-917f-03df19654846/46bb59d7-8c05-4d59-917f-03df19654846.jsonl": {
+      "mtimeMs": 1771999911925.7139,
+      "conversationId": "46bb59d7-8c05-4d59-917f-03df19654846",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/35c4ae9d-04a9-48c6-a85b-7d38974db658/35c4ae9d-04a9-48c6-a85b-7d38974db658.jsonl": {
+      "mtimeMs": 1772004571894.5781,
+      "conversationId": "35c4ae9d-04a9-48c6-a85b-7d38974db658",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/2d4aa613-0329-41b6-9813-1c2a61ae34ee/2d4aa613-0329-41b6-9813-1c2a61ae34ee.jsonl": {
+      "mtimeMs": 1771919120370.6804,
+      "conversationId": "2d4aa613-0329-41b6-9813-1c2a61ae34ee",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/2c8fbc5f-1612-4d02-9553-829fdc397235/2c8fbc5f-1612-4d02-9553-829fdc397235.jsonl": {
+      "mtimeMs": 1771995202876.5107,
+      "conversationId": "2c8fbc5f-1612-4d02-9553-829fdc397235",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/1d2ff0fc-f0d2-49be-a106-c8c7d5b8ee6e/1d2ff0fc-f0d2-49be-a106-c8c7d5b8ee6e.jsonl": {
+      "mtimeMs": 1771918298066.0488,
+      "conversationId": "1d2ff0fc-f0d2-49be-a106-c8c7d5b8ee6e",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/190d58c0-4eb9-477b-84ee-8ac6ba43a61f/190d58c0-4eb9-477b-84ee-8ac6ba43a61f.jsonl": {
+      "mtimeMs": 1772499313663.015,
+      "conversationId": "190d58c0-4eb9-477b-84ee-8ac6ba43a61f",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/04817561-6acb-442b-9d26-efcbcca7b8ad/04817561-6acb-442b-9d26-efcbcca7b8ad.jsonl": {
+      "mtimeMs": 1772084405681.7356,
+      "conversationId": "04817561-6acb-442b-9d26-efcbcca7b8ad",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/04103817-b58c-46a4-8dee-36ad08f313ca/04103817-b58c-46a4-8dee-36ad08f313ca.jsonl": {
+      "mtimeMs": 1772435034986.6738,
+      "conversationId": "04103817-b58c-46a4-8dee-36ad08f313ca",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
+    },
+    "/Users/zangtao/.cursor/projects/Users-zangtao-Workspace-tower1229-LingXi/agent-transcripts/001c3cc4-e129-476f-a12b-b084212a04da/001c3cc4-e129-476f-a12b-b084212a04da.jsonl": {
+      "mtimeMs": 1771912000424.1973,
+      "conversationId": "001c3cc4-e129-476f-a12b-b084212a04da",
+      "lastProcessedAt": "2026-03-16T01:37:40.674Z"
     }
   }
 }

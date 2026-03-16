@@ -1,10 +1,18 @@
 {
   "last_distillation_completed_at": "2026-03-08T12:33:30.000Z",
   "heartbeat": {
-    "running": false,
-    "started_at": null,
-    "run_id": null
+    "running": true,
+    "started_at": "2026-03-16T01:37:40.674Z",
+    "run_id": "test-conversation-id"
   },
+  "last_improvement_cycle_at": "2026-03-15T02:10:14.005Z",
+  "last_improvement_prompted_session_id": null,
+  "last_improvement_prompted_at": null,
+  "processed_conversation_ids": [
+    "fb64fe20-54c6-4414-8284-ca3250282a0d",
+    "4177fa7b-c731-480d-a5f7-fb42cb0c3c30",
+    "cb801904-b9d3-448e-b5b9-44f1230c473e"
+  ],
   "pending_distillation": {
     "candidate_ids": [
       "fbedc02c-8df1-484f-ace2-0c796a4d3e4b",
@@ -13,13 +21,5 @@
     ],
     "enqueued_at": "2026-03-12T13:40:15.980Z",
     "enqueued_by": "1e113795-63b8-42e0-92b2-689873306055"
-  },
-  "processed_conversation_ids": [
-    "fb64fe20-54c6-4414-8284-ca3250282a0d",
-    "4177fa7b-c731-480d-a5f7-fb42cb0c3c30",
-    "cb801904-b9d3-448e-b5b9-44f1230c473e"
-  ],
-  "last_improvement_cycle_at": "2026-03-15T02:10:14.005Z",
-  "last_improvement_prompted_session_id": null,
-  "last_improvement_prompted_at": null
+  }
 }
