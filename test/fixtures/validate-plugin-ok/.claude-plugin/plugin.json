@@ -1,0 +1,5 @@
+{
+  "name": "valid-plugin",
+  "commands": "./.claude/commands",
+  "skills": "./.claude/skills"
+}

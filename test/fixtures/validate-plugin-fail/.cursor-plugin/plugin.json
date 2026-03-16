@@ -1,5 +1,5 @@
 {
   "name": "invalid-skill-plugin",
-  "commands": "./commands",
-  "skills": "./skills"
+  "commands": "./.cursor/commands",
+  "skills": "./.cursor/skills"
 }

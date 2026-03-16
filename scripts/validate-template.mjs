@@ -259,8 +259,7 @@ function resolveMarketplaceSource(source, pluginRoot) {
   return `${normalizedRoot}/${normalizedSource}`;
 }
 
-async function validateSinglePluginManifest() {
-  const manifestPath = path.join(repoRoot, ".cursor-plugin", "plugin.json");
+async function validateSinglePluginManifest(manifestPath) {
   const pluginManifest = await readJsonFile(manifestPath, "Plugin manifest");
   if (!pluginManifest) {
     return;
@@ -282,8 +281,14 @@ async function validateSinglePluginManifest() {
 
   await validateComponentFrontmatter(repoRoot, pluginName, pluginManifest);
 
-  if (!pluginManifest.hooks && !(await pathExists(path.join(repoRoot, ".cursor/hooks.json")))) {
-    addWarning(`${pluginName}: no .cursor/hooks.json found (only needed when using hooks).`);
+  const hooksPathValue = getManifestDirPath(pluginManifest, "hooks");
+  const hasHooks =
+    hooksPathValue != null
+      ? await pathExists(path.resolve(repoRoot, hooksPathValue))
+      : await pathExists(path.join(repoRoot, ".cursor/hooks.json")) ||
+        await pathExists(path.join(repoRoot, ".claude/hooks.json"));
+  if (!hasHooks) {
+    addWarning(`${pluginName}: no hooks.json found (only needed when using hooks).`);
   }
 }
 
@@ -295,7 +300,8 @@ async function main() {
     addWarning(
       'Marketplace manifest not found at ".cursor-plugin/marketplace.json". Falling back to ".cursor-plugin/plugin.json" validation.'
     );
-    await validateSinglePluginManifest();
+    await validateSinglePluginManifest(path.join(repoRoot, ".cursor-plugin", "plugin.json"));
+    await validateSinglePluginManifest(path.join(repoRoot, ".claude-plugin", "plugin.json"));
     summarizeAndExit();
     return;
   }

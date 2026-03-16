@@ -42,22 +42,10 @@ function collectPathsToDelete(manifest) {
 
   out.push(LINGXI_RUNTIME);
 
-  // 文件已在根目录下，不再需要 plugin/ 前缀
-  (manifest.commands || []).forEach((p) => out.push(p));
-  (manifest.skills || []).forEach((p) => out.push(p));
-  (manifest.hooks?.files || []).forEach((p) => out.push(p === "hooks.json" ? ".claude/hooks.json" : p));
-  (manifest.heartbeatPlugins?.files || []).forEach((p) => out.push(p));
-  (manifest.agents?.files || []).forEach((p) => out.push(p));
-  (manifest.rules || []).forEach((p) => out.push(p));
-
-  const refs = manifest.references || {};
-  for (const key of Object.keys(refs)) {
-    (refs[key] || []).forEach((p) => out.push(p));
-  }
-
-  (manifest.scripts || []).forEach((p) => out.push("scripts/" + p));
-
-  (manifest.ideAdapterFiles || []).forEach((p) => out.push(p));
+  // 新版清单：按 IDE 目录和共享运行时分组
+  (manifest.cursorFiles || []).forEach((p) => out.push(p));
+  (manifest.claudeFiles || []).forEach((p) => out.push(p));
+  (manifest.sharedFiles || []).forEach((p) => out.push(p));
 
   if (manifest.manifestCopyPath) {
     out.push(manifest.manifestCopyPath);

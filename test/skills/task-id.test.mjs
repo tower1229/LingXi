@@ -12,8 +12,8 @@ import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const LATEST_PATH = path.join(REPO_ROOT, "plugin", "skills", "task", "scripts", "latest-task-id.mjs");
-const NEXT_PATH = path.join(REPO_ROOT, "plugin", "skills", "task", "scripts", "next-task-id.mjs");
+const LATEST_PATH = path.join(REPO_ROOT, ".cursor", "skills", "task", "scripts", "latest-task-id.mjs");
+const NEXT_PATH = path.join(REPO_ROOT, ".cursor", "skills", "task", "scripts", "next-task-id.mjs");
 
 function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-tasks-"));

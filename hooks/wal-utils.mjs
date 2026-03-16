@@ -6,7 +6,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
-const DEFAULT_WAL_REL = "skills/workspace-bootstrap/references/WAL_BUFFER.default.md";
+const DEFAULT_WAL_CANDIDATES = [
+  ".cursor/skills/workspace-bootstrap/references/WAL_BUFFER.default.md",
+  ".claude/skills/workspace-bootstrap/references/WAL_BUFFER.default.md",
+];
 const LOCK_FILE_REL = ".lingxi/os/.wal.lock";
 
 const LINE_REGEX = /^- \[([ x])\] `\[([^\]]+)\]`:?\s*(.+)$/;
@@ -131,7 +134,9 @@ export function formatWalLine(type, payload, checked = false) {
 export function appendWalTask(projectRoot, type, payload) {
   const walPath = path.join(projectRoot, WAL_BUFFER_REL);
   const lockPath = path.join(projectRoot, LOCK_FILE_REL);
-  const defaultPath = path.join(projectRoot, DEFAULT_WAL_REL);
+  const defaultPath = DEFAULT_WAL_CANDIDATES
+    .map((rel) => path.join(projectRoot, rel))
+    .find((candidate) => fs.existsSync(candidate));
   const dir = path.dirname(walPath);
 
   if (!acquireLock(lockPath)) {

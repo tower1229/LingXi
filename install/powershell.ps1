@@ -77,6 +77,30 @@ function Download-File {
   return $false
 }
 
+function Download-ManifestFileGroup {
+  param(
+    [string]$GroupKey,
+    [string]$Label
+  )
+  $items = $Manifest.$GroupKey
+  if (-not $items -or $items.Count -eq 0) {
+    Write-Warning "No $Label found in manifest key: $GroupKey"
+    return
+  }
+
+  $count = 0
+  foreach ($filePath in $items) {
+    $remotePath = $filePath.Replace('\', '/')
+    $localFile = $filePath.Replace('/', '\')
+    if (-not (Download-File $remotePath $localFile)) {
+      Write-Error "Failed to install $Label file: $filePath"
+      exit 1
+    }
+    $count++
+  }
+  Write-Success "$Label downloaded ($count files)"
+}
+
 # 读取安装清单（从 GitHub 下载）
 function Load-Manifest {
   $manifestUrl = "${BaseUrl}/install/install-manifest.json"
@@ -131,150 +155,21 @@ if ($CursorExists -or $LingxiExists) {
 
 # 创建目录结构
 Write-Info "Preparing directories..."
-New-Item -ItemType Directory -Force -Path "commands" | Out-Null
-New-Item -ItemType Directory -Force -Path "skills" | Out-Null
 New-Item -ItemType Directory -Force -Path "hooks" | Out-Null
-New-Item -ItemType Directory -Force -Path "agents" | Out-Null
 New-Item -ItemType Directory -Force -Path "heartbeat-plugins" | Out-Null
 New-Item -ItemType Directory -Force -Path ".cursor" | Out-Null
 New-Item -ItemType Directory -Force -Path ".claude" | Out-Null
+New-Item -ItemType Directory -Force -Path "scripts" | Out-Null
+New-Item -ItemType Directory -Force -Path "assets" | Out-Null
 
-# 下载 commands
-Write-Info "Downloading commands..."
-$commandCount = 0
-foreach ($cmd in $Manifest.commands) {
-  $remotePath = $cmd.Replace('\', '/')
-  $localFile = $cmd.Replace('/', '\')
-  if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "Install failed"
-    exit 1
-  }
-  $commandCount++
-}
-Write-Success "Commands downloaded ($commandCount files)"
+Write-Info "Downloading Cursor files..."
+Download-ManifestFileGroup -GroupKey "cursorFiles" -Label "Cursor files"
 
-# 下载 rules
-Write-Info "Downloading rules..."
-$ruleCount = 0
-foreach ($rule in $Manifest.rules) {
-  $remotePath = $rule.Replace('\', '/')
-  $localFile = $rule.Replace('/', '\')
-  if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "Install failed"
-    exit 1
-  }
-  $ruleCount++
-}
-Write-Success "Rules downloaded ($ruleCount files)"
+Write-Info "Downloading Claude files..."
+Download-ManifestFileGroup -GroupKey "claudeFiles" -Label "Claude files"
 
-# 下载 hooks（hooks.json 写入 .cursor/ 或 .claude/，其余写入 hooks/）
-Write-Info "Downloading hooks..."
-$hookCount = 0
-foreach ($hookFile in $Manifest.hooks.files) {
-  if ($hookFile -eq "hooks.json") {
-    $remotePath = ".claude/hooks.json"
-    $localFile = ".claude\hooks.json"
-  } else {
-    $remotePath = $hookFile.Replace('\', '/')
-    $localFile = $hookFile.Replace('/', '\')
-  }
-  if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "Install failed"
-    exit 1
-  }
-  $hookCount++
-}
-Write-Success "Hooks downloaded ($hookCount files)"
-
-# 下载 heartbeat-plugins
-if ($Manifest.heartbeatPlugins -and $Manifest.heartbeatPlugins.files) {
-  Write-Info "Downloading heartbeat plugins..."
-  $pluginCount = 0
-  foreach ($pluginFile in $Manifest.heartbeatPlugins.files) {
-    $remotePath = $pluginFile.Replace('\', '/')
-    $localFile = $pluginFile.Replace('/', '\')
-    if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "Install failed"
-      exit 1
-    }
-    $pluginCount++
-  }
-  Write-Success "Heartbeat plugins downloaded ($pluginCount files)"
-}
-
-# 下载 skills
-Write-Info "Downloading skills..."
-$skillCount = 0
-foreach ($skill in $Manifest.skills) {
-  $remotePath = $skill.Replace('\', '/')
-  $localFile = $skill.Replace('/', '\')
-  if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "Install failed"
-    exit 1
-  }
-  $skillCount++
-}
-
-# 下载 agents
-Write-Info "Downloading agents..."
-$agentCount = 0
-foreach ($agentFile in $Manifest.agents.files) {
-  $remotePath = $agentFile.Replace('\', '/')
-  $localFile = $agentFile.Replace('/', '\')
-  if (-not (Download-File $remotePath $localFile)) {
-    Write-Error "Install failed"
-    exit 1
-  }
-  $agentCount++
-}
-Write-Success "Agents downloaded ($agentCount files)"
-
-# 下载引用文件
-$refCount = 0
-foreach ($refKey in $Manifest.references.PSObject.Properties.Name) {
-  foreach ($refFile in $Manifest.references.$refKey) {
-    $remotePath = $refFile.Replace('\', '/')
-    $localFile = $refFile.Replace('/', '\')
-    if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "Install failed"
-      exit 1
-    }
-    $refCount++
-  }
-}
-
-Write-Success "Skills downloaded ($skillCount core + $refCount reference files)"
-
-# 下载 scripts（清单中 scripts 数组）
-if ($Manifest.scripts -and $Manifest.scripts.Count -gt 0) {
-  Write-Info "Downloading scripts..."
-  New-Item -ItemType Directory -Force -Path "scripts" | Out-Null
-  foreach ($scriptFile in $Manifest.scripts) {
-    $remotePath = "scripts/" + $scriptFile.Replace('\', '/')
-    $localFile = "scripts\" + $scriptFile.Replace('/', '\')
-    if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "Failed to install scripts"
-      exit 1
-    }
-  }
-  Write-Success "Scripts downloaded ($($Manifest.scripts.Count) files)"
-}
-
-# 下载 IDE 适配层（Cursor + Claude Code 双 IDE 支持）
-if ($Manifest.ideAdapterFiles -and $Manifest.ideAdapterFiles.Count -gt 0) {
-  Write-Info "Downloading IDE adapters (Cursor + Claude Code)..."
-  foreach ($adapterPath in $Manifest.ideAdapterFiles) {
-    $remotePath = $adapterPath.Replace('\', '/')
-    $localFile = $adapterPath.Replace('/', '\')
-    $dir = Split-Path $localFile
-    if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-    if (-not (Download-File $remotePath $localFile)) {
-      Write-Error "Failed to install IDE adapter: $adapterPath"
-      exit 1
-    }
-  }
-  Write-Success "IDE adapters downloaded ($($Manifest.ideAdapterFiles.Count) files)"
-}
+Write-Info "Downloading shared runtime files..."
+Download-ManifestFileGroup -GroupKey "sharedFiles" -Label "shared files"
 
 # 将安装清单保存到用户项目，供卸载脚本读取
 New-Item -ItemType Directory -Force -Path "install" | Out-Null
@@ -296,7 +191,9 @@ if ((Test-Path "package.json") -and $Manifest.packageScripts) {
 Write-Info "Bootstrapping .lingxi..."
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
-  $bootstrapScript = "plugin\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
+  $bootstrapScript = $Manifest.bootstrap.script
+  if (-not $bootstrapScript) { $bootstrapScript = ".cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs" }
+  $bootstrapScript = $bootstrapScript.Replace('/', '\')
   & node $bootstrapScript
   if ($LASTEXITCODE -ne 0) {
     Write-Error "workspace-bootstrap failed"
@@ -309,7 +206,9 @@ if ($nodeCmd) {
     $winPath = $dir.Replace('/', '\')
     New-Item -ItemType Directory -Force -Path $winPath | Out-Null
   }
-  $indexDefault = "plugin\skills\workspace-bootstrap\references\INDEX.default.md"
+  $indexDefault = $Manifest.bootstrap.indexTemplate
+  if (-not $indexDefault) { $indexDefault = ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" }
+  $indexDefault = $indexDefault.Replace('/', '\')
   if (Test-Path $indexDefault) {
     $indexTarget = ".lingxi\memory\INDEX.md"
     New-Item -ItemType Directory -Force -Path (Split-Path $indexTarget) | Out-Null

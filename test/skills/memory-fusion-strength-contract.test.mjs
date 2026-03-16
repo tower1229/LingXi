@@ -12,10 +12,10 @@ import assert from "node:assert";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 
-const DISTILL_AGENT_PATH = path.join(REPO_ROOT, "plugin", "agents", "lingxi-session-distill.md");
-const TASTE_RECOGNITION_PATH = path.join(REPO_ROOT, "plugin", "skills", "taste-recognition", "SKILL.md");
-const WRITE_PROTOCOL_PATH = path.join(REPO_ROOT, "plugin", "skills", "memory-write", "references", "write-protocol.md");
-const RETRIEVE_SKILL_PATH = path.join(REPO_ROOT, "plugin", "skills", "memory-retrieve", "SKILL.md");
+const DISTILL_AGENT_PATH = path.join(REPO_ROOT, ".cursor", "agents", "lingxi-session-distill.md");
+const TASTE_RECOGNITION_PATH = path.join(REPO_ROOT, ".cursor", "skills", "taste-recognition", "SKILL.md");
+const WRITE_PROTOCOL_PATH = path.join(REPO_ROOT, ".cursor", "skills", "memory-write", "references", "write-protocol.md");
+const RETRIEVE_SKILL_PATH = path.join(REPO_ROOT, ".cursor", "skills", "memory-retrieve", "SKILL.md");
 
 describe("memory fusion and strength contracts", () => {
   it("keeps session distill as pass-through without independent gate stage", () => {

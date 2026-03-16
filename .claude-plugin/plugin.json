@@ -1,6 +1,6 @@
 {
   "name": "lingxi",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "AI workflow and memory: task/vet/plan/build/review, persistent memory, ready to use.",
   "author": {
     "name": "tower1229"
@@ -15,7 +15,8 @@
   "homepage": "https://github.com/tower1229/LingXi",
   "repository": "https://github.com/tower1229/LingXi",
   "logo": "assets/logo.svg",
-  "skills": "./skills",
-  "commands": "./commands",
+  "skills": "./.claude/skills",
+  "agents": "./.claude/agents",
+  "commands": "./.claude/commands",
   "hooks": "./.claude/hooks.json"
 }

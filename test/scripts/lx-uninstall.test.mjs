@@ -31,10 +31,16 @@ function setupUninstallFixture(tmpDir) {
 
   fs.mkdirSync(path.join(tmpDir, ".lingxi", "tasks"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".lingxi", "tasks", "dummy"), "", "utf8");
-  fs.mkdirSync(path.join(tmpDir, "plugin", "commands"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, "plugin", "commands", "init.md"), "# init", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".cursor", "commands"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".cursor", "commands", "init.md"), "# init", "utf8");
   fs.mkdirSync(path.join(tmpDir, ".cursor"), { recursive: true });
+  fs.mkdirSync(path.join(tmpDir, ".claude"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".cursor", "hooks.json"), "{}", "utf8");
+  fs.writeFileSync(path.join(tmpDir, ".claude", "hooks.json"), "{}", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".cursor-plugin"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".cursor-plugin", "plugin.json"), "{}", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".claude-plugin"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".claude-plugin", "plugin.json"), "{}", "utf8");
   fs.mkdirSync(path.join(tmpDir, "scripts"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-uninstall.mjs"), "dummy", "utf8");
 
@@ -78,17 +84,17 @@ describe("lx-uninstall", () => {
     assert.ok(!fs.existsSync(lingxiPath), ".lingxi should be deleted");
   });
 
-  it("TC-004: removes only manifest-listed plugin and scripts paths", async () => {
+  it("TC-004: removes only manifest-listed IDE and scripts paths", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const inListCommands = path.join(tmpDir, "plugin", "commands", "init.md");
+    const inListCommands = path.join(tmpDir, ".cursor", "commands", "init.md");
     const inListScripts = path.join(tmpDir, "scripts", "lx-uninstall.mjs");
     const userRule = path.join(tmpDir, ".cursor", "user-rule.md");
     const userScript = path.join(tmpDir, "scripts", "user-script.js");
 
     await runUninstall(tmpDir);
 
-    assert.ok(!fs.existsSync(inListCommands), "manifest commands path should be deleted");
+    assert.ok(!fs.existsSync(inListCommands), "manifest IDE commands path should be deleted");
     assert.ok(!fs.existsSync(inListScripts), "manifest scripts path should be deleted");
     assert.ok(fs.existsSync(userRule), "off-manifest .cursor file should remain");
     assert.ok(fs.existsSync(userScript), "off-manifest scripts file should remain");
@@ -114,11 +120,9 @@ describe("lx-uninstall", () => {
     fs.writeFileSync(
       path.join(installDir, "install-manifest.json"),
       JSON.stringify({
-        commands: [],
-        hooks: { files: [] },
-        agents: { files: [] },
-        references: {},
-        scripts: [],
+        cursorFiles: [],
+        claudeFiles: [],
+        sharedFiles: [],
       }),
       "utf8"
     );

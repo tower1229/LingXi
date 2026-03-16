@@ -1,15 +1,10 @@
 {
-  "commands": ["commands/init.md"],
-  "rules": [],
-  "hooks": { "files": ["hooks.json"] },
-  "skills": [],
-  "agents": { "files": [] },
-  "references": {},
-  "scripts": ["lx-uninstall.mjs"],
-  "ideAdapterFiles": [
-    ".cursor-./plugin.json",
-    ".claude-./plugin.json",
-    ".claude/hooks.json"
+  "cursorFiles": [".cursor/commands/init.md"],
+  "claudeFiles": [".claude/hooks.json"],
+  "sharedFiles": [
+    "scripts/lx-uninstall.mjs",
+    ".cursor-plugin/plugin.json",
+    ".claude-plugin/plugin.json"
   ],
   "manifestCopyPath": "install/install-manifest.json"
 }

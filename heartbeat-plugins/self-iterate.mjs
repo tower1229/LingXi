@@ -39,14 +39,16 @@ export default {
   },
 
   execCommand(projectRoot, _payload) {
-    const proposalScript = path.join(
-      projectRoot,
-      "agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"
-    );
-    const applyScript = path.join(
-      projectRoot,
-      "agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
-    );
+    const proposalCandidates = [
+      path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"),
+      path.join(projectRoot, ".claude/agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs"),
+    ];
+    const applyCandidates = [
+      path.join(projectRoot, ".cursor/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"),
+      path.join(projectRoot, ".claude/agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"),
+    ];
+    const proposalScript = proposalCandidates.find((candidate) => fs.existsSync(candidate)) || proposalCandidates[0];
+    const applyScript = applyCandidates.find((candidate) => fs.existsSync(candidate)) || applyCandidates[0];
     return `node "${proposalScript}" --window-hours 24 && node "${applyScript}" --approve-all`;
   },
 

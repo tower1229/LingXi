@@ -17,8 +17,6 @@ const IGNORE_DIRS = [
   '.git',
   '.lingxi/os/sessions',
   '.lingxi/memory/project',
-  '.cursor',
-  '.claude',
   '.cursor-plugin',
   '.claude-plugin',
   'test/fixtures',
@@ -90,9 +88,10 @@ function resolvePath(basePath, link) {
   // Handle various link formats - normalize slashes for cross-platform
   const normalizedLink = link.replace(/\\/g, '/');
 
-  // Check if it's a root-relative path (starts with skill/ or commands/ etc.)
+  // Check if it's a root-relative path (old root model + new IDE model)
   let resolved;
-  if (normalizedLink.startsWith('skills/') || normalizedLink.startsWith('commands/') ||
+  if (normalizedLink.startsWith('.cursor/') || normalizedLink.startsWith('.claude/') ||
+      normalizedLink.startsWith('skills/') || normalizedLink.startsWith('commands/') ||
       normalizedLink.startsWith('agents/') || normalizedLink.startsWith('rules/') ||
       normalizedLink.startsWith('hooks/') || normalizedLink.startsWith('heartbeat-plugins/')) {
     resolved = path.join(ROOT, normalizedLink);

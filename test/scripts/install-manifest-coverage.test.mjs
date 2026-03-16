@@ -2,9 +2,9 @@
  * Structural coverage check for install/install-manifest.json.
  *
  * Scans well-known convention paths and verifies they are listed in the manifest:
- *   - skills/*\/SKILL.md  → manifest.skills
- *   - agents\/*.md        → manifest.agents.files
- *   - hooks\/*.mjs        → manifest.hooks.files
+ *   - .cursor/skills/*\/SKILL.md and .claude/skills/*\/SKILL.md → manifest.cursorFiles / manifest.claudeFiles
+ *   - .cursor/agents\/*.md and .claude/agents\/*.md            → manifest.cursorFiles / manifest.claudeFiles
+ *   - hooks\/*.mjs                                               → manifest.sharedFiles
  *
  * This catches the reverse of the existence check: files present in repo but
  * missing from the manifest (would not be distributed to users).
@@ -24,25 +24,25 @@ function loadManifest() {
   return JSON.parse(raw);
 }
 
-/** Collect all SKILL.md paths as manifest-relative strings, e.g. "skills/foo/SKILL.md" */
-function scanSkills() {
-  const skillsDir = path.join(REPO_ROOT, "skills");
+/** Collect all SKILL.md paths as manifest-relative strings for one IDE root. */
+function scanSkills(ideRoot) {
+  const skillsDir = path.join(REPO_ROOT, ideRoot, "skills");
   return fs
     .readdirSync(skillsDir)
     .filter((name) => {
       const skillFile = path.join(skillsDir, name, "SKILL.md");
       return fs.existsSync(skillFile);
     })
-    .map((name) => `skills/${name}/SKILL.md`);
+    .map((name) => `${ideRoot}/skills/${name}/SKILL.md`);
 }
 
-/** Collect top-level agent .md files, e.g. "agents/lingxi-foo.md" */
-function scanAgents() {
-  const agentsDir = path.join(REPO_ROOT, "agents");
+/** Collect top-level agent .md files for one IDE root. */
+function scanAgents(ideRoot) {
+  const agentsDir = path.join(REPO_ROOT, ideRoot, "agents");
   return fs
     .readdirSync(agentsDir)
     .filter((f) => f.endsWith(".md") && fs.statSync(path.join(agentsDir, f)).isFile())
-    .map((f) => `agents/${f}`);
+    .map((f) => `${ideRoot}/agents/${f}`);
 }
 
 /** Collect hook .mjs files (top-level only), e.g. "hooks/session-init.mjs" */
@@ -55,39 +55,63 @@ function scanHooks() {
 }
 
 describe("install-manifest-coverage", () => {
-  it("all SKILL.md files are listed in manifest.skills", () => {
+  it("all .cursor SKILL.md files are listed in manifest.cursorFiles", () => {
     const manifest = loadManifest();
-    const manifestSkills = new Set(manifest.skills || []);
-    const repoSkills = scanSkills();
+    const manifestSkills = new Set(manifest.cursorFiles || []);
+    const repoSkills = scanSkills(".cursor");
     const missing = repoSkills.filter((s) => !manifestSkills.has(s));
     assert.deepStrictEqual(
       missing,
       [],
-      `SKILL.md files not in manifest.skills:\n  ${missing.join("\n  ")}`
+      `.cursor SKILL.md files not in manifest.cursorFiles:\n  ${missing.join("\n  ")}`
     );
   });
 
-  it("all top-level agent .md files are listed in manifest.agents.files", () => {
+  it("all .claude SKILL.md files are listed in manifest.claudeFiles", () => {
     const manifest = loadManifest();
-    const manifestAgents = new Set(manifest.agents?.files || []);
-    const repoAgents = scanAgents();
+    const manifestSkills = new Set(manifest.claudeFiles || []);
+    const repoSkills = scanSkills(".claude");
+    const missing = repoSkills.filter((s) => !manifestSkills.has(s));
+    assert.deepStrictEqual(
+      missing,
+      [],
+      `.claude SKILL.md files not in manifest.claudeFiles:\n  ${missing.join("\n  ")}`
+    );
+  });
+
+  it("all .cursor top-level agent .md files are listed in manifest.cursorFiles", () => {
+    const manifest = loadManifest();
+    const manifestAgents = new Set(manifest.cursorFiles || []);
+    const repoAgents = scanAgents(".cursor");
     const missing = repoAgents.filter((a) => !manifestAgents.has(a));
     assert.deepStrictEqual(
       missing,
       [],
-      `Agent .md files not in manifest.agents.files:\n  ${missing.join("\n  ")}`
+      `.cursor Agent .md files not in manifest.cursorFiles:\n  ${missing.join("\n  ")}`
     );
   });
 
-  it("all hook .mjs files are listed in manifest.hooks.files", () => {
+  it("all .claude top-level agent .md files are listed in manifest.claudeFiles", () => {
     const manifest = loadManifest();
-    const manifestHooks = new Set(manifest.hooks?.files || []);
+    const manifestAgents = new Set(manifest.claudeFiles || []);
+    const repoAgents = scanAgents(".claude");
+    const missing = repoAgents.filter((a) => !manifestAgents.has(a));
+    assert.deepStrictEqual(
+      missing,
+      [],
+      `.claude Agent .md files not in manifest.claudeFiles:\n  ${missing.join("\n  ")}`
+    );
+  });
+
+  it("all hook .mjs files are listed in manifest.sharedFiles", () => {
+    const manifest = loadManifest();
+    const manifestHooks = new Set(manifest.sharedFiles || []);
     const repoHooks = scanHooks();
     const missing = repoHooks.filter((h) => !manifestHooks.has(h));
     assert.deepStrictEqual(
       missing,
       [],
-      `Hook .mjs files not in manifest.hooks.files:\n  ${missing.join("\n  ")}`
+      `Hook .mjs files not in manifest.sharedFiles:\n  ${missing.join("\n  ")}`
     );
   });
 });

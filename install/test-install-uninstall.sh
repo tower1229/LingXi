@@ -37,8 +37,8 @@ if [ -d ".lingxi" ]; then
   echo "FAIL: .lingxi 仍存在"
   FAIL=1
 fi
-if [ -f "commands/init.md" ]; then
-  echo "FAIL: 清单内路径 commands/init.md 仍存在"
+if [ -f ".cursor/commands/init.md" ] || [ -f ".claude/commands/init.md" ]; then
+  echo "FAIL: 清单内路径 .cursor/commands/init.md 或 .claude/commands/init.md 仍存在"
   FAIL=1
 fi
 if [ -f "scripts/lx-uninstall.mjs" ]; then

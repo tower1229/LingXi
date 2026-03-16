@@ -1,0 +1,5 @@
+{
+  "name": "invalid-skill-plugin",
+  "commands": "./.claude/commands",
+  "skills": "./.claude/skills"
+}

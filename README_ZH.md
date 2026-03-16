@@ -51,7 +51,19 @@
   irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
   ```
 
-安装完成后，在 Cursor 中打开项目并建议运行一次 `/init`，以建立项目上下文并生成可选记忆候选（写入需显式门控）。
+安装完成后，在 Cursor 或 Claude Code 中打开项目，并建议运行一次 `/init`，以建立项目上下文并生成可选记忆候选（写入需显式门控）。
+
+---
+
+### 目录布局（Hard Cutover）
+
+灵犀已改为按 IDE 默认目录维护核心资产：
+
+- Cursor：`.cursor/commands`、`.cursor/skills`、`.cursor/agents`、`.cursor/rules`、`.cursor/hooks.json`
+- Claude Code：`.claude/commands`、`.claude/skills`、`.claude/agents`、`.claude/rules`、`.claude/hooks.json`
+- 灵犀专有运行时/共享引擎：`.lingxi/`、`hooks/`、`heartbeat-plugins/`、`install/`、`scripts/`
+
+即使出现双份文件也属于设计选择，用于支持两个 IDE 独立差异化维护。
 
 ---
 
@@ -104,4 +116,4 @@ git submodule update --remote --merge
 
 ## 相关文档
 
-- [核心组件架构](skills/about-lingxi/references/architecture.md)
+- [核心组件架构](.cursor/skills/about-lingxi/references/architecture.md)

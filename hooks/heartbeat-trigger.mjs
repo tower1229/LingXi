@@ -27,10 +27,18 @@ async function runSessionInit(projectRoot, conversationId) {
 
   if (await fileExists(hotRamPath)) return;
 
-  const templatePath = path.join(
-    projectRoot,
-    "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"
-  );
+  const templateCandidates = [
+    path.join(projectRoot, ".cursor", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
+    path.join(projectRoot, ".claude", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
+  ];
+  let templatePath = "";
+  for (const candidate of templateCandidates) {
+    if (await fileExists(candidate)) {
+      templatePath = candidate;
+      break;
+    }
+  }
+  if (!templatePath) return;
 
   try {
     await fs.mkdir(sessionDir, { recursive: true });

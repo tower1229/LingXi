@@ -51,7 +51,19 @@ Run one of the following commands from your **project root** to install LingXi i
   irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
   ```
 
-After install, open the project in Cursor and run `/init` once to build project context and generate optional memory candidates (write is gated by your explicit choice).
+After install, open the project in Cursor or Claude Code and run `/init` once to build project context and generate optional memory candidates (write is gated by your explicit choice).
+
+---
+
+### Directory Layout (Hard Cutover)
+
+LingXi now keeps IDE-maintained assets in each IDE's default directory:
+
+- Cursor: `.cursor/commands`, `.cursor/skills`, `.cursor/agents`, `.cursor/rules`, `.cursor/hooks.json`
+- Claude Code: `.claude/commands`, `.claude/skills`, `.claude/agents`, `.claude/rules`, `.claude/hooks.json`
+- LingXi runtime/shared engine: `.lingxi/`, `hooks/`, `heartbeat-plugins/`, `install/`, `scripts/`
+
+This intentionally duplicates core content across IDE directories so Cursor and Claude Code can evolve independently.
 
 ---
 
@@ -104,4 +116,4 @@ In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync 
 
 ## Related docs
 
-- [Core Architecture](skills/about-lingxi/references/architecture.md)
+- [Core Architecture](.cursor/skills/about-lingxi/references/architecture.md)

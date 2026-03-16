@@ -20,7 +20,7 @@ paths:
 Hook 脚本（`heartbeat-trigger.mjs`）在本轮用户消息提交前已幂等创建会话文件。
 直接对 `.lingxi/os/sessions/[conversation_id]/HOT_RAM.md` 执行 `read_file`，以其 `Current State` 为准。
 
-- **极少数兜底情形**（Hook 未执行或执行失败）：若文件不存在，从 `plugin/skills/workspace-bootstrap/references/HOT_RAM.default.md` 创建（替换 `{{SESSION_ID}}` 和 `{{TIMESTAMP}}`），写入后视为已读取。
+- **极少数兜底情形**（Hook 未执行或执行失败）：若文件不存在，从 `.claude/skills/workspace-bootstrap/references/HOT_RAM.default.md` 创建（替换 `{{SESSION_ID}}` 和 `{{TIMESTAMP}}`），写入后视为已读取。
 
 读取完成后，检查 `[GLOBAL CONFIG]` 区块：
 

@@ -205,7 +205,7 @@ get_json_array() {
     return 1
   fi
   if command -v jq &> /dev/null; then
-    jq -r --arg key "$key" '.[$key][]' "$MANIFEST_PATH" 2>/dev/null || return 1
+    jq -r --arg key "$key" '.[$key] // [] | .[]' "$MANIFEST_PATH" 2>/dev/null || return 1
   elif [ -n "$PYTHON_CMD" ]; then
     $PYTHON_CMD -c "
 import sys
@@ -215,7 +215,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 try:
   with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
     data = json.load(f)
-  items = data.get('$key', [])
+  items = data.get('$key', []) or []
   for item in items:
     print(item)
 except Exception as e:
@@ -237,7 +237,7 @@ get_json_object_array() {
     return 1
   fi
   if command -v jq &> /dev/null; then
-    jq -r --arg key "$key" --arg subkey "$subkey" '.[$key][$subkey][]' "$MANIFEST_PATH" 2>/dev/null || return 1
+    jq -r --arg key "$key" --arg subkey "$subkey" '.[$key][$subkey] // [] | .[]' "$MANIFEST_PATH" 2>/dev/null || return 1
   elif [ -n "$PYTHON_CMD" ]; then
     $PYTHON_CMD -c "
 import sys
@@ -247,7 +247,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 try:
   with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
     data = json.load(f)
-  items = data.get('$key', {}).get('$subkey', [])
+  items = (data.get('$key', {}) or {}).get('$subkey', []) or []
   for item in items:
     print(item)
 except Exception as e:
@@ -257,6 +257,57 @@ except Exception as e:
   else
     error "jq or Python 3 is required to parse JSON"
     return 1
+  fi
+}
+
+get_json_object_value() {
+  local key=$1
+  local subkey=$2
+  if [ -z "${MANIFEST_PATH:-}" ] || [ ! -f "$MANIFEST_PATH" ]; then
+    echo ""
+    return 0
+  fi
+  if command -v jq &> /dev/null; then
+    jq -r --arg key "$key" --arg subkey "$subkey" '.[$key][$subkey] // ""' "$MANIFEST_PATH" 2>/dev/null || echo ""
+  elif [ -n "$PYTHON_CMD" ]; then
+    $PYTHON_CMD -c "
+import json
+try:
+  with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+  obj = data.get('$key', {}) or {}
+  val = obj.get('$subkey', '') or ''
+  print(val)
+except Exception:
+  print('')
+" 2>/dev/null || echo ""
+  else
+    echo ""
+  fi
+}
+
+# 读取 manifest 中的扁平文件分组（cursorFiles / claudeFiles / sharedFiles）
+download_manifest_file_group() {
+  local group_key="$1"
+  local label="$2"
+  local count=0
+  while IFS= read -r file_path; do
+    [ -z "$file_path" ] && continue
+    file_path="${file_path//$'\r'/}"
+    if ! download_file "$file_path" "$file_path"; then
+      error "Failed to install ${label}: ${file_path}"
+      return 1
+    fi
+    if [[ "$file_path" == *.sh ]]; then
+      chmod +x "$file_path"
+    fi
+    count=$((count + 1))
+  done < <(get_json_array "$group_key")
+
+  if [ "$count" -gt 0 ]; then
+    success "${label} downloaded (${count} files)"
+  else
+    warning "No ${label} found in manifest key: ${group_key}"
   fi
 }
 
@@ -312,227 +363,17 @@ fi
 
 # 创建目录结构
 info "Preparing directories..."
-mkdir -p commands skills hooks agents heartbeat-plugins .cursor
+mkdir -p .cursor .claude hooks heartbeat-plugins scripts assets
 
-# 下载 commands
-info "Downloading commands..."
-command_count=0
-while IFS= read -r cmd; do
-  [ -z "$cmd" ] && continue
-  cmd="${cmd//$'\r'/}"
-  if ! download_file "${cmd}" "${cmd}"; then
-    error "Install failed"
-    exit 1
-  fi
-  command_count=$((command_count + 1))
-done < <(get_json_array "commands")
-success "Commands downloaded ($command_count files)"
+# 下载新的双 IDE 分组文件（硬切换目录模型）
+info "Downloading Cursor files..."
+download_manifest_file_group "cursorFiles" "Cursor files" || exit 1
 
-# 下载 rules
-info "Downloading rules..."
-rule_count=0
-while IFS= read -r rule; do
-  [ -z "$rule" ] && continue
-  rule="${rule//$'\r'/}"
-  if ! download_file "${rule}" ""${rule}"; then
-    error "Install failed"
-    exit 1
-  fi
-  rule_count=$((rule_count + 1))
-done < <(get_json_array "rules")
-success "Rules downloaded ($rule_count files)"
+info "Downloading Claude files..."
+download_manifest_file_group "claudeFiles" "Claude files" || exit 1
 
-# 下载 hooks（hooks.json 写入 .cursor/，其余写入 hooks/）
-info "Downloading hooks..."
-hook_count=0
-while IFS= read -r hook_file; do
-  [ -z "$hook_file" ] && continue
-  hook_file="${hook_file//$'\r'/}"
-  if [ "$hook_file" = "hooks.json" ]; then
-    if ! download_file ".cursor/hooks.json" ".cursor/hooks.json"; then
-      error "Install failed"
-      exit 1
-    fi
-  else
-    if ! download_file "${hook_file}" ""${hook_file}"; then
-      error "Install failed"
-      exit 1
-    fi
-    # Make shell scripts executable
-    if [[ "$hook_file" == *.sh ]]; then
-      chmod +x "${hook_file}"
-    fi
-  fi
-  hook_count=$((hook_count + 1))
-done < <(get_json_object_array "hooks" "files")
-success "Hooks downloaded ($hook_count files)"
-
-# 下载 heartbeat-plugins
-info "Downloading heartbeat plugins..."
-plugin_count=0
-while IFS= read -r plugin_file; do
-  [ -z "$plugin_file" ] && continue
-  plugin_file="${plugin_file//$'\r'/}"
-  if ! download_file "${plugin_file}" ""${plugin_file}"; then
-    error "Install failed"
-    exit 1
-  fi
-  plugin_count=$((plugin_count + 1))
-done < <(get_json_object_array "heartbeatPlugins" "files")
-success "Heartbeat plugins downloaded ($plugin_count files)"
-
-# 下载 skills（仅 SKILL.md）
-info "Downloading skills..."
-skill_count=0
-while IFS= read -r skill; do
-  [ -z "$skill" ] && continue
-  skill="${skill//$'\r'/}"
-  if ! download_file "${skill}" ""${skill}"; then
-    error "Install failed"
-    exit 1
-  fi
-  skill_count=$((skill_count + 1))
-done < <(get_json_array "skills")
-
-# 下载 agents
-info "Downloading agents..."
-agent_count=0
-while IFS= read -r agent_file; do
-  [ -z "$agent_file" ] && continue
-  agent_file="${agent_file//$'\r'/}"
-  if ! download_file "${agent_file}" ""${agent_file}"; then
-    error "Install failed"
-    exit 1
-  fi
-  agent_count=$((agent_count + 1))
-done < <(get_json_object_array "agents" "files")
-success "Agents downloaded ($agent_count files)"
-
-# 下载 references（按 skill 分组）
-ref_count=0
-if command -v jq &> /dev/null; then
-  for ref_key in $(jq -r '.references | keys[]' "$MANIFEST_PATH" 2>/dev/null); do
-    if ! ref_items=$(jq -r --arg key "$ref_key" '.references[$key][]' "$MANIFEST_PATH" 2>/dev/null); then
-      error "Failed to parse references.$ref_key in manifest"
-      exit 1
-    fi
-    while IFS= read -r ref_file; do
-      [ -z "$ref_file" ] && continue
-      ref_file="${ref_file//$'\r'/}"
-      if ! download_file "${ref_file}" ""${ref_file}"; then
-        error "Install failed"
-        exit 1
-      fi
-      ref_count=$((ref_count + 1))
-    done <<< "$ref_items"
-  done
-elif [ -n "$PYTHON_CMD" ]; then
-  for ref_key in $($PYTHON_CMD -c "
-import sys
-import json
-if hasattr(sys.stdout, 'reconfigure'):
-  sys.stdout.reconfigure(newline='\n')
-try:
-  with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
-    data = json.load(f)
-  refs = data.get('references', {})
-  for key in refs.keys():
-    print(key)
-except Exception as e:
-  sys.stderr.write(f'JSON 解析错误: {e}\n')
-  sys.exit(1)
-" 2>/dev/null); do
-    ref_key="${ref_key//$'\r'/}"
-    while IFS= read -r ref_file; do
-      [ -z "$ref_file" ] && continue
-      ref_file="${ref_file//$'\r'/}"
-      if ! download_file "${ref_file}" ""${ref_file}"; then
-        error "Install failed"
-        exit 1
-      fi
-      ref_count=$((ref_count + 1))
-    done < <(get_json_object_array "references" "$ref_key")
-  done
-else
-  error "jq or Python 3 is required to parse JSON references"
-  exit 1
-fi
-
-success "Skills downloaded ($skill_count core + $ref_count reference files)"
-
-# 下载 scripts（清单中 scripts 数组，远程路径 scripts/xxx，本地 scripts/xxx）
-if command -v jq &> /dev/null; then
-  script_count=0
-  while IFS= read -r script_file; do
-    [ -z "$script_file" ] && continue
-    script_file="${script_file//$'\r'/}"
-    if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
-      error "Failed to install scripts"
-      exit 1
-    fi
-    script_count=$((script_count + 1))
-  done < <(jq -r '.scripts[]?' "$MANIFEST_PATH" 2>/dev/null || true)
-  if [ "$script_count" -gt 0 ]; then
-    success "Scripts downloaded ($script_count files)"
-  fi
-elif [ -n "$PYTHON_CMD" ]; then
-  script_count=0
-  while IFS= read -r script_file; do
-    [ -z "$script_file" ] && continue
-    script_file="${script_file//$'\r'/}"
-    if ! download_file "scripts/${script_file}" "scripts/${script_file}"; then
-      error "Failed to install scripts"
-      exit 1
-    fi
-    script_count=$((script_count + 1))
-  done < <($PYTHON_CMD -c "
-import sys, json
-with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
-  d = json.load(f)
-for x in d.get('scripts', []):
-  print(x)
-" 2>/dev/null || true)
-  if [ "$script_count" -gt 0 ]; then
-    success "Scripts downloaded ($script_count files)"
-  fi
-fi
-
-# 下载 IDE 适配层（Cursor + Claude Code 双 IDE 支持）
-if command -v jq &>/dev/null; then
-  adapter_count=0
-  while IFS= read -r adapter_path; do
-    [ -z "$adapter_path" ] && continue
-    adapter_path="${adapter_path//$'\r'/}"
-    if ! download_file "$adapter_path" "$adapter_path"; then
-      error "Failed to install IDE adapter: $adapter_path"
-      exit 1
-    fi
-    adapter_count=$((adapter_count + 1))
-  done < <(jq -r '.ideAdapterFiles[]?' "$MANIFEST_PATH" 2>/dev/null || true)
-  if [ "$adapter_count" -gt 0 ]; then
-    success "IDE adapters downloaded ($adapter_count files, Cursor + Claude Code)"
-  fi
-elif [ -n "$PYTHON_CMD" ]; then
-  adapter_count=0
-  while IFS= read -r adapter_path; do
-    [ -z "$adapter_path" ] && continue
-    adapter_path="${adapter_path//$'\r'/}"
-    if ! download_file "$adapter_path" "$adapter_path"; then
-      error "Failed to install IDE adapter: $adapter_path"
-      exit 1
-    fi
-    adapter_count=$((adapter_count + 1))
-  done < <($PYTHON_CMD -c "
-import sys, json
-with open(r'$MANIFEST_PATH_FOR_PYTHON', 'r', encoding='utf-8') as f:
-  d = json.load(f)
-for x in d.get('ideAdapterFiles', []):
-  print(x)
-" 2>/dev/null || true)
-  if [ "$adapter_count" -gt 0 ]; then
-    success "IDE adapters downloaded ($adapter_count files, Cursor + Claude Code)"
-  fi
-fi
+info "Downloading shared runtime files..."
+download_manifest_file_group "sharedFiles" "shared files" || exit 1
 
 # 将安装清单保存到用户项目，供卸载脚本读取
 mkdir -p install
@@ -566,8 +407,16 @@ fi
 
 # 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
 info "Bootstrapping .lingxi..."
+BOOTSTRAP_SCRIPT=$(get_json_object_value "bootstrap" "script")
+BOOTSTRAP_INDEX_TEMPLATE=$(get_json_object_value "bootstrap" "indexTemplate")
+if [ -z "$BOOTSTRAP_SCRIPT" ]; then
+  BOOTSTRAP_SCRIPT=".cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs"
+fi
+if [ -z "$BOOTSTRAP_INDEX_TEMPLATE" ]; then
+  BOOTSTRAP_INDEX_TEMPLATE=".cursor/skills/workspace-bootstrap/references/INDEX.default.md"
+fi
 if command -v node &>/dev/null; then
-  if node skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
+  if node "$BOOTSTRAP_SCRIPT"; then
     success "Workspace bootstrap completed"
   else
     error "workspace-bootstrap failed"
@@ -580,8 +429,8 @@ else
     dir="${dir//$'\r'/}"
     mkdir -p "$dir"
   done < <(get_json_array "workflowDirectories")
-  if [ -f "skills/workspace-bootstrap/references/INDEX.default.md" ]; then
-    cp "skills/workspace-bootstrap/references/INDEX.default.md" ".lingxi/memory/INDEX.md"
+  if [ -f "$BOOTSTRAP_INDEX_TEMPLATE" ]; then
+    cp "$BOOTSTRAP_INDEX_TEMPLATE" ".lingxi/memory/INDEX.md"
     success "Workspace bootstrap completed (no Node.js mode)"
   else
     error "Template file missing; ensure skills were downloaded"

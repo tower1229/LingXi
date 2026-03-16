@@ -1,0 +1,18 @@
+{
+    "workflowDirectories": [
+        ".lingxi/tasks",
+        ".lingxi/memory",
+        ".lingxi/memory/project",
+        ".lingxi/memory/share",
+        ".lingxi/os",
+        ".lingxi/os/sessions"
+    ],
+    "workflowIndexFiles": [
+        ".lingxi/memory/INDEX.md",
+        ".lingxi/memory/USER.md",
+        ".lingxi/os/WAL_BUFFER.md",
+        ".lingxi/os/heartbeat-control.json",
+        ".lingxi/os/heartbeat-transcript-index.json",
+        ".lingxi/os/MEMORY_JOURNAL.jsonl"
+    ]
+}

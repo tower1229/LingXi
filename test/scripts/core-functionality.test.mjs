@@ -21,13 +21,7 @@ const REPO_ROOT = path.resolve(__dirname, "../..");
 
 // ============ 核心目录与文件定义 ============
 
-const CORE_DIRS = [
-  "skills",
-  "commands",
-  "agents",
-  "hooks",
-  "heartbeat-plugins",
-];
+const CORE_DIRS = ["hooks", "heartbeat-plugins"];
 
 const IDE_ADAPTER_DIRS = [
   ".cursor",
@@ -35,6 +29,8 @@ const IDE_ADAPTER_DIRS = [
   ".claude",
   ".claude-plugin",
 ];
+const IDE_CONTENT_DIRS = ["commands", "skills", "agents"];
+const IDE_PREFIXES = [".cursor", ".claude"];
 
 // 必需的 Skills（核心工作流）
 const REQUIRED_SKILLS = [
@@ -92,52 +88,70 @@ describe("LingXi Agent OS 核心功能可用性", () => {
     });
   });
 
-  describe("2. Skills 加载", () => {
-    REQUIRED_SKILLS.forEach((skill) => {
-      it(`Skill 存在: skills/${skill}/SKILL.md`, () => {
-        const skillPath = path.join(REPO_ROOT, "skills", skill, "SKILL.md");
-        assert.ok(
-          fs.existsSync(skillPath),
-          `Skill ${skill} 不存在: ${skillPath}`
-        );
+  describe("1.1 IDE 内容目录结构", () => {
+    IDE_PREFIXES.forEach((ideRoot) => {
+      IDE_CONTENT_DIRS.forEach((dir) => {
+        it(`目录存在: ${ideRoot}/${dir}/`, () => {
+          const dirPath = path.join(REPO_ROOT, ideRoot, dir);
+          assert.ok(
+            fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory(),
+            `IDE 内容目录 ${ideRoot}/${dir}/ 不存在`
+          );
+        });
       });
+    });
+  });
 
-      it(`Skill 包含有效 frontmatter: skills/${skill}/SKILL.md`, () => {
-        const skillPath = path.join(REPO_ROOT, "skills", skill, "SKILL.md");
-        const content = fs.readFileSync(skillPath, "utf8");
-        // 检查是否包含 YAML frontmatter
-        assert.ok(
-          content.startsWith("---"),
-          `Skill ${skill} 缺少 frontmatter`
-        );
-        // 检查是否有 name 字段
-        const nameMatch = content.match(/^---\n[\s\S]*?name:\s*(\S+)/);
-        assert.ok(nameMatch, `Skill ${skill} frontmatter 缺少 name 字段`);
+  describe("2. Skills 加载", () => {
+    IDE_PREFIXES.forEach((ideRoot) => {
+      REQUIRED_SKILLS.forEach((skill) => {
+        it(`Skill 存在: ${ideRoot}/skills/${skill}/SKILL.md`, () => {
+          const skillPath = path.join(REPO_ROOT, ideRoot, "skills", skill, "SKILL.md");
+          assert.ok(
+            fs.existsSync(skillPath),
+            `Skill ${skill} 不存在: ${skillPath}`
+          );
+        });
+
+        it(`Skill 包含有效 frontmatter: ${ideRoot}/skills/${skill}/SKILL.md`, () => {
+          const skillPath = path.join(REPO_ROOT, ideRoot, "skills", skill, "SKILL.md");
+          const content = fs.readFileSync(skillPath, "utf8");
+          // 检查是否包含 YAML frontmatter
+          assert.ok(
+            content.startsWith("---"),
+            `Skill ${skill} 缺少 frontmatter`
+          );
+          // 检查是否有 name 字段
+          const nameMatch = content.match(/^---\n[\s\S]*?name:\s*(\S+)/);
+          assert.ok(nameMatch, `Skill ${skill} frontmatter 缺少 name 字段`);
+        });
       });
     });
   });
 
   describe("3. Commands 加载", () => {
-    REQUIRED_COMMANDS.forEach((cmd) => {
-      it(`Command 存在: commands/${cmd}.md`, () => {
-        const cmdPath = path.join(REPO_ROOT, "commands", `${cmd}.md`);
-        assert.ok(
-          fs.existsSync(cmdPath),
-          `Command ${cmd} 不存在: ${cmdPath}`
-        );
-      });
+    IDE_PREFIXES.forEach((ideRoot) => {
+      REQUIRED_COMMANDS.forEach((cmd) => {
+        it(`Command 存在: ${ideRoot}/commands/${cmd}.md`, () => {
+          const cmdPath = path.join(REPO_ROOT, ideRoot, "commands", `${cmd}.md`);
+          assert.ok(
+            fs.existsSync(cmdPath),
+            `Command ${cmd} 不存在: ${cmdPath}`
+          );
+        });
 
-      it(`Command 包含有效 frontmatter: commands/${cmd}.md`, () => {
-        const cmdPath = path.join(REPO_ROOT, "commands", `${cmd}.md`);
-        const content = fs.readFileSync(cmdPath, "utf8");
-        assert.ok(
-          content.startsWith("---"),
-          `Command ${cmd} 缺少 frontmatter`
-        );
-        // 检查是否有 name 和 description 字段
-        const hasName = content.includes("name:");
-        const hasDesc = content.includes("description:");
-        assert.ok(hasName && hasDesc, `Command ${cmd} frontmatter 缺少必要字段`);
+        it(`Command 包含有效 frontmatter: ${ideRoot}/commands/${cmd}.md`, () => {
+          const cmdPath = path.join(REPO_ROOT, ideRoot, "commands", `${cmd}.md`);
+          const content = fs.readFileSync(cmdPath, "utf8");
+          assert.ok(
+            content.startsWith("---"),
+            `Command ${cmd} 缺少 frontmatter`
+          );
+          // 检查是否有 name 和 description 字段
+          const hasName = content.includes("name:");
+          const hasDesc = content.includes("description:");
+          assert.ok(hasName && hasDesc, `Command ${cmd} frontmatter 缺少必要字段`);
+        });
       });
     });
   });
@@ -206,25 +220,27 @@ describe("LingXi Agent OS 核心功能可用性", () => {
   });
 
   describe("6. Agents", () => {
-    REQUIRED_AGENTS.forEach((agent) => {
-      it(`Agent 存在: agents/${agent}`, () => {
-        const agentPath = path.join(REPO_ROOT, "agents", agent);
-        assert.ok(
-          fs.existsSync(agentPath),
-          `Agent 文件不存在: ${agent}`
-        );
-      });
+    IDE_PREFIXES.forEach((ideRoot) => {
+      REQUIRED_AGENTS.forEach((agent) => {
+        it(`Agent 存在: ${ideRoot}/agents/${agent}`, () => {
+          const agentPath = path.join(REPO_ROOT, ideRoot, "agents", agent);
+          assert.ok(
+            fs.existsSync(agentPath),
+            `Agent 文件不存在: ${agent}`
+          );
+        });
 
-      it(`Agent 包含有效 frontmatter: agents/${agent}`, () => {
-        const agentPath = path.join(REPO_ROOT, "agents", agent);
-        const content = fs.readFileSync(agentPath, "utf8");
-        assert.ok(
-          content.startsWith("---"),
-          `Agent ${agent} 缺少 frontmatter`
-        );
-        // 检查是否有 name 字段
-        const hasName = content.includes("name:");
-        assert.ok(hasName, `Agent ${agent} frontmatter 缺少 name 字段`);
+        it(`Agent 包含有效 frontmatter: ${ideRoot}/agents/${agent}`, () => {
+          const agentPath = path.join(REPO_ROOT, ideRoot, "agents", agent);
+          const content = fs.readFileSync(agentPath, "utf8");
+          assert.ok(
+            content.startsWith("---"),
+            `Agent ${agent} 缺少 frontmatter`
+          );
+          // 检查是否有 name 字段
+          const hasName = content.includes("name:");
+          assert.ok(hasName, `Agent ${agent} frontmatter 缺少 name 字段`);
+        });
       });
     });
   });
@@ -267,6 +283,7 @@ describe("LingXi Agent OS 核心功能可用性", () => {
     it("workspace-bootstrap.mjs 是有效的 Node 脚本", () => {
       const scriptPath = path.join(
         REPO_ROOT,
+        ".cursor",
         "skills",
         "workspace-bootstrap",
         "scripts",
@@ -283,8 +300,8 @@ describe("LingXi Agent OS 核心功能可用性", () => {
     });
 
     it("task ID 脚本存在且为可执行脚本", () => {
-      const nextTaskId = path.join(REPO_ROOT, "skills", "task", "scripts", "next-task-id.mjs");
-      const latestTaskId = path.join(REPO_ROOT, "skills", "task", "scripts", "latest-task-id.mjs");
+      const nextTaskId = path.join(REPO_ROOT, ".cursor", "skills", "task", "scripts", "next-task-id.mjs");
+      const latestTaskId = path.join(REPO_ROOT, ".cursor", "skills", "task", "scripts", "latest-task-id.mjs");
       assert.ok(fs.existsSync(nextTaskId), "next-task-id.mjs 不存在");
       assert.ok(fs.existsSync(latestTaskId), "latest-task-id.mjs 不存在");
     });

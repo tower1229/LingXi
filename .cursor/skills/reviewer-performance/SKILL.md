@@ -1,0 +1,58 @@
+---
+name: reviewer-performance
+description: 显式调用。由 review skill 调用，用于审查代码中的性能问题。
+---
+
+# Reviewer Performance
+
+由 review skill 显式调用，可访问其上下文（task、变更代码列表等）。能力：读 task 与变更代码；语义搜索性能相关实现（循环、查询、异步、缓存等），识别瓶颈与泄漏风险。
+
+## Instructions
+
+### 1. 读取输入
+
+从 review skill 的上下文中获取：
+- task 文档路径（了解性能要求和成功标准）
+- 变更代码文件列表
+- 性能相关代码片段（如批量处理、数据库查询、异步处理等）
+
+### 2. 性能风险扫描
+
+- **性能瓶颈**：循环遍历、重复查询、未优化的算法
+- **内存泄漏风险**：资源未释放、事件监听器未移除、缓存未清理
+- **响应时间**：是否符合 task 中的性能要求
+- **资源使用**：CPU、内存、磁盘IO、网络传输是否合理
+- **并发处理**：并发控制是否合理、是否存在竞态条件
+- **数据库优化**：查询是否优化、索引是否合理、是否存在 N+1 查询
+
+### 3. 识别性能问题
+
+- 性能瓶颈（Blockers/High）
+- 性能风险（Medium/Low）
+- 优化建议
+
+### 4. 输出审查结果
+
+必须遵循 **review 的 references/reviewer-output-spec.md** 统一输出结构：
+
+- **维度**：`performance`；**状态**：`completed` | `partial` | `degraded`（降级时在「说明」中写原因）。
+- 按 **Blockers / High / Medium / Low** 四级列出问题，每项含：描述、位置、建议修复（表格形式）；无则写「无」或省略该级表格。
+- 结尾 **小结**：共 X 项（各级数量）、结论（通过/需修复）。
+- **可选（机器可读）**：在 Markdown 前输出 `<!-- REVIEWER_JSON` + JSON（含 dimension、status、issues[]、summary） + `-->`，格式见 spec 第 4 节。
+
+- 性能问题清单（按优先级分级）
+- 具体问题描述和代码位置
+- 性能影响评估和优化建议
+
+### 5. 输出与静默
+
+遵循 [workflow-output-principles](skills/about-lingxi/references/workflow-output-principles.md)；不干扰主流程，返回**符合 reviewer-output-spec 的结构化审查结果**。
+
+### 6. 降级处理
+
+- **性能分析工具不可用**：
+  - 基于代码模式识别潜在性能问题
+  - 输出性能优化建议清单
+- **无法执行性能测试**：
+  - 标记为需要手动性能测试
+  - 输出性能测试清单（基于 task 文档中的性能要求）
