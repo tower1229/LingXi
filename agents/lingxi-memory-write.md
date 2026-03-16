@@ -30,7 +30,7 @@ model: inherit
 
 1. **输入校验**：校验 payloads 为非空数组，逐条按**品味 Payload 规范**（见 `taste-recognition/SKILL.md`）校验所有必填字段及可选字段的枚举合法性；任一必填字段缺失或枚举值非法时，整批拒收并在 Summary 中返回 FAILED。
 2. **分流路由**：根据每条 payload 的 `destination` 和 `source` 字段决定写入路径：
-   - `destination: user-config` + `source: remember` → 直接将内容追加写入 `.lingxi/os/USER.md` 的"行为偏好"区块，**无需门控**。
+   - `destination: user-config` + `source: remember` → 直接将内容追加写入 `.lingxi/memory/USER.md` 的"行为偏好"区块，**无需门控**。
    - `destination: user-config` + `source: extract` / `heartbeat` / `choice` / `init` → 向用户展示待写内容，获得明确确认后再写入 `USER.md`，**需要门控**。
    - `destination: memory` → 进入下一步，调用 `memory-write` skill，按现有 `confidence` 门控逻辑处理。
 3. **调用 memory-write**：将 `destination: memory` 的 payloads 及可选 conversation_id 传入 memory-write skill，按该 skill 的 SKILL.md 与 references 执行写入（映射、治理、门控、写 memory/project/ 或 memory/share/ 与 INDEX、向 `MEMORY_JOURNAL.jsonl` 追加审计）。具体映射规则、治理逻辑、门控格式、INDEX 与 File 路径约定见 `skills/memory-write/references/write-protocol.md`，note 结构见 `skills/memory-write/references/memory-note-template.md`。

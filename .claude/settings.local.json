@@ -6,7 +6,10 @@
       "WebSearch",
       "Bash(ls:*)",
       "Bash(git checkout:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(mkdir:*)",
+      "Skill(claude-api)"
     ]
   }
 }

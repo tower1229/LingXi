@@ -358,6 +358,10 @@ while IFS= read -r hook_file; do
       error "Install failed"
       exit 1
     fi
+    # Make shell scripts executable
+    if [[ "$hook_file" == *.sh ]]; then
+      chmod +x "${hook_file}"
+    fi
   fi
   hook_count=$((hook_count + 1))
 done < <(get_json_object_array "hooks" "files")

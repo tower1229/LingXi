@@ -9,11 +9,10 @@
     ],
     "workflowIndexFiles": [
         ".lingxi/memory/INDEX.md",
-        ".lingxi/os/USER.md",
+        ".lingxi/memory/USER.md",
         ".lingxi/os/WAL_BUFFER.md",
         ".lingxi/os/heartbeat-control.json",
         ".lingxi/os/heartbeat-transcript-index.json",
-        ".lingxi/os/MEMORY_JOURNAL.jsonl",
-        ".lingxi/os/USER.md"
+        ".lingxi/os/MEMORY_JOURNAL.jsonl"
     ]
 }

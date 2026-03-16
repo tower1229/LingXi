@@ -6,7 +6,7 @@
 
 ## 0. 用户全局行为配置：`USER.md`
 
-**物理路径**：`.lingxi/os/USER.md`
+**物理路径**：`.lingxi/memory/USER.md`
 
 **权威实现**：
 - **初始化模板** → `skills/workspace-bootstrap/references/USER.default.md`

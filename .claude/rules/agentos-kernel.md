@@ -1,4 +1,4 @@
-﻿---
+---
 description: "LingXi AgentOS Kernel Directive - MUST ALWAYS APPLY"
 globs: "*"
 alwaysApply: true
@@ -24,7 +24,7 @@ Hook 脚本（`heartbeat-trigger.mjs`）在本轮用户消息提交前已幂等�
 
 读取完成后，检查 `[GLOBAL CONFIG]` 区块：
 
-- 内容为 `_(空)_` → 读取 `.lingxi/os/USER.md`，将"行为偏好"复制到 `[GLOBAL CONFIG]`（每会话一次）。
+- 内容为 `_(空)_` → 读取 `.lingxi/memory/USER.md`，将"行为偏好"复制到 `[GLOBAL CONFIG]`（每会话一次）。
 - 已有内容 → 跳过。
 
 **HOT_RAM 读取完成后**，方可读取用户消息并执行下方的调度决策。

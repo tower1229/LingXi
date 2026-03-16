@@ -16,7 +16,7 @@ const REFS_DIR = path.join(SKILL_DIR, "references");
 const TEMPLATE_SOURCES = {
   ".lingxi/memory/INDEX.md": "INDEX.default.md",
   ".lingxi/os/WAL_BUFFER.md": "WAL_BUFFER.default.md",
-  ".lingxi/os/USER.md": "USER.default.md",
+  ".lingxi/memory/USER.md": "USER.default.md",
   ".lingxi/os/heartbeat-control.json": "heartbeat-control.default.json",
   ".lingxi/os/heartbeat-transcript-index.json": "heartbeat-transcript-index.default.json",
   ".lingxi/os/MEMORY_JOURNAL.jsonl": "MEMORY_JOURNAL.default.jsonl",

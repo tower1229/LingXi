@@ -1,5 +1,6 @@
-# Local workspace for temp code clones, generated artifacts, etc.
-.lingxi/workspace/
+# LingXi runtime state — generated at runtime, not source-controlled
+.lingxi/os/
+
 
 # OS / IDE
 .DS_Store

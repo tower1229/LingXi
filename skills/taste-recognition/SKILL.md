@@ -37,7 +37,7 @@ description: 显式调用。从用户输入或行为中识别可沉淀的「品�
 | `confidence` | enum | 是 | `low` \| `medium` \| `high`；供门控：high 可静默 new，medium/low 须 questions。 |
 | `apply` | enum | 否 | `project` \| `team`；缺省时下游可默认 project。项目级=写入 memory/project/，团队级=写入 memory/share/（跨项目复用）。 |
 | `layer` | enum | 是 | `L0` \| `L1` \| `L0+L1`；由本 Skill 按 references/elevation-rules.md 填写。 |
-| `destination` | enum | 是 | `user-config` \| `memory`。决定写入目标：`user-config` 写入 `USER.md`（行为偏好类，如称呼/语言/输出风格）；`memory` 写入语义记忆库（技术规范/项目决策等，默认值）。 |
+| `destination` | enum | 是 | `user-config` \| `memory`。决定写入目标：`user-config` 写入 `.lingxi/memory/USER.md`（行为偏好类，如称呼/语言/输出风格）；`memory` 写入语义记忆库（技术规范/项目决策等，默认值）。 |
 | `l0OneLiner` | string | 否 | 当 layer 为 L0 或 L0+L1 时建议填写；下游直接用于 note 的 L0 句/事实句。 |
 | `l1OneLiner` | string | 否 | 当 layer 为 L1 或 L0+L1 时建议填写；下游直接用于 note 的 L1 句/原则句。 |
 | `patternHint` | string | 否 | 设计模式名称（与 references/pattern-catalog.md 一致）；匹配到模式时填写。 |

@@ -5,7 +5,7 @@
         "commands/remember.md"
     ],
     "rules": [
-        "rules/agentos-kernel.md"
+        ".claude/rules/agentos-kernel.md"
     ],
     "hooks": {
         "files": [
@@ -15,7 +15,8 @@
             "hooks/heartbeat-check.mjs",
             "hooks/wal-utils.mjs",
             "hooks/heartbeat-distill-done.mjs",
-            "hooks/_hook-utils.mjs"
+            "hooks/_hook-utils.mjs",
+            "hooks/run-node.sh"
         ]
     },
     "heartbeatPlugins": {
@@ -151,12 +152,11 @@
     ],
     "workflowIndexFiles": [
         ".lingxi/memory/INDEX.md",
-        ".lingxi/os/WAL_BUFFER.md",
-        ".lingxi/os/heartbeat-control.json",
-        ".lingxi/os/heartbeat-transcript-index.json",
-        ".lingxi/os/MEMORY_JOURNAL.jsonl"
+        ".lingxi/memory/USER.md"
     ],
     "gitignoreEntries": [
+        "# LingXi runtime state — generated at runtime, not source-controlled",
+        ".lingxi/os/",
         "# Local workspace for temp code clones, generated artifacts, etc.",
         ".lingxi/workspace/"
     ],

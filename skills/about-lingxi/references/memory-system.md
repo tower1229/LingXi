@@ -33,7 +33,7 @@
 
 ## 三、语义记忆：USER、memory/ 与 INDEX
 
-- **USER.md**（`.lingxi/os/USER.md`）：用户全局偏好与行为指引（称呼、语言、输出风格等），会话初始化时注入 HOT_RAM，零检索，对所有 Tier 生效。
+- **USER.md**（`.lingxi/memory/USER.md`）：用户全局偏好与行为指引（称呼、语言、输出风格等），会话初始化时注入 HOT_RAM，零检索，对所有 Tier 生效。
 - **memory/**：扁平化记忆库。
   - **INDEX.md**：统一索引（SSoT，最小元数据），用于治理与定位；真实语义检索以实体文件为准。
   - **memory/project/**：项目级记忆（语义 + 关键词混合检索的主搜索面）。
