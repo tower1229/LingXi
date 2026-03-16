@@ -20,45 +20,21 @@ const MAX_CANDIDATES = 3;
 const INDEX_VERSION = 1;
 const IMPROVEMENT_THRESHOLD_HOURS = 24;
 
-function resolveTranscriptRoot(projectRoot) {
-  const explicitRoot = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR?.trim() || process.env.LINGXI_TRANSCRIPT_ROOT?.trim();
-  if (explicitRoot) return explicitRoot;
-
-  const home = process.env.HOME || process.env.USERPROFILE || "";
-  if (!home) return "";
-
-  let normalizedProjectPath = path.resolve(projectRoot);
-  if (process.platform === "win32") {
-    normalizedProjectPath = normalizedProjectPath.replace(/^([a-zA-Z]):[\\/]/, "$1--");
-  } else {
-    normalizedProjectPath = normalizedProjectPath.replace(/^[\\/]+/, "");
-  }
-
-  const workspaceSlug = normalizedProjectPath.replace(/[\\/]/g, "-").replace(/[^A-Za-z0-9._-]/g, "-");
-  const targetDir = path.join(home, ".cursor", "projects", workspaceSlug, "agent-transcripts");
-
-  if (!fs.existsSync(targetDir)) {
-    const baseName = path.basename(projectRoot);
-    const projDir = path.join(home, ".cursor", "projects");
-    if (fs.existsSync(projDir)) {
-      const candidates = fs.readdirSync(projDir, { withFileTypes: true })
-        .filter((dir) => dir.isDirectory() && dir.name.endsWith(`-${baseName}`))
-        .map((dir) => path.join(projDir, dir.name, "agent-transcripts"))
-        .filter((p) => fs.existsSync(p));
-      if (candidates.length > 0) return candidates[0];
-    }
-  }
-
-  return targetDir;
-}
-
+/**
+ * 列出目录下的所有 .jsonl 文件（递归）
+ */
 function listTranscriptFiles(transcriptRoot) {
   if (!fs.existsSync(transcriptRoot)) return [];
   const stack = [transcriptRoot];
   const files = [];
   while (stack.length > 0) {
     const current = stack.pop();
-    const entries = fs.readdirSync(current, { withFileTypes: true });
+    let entries;
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
     for (const entry of entries) {
       const abs = path.join(current, entry.name);
       if (entry.isDirectory()) {
@@ -71,6 +47,142 @@ function listTranscriptFiles(transcriptRoot) {
     }
   }
   return files;
+}
+
+/**
+ * 生成标准化项目 slug（用于目录名匹配）
+ */
+function generateProjectSlug(projectRoot) {
+  const platform = process.platform;
+  let normalizedPath = path.resolve(projectRoot);
+
+  if (platform === "win32") {
+    // Windows: C:\path\to\project -> c--path-to-project
+    normalizedPath = normalizedPath.replace(/^([a-zA-Z]):[\\/]/, "$1--");
+  }
+  // 移除开头的 /
+  normalizedPath = normalizedPath.replace(/^[\\/]+/, "");
+  // 替换路径分隔符和非法字符
+  return normalizedPath.replace(/[\\/]/g, "-").replace(/[^A-Za-z0-9._-]/g, "-");
+}
+
+/**
+ * 兼容 Cursor (Win/Mac) 和 Claude Code 的 Transcript 目录解析
+ * 返回所有可能的 transcript 目录数组（已去重）
+ */
+function resolveAllTranscriptRoots(projectRoot) {
+  const roots = new Set();
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const platform = process.platform;
+
+  // 1. 显式环境变量（优先级最高）
+  const envVars = [
+    process.env.CLAUDE_TRANSCRIPT_DIR?.trim(),
+    process.env.CURSOR_AGENT_TRANSCRIPTS_DIR?.trim(),
+    process.env.LINGXI_TRANSCRIPT_ROOT?.trim(),
+  ];
+  for (const v of envVars) {
+    if (v && fs.existsSync(v)) {
+      roots.add(v);
+    }
+  }
+
+  if (!home) return [...roots];
+
+  const projectName = path.basename(projectRoot);
+  const fullSlug = generateProjectSlug(projectRoot);
+
+  // 2. Claude Code 目录（两个平台通用）
+  // 格式: ~/.claude/projects/{slug}/ (jsonl 直接在目录下)
+  // Claude Code 使用完整路径转换的 slug，如 -Users-zangtao-Workspace-tower1229-LingXi
+  const claudeSlugs = [
+    `-${fullSlug}`,
+    fullSlug,
+    `-${projectName}`,
+    projectName,
+  ];
+  for (const slug of claudeSlugs) {
+    const claudeDir = path.join(home, ".claude", "projects", slug);
+    if (fs.existsSync(claudeDir)) {
+      // 检查是否有 .jsonl 文件
+      const files = fs.readdirSync(claudeDir, { withFileTypes: true });
+      const hasJsonl = files.some(f => f.isFile() && f.name.endsWith(".jsonl"));
+      if (hasJsonl) {
+        roots.add(claudeDir);
+      }
+    }
+  }
+
+  // 3. Cursor 目录
+  const cursorProjectsDir = path.join(home, ".cursor", "projects");
+  if (fs.existsSync(cursorProjectsDir)) {
+    const candidateSlugs = new Set([
+      projectName,
+      `-${projectName}`,
+      fullSlug,
+    ]);
+
+    try {
+      const entries = fs.readdirSync(cursorProjectsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const dirName = entry.name;
+
+        // 检查是否匹配项目名
+        const isMatch = [...candidateSlugs].some(slug =>
+          dirName === slug || dirName.endsWith(`-${slug}`) || dirName === `-${slug}`
+        );
+        if (!isMatch) continue;
+
+        // 3a. agent-transcripts 子目录（Cursor 标准格式）
+        const agentTranscripts = path.join(cursorProjectsDir, dirName, "agent-transcripts");
+        if (fs.existsSync(agentTranscripts)) {
+          roots.add(agentTranscripts);
+        }
+
+        // 3b. 直接目录（Claude Code 格式兼容）
+        const directDir = path.join(cursorProjectsDir, dirName);
+        const files = fs.readdirSync(directDir, { withFileTypes: true });
+        const hasJsonl = files.some(f => f.isFile() && f.name.endsWith(".jsonl"));
+        if (hasJsonl) {
+          roots.add(directDir);
+        }
+      }
+    } catch {
+      // 忽略读取错误
+    }
+  }
+
+  return [...roots];
+}
+
+/**
+ * 从所有可能的 transcript 目录收集文件（去重）
+ */
+function collectAllTranscriptFiles(projectRoot) {
+  const roots = resolveAllTranscriptRoots(projectRoot);
+  const allFiles = [];
+  const seen = new Set();
+
+  for (const root of roots) {
+    const files = listTranscriptFiles(root);
+    for (const f of files) {
+      if (!seen.has(f)) {
+        seen.add(f);
+        allFiles.push(f);
+      }
+    }
+  }
+
+  return allFiles;
+}
+
+/**
+ * 保留旧函数以兼容外部调用（返回第一个有效目录）
+ */
+function resolveTranscriptRoot(projectRoot) {
+  const roots = resolveAllTranscriptRoots(projectRoot);
+  return roots.length > 0 ? roots[0] : "";
 }
 
 function extractConversationId(filePath) {
@@ -181,9 +293,10 @@ function readControl(controlPath) {
 
 /**
  * 为 30min 插件提供：时间/锁/transcript 检查 + 收集候选，返回 { candidate_ids, nextIndex, controlPatch } 或 null。
+ * 支持多目录扫描（兼容 Cursor 和 Claude Code）
  */
 function getTranscriptCandidates(projectRoot, control, now, nowIso, conversationId, controlPath, indexPath) {
-  const transcriptRoot = resolveTranscriptRoot(projectRoot);
+  const allRoots = resolveAllTranscriptRoots(projectRoot);
   const thresholdMs = THRESHOLD_MINUTES * 60 * 1000;
   const lockStaleMs = LOCK_STALE_MINUTES * 60 * 1000;
 
@@ -197,22 +310,52 @@ function getTranscriptCandidates(projectRoot, control, now, nowIso, conversation
   const lockStale = startedAt > 0 && now - startedAt > lockStaleMs;
   const canAcquireLock = !running || lockStale;
 
-  if (!shouldTriggerByTime || !canAcquireLock || !transcriptRoot || !fs.existsSync(transcriptRoot))
+  if (!shouldTriggerByTime || !canAcquireLock || allRoots.length === 0)
     return null;
 
   const processedSet = new Set(
     Array.isArray(control.processed_conversation_ids) ? control.processed_conversation_ids : []
   );
   const transcriptIndex = readTranscriptIndex(indexPath);
-  const { candidate_ids, nextIndex } = collectTranscriptCandidates({
-    transcriptRoot,
-    index: transcriptIndex,
-    processedSet,
-    currentConversationId: conversationId,
-    nowIso,
-  });
 
-  if (candidate_ids.length === 0) return null;
+  // 从所有目录收集文件
+  const allFiles = collectAllTranscriptFiles(projectRoot);
+  const nextTranscripts = { ...transcriptIndex.transcripts };
+  const changedFiles = [];
+
+  for (const filePath of allFiles) {
+    const stat = fs.statSync(filePath, { throwIfNoEntry: false });
+    if (!stat || !stat.isFile()) continue;
+    const mtimeMs = stat.mtimeMs;
+    const conversationIdFromFile = extractConversationId(filePath);
+    const previous = transcriptIndex.transcripts?.[filePath];
+    const hasChanged = !previous || mtimeMs > Number(previous.mtimeMs ?? 0);
+
+    nextTranscripts[filePath] = {
+      mtimeMs,
+      conversationId: conversationIdFromFile,
+      lastProcessedAt: hasChanged ? nowIso : previous.lastProcessedAt ?? null,
+    };
+
+    if (hasChanged) {
+      changedFiles.push({ filePath, mtimeMs, conversationId: conversationIdFromFile });
+    }
+  }
+
+  // 按时间排序并选择候选
+  const sortedChanged = changedFiles.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  const candidateIds = [];
+  const seenConversationIds = new Set();
+  for (const item of sortedChanged) {
+    const cid = item.conversationId;
+    if (!cid || seenConversationIds.has(cid)) continue;
+    if (cid === conversationId || processedSet.has(cid)) continue;
+    seenConversationIds.add(cid);
+    candidateIds.push(cid);
+    if (candidateIds.length >= MAX_CANDIDATES) break;
+  }
+
+  if (candidateIds.length === 0) return null;
 
   const holdLock = !lockStale;
   const controlPatch = {
@@ -222,7 +365,11 @@ function getTranscriptCandidates(projectRoot, control, now, nowIso, conversation
       run_id: holdLock ? (conversationId || null) : null,
     },
   };
-  return { candidate_ids, nextIndex, controlPatch };
+  return {
+    candidate_ids: candidateIds,
+    nextIndex: { version: INDEX_VERSION, transcripts: nextTranscripts },
+    controlPatch
+  };
 }
 
 /**

@@ -4,7 +4,8 @@
       "Bash(cd:*)",
       "Bash(node:*)",
       "WebSearch",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
