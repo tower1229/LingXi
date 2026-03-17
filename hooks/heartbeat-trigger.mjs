@@ -202,8 +202,10 @@ async function main() {
     getProjectRootFromHookScriptUrl(import.meta.url);
 
   // 检测 IDE 类型以区分会话目录
+  // 优先使用环境变量，然后检查 workspace_roots 路径
   const isCursor = !!process.env.CURSOR_PROJECT_DIR || !!input.workspace_roots?.some?.(w => w.includes(".cursor"));
-  const isClaude = !!process.env.CLAUDE_PROJECT_DIR;
+  // 当环境变量为空时，根据 workspace_roots 推断：包含 .cursor 则为 cursor，否则为 claude
+  const isClaude = !!process.env.CLAUDE_PROJECT_DIR || (!isCursor && !!input.workspace_roots);
   const ideName = isCursor ? "cursor" : isClaude ? "claude" : "unknown";
 
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();

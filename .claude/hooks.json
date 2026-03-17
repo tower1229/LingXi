@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "beforeSubmitPrompt": [
       {
         "matcher": ".*",
         "hooks": [
