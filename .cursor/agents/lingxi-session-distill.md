@@ -20,8 +20,10 @@ description: 会话提炼子代理。由主 Agent 在后置收敛阶段消费 WA
 1. **解析输入**：从父代理的提示中解析 candidate_ids（及 enqueued_by）。若 candidate_ids 为空或缺失，直接返回 FAILED 状态的 Summary。
 2. **逐会话提炼**：对每个 candidate_id：
    - 用自然语言获取该会话的完整内容，例如：「获取 id 为 \<该 conversation_id\> 的会话内容」。
+   - **若会话内容获取失败（transcript 不存在或无法访问）**：将该 id 记录到 `<Key_Traps>` 中（注明"transcript not found, skipped"），**直接跳过**，继续处理下一个 candidate_id。此为不可抗力，不应导致整批任务失败。
    - 将**完整对话内容**作为 taste-recognition 的输入，按 `skills/taste-recognition/SKILL.md` 执行品味识别；**重点依据对话中的用户输入**判断可沉淀性，assistant 内容仅作上下文。
    - 产出时 **source 一律为 `heartbeat`**；将本批所有 payload 汇总到同一 payloads 数组。
+   - **若所有 candidate_id 均获取失败**：Status 返回 `PARTIAL_SUCCESS`（而非 `FAILED`），payloads 为空数组，在 `<Key_Traps>` 中说明原因。父代理仍须执行完成回调以清除锁定状态。
 3. **回传主对话 (强制契约)**：你**必须且只能**在正文最前方严格输出以下结构：
 
 ```xml

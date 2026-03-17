@@ -5,8 +5,9 @@
  */
 import sessionDistill from "./session-distill.mjs";
 import selfIterate from "./self-iterate.mjs";
+import sessionCleanup from "./session-cleanup.mjs";
 
-const PLUGINS = [sessionDistill, selfIterate];
+const PLUGINS = [sessionDistill, selfIterate, sessionCleanup];
 
 export function getRegisteredApps() {
   return PLUGINS;
