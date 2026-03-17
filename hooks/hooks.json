@@ -1,15 +1,15 @@
 {
-    "description": "LingXi plugin hooks: heartbeat and session lifecycle",
-    "hooks": {
-        "UserPromptSubmit": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/heartbeat-trigger.mjs --ide claude"
-                    }
-                ]
-            }
+  "description": "LingXi plugin hooks: heartbeat and session lifecycle",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/heartbeat-trigger.mjs --ide claude"
+          }
         ]
-    }
+      }
+    ]
+  }
 }

@@ -1,4 +1,7 @@
 {
+  "enabledPlugins": {
+    "lingxi": true
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
