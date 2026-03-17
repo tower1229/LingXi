@@ -85,8 +85,14 @@ async function runUserConfigInject(projectRoot, conversationId) {
     if (!globalConfigMatch) return;
 
     const configBody = globalConfigMatch[1].trim();
+    // 区块内容可能包含 > 注释行，需要去掉注释行后再判断是否为占位符
+    const configBodyWithoutComments = configBody
+      .split("\n")
+      .filter(line => !line.trim().startsWith(">"))
+      .join("\n")
+      .trim();
     // 若已有实质内容（非空、非占位符），跳过
-    const isEmpty = !configBody || configBody === "_(空)_" || /^_\(空[^)]*\)_$/.test(configBody);
+    const isEmpty = !configBodyWithoutComments || /^_\(空[^)]*\)_$/.test(configBodyWithoutComments);
     if (!isEmpty) return;
 
     // 查找 USER.md
@@ -106,11 +112,17 @@ async function runUserConfigInject(projectRoot, conversationId) {
     const prefContent = prefMatch ? prefMatch[1].trim() : userMdContent.trim();
     if (!prefContent || prefContent === "_(空 — 通过 `/remember` 或在对话中表达偏好来填充)_") return;
 
-    // 将占位符替换为实际内容
-    const updated = hotRamContent.replace(
-      /(##\s+🧑\s+\[GLOBAL CONFIG\][^\n]*\n(?:>[^\n]*\n)*)\s*_\(空\)_/,
-      `$1\n## 行为偏好\n\n${prefContent}`
-    );
+    // 将 [GLOBAL CONFIG] 区块中的占位符替换为实际内容
+    // 策略：找到 [GLOBAL CONFIG] 区块的起止位置，只在该区块内做替换
+    const gcStart = hotRamContent.indexOf("[GLOBAL CONFIG]");
+    const gcEnd = hotRamContent.indexOf("\n---", gcStart);
+    if (gcStart === -1 || gcEnd === -1) return;
+
+    const gcSection = hotRamContent.slice(gcStart, gcEnd);
+    const gcUpdated = gcSection.replace(/_\(空[^)]*\)_/, prefContent);
+    if (gcUpdated === gcSection) return; // 没有找到占位符
+
+    const updated = hotRamContent.slice(0, gcStart) + gcUpdated + hotRamContent.slice(gcEnd);
 
     if (updated !== hotRamContent) {
       await fs.writeFile(hotRamPath, updated, "utf8");
