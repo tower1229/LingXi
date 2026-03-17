@@ -17,7 +17,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `candidate_ids` | `string[]` | 是 | 待提炼的 conversation_id 列表，最多 5 条（由 Watchdog 按 transcript 索引与 processed_conversation_ids 计算） |
+| `candidate_ids` | `string[]` | 是 | 待提炼的 conversation_id 列表，最多 3 条（由 Watchdog 按 transcript 索引与 processed_conversation_ids 计算） |
 | `enqueued_by` | `string` | 是 | 触发入队的当前会话 id |
 
 **示例**：`- [ ] \`[SESSION_DISTILL]\`: {"candidate_ids": ["uuid1","uuid2"], "enqueued_by": "current-session-id"}`
@@ -31,6 +31,23 @@
 | `session_id` | `string` | 是 | 触发入队的会话 id（用于防重复提示等） |
 
 **示例**：`- [ ] \`[SELF_ITERATE]\`: {"session_id": "uuid"}`
+
+### SESSION_CLEANUP
+
+由 Watchdog 在满足 24 小时条件时入队并直接执行（`consumer: watchdog`）；清理 `.lingxi/os/sessions/` 下已完成且超过保留期的会话目录。
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `triggered_by` | `string` | 是 | 触发入队的当前会话 id |
+
+**示例**：`- [ ] \`[SESSION_CLEANUP]\`: {"triggered_by": "current-session-id"}`
+
+**清理策略**（满足全部条件才删除）：
+1. HOT_RAM `Current State === IDLE`（非活跃会话）
+2. `conversation_id` 已在 `processed_conversation_ids` 中（已完成提炼）
+3. HOT_RAM.md 最后修改时间超过 7 天
+
+超过 30 天的会话目录无视提炼状态强制删除。
 
 ## 解析与写入
 

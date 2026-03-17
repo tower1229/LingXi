@@ -35,7 +35,7 @@ graph TD
     subgraph 守护层 [四、守护层 Daemon Layer - 心跳机制]
         Hooks(心跳触发: beforeSubmitPrompt)
         Watchdog(heartbeat-check 调度与执行)
-        Plugins(heartbeat-plugins 注册表: SESSION_DISTILL / SELF_ITERATE)
+        Plugins(heartbeat-plugins 注册表: SESSION_DISTILL / SELF_ITERATE / SESSION_CLEANUP)
     end
 
     User <--> MainAgent
@@ -95,7 +95,7 @@ graph TD
 
 ### 4. 守护层 (Daemon Layer / Heartbeat)
 
-**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）** 与 **24 小时自我迭代（SELF_ITERATE）**。
+**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）**、**24 小时自我迭代（SELF_ITERATE）** 与 **24 小时 sessions 目录清理（SESSION_CLEANUP）**。
 
 **心跳机制结构**：
 
