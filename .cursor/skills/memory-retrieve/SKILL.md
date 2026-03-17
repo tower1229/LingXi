@@ -24,6 +24,7 @@ description: 显式调用。供主 Agent 在 Tier 3 任务前置或后置阶段�
 4. **双路径检索（必须）**：
    - 语义路径：在范围 @.lingxi/memory/project/ 与 @.lingxi/memory/share/ 内查找与 `semantic_summary` 相关的内容。
    - 关键词路径：调用 `Grep`（ripgrep），范围 @.lingxi/memory/project/、@.lingxi/memory/share/ 正文 + @.lingxi/memory/INDEX.md 的 Title/When to load。
+   - **索引不存在时**：若 @.lingxi/memory/INDEX.md 不存在，仅执行语义路径和关键词路径的文件检索，跳过索引检索。
 5. **融合与最小读取**：采用**并集（Union）**合并两路候选后重排取 top 0–2。
 6. **输出与状态机写入**：
    - **Pre 模式**：筛选 `trigger_timing=pre` 或 `both` 的记忆。主 Agent 必须将命中的记忆内容格式化为 `- **Rule**: [内容]`，写入 `HOT_RAM.md` 的 `[PRE-MEMORY]` 区块。

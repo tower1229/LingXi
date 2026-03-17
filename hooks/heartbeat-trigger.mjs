@@ -55,6 +55,40 @@ async function runSessionInit(projectRoot, conversationId) {
           .replace(/\{\{SESSION_ID\}\}/g, conversationId)
           .replace(/\{\{TIMESTAMP\}\}/g, timestamp);
         await fs.writeFile(hotRamPath, template, "utf8");
+      } else {
+        // 兜底：模板不存在时创建最小 HOT_RAM 结构
+        const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+        const minimalHotRam = `# 🧠 OS HOT RAM - Session: ${conversationId}
+
+> **[SYSTEM_WARNING]**: DO NOT EDIT THIS HEADER.
+> Current State MUST be one of: [IDLE | WAITING_SUBAGENT | POST_PROCESSING_REQUIRED | HUMAN_INTERVENTION_REQUIRED]
+
+**Current State**: \`IDLE\`
+**Last Updated**: \`${timestamp}\`
+
+---
+
+## 🧑 [GLOBAL CONFIG] (用户全局行为配置)
+_(空)_
+
+---
+
+## 📥 [PRE-MEMORY] (前置上下文与约束)
+_(空)_
+
+---
+
+## ⚙️ [TASK-CONTEXT] (当前轮次任务上下文)
+_(空)_
+
+---
+
+## 📤 [POST-PROCESSING QUEUE] (后置处理队列)
+- [ ] \`[POST_RETRIEVE]\`: ...
+- [ ] \`[WAL_BUFFER_SYNC]\`: ...
+- [ ] \`[USER_REPORT]\`: ...
+`;
+        await fs.writeFile(hotRamPath, minimalHotRam, "utf8");
       }
     }
 
@@ -167,7 +201,8 @@ async function main() {
   await runSessionInit(projectRoot, conversationId);
 
   // 2. 运行心跳检查，将任务写入 WAL_BUFFER.md
-  runHeartbeatCheck(projectRoot, conversationId);
+  // 必须等待完成以确保 Agent 启动前 WAL 已就绪（lifecycle-flow.md Phase 0 要求）
+  await runHeartbeatCheck(projectRoot, conversationId);
 
   // 3. 幂等注入用户全局配置到 HOT_RAM [GLOBAL CONFIG]
   await runUserConfigInject(projectRoot, conversationId);

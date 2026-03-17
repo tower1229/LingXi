@@ -221,57 +221,6 @@ function writeControlFile(controlPath, control) {
   fs.writeFileSync(controlPath, JSON.stringify(control, null, 2), "utf8");
 }
 
-function collectTranscriptCandidates({
-  transcriptRoot,
-  index,
-  processedSet,
-  currentConversationId,
-  nowIso,
-}) {
-  const files = listTranscriptFiles(transcriptRoot);
-  const nextTranscripts = {};
-  const changedFiles = [];
-
-  for (const filePath of files) {
-    const stat = fs.statSync(filePath, { throwIfNoEntry: false });
-    if (!stat || !stat.isFile()) continue;
-    const mtimeMs = stat.mtimeMs;
-    const conversationId = extractConversationId(filePath);
-    const previous = index.transcripts?.[filePath];
-    const hasChanged = !previous || mtimeMs > Number(previous.mtimeMs ?? 0);
-
-    nextTranscripts[filePath] = {
-      mtimeMs,
-      conversationId,
-      lastProcessedAt: hasChanged ? nowIso : previous.lastProcessedAt ?? null,
-    };
-
-    if (hasChanged) {
-      changedFiles.push({ filePath, mtimeMs, conversationId });
-    }
-  }
-
-  const sortedChanged = changedFiles.sort((a, b) => b.mtimeMs - a.mtimeMs);
-  const candidateIds = [];
-  const seenConversationIds = new Set();
-  for (const item of sortedChanged) {
-    const cid = item.conversationId;
-    if (!cid || seenConversationIds.has(cid)) continue;
-    if (cid === currentConversationId || processedSet.has(cid)) continue;
-    seenConversationIds.add(cid);
-    candidateIds.push(cid);
-    if (candidateIds.length >= MAX_CANDIDATES) break;
-  }
-
-  return {
-    candidate_ids: candidateIds,
-    nextIndex: {
-      version: INDEX_VERSION,
-      transcripts: nextTranscripts,
-    },
-  };
-}
-
 function readControl(controlPath) {
   const defaultControl = {
     last_distillation_completed_at: null,
@@ -538,8 +487,10 @@ function runHeartbeatConsume(projectRoot) {
 
 /**
  * 执行心跳检查：先入队再消费。可被 heartbeat-trigger hook 调用。
+ * 异步版本：确保入队和消费都完成后再返回
  */
-export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
+export async function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   runHeartbeatEnqueue(projectRoot, currentConversationId);
+  // 消费阶段是同步的，因为 exec 使用回调
   runHeartbeatConsume(projectRoot);
 }

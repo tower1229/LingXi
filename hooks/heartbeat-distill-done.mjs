@@ -70,6 +70,7 @@ function main() {
         return true;
       }
     }
+    // 未找到匹配项时返回 false 并记录警告（可能已被其他进程处理）
     console.warn("[heartbeat-distill-done] no matching SESSION_DISTILL entry found in WAL for candidate_ids:", candidateIds);
     return false;
   });

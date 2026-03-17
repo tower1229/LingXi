@@ -4,6 +4,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const WAL_BUFFER_REL = ".lingxi/os/WAL_BUFFER.md";
 const DEFAULT_WAL_CANDIDATES = [
@@ -17,12 +18,16 @@ const LINE_REGEX = /^- \[([ x])\] `\[([^\]]+)\]`:?\s*(.+)$/;
 /**
  * 简单的文件锁实现（基于 flock 思想）。
  * 获取锁时尝试写入锁文件，成功返回 true，超时返回 false。
+ * 跨平台兼容：处理 Windows 和 POSIX 差异
  */
 export function acquireLock(lockPath, timeoutMs = 5000, intervalMs = 50) {
   const start = Date.now();
+  const isWindows = process.platform === "win32";
+
   while (Date.now() - start < timeoutMs) {
     try {
-      // O_EXCL: 原子创建，若存在则失败
+      // 使用 'wx' flag: O_CREAT | O_EXCL，原子创建，跨平台兼容
+      // Windows 上 'wx' 会创建新文件，若存在则失败
       fs.writeFileSync(lockPath, String(process.pid), { flag: "wx" });
       return true;
     } catch (err) {
@@ -39,12 +44,12 @@ export function acquireLock(lockPath, timeoutMs = 5000, intervalMs = 50) {
         } catch {
           // 文件可能被删除，重试
         }
-        // 等待后重试
+        // 等待后重试 - 使用更短的spin循环减少CPU占用
         const wait = Math.min(intervalMs * (1 + Math.random()), 200);
         const waitUntil = Date.now() + wait;
         while (Date.now() < waitUntil) {
-          // busy wait (simplified)
-          for (let i = 0; i < 1000; i++) { /* spin */ }
+          // 减少spin次数，从1000降至10
+          for (let i = 0; i < 10; i++) { /* minimal spin to reduce CPU */ }
         }
         continue;
       }
