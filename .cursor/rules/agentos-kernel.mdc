@@ -43,10 +43,11 @@ alwaysApply: true
 
 **在 SUCCESS / PARTIAL_SUCCESS 情况下，MUST 按以下顺序完成后置处理：**
 
-1. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`。
-2. 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`，**按顺序执行队列中所有未勾选项**，全部执行完毕并勾选完毕后方可继续。
-3. 若子代理返回含 `<Payload>` JSON：解析后将 `next_steps_options`、`f_results` 等字段**原样**呈现给用户，不得汇总或改写。
-4. 向用户输出最终回复。若 [POST-PROCESSING QUEUE] 中所有任务均已勾选完成，则将 HOT_RAM `Current State` 复位为 `IDLE`。
+1. 将 `<Execution_Summary>` 追加写入 `.lingxi/os/sessions/[conversation_id]/SESSION_TRACE.md`（append-only，文件不存在则创建）。
+2. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`。
+3. 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`，**按顺序执行队列中所有未勾选项**，全部执行完毕并勾选完毕后方可继续。
+4. 若子代理返回含 `<Payload>` JSON：解析后将 `next_steps_options`、`f_results` 等字段**原样**呈现给用户，不得汇总或改写。
+5. 向用户输出最终回复。若 [POST-PROCESSING QUEUE] 中所有任务均已勾选完成，则将 HOT_RAM `Current State` 复位为 `IDLE`。
 
 ---
 

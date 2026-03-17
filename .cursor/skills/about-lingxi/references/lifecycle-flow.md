@@ -92,7 +92,9 @@ Phase 0 执行完毕后，HOT_RAM 已完全就绪：文件存在、GLOBAL CONFIG
 
 **触发条件**：Subagent 返回状态为 `SUCCESS` 或 `PARTIAL_SUCCESS`。
 
-**前置动作**：将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`，并将 `<Execution_Summary>` 追加到 `SESSION_TRACE.md`。
+**前置动作（按序）**：
+1. 将 `<Execution_Summary>` 追加写入 `SESSION_TRACE.md`（append-only，文件不存在则创建）
+2. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`
 
 **队列消费顺序**（严格按序，全部勾销后才可结束）：
 
