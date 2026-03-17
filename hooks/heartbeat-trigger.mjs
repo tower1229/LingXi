@@ -14,6 +14,17 @@ import { readStdinJson, writeStdoutJson, fileExists, getProjectRootFromHookScrip
 import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 
 /**
+ * 解析命令行参数
+ * 支持 --ide <value> 显式指定 IDE 类型
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const ideArg = args.indexOf("--ide");
+  const ide = ideArg !== -1 && args[ideArg + 1] ? args[ideArg + 1] : null;
+  return { ide };
+}
+
+/**
  * 幂等会话初始化。
  * 以 conversationId 为 sessionId，确保：
  * - 会话目录存在（添加 IDE 前缀以区分不同 IDE 的会话）
@@ -184,6 +195,7 @@ async function runUserConfigInject(projectRoot, conversationId, ideName = "unkno
 }
 
 async function main() {
+  const { ide: cliIde } = parseArgs();
   const input = await readStdinJson();
   // Prefer explicit env vars, then workspace_roots from hook input (Cursor 2.6+),
   // then fall back to script-relative path resolution.
@@ -201,12 +213,18 @@ async function main() {
     workspaceRoot ||
     getProjectRootFromHookScriptUrl(import.meta.url);
 
-  // 检测 IDE 类型以区分会话目录
-  // 优先使用环境变量，然后检查 workspace_roots 路径
-  const isCursor = !!process.env.CURSOR_PROJECT_DIR || !!input.workspace_roots?.some?.(w => w.includes(".cursor"));
-  // 当环境变量为空时，根据 workspace_roots 推断：包含 .cursor 则为 cursor，否则为 claude
-  const isClaude = !!process.env.CLAUDE_PROJECT_DIR || (!isCursor && !!input.workspace_roots);
-  const ideName = isCursor ? "cursor" : isClaude ? "claude" : "unknown";
+  // IDE 类型优先级：
+  // 1. 命令行显式传入的 --ide 参数（最高优先级）
+  // 2. 基于 CURSOR_PROJECT_DIR 环境变量
+  // 3. 兜底为 unknown
+  let ideName = cliIde || "unknown";
+  if (!ideName || ideName === "unknown") {
+    if (process.env.CURSOR_PROJECT_DIR) {
+      ideName = "cursor";
+    } else if (process.env.CLAUDE_PROJECT_DIR) {
+      ideName = "claude";
+    }
+  }
 
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
 
