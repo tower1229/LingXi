@@ -6,6 +6,7 @@
  * 职责（按顺序）：
  * 1. [session-init] 幂等初始化会话文件——确保 HOT_RAM.md 已存在，主 Agent 开始时无需自行创建。
  * 2. [heartbeat-check] 将 30min/24h 等任务写入 WAL_BUFFER.md，并扫描 WAL 唤起后台进程（如 SELF_ITERATE）。
+ * 3. [user-config-inject] 幂等读取 USER.md，若 HOT_RAM [GLOBAL CONFIG] 为空则注入，每会话只执行一次。
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -55,6 +56,70 @@ async function runSessionInit(projectRoot, conversationId) {
   }
 }
 
+/**
+ * 幂等注入用户全局配置。
+ * 读取 USER.md，若 HOT_RAM [GLOBAL CONFIG] 区块仍为占位符则写入。
+ * 每会话只执行一次（幂等检查基于占位符内容）。
+ * 若任意步骤失败，静默继续——主 Agent 的兜底逻辑仍可处理。
+ */
+async function runUserConfigInject(projectRoot, conversationId) {
+  if (!conversationId) return;
+
+  const hotRamPath = path.join(
+    projectRoot, ".lingxi", "os", "sessions", conversationId, "HOT_RAM.md"
+  );
+
+  const userMdCandidates = [
+    path.join(projectRoot, ".lingxi", "memory", "USER.md"),
+  ];
+
+  try {
+    if (!(await fileExists(hotRamPath))) return;
+
+    const hotRamContent = await fs.readFile(hotRamPath, "utf8");
+
+    // 检查 [GLOBAL CONFIG] 区块是否已有实质内容（占位符判断）
+    const globalConfigMatch = hotRamContent.match(
+      /##\s+🧑\s+\[GLOBAL CONFIG\][^\n]*\n([\s\S]*?)(?=\n##\s+|\n---\s*\n|$)/
+    );
+    if (!globalConfigMatch) return;
+
+    const configBody = globalConfigMatch[1].trim();
+    // 若已有实质内容（非空、非占位符），跳过
+    const isEmpty = !configBody || configBody === "_(空)_" || /^_\(空[^)]*\)_$/.test(configBody);
+    if (!isEmpty) return;
+
+    // 查找 USER.md
+    let userMdPath = "";
+    for (const candidate of userMdCandidates) {
+      if (await fileExists(candidate)) {
+        userMdPath = candidate;
+        break;
+      }
+    }
+    if (!userMdPath) return;
+
+    const userMdContent = await fs.readFile(userMdPath, "utf8");
+
+    // 提取 USER.md 中 "## 行为偏好" 之后的内容（跳过文件头注释）
+    const prefMatch = userMdContent.match(/##\s+行为偏好\s*\n([\s\S]*)/);
+    const prefContent = prefMatch ? prefMatch[1].trim() : userMdContent.trim();
+    if (!prefContent || prefContent === "_(空 — 通过 `/remember` 或在对话中表达偏好来填充)_") return;
+
+    // 将占位符替换为实际内容
+    const updated = hotRamContent.replace(
+      /(##\s+🧑\s+\[GLOBAL CONFIG\][^\n]*\n(?:>[^\n]*\n)*)\s*_\(空\)_/,
+      `$1\n## 行为偏好\n\n${prefContent}`
+    );
+
+    if (updated !== hotRamContent) {
+      await fs.writeFile(hotRamPath, updated, "utf8");
+    }
+  } catch (err) {
+    console.error("[heartbeat-trigger] user-config-inject failed, agent will handle fallback:", err.message);
+  }
+}
+
 async function main() {
   const input = await readStdinJson();
   // Prefer explicit env vars, then workspace_roots from hook input (Cursor 2.6+),
@@ -79,6 +144,9 @@ async function main() {
 
   // 2. 运行心跳检查，将任务写入 WAL_BUFFER.md
   runHeartbeatCheck(projectRoot, conversationId);
+
+  // 3. 幂等注入用户全局配置到 HOT_RAM [GLOBAL CONFIG]
+  await runUserConfigInject(projectRoot, conversationId);
 
   writeStdoutJson({ continue: true });
 }

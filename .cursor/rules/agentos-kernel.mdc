@@ -9,27 +9,28 @@ alwaysApply: true
 
 ## 每轮对话必须按序执行以下 3 个阶段，不可跳过、不可合并、不可乱序
 
-### 阶段一：启动预检
-
-**FORBIDDEN：在完成阶段一之前，进行任何回复、执行任何任务、或派发子代理。**
-
-1. 读取 `.lingxi/os/sessions/[conversation_id]/HOT_RAM.md`。若文件不存在，则用 HOT_RAM.default.md 模板创建并写入，替换 `{{SESSION_ID}}` 和 `{{TIMESTAMP}}` 后写入会话路径，再继续后续检查。
-2. 检查 `[GLOBAL CONFIG]`：若为 `_(空)_`，读取 `.lingxi/memory/USER.md` 将"行为偏好"写入（每会话只写一次）；已有内容则跳过。
+> **前提**：`beforeSubmitPrompt` 脚本已在 Agent 启动前完成 Phase 0 预处理（session-init、heartbeat-check、user-config-inject），HOT_RAM.md 已存在且 `[GLOBAL CONFIG]` 已就绪。
 
 ---
 
-### 阶段二：任务调度
+### 阶段一：任务预处理
 
-**FORBIDDEN：主 Agent 直接执行用户请求。**
+**FORBIDDEN：在完成阶段一之前，进行任何回复、执行任何任务、或派发子代理。**
 
-**MUST 按以下顺序完成任务调度：**
+1. 读取 `.lingxi/os/sessions/[conversation_id]/HOT_RAM.md`，获取当前会话状态与全局配置。
+2. 调用 `memory-retrieve`（Pre 模式），以用户消息为 Query 检索相关记忆，将命中内容写入 HOT_RAM `[PRE-MEMORY]` 区块。
+3. 调用 `taste-recognition`，识别用户消息中可沉淀的品味 payload；若有产出，以 `- [ ] [MEMORY_WRITE]: <payload_json>` 格式压入 HOT_RAM `[POST-PROCESSING QUEUE]`。
 
-1. 调用 `memory-retrieve`（Pre 模式）获取用户请求相关的记忆。
-2. 调用 `taste-recognition` 进行品味识别。
-3. 调用 `megaprompt-assembly` 将本轮任务与约束封装为 Megaprompt。
-4. 携带 Megaprompt 派发 `lingxi-subagent`，同时将 HOT_RAM 的 `Current State` 写为 `WAITING_SUBAGENT`。
+> 若对任务理解置信度不足，MUST 通过 `ask-questions` 向用户澄清后再进入阶段二。
 
-> 若对任务理解置信度不足，MUST 通过 `ask-questions` 向用户澄清后再继续。
+---
+
+### 阶段二：任务委派
+
+**FORBIDDEN：主 Agent 直接执行用户请求的业务逻辑。**
+
+1. 调用 `megaprompt-assembly`，从 HOT_RAM `[PRE-MEMORY]` 中读取约束，结合用户意图组装完整 Megaprompt。
+2. 携带 Megaprompt 派发 `lingxi-subagent`，同时将 HOT_RAM 的 `Current State` 写为 `WAITING_SUBAGENT`。
 
 ---
 
@@ -37,15 +38,15 @@ alwaysApply: true
 
 **FORBIDDEN：在阶段三全部完成之前，向用户输出任何"完成"类回复并结束。**
 
-> 仅当本轮子代理状态为 `SUCCESS` 或 `PARTIAL_SUCCESS` 时才进入本阶段。  
+> 仅当本轮子代理状态为 `SUCCESS` 或 `PARTIAL_SUCCESS` 时才进入本阶段。
 > 若子代理状态为 `FAILED`，**不得进入本阶段**，必须立即将 HOT_RAM `Current State` 写为 `HUMAN_INTERVENTION_REQUIRED`，停止执行，并向用户请求下一步指示。
 
 **在 SUCCESS / PARTIAL_SUCCESS 情况下，MUST 按以下顺序完成后置处理：**
 
 1. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`。
-2. 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`，**按顺序执行队列中所有未勾选项**（如 `memory-write`、WAL 消费、状态更新等），全部执行完毕并勾选完毕后方可继续。
+2. 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`，**按顺序执行队列中所有未勾选项**，全部执行完毕并勾选完毕后方可继续。
 3. 若子代理返回含 `<Payload>` JSON：解析后将 `next_steps_options`、`f_results` 等字段**原样**呈现给用户，不得汇总或改写。
-4. 向用户输出最终回复。若 [POST-PROCESSING QUEUE] 中所有任务（含 [POST_RETRIEVE]、[WAL_BUFFER_SYNC]、[USER_REPORT] 及任何新增任务）均已勾选完成，则将 HOT_RAM `Current State` 复位为 `IDLE`。
+4. 向用户输出最终回复。若 [POST-PROCESSING QUEUE] 中所有任务均已勾选完成，则将 HOT_RAM `Current State` 复位为 `IDLE`。
 
 ---
 
