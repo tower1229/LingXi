@@ -18,6 +18,7 @@ import { runHeartbeatCheck } from "./heartbeat-check.mjs";
  * 以 conversationId 为 sessionId，确保：
  * - 会话目录存在
  * - HOT_RAM.md 存在（不存在则从模板创建）
+ * - SESSION_TRACE.md 存在（不存在则创建空文件，供 Phase 3 直接 append）
  * 若任意步骤失败，静默继续——主 Agent 的兜底逻辑仍可处理。
  */
 async function runSessionInit(projectRoot, conversationId) {
@@ -25,32 +26,43 @@ async function runSessionInit(projectRoot, conversationId) {
 
   const sessionDir = path.join(projectRoot, ".lingxi", "os", "sessions", conversationId);
   const hotRamPath = path.join(sessionDir, "HOT_RAM.md");
+  const sessionTracePath = path.join(sessionDir, "SESSION_TRACE.md");
 
-  if (await fileExists(hotRamPath)) return;
+  const hotRamExists = await fileExists(hotRamPath);
+  const sessionTraceExists = await fileExists(sessionTracePath);
 
-  const templateCandidates = [
-    path.join(projectRoot, ".cursor", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
-    path.join(projectRoot, ".claude", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
-  ];
-  let templatePath = "";
-  for (const candidate of templateCandidates) {
-    if (await fileExists(candidate)) {
-      templatePath = candidate;
-      break;
-    }
-  }
-  if (!templatePath) return;
+  if (hotRamExists && sessionTraceExists) return;
 
   try {
     await fs.mkdir(sessionDir, { recursive: true });
 
-    let template = await fs.readFile(templatePath, "utf8");
-    const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-    template = template
-      .replace(/\{\{SESSION_ID\}\}/g, conversationId)
-      .replace(/\{\{TIMESTAMP\}\}/g, timestamp);
+    if (!hotRamExists) {
+      const templateCandidates = [
+        path.join(projectRoot, ".cursor", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
+        path.join(projectRoot, ".claude", "skills", "workspace-bootstrap", "references", "HOT_RAM.default.md"),
+      ];
+      let templatePath = "";
+      for (const candidate of templateCandidates) {
+        if (await fileExists(candidate)) {
+          templatePath = candidate;
+          break;
+        }
+      }
+      if (templatePath) {
+        let template = await fs.readFile(templatePath, "utf8");
+        const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+        template = template
+          .replace(/\{\{SESSION_ID\}\}/g, conversationId)
+          .replace(/\{\{TIMESTAMP\}\}/g, timestamp);
+        await fs.writeFile(hotRamPath, template, "utf8");
+      }
+    }
 
-    await fs.writeFile(hotRamPath, template, "utf8");
+    if (!sessionTraceExists) {
+      const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+      const header = `# 📋 SESSION TRACE - Session: ${conversationId}\n\n> Append-only log of subagent execution summaries.\n> Created: ${timestamp}\n\n`;
+      await fs.writeFile(sessionTracePath, header, "utf8");
+    }
   } catch (err) {
     console.error("[heartbeat-trigger] session-init failed, agent will handle fallback:", err.message);
   }
