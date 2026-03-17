@@ -10,7 +10,7 @@
 
 **权威实现**：
 - **初始化模板** → `skills/workspace-bootstrap/references/USER.default.md`
-- **注入时机与规则** → `rules/agentos-kernel.md` Law 1（`[GLOBAL CONFIG] Initialization`）
+- **注入时机与规则** → Phase 0 脚本 `hooks/heartbeat-trigger.mjs`（`runUserConfigInject`，每会话幂等注入一次）
 - **写入逻辑（分流路由）** → `agents/lingxi-memory-write.md`（步骤 2 分流路由）
 - **内容识别（行为偏好判定）** → `skills/taste-recognition/references/content-types.md`（偏好类型的 `destination` 路由规则）
 
@@ -18,8 +18,8 @@
 
 三层记忆架构中的 **User Config Layer**（用户配置层），存储用户对 Agent 行为的全局配置性偏好（程序记忆）：称呼、回答语言、输出风格等。与语义记忆库的核心区别：
 
-- **无需检索**：每次会话初始化时由主 Agent 一次性注入 `HOT_RAM.md` 的 `[GLOBAL CONFIG]` 区块，后续轮次直接读取，零额外检索开销
-- **对所有 Tier 生效**：包括 Tier-1 纯问答和 Tier-2 快速路径，而语义记忆库仅在 Tier-3 或项目特异性问题时才检索
+- **无需检索**：每次会话初始化时由 Phase 0 脚本一次性注入 `HOT_RAM.md` 的 `[GLOBAL CONFIG]` 区块，后续轮次直接读取，零额外检索开销
+- **对所有请求生效**：统一四阶段管道下均可读取，作为全局行为配置基线
 - **文件可移植**：纯 Markdown 文件，可随项目 Git 管理，可备份和跨设备共享
 
 **写入来源**：
@@ -33,26 +33,28 @@
 **物理路径**：`.lingxi/os/sessions/[session_id]/HOT_RAM.md`
 
 **权威实现**：
-- **行为规则**（主 Agent 何时读写、状态转换逻辑、合法 State 值）→ `rules/agentos-kernel.md` Law 1
+- **行为规则**（主 Agent 何时读写、状态转换逻辑、合法 State 值）→ `rules/agentos-kernel.md` Phase 1–3
 - **初始化模板**（Markdown 格式）→ `skills/workspace-bootstrap/references/HOT_RAM.default.md`
+- **创建时机** → Phase 0 脚本 `hooks/heartbeat-trigger.mjs`（`runSessionInit`，每会话幂等创建）
 
 ### 说明
 
-单会话的"图灵纸带"与状态机寄存器。主 Agent 在响应任何用户输入前必须首步读取此文件。文件包含三个区块：
+单会话的"图灵纸带"与状态机寄存器。主 Agent 在响应任何用户输入前必须首步读取此文件。文件包含四个区块：
 
+- **`[GLOBAL CONFIG]`**：由 Phase 0 脚本从 `USER.md` 注入的用户全局行为偏好，Agent 只读。
 - **`[PRE-MEMORY]`**：`memory-retrieve` 预检索的项目规范与历史教训，主 Agent 将此内容按规范编译进 Megaprompt。
-- **`[DYNAMIC TASK QUEUE]`**：当前轮次需 Subagent 执行的具体任务拆解。
+- **`[TASK-CONTEXT]`**：当前轮次的任务拆解与执行上下文，供 Subagent 参考。
 - **`[POST-PROCESSING QUEUE]`**：强制后置处理的 Checkbox 清单，默认包含 `[POST_RETRIEVE]`、`[WAL_BUFFER_SYNC]`、`[USER_REPORT]` 三项。
 
 ---
 
 ## 2. Megaprompt 组装协议
 
-**权威实现** → `rules/megaprompt-assembly.mdc`
+**权威实现** → `skills/megaprompt-assembly/SKILL.md`
 
 ### 说明
 
-主 Agent 在 Tier-3 路径下向 `lingxi-subagent` 派发任务时，必须按四层结构组装 Megaprompt：
+主 Agent 在 Phase 2 向 `lingxi-subagent` 派发任务时，必须按四层结构组装 Megaprompt：
 
 1. **执行者角色与任务边界**（Layer 1）
 2. **任务描述**（Layer 2）
@@ -78,7 +80,8 @@ Subagent 执行完毕后，必须在返回给主 Agent 的文本最前方严格�
 **物理路径**：`.lingxi/os/sessions/[session_id]/SESSION_TRACE.md`
 
 **权威实现**：
-- **追加时机与内容要求** → `rules/agentos-kernel.md` Law 3（Step 1）
+- **创建时机** → Phase 0 脚本 `hooks/heartbeat-trigger.mjs`（`runSessionInit`，与 HOT_RAM.md 同步幂等创建）
+- **追加时机与内容要求** → `rules/agentos-kernel.md` Phase 3 Step 1
 - **折叠规范**（语义压缩保留结构化摘要）→ Watchdog 守护进程约定（待实现）
 
 ### 说明
@@ -113,7 +116,7 @@ Append-only 追加日志，记录该会话下历次 Subagent 的执行摘要、�
 **其他**：
 
 - **初始化模板** → `skills/workspace-bootstrap/references/WAL_BUFFER.default.md`
-- **消费规则** → `rules/agentos-kernel.md` Law 3（`[WAL_BUFFER_SYNC]` 队列项）；主 Agent 在后处理阶段消费未勾选的 `[SESSION_DISTILL]` 等，Watchdog 消费 `[SELF_ITERATE]`。详见 `architecture.md` 守护层。
+- **消费规则** → `rules/agentos-kernel.md` Phase 3（`[WAL_BUFFER_SYNC]` 队列项）；主 Agent 在后处理阶段消费未勾选的 `[SESSION_DISTILL]` 等，Watchdog 消费 `[SELF_ITERATE]` 与 `SESSION_CLEANUP`。详见 `architecture.md` 守护层。
 
 ---
 

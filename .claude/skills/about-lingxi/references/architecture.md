@@ -18,7 +18,7 @@ graph TD
 
     subgraph 调度层 [一、调度层 Orchestrator Layer - 大脑]
         MainAgent(主 Agent / Kernel)
-        Tiers(双轨决策: Fast-Path vs Strict OS)
+        Pipeline(四阶段管道: Phase0-Script / Phase1-Pre / Phase2-Dispatch / Phase3-Post)
     end
 
     subgraph 执行层 [二、执行层 Execution Layer - 手脚]
@@ -33,9 +33,9 @@ graph TD
     end
 
     subgraph 守护层 [四、守护层 Daemon Layer - 心跳机制]
-        Hooks(心跳触发: beforeSubmitPrompt)
+        Hooks(心跳触发: UserPromptSubmit)
         Watchdog(heartbeat-check 调度与执行)
-        Plugins(heartbeat-plugins 注册表: SESSION_DISTILL / SELF_ITERATE)
+        Plugins(heartbeat-plugins 注册表: SESSION_DISTILL / SELF_ITERATE / SESSION_CLEANUP)
     end
 
     User <--> MainAgent
@@ -57,11 +57,12 @@ graph TD
 
 **核心机理**：
 
-- **双轨执行决策 (Dual-Path Execution)**：内核通过决策树将请求划分为 Tier 1/2/3。纯信息类、轻量交互、以及**工作流中的 task / vet / plan / review**（交互与审计类）走 **Fast-Path**，由主 Agent 直接执行，可 ask-questions、直接写文档与完整审查报告，无需状态机与子代理派发，**低延迟、省 token**；仅**涉及代码编写、调试或 build 步骤**的请求强制进入 **Strict OS Mode**，激活状态机并委派 Subagent，**隔离风险、契约可追溯**。双轨设计使“规划与审查在主会话完成、仅实现阶段走子代理”成为可能，兼顾体验与可控性。
-- **确定性管道 (Deterministic Pipeline)**：在 Strict OS 下，调度层严格按“前置检索 → 任务委派 → 状态回收 → 后置义务”执行。每一轮子代理返回后，内核必先同步状态文件、再消费后处理队列，**无隐式分支**，便于推理与排错。
-- **后置闭环收敛 (Lifecycle Convergence)**：通过 `HOT_RAM.md` 中的 `[POST-PROCESSING QUEUE]`，所有衍生义务（如记忆写入、文档同步、报告呈现）在会话收敛前被显式执行并勾销。**会话结束即无遗留任务**，避免“做了开发却忘了记一笔”的语义泄漏。
+- **脚本与 Agent 分工 (Script-Agent Separation)**：调度层分为两个执行主体——`UserPromptSubmit` **脚本**（Phase 0）负责所有确定性的纯文件操作（HOT_RAM 初始化、心跳调度、用户配置注入），在 Agent 启动前同步完成；**主 Agent**（Phase 1-3）专注需要 LLM 语义理解的操作（记忆检索、品味识别、Megaprompt 组装、Subagent 派发与后处理）。职责边界清晰，Agent 不兜底脚本层的工作。
+- **统一四阶段管道 (Unified Four-Phase Pipeline)**：所有请求统一走相同管道——Phase 0（脚本预处理）→ Phase 1（任务预处理）→ Phase 2（任务委派）→ Phase 3（后置处理），无分支决策，管道完全可预测、可推理。Agent 不做路径判断，只按阶段顺序执行。
+- **确定性管道 (Deterministic Pipeline)**：调度层严格按“预处理 → 委派 → 状态回收 → 后置义务”执行。每一轮子代理返回后，内核必先同步状态文件、再消费后处理队列，**无隐式分支**，便于推理与排错。
+- **后置闭环收敛 (Lifecycle Convergence)**：通过 `HOT_RAM.md` 中的 `[POST-PROCESSING QUEUE]`，所有衍生义务（如记忆写入、WAL 消费、报告呈现）在会话收敛前被显式执行并勾销。**会话结束即无遗留任务**，避免语义泄漏。
 
-**架构优势**：决策集中、路径可预测；双轨降低简单请求成本，严格管道保障复杂请求的完整性与可追溯性。
+**架构优势**：脚本层承接确定性事务，Agent 上下文始终精简；统一管道消除分支判断，执行路径完全可预测；后置闭环保障每轮操作的完整性与可追溯性。
 
 ---
 
@@ -94,15 +95,15 @@ graph TD
 
 ### 4. 守护层 (Daemon Layer / Heartbeat)
 
-**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `beforeSubmitPrompt` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）** 与 **24 小时自我迭代（SELF_ITERATE）**。
+**定位**：守护层的**主体是心跳机制**。用户每次提交消息时由 `UserPromptSubmit` 触发 `heartbeat-trigger.mjs`，其调用 Watchdog（`heartbeat-check.mjs`），不阻塞主对话。心跳采用**入队（enqueue）与消费（consume）两阶段**：待办任务统一写入 `WAL_BUFFER.md`，格式与解析由 `wal-schema.md` 与 `wal-utils.mjs` 契约约束。具体应用由 **`heartbeat-plugins/`** 下的单文件插件通过 `registry.mjs` 注册，目前包含 **30 分钟会话提炼（SESSION_DISTILL）**、**24 小时自我迭代（SELF_ITERATE）** 与 **24 小时 sessions 目录清理（SESSION_CLEANUP）**。
 
 **心跳机制结构**：
 
-- **触发链**：`beforeSubmitPrompt` → `heartbeat-trigger.mjs` → `runHeartbeatCheck`（先入队再消费），与用户使用节奏对齐。
+- **触发链**：`UserPromptSubmit` → `heartbeat-trigger.mjs` → `runHeartbeatCheck`（先入队再消费），与用户使用节奏对齐。
 - **插件目录**：`heartbeat-plugins/` 下每个插件一个 `.mjs` 文件，通过 `registry.mjs` 注册；Watchdog 按注册表顺序调用各插件的 `shouldEnqueue(env)`，若有 payload 则入队并更新 control。
 - **入队阶段 (runHeartbeatEnqueue)**：按注册表依次调用插件的 `shouldEnqueue`；根据 `heartbeat-control.json` 与插件逻辑判断是否满足条件，若满足则通过 `appendWalTask` 向 WAL 追加未勾选任务行，并更新 control（锁、时间、processed 等）。**不在此阶段读 WAL 或执行任务**。
 - **消费阶段 (runHeartbeatConsume)**：读取 WAL，用统一解析得到未勾选任务，按任务类型查注册表分发。仅 **Watchdog 可直接执行**的类型（如 SELF_ITERATE）在本阶段 `exec` 并勾选；需主 Agent 参与的类型（如 SESSION_DISTILL）只入队，由主 Agent 在后处理中消费。
-- **WAL 契约**：任务行格式为 `- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`，TYPE 含 `SESSION_DISTILL`、`SELF_ITERATE` 等；写入与解析由 `hooks/wal-utils.mjs` 提供，与 `skills/workspace-bootstrap/references/wal-schema.md` 一致。
+- **WAL 契约**：任务行格式为 `- [ ] \`[TYPE]\`: <JSON>` / `- [x] \`[TYPE]\`: <JSON>`，TYPE 含 `SESSION_DISTILL`、`SELF_ITERATE`、`SESSION_CLEANUP` 等；写入与解析由 `hooks/wal-utils.mjs` 提供，与 `skills/workspace-bootstrap/references/wal-schema.md` 一致。
 
 **30 分钟会话提炼**：
 
@@ -121,7 +122,7 @@ graph TD
 
 ## 二、开发工作流（Workflow）
 
-开发工作流是灵犀在四层架构之上提供的一条**可选、显式触发**的工程管道：从需求到交付，各步骤由对应 Skill 实现，产物与状态落在记忆层，执行路径由调度层双轨决策与执行层 Subagent 契约共同保障。工作流与架构的关系见下文 2.2。
+开发工作流是灵犀在四层架构之上提供的一条**可选、显式触发**的工程管道：从需求到交付，各步骤由对应 Skill 实现，产物与状态落在记忆层，执行路径由调度层统一四阶段管道与执行层 Subagent 契约共同保障。工作流与架构的关系见下文 2.2。
 
 ### 2.1 工作流概览
 
@@ -145,12 +146,12 @@ graph TD
 
 | 层级 | 在工作流中的角色 |
 |------|------------------|
-| **调度层** | 判定请求属于哪一工作流步骤；**task / vet / plan / review** 走 **Fast-Path**（主 Agent 直接执行，可 ask-questions、直接写文档与完整审查报告）；**仅 build** 走 **Strict OS**（委派 Subagent，主 Agent 做零干预派发与后处理）。编排、下一步建议、状态读写均经调度层。 |
-| **执行层** | 各步骤由对应 **Skill** 实现；**仅 build** 由 **Subagent** 在隔离上下文中执行，通过 Megaprompt 与 `<Execution_Summary>` 与内核交互；task / vet / plan / review 由主 Agent 在主会话中直接执行。 |
+| **调度层** | 判定请求属于哪一工作流步骤；统一走四阶段管道（Phase 0-3）；编排、下一步建议、状态读写均经调度层。 |
+| **执行层** | 各步骤由对应 **Skill** 实现；任务执行由 **Subagent** 在隔离上下文中完成，通过 Megaprompt 与 `<Execution_Summary>` 与内核交互；主 Agent 仅做调度与收敛。 |
 | **记忆层** | 工作流**产物**统一落在 `.lingxi/tasks/`（task / plan / testcase / review 文档）；会话状态与后处理队列在 `HOT_RAM.md`、`SESSION_TRACE.md`；后处理阶段可能触发记忆写入等，仍写入记忆层。 |
 | **守护层** | 不驱动工作流步骤，但通过心跳与状态自愈保障 `HOT_RAM` 与会话一致性，使工作流在异常或中断后**可恢复、可追溯**。 |
 
-由此可见：**工作流是架构的上层用法**，四层为其提供决策、执行、持久化与保活能力；工作流的可伸缩与可跳过设计，也反过来依赖调度层双轨与执行层契约才能稳定实现。
+由此可见：**工作流是架构的上层用法**，四层为其提供决策、执行、持久化与保活能力；工作流的可伸缩与可跳过设计，依赖调度层统一管道与执行层契约才能稳定实现。
 
 ### 2.3 延伸阅读
 
@@ -185,7 +186,7 @@ graph TD
 | 工作流 Skill | `skills/{task,vet,plan,build,review,...}/` | 各 SKILL.md、`lifecycle-flow.md` | 改描述、改步骤、增 refs | 描述 low、步骤 medium | 仅 low（如描述微调） |
 | 其他 Skill | `skills/*/`（含 about-lingxi） | 各 SKILL.md、skill-creator refs | 改描述、增 references | low / medium | 仅 low |
 | Commands | `commands/` | 各 command 的 .md | 改说明、改入口 | medium | 否 |
-| Rules | `rules/` | `agentos-kernel.mdc` 等 | 改规则内容 | high | 否 |
+| Rules | `rules/` | `agentos-kernel.md` 等 | 改规则内容 | high | 否 |
 | 心跳插件 | `heartbeat-plugins/*.mjs`、`registry.mjs` | `architecture.md` 守护层、`heartbeat-plugins/README.md` | 新增插件、注册 | 新增 low | 仅新增并注册（low） |
 | Hooks | `hooks/` | `architecture.md` 守护层 | 改主循环逻辑 | high | 否 |
 | Agents | `agents/` | 各 agent 的 .md | 改说明、改步骤 | medium | 否 |

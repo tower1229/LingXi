@@ -9,5 +9,6 @@
   "last_improvement_cycle_at": null,
   "last_improvement_prompted_session_id": null,
   "last_improvement_prompted_at": null,
-  "last_improvement_failed_at": null
+  "last_improvement_failed_at": null,
+  "last_session_cleanup_at": null
 }

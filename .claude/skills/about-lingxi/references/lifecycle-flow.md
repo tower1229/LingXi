@@ -1,73 +1,116 @@
 # 灵犀生命周期与调度管道 (Lifecycle Flow)
 
-本文档展开调度层的**双轨决策**与 **Strict OS 下的确定性管道**：Tier 1/2/3 决策树、「前置检索 → 派发 → 状态回收 → 后置义务」的逐步技术细节，以及后处理队列的消费顺序。与 `architecture.md` 调度层、`agentos-kernel.mdc` 规则一一对应。
+本文档展开灵犀 AgentOS 的**四阶段统一管道**：Phase 0（脚本预处理）→ Phase 1（任务预处理）→ Phase 2（任务委派）→ Phase 3（后置处理）。与 `architecture.md` 调度层、`agentos-kernel.md` 规则一一对应。
 
 ---
 
-## 一、每轮入口：必读 HOT_RAM
+## 总览：四阶段管道
 
-主 Agent 在响应用户**任意**消息前，**第一步**必须读取当前会话的 `HOT_RAM.md`（路径含 `session_id`）。若文件不存在，则从 `HOT_RAM.default.md` 模板创建并写入正确会话路径。禁止在未摄入 HOT_RAM 前做出任何主观响应。
+```
+用户提交消息
+    │
+    ▼
+Phase 0  脚本预处理（UserPromptSubmit hook，Agent 启动前同步完成）
+    │      session-init → heartbeat-check → user-config-inject
+    │
+    ▼
+Phase 1  任务预处理（主 Agent，LLM 语义操作）
+    │      读 HOT_RAM → memory-retrieve Pre → taste-recognition
+    │
+    ▼
+Phase 2  任务委派（主 Agent）
+    │      megaprompt-assembly → 派发 lingxi-subagent → 等待返回
+    │
+    ▼
+Phase 3  后置处理（主 Agent，消费队列）
+           POST_RETRIEVE → WAL_BUFFER_SYNC → MEMORY_WRITE → USER_REPORT
+```
 
-- **合法状态**：`IDLE` | `WAITING_SUBAGENT` | `POST_PROCESSING_REQUIRED` | `HUMAN_INTERVENTION_REQUIRED`。
-- **GLOBAL CONFIG**：若 `[GLOBAL CONFIG]` 为空或占位，则从 `USER.md` 读取行为偏好并写入 HOT_RAM，每会话一次。
-
----
-
-## 二、Tier 1/2/3 决策树（双轨）
-
-请求按下列决策树划分，决定走 **Fast-Path** 还是 **Strict OS Mode**：
-
-| 分支 | 条件 | 路径 | 行为要点 |
-|------|------|------|----------|
-| **Tier 1/2** | 纯信息、轻量工具调用，或工作流中的 **task / vet / plan / review**（交互与审计） | **Fast-Path** | 主 Agent **直接执行**，不委派 Subagent。可使用 ask-questions、直接写文档与完整审查报告。无需状态机，可将动作记入 SESSION_TRACE。可选：纯问答前若依赖项目规范，先做 memory-retrieve（Pre 模式）。 |
-| **Tier 3** | 涉及**代码编写、调试或 build 步骤** | **Strict OS Mode** | **禁止**主 Agent 直接写代码或执行重度 I/O。**必须**委派 Subagent，并走完整 HOT_RAM 生命周期（见第三节）。build 时采用 Zero-Intervention Dispatch；其他复杂任务可先 memory-retrieve、taste-recognition，再 megaprompt-assembly 后派发。 |
-
-- **Tier 1 增强**：回答纯信息问题时，若依赖本项目约定，先调用 memory-retrieve（Pre）。
-- **Tier 3 派发**：build 仅组最小 Megaprompt 即派发；其他任务可先检索与品味识别，再组装 Megaprompt 派发。
-
----
-
-## 三、Strict OS 管道：四步与后置义务
-
-在 **Strict OS Mode** 下，调度层严格按以下顺序执行，**无隐式分支**：
-
-1. **前置检索（可选）**  
-   按需调用 memory-retrieve（Pre）、taste-recognition，结果写入 HOT_RAM 的 `[PRE-MEMORY]` 等；用于组装 Megaprompt 的工程约束。
-
-2. **任务派发**  
-   将 `Current State` 置为 `WAITING_SUBAGENT`；按 Megaprompt 组装协议（见 `ipc-protocols.md`）派发 Subagent。主 Agent 挂起，不执行业务逻辑。
-
-3. **状态回收**  
-   Subagent 返回后，主 Agent **必须**立即（且可并行）完成：  
-   - 将 `<Execution_Summary>` 追加到 `SESSION_TRACE.md`；  
-   - 将 HOT_RAM 的 `Current State` 改为 `POST_PROCESSING_REQUIRED`。  
-   禁止在未完成上述两步前向用户报“任务完成”并结束。
-
-4. **后置义务**  
-   - 读取 HOT_RAM 的 `[POST-PROCESSING QUEUE]`；  
-   - **按顺序执行队列中所有未勾选任务**（如记忆写入、WAL 消费、用户报告、状态更新等）；  
-   - 若 Subagent 返回中含 `<Payload>` JSON，须解析并用于最终报告与下一步选项；  
-   - **仅当队列中所有项均勾销后**，才可结束对用户的回复。
-
-若 Subagent 返回 `FAILED` 或内核对派发信心不足，须将状态置为 `HUMAN_INTERVENTION_REQUIRED` 并暂停，请求用户决策。
+所有请求统一走此管道，无分支决策。
 
 ---
 
-## 四、后处理队列（POST-PROCESSING QUEUE）典型项
+## Phase 0 — 脚本预处理
 
-队列中常见项（具体以 HOT_RAM 模板与规则为准）包括但不限于：
+**执行者**：`hooks/heartbeat-trigger.mjs`（UserPromptSubmit hook，同步，Agent 启动前完成）
 
-- **POST_RETRIEVE**：基于 `<Execution_Summary>` 的 Touched Assets 做后置记忆检索，将结果追加为新的 checkbox 任务。
-- **WAL_BUFFER_SYNC**：消费 `WAL_BUFFER.md` 中未勾选任务（如 `[SESSION_DISTILL]`），必要时唤起 session-distill 等子代理，完成后勾选 WAL 行。
-- **USER_REPORT**：向用户呈现 Task Summary、下一步选项等。
-- **记忆写入**：将本轮产生的记忆 Payload 交给 lingxi-memory-write 等。
+**职责**：承接所有确定性的纯文件操作，Agent 不再承担任何初始化或兜底工作。
 
-执行顺序固定：按队列顺序依次处理，全部勾销后会话轮次才视为收敛，实现**后置闭环**（见 `design-principles.md`）。
+| 步骤 | 说明 |
+|------|------|
+| `session-init` | 以 `conversation_id` 为会话 ID，幂等创建 `.lingxi/os/sessions/<id>/` 目录、`HOT_RAM.md`（从模板复制，替换占位符）与空白 `SESSION_TRACE.md`。若文件已存在则跳过。 |
+| `heartbeat-check` | 调用 Watchdog：先入队（按注册表扫描 SESSION_DISTILL / SELF_ITERATE / SESSION_CLEANUP 插件的 `shouldEnqueue`），再消费（对 watchdog 类型任务 exec 执行，成功后勾选 WAL 行）。 |
+| `user-config-inject` | 读取 `.lingxi/memory/USER.md`，检查 HOT_RAM `[GLOBAL CONFIG]` 区块是否为占位符；若为空则写入行为偏好内容，每会话只执行一次（幂等）。 |
+
+Phase 0 执行完毕后，HOT_RAM 已完全就绪：文件存在、GLOBAL CONFIG 已注入、心跳任务已入队或消费。
+
+---
+
+## Phase 1 — 任务预处理
+
+**执行者**：主 Agent
+
+**前提**：HOT_RAM 由 Phase 0 完全准备好，Agent 直接读取，禁止自行创建文件或注入配置。
+
+> **兜底情形**（Hook 未执行或执行失败）：若 HOT_RAM.md 不存在，从 `.claude/skills/workspace-bootstrap/references/HOT_RAM.default.md` 创建（替换 `{{SESSION_ID}}` 和 `{{TIMESTAMP}}`），写入后继续执行。
+
+**职责**：完成所有需要 LLM 语义理解的"备料"工作，为 Phase 2 的 Megaprompt 组装准备完整材料。
+
+**执行顺序**：
+
+1. **读取 HOT_RAM**：获取 `Current State`、`[GLOBAL CONFIG]`、`[PRE-MEMORY]` 等所有区块内容。
+2. **memory-retrieve（Pre 模式）**：以当前用户消息为 Query，双路径检索 `.lingxi/memory/project/` 与 `.lingxi/memory/share/`，命中内容格式化后写入 HOT_RAM `[PRE-MEMORY]` 区块。若无相关记忆则静默跳过。
+3. **taste-recognition**：对当前用户消息识别可沉淀的品味 payload；非空时以 `- [ ] [MEMORY_WRITE]: <payload_json>` 格式压入 HOT_RAM `[POST-PROCESSING QUEUE]`；无可沉淀内容则静默。
+
+> 若对任务理解置信度不足，在 Phase 1 结束前通过 `ask-questions` 向用户澄清，再进入 Phase 2。
+
+---
+
+## Phase 2 — 任务委派
+
+**执行者**：主 Agent
+
+**职责**：以 Phase 1 产出的材料组装 Megaprompt，派发 Subagent 执行任务。这是上下文工程的核心实现——前置记忆在此注入。
+
+**执行顺序**：
+
+1. **megaprompt-assembly**：按四步协议组装 Megaprompt：
+   - Layer 1：执行者角色与任务边界
+   - Layer 2：任务描述（用户意图、子任务列表、Target Scope）
+   - Layer 3：工程约束注入（从 HOT_RAM `[PRE-MEMORY]` 读取，置于靠近末尾以提高权重）
+   - Layer 4：返回格式提醒（`<Execution_Summary>` 契约）
+
+2. **派发 lingxi-subagent**：携带 Megaprompt 调用子代理，同时将 HOT_RAM `Current State` 写为 `WAITING_SUBAGENT`。
+
+3. **接收返回**：获取 `<Execution_Summary>`：
+   - `SUCCESS` / `PARTIAL_SUCCESS`：进入 Phase 3
+   - `FAILED`：将 `Current State` 写为 `HUMAN_INTERVENTION_REQUIRED`，停止执行，向用户请求下一步指示
+
+---
+
+## Phase 3 — 后置处理
+
+**执行者**：主 Agent
+
+**触发条件**：Subagent 返回状态为 `SUCCESS` 或 `PARTIAL_SUCCESS`。
+
+**前置动作（按序）**：
+1. 将 `<Execution_Summary>` 追加写入 `SESSION_TRACE.md`（append-only，文件已由 Phase 0 脚本创建）
+2. 将 HOT_RAM `Current State` 写为 `POST_PROCESSING_REQUIRED`
+
+**队列消费顺序**（严格按序，全部勾销后才可结束）：
+
+| 队列项 | 执行内容 |
+|--------|----------|
+| `[POST_RETRIEVE]` | 以 Subagent 返回的 `Touched Assets` 为 Query，调用 `memory-retrieve`（Post 模式），将命中的滞后义务格式化为新 Checkbox 追加到队列末尾。 |
+| `[WAL_BUFFER_SYNC]` | 读取 `WAL_BUFFER.md`，循环处理所有未勾选的 `[SESSION_DISTILL]` 任务：每条独立调用一次 `lingxi-session-distill` Subagent，完成后执行 `node hooks/heartbeat-distill-done.mjs` 更新 control 并勾选 WAL 行。 |
+| `[MEMORY_WRITE]` | 消费 Phase 1 由 `taste-recognition` 压入的品味 payload（若有），调用 `lingxi-memory-write` 写入记忆库。 |
+| `[USER_REPORT]` | 向用户呈现最终结果（含 Subagent 的 `next_steps_options`、`f_results` 等字段，原样呈现不改写）；所有队列项勾销后将 `Current State` 复位为 `IDLE`。 |
 
 ---
 
 ## 关联导航
 
-- **上游**：`architecture.md`（调度层、双轨、管道）、`design-principles.md`（后置闭环、主从解耦）
+- **上游**：`architecture.md`（调度层、四层架构）、`design-principles.md`（后置闭环、主从解耦）
 - **下游**：`ipc-protocols.md`（HOT_RAM 结构、Megaprompt、Execution_Summary）、`memory-system.md`（后处理中的记忆与 WAL）、`rules/agentos-kernel.md`（权威规则）
 - **同层**：`architecture.md`（工作流与四层关系）、`workflow-output-principles.md`（输出契约）

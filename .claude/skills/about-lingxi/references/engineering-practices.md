@@ -163,7 +163,7 @@
 - 明确的阶段推进协议（菜单选项）
 - 明确的确认机制（`/remember ...` 或用户选择存储目标）
 - 明确的索引和引用关系
-- HOT_RAM 状态机与合法状态显式；`[POST-PROCESSING QUEUE]` 显式消费、无隐式分支；双轨决策（Tier 1/2/3）显式分支（见 `lifecycle-flow.md`、`agentos-kernel.mdc`）
+- HOT_RAM 状态机与合法状态显式；`[POST-PROCESSING QUEUE]` 显式消费、无隐式分支；统一四阶段管道顺序显式可审计（见 `lifecycle-flow.md`、`agentos-kernel.md`）
 
 **检查点**：
 
@@ -290,10 +290,10 @@
 
 **在 workflow 中的应用**（与 `architecture.md` 四层一致）：
 
-- **调度层**：主 Agent 决策、双轨（Fast-Path / Strict OS）、状态读写、后处理队列消费
+- **调度层**：主 Agent 决策、四阶段统一管道、状态读写、后处理队列消费
 - **执行层**：Subagents、Megaprompt 与 `<Execution_Summary>` 契约
 - **记忆层**：HOT_RAM、SESSION_TRACE、USER、memory/、INDEX、WAL_BUFFER（情节 / 语义 / IPC）
-- **守护层**：beforeSubmitPrompt → heartbeat-trigger → heartbeat-check；heartbeat-plugins 注册表，入队与消费分离
+- **守护层**：UserPromptSubmit → heartbeat-trigger → heartbeat-check；heartbeat-plugins 注册表，入队与消费分离
 
 **检查点**：
 
@@ -416,10 +416,10 @@
    - 若某条 rule 很长，把「每轮必做」的 3～5 步单独成块放在最前，其余细节用「详见 Law N」引用，避免首屏被长文字冲淡。
 
 4. **与生命周期文档一致**
-   - `lifecycle-flow.md`、`agentos-kernel.mdc` 中对「每轮入口」的描述保持一致；规则为权威执行依据，refs 为展开说明。
+   - `lifecycle-flow.md`、`agentos-kernel.md` 中对「每轮入口」的描述保持一致；规则为权威执行依据，refs 为展开说明。
 
 5. **守护层可选的二次提醒（若产品支持）**
-   - 若 Cursor 的 Hook（如 `beforeSubmitPrompt`）支持向上下文注入简短提醒，可在守护层增加「本轮请先执行 TURN PRE-FLIGHT」类提示，作为规则之外的冗余保障；实现前需确认 Hook 能力与注入位置。
+   - 若 Claude 的 Hook（如 `UserPromptSubmit`）支持向上下文注入简短提醒，可在守护层增加「本轮请先执行 TURN PRE-FLIGHT」类提示，作为规则之外的冗余保障；实现前需确认 Hook 能力与注入位置。
 
 **检查点**：
 - [ ] 关键「每轮首步」是否出现在规则前部、且为独立区块？

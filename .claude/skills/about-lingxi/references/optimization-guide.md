@@ -10,8 +10,8 @@
 
 ### 调度层
 
-- **双轨决策**：确认 task/vet/plan/review 走 Fast-Path、仅 build 走 Strict OS；若发现简单请求被委派或复杂请求未委派，检查 `agentos-kernel.mdc` 与 `lifecycle-flow.md` 中的决策树。
-- **后处理队列**：确认每轮子代理返回后必先同步状态再消费 `[POST-PROCESSING QUEUE]`；若有遗漏义务，检查 HOT_RAM 模板与 Law 3。
+- **四阶段管道**：确认请求统一经过 Phase 0（脚本预处理）→ Phase 1（任务预处理）→ Phase 2（任务委派）→ Phase 3（后置处理）；若出现跳阶段或乱序，检查 `agentos-kernel.md` 与 `lifecycle-flow.md`。
+- **后处理队列**：确认每轮子代理返回后必先写入 `SESSION_TRACE.md`、同步状态再消费 `[POST-PROCESSING QUEUE]`；若有遗漏义务，检查 HOT_RAM 模板与 Phase 3 规则。
 - **静默与高信号**：输出是否符合 `workflow-output-principles.md`；是否减少过程旁白与冗余确认。
 
 ### 执行层
