@@ -1,15 +1,10 @@
 {
-  "hooks": {
-    "beforeSubmitPrompt": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/heartbeat-trigger.mjs"
-          }
+    "version": 1,
+    "hooks": {
+        "beforeSubmitPrompt": [
+            {
+                "command": "node hooks/heartbeat-trigger.mjs"
+            }
         ]
-      }
-    ]
-  }
+    }
 }
