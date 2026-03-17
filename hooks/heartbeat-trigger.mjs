@@ -16,15 +16,16 @@ import { runHeartbeatCheck } from "./heartbeat-check.mjs";
 /**
  * 幂等会话初始化。
  * 以 conversationId 为 sessionId，确保：
- * - 会话目录存在
+ * - 会话目录存在（添加 IDE 前缀以区分不同 IDE 的会话）
  * - HOT_RAM.md 存在（不存在则从模板创建）
  * - SESSION_TRACE.md 存在（不存在则创建空文件，供 Phase 3 直接 append）
  * 若任意步骤失败，静默继续——主 Agent 的兜底逻辑仍可处理。
  */
-async function runSessionInit(projectRoot, conversationId) {
+async function runSessionInit(projectRoot, conversationId, ideName = "unknown") {
   if (!conversationId) return;
 
-  const sessionDir = path.join(projectRoot, ".lingxi", "os", "sessions", conversationId);
+  // 使用 IDE 名称作为 workspace 前缀，区分不同 IDE 的会话
+  const sessionDir = path.join(projectRoot, ".lingxi", "os", "sessions", `${ideName}-${conversationId}`);
   const hotRamPath = path.join(sessionDir, "HOT_RAM.md");
   const sessionTracePath = path.join(sessionDir, "SESSION_TRACE.md");
 
@@ -51,14 +52,16 @@ async function runSessionInit(projectRoot, conversationId) {
       if (templatePath) {
         let template = await fs.readFile(templatePath, "utf8");
         const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+        const sessionIdDisplay = `${ideName}/${conversationId}`;
         template = template
-          .replace(/\{\{SESSION_ID\}\}/g, conversationId)
+          .replace(/\{\{SESSION_ID\}\}/g, sessionIdDisplay)
           .replace(/\{\{TIMESTAMP\}\}/g, timestamp);
         await fs.writeFile(hotRamPath, template, "utf8");
       } else {
         // 兜底：模板不存在时创建最小 HOT_RAM 结构
         const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-        const minimalHotRam = `# 🧠 OS HOT RAM - Session: ${conversationId}
+        const sessionIdDisplay = `${ideName}/${conversationId}`;
+        const minimalHotRam = `# 🧠 OS HOT RAM - Session: ${sessionIdDisplay}
 
 > **[SYSTEM_WARNING]**: DO NOT EDIT THIS HEADER.
 > Current State MUST be one of: [IDLE | WAITING_SUBAGENT | POST_PROCESSING_REQUIRED | HUMAN_INTERVENTION_REQUIRED]
@@ -94,7 +97,8 @@ _(空)_
 
     if (!sessionTraceExists) {
       const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-      const header = `# 📋 SESSION TRACE - Session: ${conversationId}\n\n> Append-only log of subagent execution summaries.\n> Created: ${timestamp}\n\n`;
+      const sessionIdDisplay = `${ideName}/${conversationId}`;
+      const header = `# 📋 SESSION TRACE - Session: ${sessionIdDisplay}\n\n> Append-only log of subagent execution summaries.\n> IDE: ${ideName}\n> Created: ${timestamp}\n\n`;
       await fs.writeFile(sessionTracePath, header, "utf8");
     }
   } catch (err) {
@@ -108,11 +112,12 @@ _(空)_
  * 每会话只执行一次（幂等检查基于占位符内容）。
  * 若任意步骤失败，静默继续——主 Agent 的兜底逻辑仍可处理。
  */
-async function runUserConfigInject(projectRoot, conversationId) {
+async function runUserConfigInject(projectRoot, conversationId, ideName = "unknown") {
   if (!conversationId) return;
 
+  const sessionIdDir = `${ideName}-${conversationId}`;
   const hotRamPath = path.join(
-    projectRoot, ".lingxi", "os", "sessions", conversationId, "HOT_RAM.md"
+    projectRoot, ".lingxi", "os", "sessions", sessionIdDir, "HOT_RAM.md"
   );
 
   const userMdCandidates = [
@@ -195,17 +200,23 @@ async function main() {
     process.env.CLAUDE_PROJECT_DIR ||
     workspaceRoot ||
     getProjectRootFromHookScriptUrl(import.meta.url);
+
+  // 检测 IDE 类型以区分会话目录
+  const isCursor = !!process.env.CURSOR_PROJECT_DIR || !!input.workspace_roots?.some?.(w => w.includes(".cursor"));
+  const isClaude = !!process.env.CLAUDE_PROJECT_DIR;
+  const ideName = isCursor ? "cursor" : isClaude ? "claude" : "unknown";
+
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
 
-  // 1. 幂等初始化会话文件
-  await runSessionInit(projectRoot, conversationId);
+  // 1. 幂等初始化会话文件（添加 IDE 前缀以区分不同 IDE 的会话）
+  await runSessionInit(projectRoot, conversationId, ideName);
 
   // 2. 运行心跳检查，将任务写入 WAL_BUFFER.md
   // 必须等待完成以确保 Agent 启动前 WAL 已就绪（lifecycle-flow.md Phase 0 要求）
   await runHeartbeatCheck(projectRoot, conversationId);
 
   // 3. 幂等注入用户全局配置到 HOT_RAM [GLOBAL CONFIG]
-  await runUserConfigInject(projectRoot, conversationId);
+  await runUserConfigInject(projectRoot, conversationId, ideName);
 
   writeStdoutJson({ continue: true });
 }

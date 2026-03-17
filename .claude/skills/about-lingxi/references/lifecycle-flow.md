@@ -38,7 +38,7 @@ Phase 3  后置处理（主 Agent，消费队列）
 
 | 步骤 | 说明 |
 |------|------|
-| `session-init` | 以 `conversation_id` 为会话 ID，幂等创建 `.lingxi/os/sessions/<id>/` 目录、`HOT_RAM.md`（从模板复制，替换占位符）与空白 `SESSION_TRACE.md`。若文件已存在则跳过。 |
+| `session-init` | 以 `<ide>-<conversation_id>` 为会话 ID（IDE 标识符区分 Claude/Cursor），幂等创建 `.lingxi/os/sessions/<ide>-<id>/` 目录、`HOT_RAM.md`（从模板复制，替换占位符）与空白 `SESSION_TRACE.md`。若文件已存在则跳过。 |
 | `heartbeat-check` | 调用 Watchdog：先入队（按注册表扫描 SESSION_DISTILL / SELF_ITERATE / SESSION_CLEANUP 插件的 `shouldEnqueue`），再消费（对 watchdog 类型任务 exec 执行，成功后勾选 WAL 行）。 |
 | `user-config-inject` | 读取 `.lingxi/memory/USER.md`，检查 HOT_RAM `[GLOBAL CONFIG]` 区块是否为占位符；若为空则写入行为偏好内容，每会话只执行一次（幂等）。 |
 

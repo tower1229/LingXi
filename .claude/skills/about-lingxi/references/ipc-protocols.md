@@ -30,7 +30,9 @@
 
 ## 1. 核心状态控制台：`HOT_RAM.md`
 
-**物理路径**：`.lingxi/os/sessions/[session_id]/HOT_RAM.md`
+**物理路径**：`.lingxi/os/sessions/[ide]-[session_id]/HOT_RAM.md`
+
+> 注：`[ide]` 为 IDE 标识符（`claude` 或 `cursor`），用于区分不同 IDE 的会话。
 
 **权威实现**：
 - **行为规则**（主 Agent 何时读写、状态转换逻辑、合法 State 值）→ `rules/agentos-kernel.md` Phase 1–3
@@ -77,7 +79,7 @@ Subagent 执行完毕后，必须在返回给主 Agent 的文本最前方严格�
 
 ## 4. 会话时间轴流水账：`SESSION_TRACE.md`
 
-**物理路径**：`.lingxi/os/sessions/[session_id]/SESSION_TRACE.md`
+**物理路径**：`.lingxi/os/sessions/[ide]-[session_id]/SESSION_TRACE.md`
 
 **权威实现**：
 - **创建时机** → Phase 0 脚本 `hooks/heartbeat-trigger.mjs`（`runSessionInit`，与 HOT_RAM.md 同步幂等创建）
