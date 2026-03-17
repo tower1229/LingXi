@@ -10,7 +10,8 @@
       "Bash(echo:*)",
       "Bash(mkdir:*)",
       "Skill(claude-api)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "WebFetch(domain:docs.anthropic.com)"
     ]
   }
 }
