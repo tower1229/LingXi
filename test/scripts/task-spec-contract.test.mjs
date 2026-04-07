@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   TASK_SPEC_REQUIRED_FIELDS,
   TASK_SPEC_SCHEMA_VERSION,
+  buildTaskSpecValidationReport,
   validateTaskSpecShape
 } from "../../skills/task/scripts/task-spec.mjs";
 
@@ -68,6 +69,11 @@ describe("task spec contract", () => {
       type: "后端",
       complexity: "中等",
       project_context: null,
+      goal: "Clarify the backend API boundary.",
+      scope: ["Document one explicit backend seam"],
+      acceptance_criteria: ["The backend seam is explicit and reviewable"],
+      task_id: "001",
+      tags: ["库/SDK"],
       background: "Integration boundaries are currently implicit.",
       problem: "The current module seam is hard to review safely.",
       solution_overview: "Introduce one explicit backend contract and keep the change bounded.",
@@ -139,6 +145,81 @@ describe("task spec contract", () => {
     assert.ok(payload.issue_count > 0);
   });
 
+  it("builds a stable validator payload for invalid TaskSpec input", () => {
+    const payload = buildTaskSpecValidationReport({
+      schema_version: "draft-old",
+      title: "API seam",
+      type: "后端"
+    });
+    assert.strictEqual(payload.ok, false);
+    assert.strictEqual(payload.validator, "task_spec");
+    assert.strictEqual(payload.schema_version, TASK_SPEC_SCHEMA_VERSION);
+    assert.ok(payload.issue_count > 0);
+  });
+
+  it("rejects malformed nested TaskSpec structures", () => {
+    const payload = buildTaskSpecValidationReport({
+      schema_version: TASK_SPEC_SCHEMA_VERSION,
+      title: "API seam",
+      type: "后端",
+      complexity: "中等",
+      project_context: {
+        kind: "api",
+        stack: ["Node.js"],
+        cues: ["package.json"],
+        summary: "",
+        impact: "",
+        frontend_strength: -1,
+        backend_strength: 1,
+        docs_strength: 0
+      },
+      goal: "",
+      scope: ["", "Define seam"],
+      acceptance_criteria: ["The backend seam is explicit and reviewable"],
+      background: "Integration boundaries are currently implicit.",
+      problem: "The current module seam is hard to review safely.",
+      solution_overview: "Introduce one explicit backend contract and keep the change bounded.",
+      goals: ["Clarify the backend seam"],
+      non_goals: ["不扩展为新的服务能力"],
+      success_criteria: ["The backend seam is explicit and reviewable"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "",
+          so_that: "I can review the change against a stable contract",
+          acceptance_criteria: [""]
+        }
+      ],
+      functional_requirements: [
+        {
+          id: "F1",
+          title: "Define seam",
+          description: "Describe the request and response boundary",
+          implementation_scheme: "Document one explicit contract for the current service seam",
+          acceptance_criteria: ["The backend seam is explicit and reviewable"],
+          verification_method: "walkthrough",
+          edge_cases: [""],
+          evidence: "",
+          priority: "紧急"
+        }
+      ],
+      constraints: ["Do not change runtime behavior"],
+      memory_refs: [],
+      open_questions: [],
+      confidence: 1.2,
+      tags: [12]
+    });
+    assert.strictEqual(payload.ok, false);
+    assert.ok(payload.issues.some((item) => item.path === "project_context.kind"));
+    assert.ok(payload.issues.some((item) => item.path === "goal"));
+    assert.ok(payload.issues.some((item) => item.path === "scope"));
+    assert.ok(payload.issues.some((item) => item.path === "user_stories[0].i_want"));
+    assert.ok(payload.issues.some((item) => item.path === "functional_requirements[0].verification_method"));
+    assert.ok(payload.issues.some((item) => item.path === "functional_requirements[0].priority"));
+    assert.ok(payload.issues.some((item) => item.path === "confidence"));
+    assert.ok(payload.issues.some((item) => item.path === "tags"));
+  });
+
   it("compile-task-spec CLI persists a valid TaskSpec independently of write-task", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
@@ -148,6 +229,9 @@ describe("task spec contract", () => {
       type: "后端",
       complexity: "中等",
       project_context: null,
+      goal: "Clarify the backend API boundary.",
+      scope: ["Document one explicit backend seam"],
+      acceptance_criteria: ["The backend seam is explicit and reviewable"],
       background: "Integration boundaries are currently implicit.",
       problem: "The current module seam is hard to review safely.",
       solution_overview: "Introduce one explicit backend contract and keep the change bounded.",

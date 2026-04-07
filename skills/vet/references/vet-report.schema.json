@@ -4,7 +4,41 @@
   "title": "LingXi VetReport",
   "type": "object",
   "additionalProperties": true,
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message", "section"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["blocking", "high", "warning", "info"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "section": { "type": "string", "enum": ["D1", "D2", "D3", "D4", "D5"] }
+      }
+    },
+    "dimensionSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["dimension", "finding_count", "status"],
+      "properties": {
+        "dimension": { "type": "string", "enum": ["D1", "D2", "D3", "D4", "D5"] },
+        "finding_count": { "type": "integer", "minimum": 0 },
+        "status": { "type": "string", "enum": ["blocking", "needs_attention", "warning", "clear"] }
+      }
+    },
+    "nextStepOption": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "action"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "enum": ["revise_task", "rerun_vet", "skip", "proceed"] }
+      }
+    }
+  },
   "required": [
+    "report_version",
     "task_id",
     "file",
     "review_scope",
@@ -13,21 +47,113 @@
     "findings",
     "findings_by_dimension",
     "dimension_summaries",
+    "review_range_statement",
+    "overall_evaluation",
+    "execution_readiness_breakdown",
     "improvement_priority",
+    "issues_only_dimensions",
+    "revision_targets",
     "recommended_next_action",
+    "next_step_options",
     "implementation_readiness"
   ],
   "properties": {
+    "report_version": { "type": "string", "const": "draft-2026-04-07" },
     "task_id": { "type": "string", "minLength": 1 },
     "file": { "type": "string", "minLength": 1 },
-    "review_scope": { "type": "object" },
+    "review_scope": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "complexity", "tags", "dimensions"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "complexity": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["D1", "D2", "D3", "D4", "D5"] }
+        }
+      }
+    },
     "project_context_summary": { "type": "string" },
-    "summary": { "type": "object" },
-    "findings": { "type": "array" },
-    "findings_by_dimension": { "type": "object" },
-    "dimension_summaries": { "type": "array" },
-    "improvement_priority": { "type": "object" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["blocking_count", "high_count", "warning_count", "readiness"],
+      "properties": {
+        "blocking_count": { "type": "integer", "minimum": 0 },
+        "high_count": { "type": "integer", "minimum": 0 },
+        "warning_count": { "type": "integer", "minimum": 0 },
+        "readiness": { "type": "string", "enum": ["ready", "ready_with_notes", "revise_first", "not_ready"] }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "findings_by_dimension": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/finding" }
+      },
+      "propertyNames": {
+        "enum": ["D1", "D2", "D3", "D4", "D5"]
+      }
+    },
+    "dimension_summaries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dimensionSummary" }
+    },
+    "review_range_statement": { "type": "string", "minLength": 1 },
+    "overall_evaluation": { "type": "string", "minLength": 1 },
+    "execution_readiness_breakdown": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["can_start_implementation", "should_revise_first", "primary_risk_area"],
+      "properties": {
+        "can_start_implementation": { "type": "boolean" },
+        "should_revise_first": { "type": "boolean" },
+        "primary_risk_area": { "type": "string", "minLength": 1 }
+      }
+    },
+    "improvement_priority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blockers", "high", "warning"],
+      "properties": {
+        "blockers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/finding" }
+        },
+        "high": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/finding" }
+        },
+        "warning": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/finding" }
+        }
+      }
+    },
+    "issues_only_dimensions": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["D1", "D2", "D3", "D4", "D5"] }
+    },
+    "revision_targets": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
     "recommended_next_action": { "type": "string", "minLength": 1 },
+    "next_step_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nextStepOption" }
+    },
     "implementation_readiness": { "type": "string", "minLength": 1 }
   }
 }

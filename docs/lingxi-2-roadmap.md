@@ -459,12 +459,13 @@ So the design target is a hybrid path, not a choice between the two.
 
 ### `TaskSpec` Direction
 
-`task` should move toward an explicit intermediate schema, tentatively called `TaskSpec`.
+`task` has now moved onto an explicit intermediate schema, currently implemented as `TaskSpec`.
 
 `TaskSpec` should become the source of truth before markdown rendering.
 
-Planned fields:
+Current draft fields:
 
+- `schema_version`
 - `title`
 - `type`
 - `complexity`
@@ -482,12 +483,21 @@ Planned fields:
 - `open_questions[]`
 - `confidence`
 
+Compatibility fields currently preserved by the deterministic task path:
+
+- `goal`
+- `scope[]`
+- `acceptance_criteria[]`
+- `task_id`
+- `tags[]`
+
 ### `VetReport` Direction
 
-`vet` should move toward an explicit intermediate schema, tentatively called `VetReport`.
+`vet` has now moved onto an explicit intermediate schema, currently implemented as `VetReport`.
 
-Planned fields:
+Current stable fields:
 
+- `report_version`
 - `task_id`
 - `file`
 - `review_scope`
@@ -496,8 +506,14 @@ Planned fields:
 - `findings`
 - `findings_by_dimension`
 - `dimension_summaries`
+- `review_range_statement`
+- `overall_evaluation`
+- `execution_readiness_breakdown`
 - `improvement_priority`
+- `issues_only_dimensions`
+- `revision_targets`
 - `recommended_next_action`
+- `next_step_options`
 - `implementation_readiness`
 
 ### Repair Loop Requirement
@@ -509,6 +525,8 @@ The intended task path is:
 3. LLM repairs the spec
 4. validator re-checks
 5. compiler renders task markdown
+
+The same repair-loop pattern now also applies to `VetReport`, with report acceptance replacing markdown compilation at the terminal step.
 
 This should become the standard LingXi path instead of relying on raw script exceptions as the main user-facing refinement mechanism.
 
@@ -690,6 +708,8 @@ Deliverables:
 - rewritten `vet` skill instructions oriented around LLM review
 - validator/compiler split for task
 - clearer validator output contracts
+- repair-loop contracts for `TaskSpec` and `VetReport`
+- contract tests for schema stability and repair-loop behavior
 
 Goal:
 

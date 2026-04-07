@@ -104,6 +104,7 @@ describe("vet report contract", () => {
   it("validate-vet-report CLI validates a stable VetReport payload", async () => {
     tempDir = createTempDir();
     const result = await runNode(validateVetReportPath, tempDir, [], {
+      report_version: VET_REPORT_SCHEMA_VERSION,
       task_id: "001",
       file: "/tmp/example.md",
       review_scope: { type: "后端", complexity: "中等", tags: [], dimensions: ["D1", "D2"] },
@@ -112,8 +113,22 @@ describe("vet report contract", () => {
       findings: [],
       findings_by_dimension: { D1: [], D2: [] },
       dimension_summaries: [],
+      review_range_statement: "Reviewed 后端/中等 task across D1, D2.",
+      overall_evaluation: "Task framing is solid and can proceed.",
+      execution_readiness_breakdown: {
+        can_start_implementation: true,
+        should_revise_first: false,
+        primary_risk_area: "none"
+      },
       improvement_priority: { blockers: [], high: [], warning: [] },
+      issues_only_dimensions: [],
+      revision_targets: [],
       recommended_next_action: "Task framing is solid and can proceed.",
+      next_step_options: [
+        { id: "A", label: "开始实现", action: "proceed" },
+        { id: "B", label: "补强 task", action: "revise_task" },
+        { id: "C", label: "跳过", action: "skip" }
+      ],
       implementation_readiness: "Task can proceed."
     });
     assert.strictEqual(result.code, 0, result.stderr);
@@ -125,6 +140,7 @@ describe("vet report contract", () => {
 
   it("builds a stable validator payload for invalid VetReport input", () => {
     const payload = buildVetReportValidationReport({
+      report_version: "draft-old",
       task_id: "001",
       file: "/tmp/example.md"
     });
@@ -132,5 +148,37 @@ describe("vet report contract", () => {
     assert.strictEqual(payload.validator, "vet_report");
     assert.strictEqual(payload.schema_version, VET_REPORT_SCHEMA_VERSION);
     assert.ok(payload.issue_count > 0);
+  });
+
+  it("rejects malformed nested finding and next-step structures", () => {
+    const payload = buildVetReportValidationReport({
+      report_version: VET_REPORT_SCHEMA_VERSION,
+      task_id: "001",
+      file: "/tmp/example.md",
+      review_scope: { type: "后端", complexity: "中等", tags: [], dimensions: ["D1", "DX"] },
+      project_context_summary: "",
+      summary: { blocking_count: 0, high_count: 0, warning_count: 0, readiness: "almost_ready" },
+      findings: [{ severity: "critical", code: "", message: "", section: "DX" }],
+      findings_by_dimension: { DX: [{}] },
+      dimension_summaries: [{ dimension: "DX", finding_count: -1, status: "unknown" }],
+      review_range_statement: "",
+      overall_evaluation: "",
+      execution_readiness_breakdown: {
+        can_start_implementation: "yes",
+        should_revise_first: "no",
+        primary_risk_area: ""
+      },
+      improvement_priority: { blockers: [{}], high: [], warning: [] },
+      issues_only_dimensions: ["DX"],
+      revision_targets: [12],
+      recommended_next_action: "",
+      next_step_options: [{ id: "", label: "", action: "invented" }],
+      implementation_readiness: ""
+    });
+    assert.strictEqual(payload.ok, false);
+    assert.ok(payload.issues.some((item) => item.path === "review_scope.dimensions[1]"));
+    assert.ok(payload.issues.some((item) => item.path === "summary.readiness"));
+    assert.ok(payload.issues.some((item) => item.path === "findings[0].severity"));
+    assert.ok(payload.issues.some((item) => item.path === "next_step_options[0].action"));
   });
 });

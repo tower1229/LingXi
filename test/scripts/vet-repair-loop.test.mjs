@@ -17,6 +17,7 @@ function createTempDir() {
 
 function buildValidVetReport(overrides = {}) {
   return {
+    report_version: VET_REPORT_SCHEMA_VERSION,
     task_id: "001",
     file: "/tmp/example.md",
     review_scope: { type: "后端", complexity: "中等", tags: [], dimensions: ["D1", "D2"] },
@@ -25,8 +26,22 @@ function buildValidVetReport(overrides = {}) {
     findings: [],
     findings_by_dimension: { D1: [], D2: [] },
     dimension_summaries: [],
+    review_range_statement: "Reviewed 后端/中等 task across D1, D2.",
+    overall_evaluation: "Task framing is solid and can proceed.",
+    execution_readiness_breakdown: {
+      can_start_implementation: true,
+      should_revise_first: false,
+      primary_risk_area: "none"
+    },
     improvement_priority: { blockers: [], high: [], warning: [] },
+    issues_only_dimensions: [],
+    revision_targets: [],
     recommended_next_action: "Task framing is solid and can proceed.",
+    next_step_options: [
+      { id: "A", label: "开始实现", action: "proceed" },
+      { id: "B", label: "补强 task", action: "revise_task" },
+      { id: "C", label: "跳过", action: "skip" }
+    ],
     implementation_readiness: "Task can proceed.",
     ...overrides
   };

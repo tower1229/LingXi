@@ -336,8 +336,9 @@ The next development phase should formalize explicit intermediate schemas.
 
 `TaskSpec` is the structured artifact produced after LLM refinement and before deterministic compilation.
 
-Expected fields:
+Current draft contract fields:
 
+- `schema_version`
 - `title`
 - `type`
 - `complexity`
@@ -355,6 +356,14 @@ Expected fields:
 - `open_questions[]`
 - `confidence`
 
+Current compatibility/pass-through fields carried by the deterministic compiler path:
+
+- `goal`
+- `scope[]`
+- `acceptance_criteria[]`
+- `task_id`
+- `tags[]`
+
 `TaskSpec` is the point where LingXi should combine:
 
 - user intent
@@ -366,8 +375,9 @@ Expected fields:
 
 `VetReport` is the structured artifact produced after LLM review and deterministic review aggregation.
 
-Expected fields:
+Current stable contract fields:
 
+- `report_version`
 - `task_id`
 - `file`
 - `review_scope`
@@ -376,8 +386,14 @@ Expected fields:
 - `findings`
 - `findings_by_dimension`
 - `dimension_summaries`
+- `review_range_statement`
+- `overall_evaluation`
+- `execution_readiness_breakdown`
 - `improvement_priority`
+- `issues_only_dimensions`
+- `revision_targets`
 - `recommended_next_action`
+- `next_step_options`
 - `implementation_readiness`
 
 `VetReport` is the stable interface between:
@@ -424,7 +440,13 @@ The intended flow is:
 4. validator re-checks
 5. compiler writes final task document
 
-The same general pattern should later apply to `VetReport` generation.
+The same general pattern now also applies to `VetReport`, with a slightly different terminal step:
+
+1. LLM or review logic produces `VetReport`
+2. validator returns structured errors
+3. review logic repairs `VetReport`
+4. validator re-checks
+5. LingXi accepts the validated report as the stable review artifact
 
 ---
 
