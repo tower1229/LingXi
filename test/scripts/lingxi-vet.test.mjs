@@ -828,4 +828,126 @@ Define explicit integration contracts and keep the service change bounded to the
     assert.ok(vetResult.findings.some((item) => item.code === "evidence_specificity_thin"), vet.stdout);
     assert.ok(vetResult.revision_targets.some((item) => item.includes("约束") || item.includes("constraints")), vet.stdout);
   });
+
+  it("flags ambiguous success criteria and template-like non-goals", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.status-flow.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.status-flow.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 前端 |
+| 复杂度 | 中等 |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+Dashboard state transitions are difficult for users to follow.
+
+### 1.2 问题描述
+
+The current status flow does not make important states explicit enough.
+
+### 1.3 解决方案概述
+
+Introduce one explicit state flow for the dashboard pane within the existing route.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the dashboard status flow
+
+### 2.2 非目标
+
+- 不扩展为大范围重构
+- 不在本任务内引入额外能力面
+
+### 2.3 成功标准
+
+- Dashboard experience is better for users
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：dashboard user
+- 我想要：clearer status flow
+- 以便：I can understand loading and failure states
+- 验收标准：
+  - Dashboard states render with one explicit pane per user-visible condition
+
+---
+
+## 4. 功能需求
+
+### F1: State panes
+
+- 需求描述：Render explicit loading, empty, and error panes
+- 实现方案：Split the dashboard pane into visible state-specific feedback
+- 验收标准：
+  - Dashboard states render with one explicit pane per user-visible condition
+- 验证方式：manual
+- 边界/异常：
+  - loading state
+  - empty state
+  - error state
+- 证据形式：交互 walkthrough 或界面截图
+- 优先级：必须
+
+### F2: Route boundary
+
+- 需求描述：Keep the work inside the existing dashboard route
+- 实现方案：Clarify the state flow without changing route structure
+- 验收标准：
+  - Dashboard state changes stay within the existing route
+- 验证方式：manual
+- 边界/异常：
+  - state change without route change
+- 证据形式：交互 walkthrough 或界面截图
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Keep existing routes unchanged
+- Do not alter backend APIs
+
+---
+
+## 6. 验收检查清单
+
+- [ ] Dashboard states render with one explicit pane per user-visible condition
+- [ ] Dashboard state changes stay within the existing route
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "success_criteria_ambiguous"), vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "non_goals_generic_only"), vet.stdout);
+    assert.ok(vetResult.revision_targets.some((item) => item.includes("非目标")), vet.stdout);
+  });
 });

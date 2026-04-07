@@ -41,6 +41,23 @@ const GENERIC_CONSTRAINT_TERMS = [
   /保持外部 api 稳定/
 ];
 
+const GENERIC_NON_GOAL_TERMS = [
+  /do not change runtime behavior/i,
+  /keep (the )?diff minimal/i,
+  /do not introduce extra capability surface/i,
+  /do not expand into unrelated refactors/i,
+  /do not alter unrelated apis/i,
+  /do not expand into a new service/i,
+  /不改运行时行为/,
+  /保持 diff 最小/,
+  /不在本任务内引入额外能力面/,
+  /不扩展为大范围重构/,
+  /不调整无关接口/,
+  /不扩展为新的服务能力/,
+  /不扩展为新的功能包/,
+  /不重做整套页面视觉/
+];
+
 const GENERIC_EVIDENCE_TERMS = [
   /手工验证记录/i,
   /documentation review/i,
@@ -168,6 +185,11 @@ function looksGenericEvidence(value) {
   return GENERIC_EVIDENCE_TERMS.some((pattern) => pattern.test(normalized));
 }
 
+function looksGenericNonGoal(value) {
+  const normalized = normalizeText(value);
+  return GENERIC_NON_GOAL_TERMS.some((pattern) => pattern.test(normalized));
+}
+
 function acceptanceCoverageGap(task) {
   const topLevel = normalizedUnique(task.acceptance_criteria || []);
   if (topLevel.length === 0) return [];
@@ -193,6 +215,13 @@ function genericEvidenceFootprint(task) {
   return evidenceItems.every((item) => looksGenericEvidence(item));
 }
 
+function genericOnlyNonGoals(task) {
+  if (task.complexity === "简单") return false;
+  const nonGoals = normalizedUnique(task.non_goals || []);
+  if (nonGoals.length === 0) return false;
+  return nonGoals.every((item) => looksGenericNonGoal(item));
+}
+
 function revisionTargetForFinding(item) {
   switch (item.code) {
     case "goal_missing_or_weak":
@@ -200,6 +229,7 @@ function revisionTargetForFinding(item) {
       return "重写目标与问题描述，让任务目标可判定且不含模糊措辞。";
     case "acceptance_missing":
     case "acceptance_ambiguous":
+    case "success_criteria_ambiguous":
       return "补强验收标准，确保每条都可二值判定并且可直接验证。";
     case "acceptance_coverage_gap":
       return "把顶层验收检查清单逐条映射到对应功能需求，避免出现无人承接的验收项。";
@@ -214,6 +244,7 @@ function revisionTargetForFinding(item) {
       return "改写解决方案概述，明确 chosen direction、边界与为什么这样落地。";
     case "non_goals_missing":
     case "non_goals_overlap_scope":
+    case "non_goals_generic_only":
       return "补齐真正的非目标，明确这次不会做什么来防止 scope drift。";
     case "requirement_spec_incomplete":
     case "requirement_granularity_thin":
@@ -337,6 +368,12 @@ function vetTask(task, projectContext) {
   if ((task.success_criteria || []).length < (task.goals || []).length) {
     findings.push(finding("warning", "success_criteria_thin", "Success criteria are thinner than the stated goals.", "D2"));
   }
+  for (const criterion of task.success_criteria || []) {
+    if (hasAmbiguousLanguage(criterion)) {
+      findings.push(finding("warning", "success_criteria_ambiguous", "Success criterion uses ambiguous language without measurable detail.", "D2"));
+      break;
+    }
+  }
   if (task.constraints.length === 0) {
     findings.push(finding("warning", "constraints_missing", "Constraints are empty. This often hides assumptions that should be explicit.", "D1"));
   }
@@ -390,6 +427,16 @@ function vetTask(task, projectContext) {
     (task.non_goals || []).some((item) => goalScopeSet.has(normalizeText(item).toLowerCase()))
   ) {
     findings.push(finding("warning", "non_goals_overlap_scope", "Non-goals repeat goals or scope instead of declaring true exclusions.", "D3"));
+  }
+  if (dimensions.includes("D3") && genericOnlyNonGoals(task)) {
+    findings.push(
+      finding(
+        "warning",
+        "non_goals_generic_only",
+        "Non-goals currently read like generic template exclusions; add task-specific boundaries that clarify what this task still will not cover.",
+        "D3"
+      )
+    );
   }
   if (dimensions.includes("D4")) {
     const incompleteReq = (task.functional_requirements || []).find(
