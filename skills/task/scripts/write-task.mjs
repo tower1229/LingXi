@@ -116,6 +116,34 @@ function collectBinaryAcceptanceIssues(items, fieldLabel) {
   return issues;
 }
 
+function collectScopeQualityIssues(scope) {
+  const vagueMarkers = [
+    "优化",
+    "提升",
+    "改进",
+    "完善",
+    "支持更多",
+    "improve",
+    "optimize",
+    "enhance",
+    "refine"
+  ];
+  const issues = [];
+  const seen = new Set();
+  for (const item of scope || []) {
+    const normalized = normalizeText(item);
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) {
+      issues.push(`scope contains duplicated item: ${item}`);
+    }
+    seen.add(key);
+    if (vagueMarkers.some((marker) => key.includes(marker)) && !/(api|interface|state|error|loading|schema|contract|route|layout)/i.test(key)) {
+      issues.push(`scope item is too vague and should be rewritten concretely: ${item}`);
+    }
+  }
+  return issues;
+}
+
 function ensureBoundedScope(scope) {
   if (scope.length > 8) {
     throw new Error("Scope is too broad for a single task. Split the task before writing it.");
@@ -207,6 +235,7 @@ function validateTaskReadiness({
   if (scope.length > 8) {
     issues.push("scope is too broad for a single task; split it before writing");
   }
+  issues.push(...collectScopeQualityIssues(scope));
   issues.push(...collectBinaryAcceptanceIssues(acceptanceCriteria, "acceptance_criteria"));
   issues.push(...collectBinaryAcceptanceIssues(successCriteria, "success_criteria"));
 
@@ -308,6 +337,15 @@ function validateTaskReadiness({
     }
   }
 
+  const allVerificationMethods = [...new Set(functionalRequirements.map((req) => normalizeText(req.verification_method)).filter(Boolean))];
+  if (
+    complexity === "复杂" &&
+    type !== "前端" &&
+    !allVerificationMethods.some((method) => method === "unit" || method === "integration" || method === "e2e")
+  ) {
+    issues.push("complex non-frontend task should not rely solely on manual/rubric verification");
+  }
+
   if (issues.length > 0) {
     const uniqueIssues = [...new Set(issues)];
     throw new Error(`Task input is not ready:\n- ${uniqueIssues.join("\n- ")}`);
@@ -388,6 +426,12 @@ function validateInput(input) {
     functionalRequirements
   });
   const tags = Array.isArray(input.tags) ? input.tags.map((item) => normalizeText(item)).filter(Boolean) : [];
+  const corpus = [input.title, input.goal, input.background, input.problem, ...scope]
+    .map((item) => normalizeText(item))
+    .join(" ");
+  if (/(docs|documentation|文档|手册|guide|readme)/i.test(corpus)) {
+    tags.push("文档为主");
+  }
   if (type === "其他" && /(sdk|库|package|library|cli)/i.test([input.title, input.goal].join(" "))) {
     tags.push("库/SDK");
   }

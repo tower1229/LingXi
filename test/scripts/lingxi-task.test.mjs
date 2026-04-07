@@ -175,4 +175,18 @@ describe("lingxi task", () => {
     assert.ok(result.stderr.includes("user_stories"), result.stderr);
     assert.ok(result.stderr.includes("frontend task should include state-oriented edge cases"), result.stderr);
   });
+
+  it("fails fast when scope wording is vague instead of concrete", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "Doc polish",
+      goal: "Clarify the contributor guide.",
+      scope: ["Improve documentation", "Refine docs flow"],
+      constraints: ["Keep the existing repo structure"],
+      acceptance_criteria: ["Contributor guide has one explicit onboarding section"]
+    });
+    assert.notStrictEqual(result.code, 0);
+    assert.ok(result.stderr.includes("scope item is too vague"), result.stderr);
+  });
 });

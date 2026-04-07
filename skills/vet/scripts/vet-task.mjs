@@ -80,9 +80,18 @@ function typeSpecificD4Check(task) {
       : null;
   }
   if (task.type === "后端") {
-    return task.functional_requirements.some((req) => !/unit|integration|manual/i.test(req.verification_method))
-      ? finding("warning", "backend_verification_weak", "Backend requirement has weak verification method coverage.", "D4")
-      : null;
+    if (task.functional_requirements.some((req) => !/unit|integration|manual/i.test(req.verification_method))) {
+      return finding("warning", "backend_verification_weak", "Backend requirement has weak verification method coverage.", "D4");
+    }
+    const hasContractBoundary = task.functional_requirements.some((req) =>
+      /api|接口|endpoint|request|response|schema|contract|payload/i.test(
+        [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
+      )
+    );
+    if (!hasContractBoundary) {
+      return finding("warning", "backend_contract_surface_thin", "Backend task should define request/response/schema or contract boundaries.", "D4");
+    }
+    return null;
   }
   return null;
 }
@@ -118,6 +127,16 @@ function tagSpecificD4Checks(task) {
         finding("warning", "docs_audience_missing", "Documentation-oriented task should state target readers or audience explicitly.", "D4")
       );
     }
+    const hasDeliverySignal = (task.functional_requirements || []).some((req) =>
+      /readme|guide|publish|release|交付|文档页面|章节|section/i.test(
+        [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
+      )
+    );
+    if (!hasDeliverySignal) {
+      findings.push(
+        finding("warning", "docs_delivery_missing", "Documentation-oriented task should describe the concrete delivery artifact or publication surface.", "D4")
+      );
+    }
   }
   if (hasSdkTag) {
     const hasContractSignal = (task.functional_requirements || []).some((req) =>
@@ -139,6 +158,9 @@ function vetTask(task) {
   const goalText = [task.background, task.problem, ...(task.goals || [])].filter(Boolean).join(" ");
   const scopeCount = (task.functional_requirements || []).length;
   const dimensions = reviewDimensions(task);
+  const goalScopeSet = new Set([...(task.goals || []), ...(task.functional_requirements || []).map((req) => req.title)]
+    .map((item) => normalizeText(item).toLowerCase())
+    .filter(Boolean));
 
   if (!goalText || goalText.length < 12) {
     findings.push(finding("blocking", "goal_missing_or_weak", "Goal framing is missing or too weak to guide implementation.", "D1"));
@@ -176,8 +198,24 @@ function vetTask(task) {
   if (dimensions.includes("D3") && task.type !== "简单功能" && task.solution_overview.length < 12) {
     findings.push(finding("warning", "solution_too_thin", "Solution overview is too thin for a non-trivial task.", "D3"));
   }
+  if (
+    dimensions.includes("D3") &&
+    task.type !== "简单功能" &&
+    task.solution_overview &&
+    [normalizeText(task.problem).toLowerCase(), normalizeText((task.goals || [])[0]).toLowerCase()].includes(
+      normalizeText(task.solution_overview).toLowerCase()
+    )
+  ) {
+    findings.push(finding("warning", "solution_repeats_problem", "Solution overview mostly repeats the goal/problem instead of explaining the chosen direction.", "D3"));
+  }
   if (dimensions.includes("D3") && task.type !== "简单功能" && (task.non_goals || []).length === 0) {
     findings.push(finding("warning", "non_goals_missing", "Non-trivial task should state non-goals to prevent scope drift.", "D3"));
+  }
+  if (
+    dimensions.includes("D3") &&
+    (task.non_goals || []).some((item) => goalScopeSet.has(normalizeText(item).toLowerCase()))
+  ) {
+    findings.push(finding("warning", "non_goals_overlap_scope", "Non-goals repeat goals or scope instead of declaring true exclusions.", "D3"));
   }
   if (dimensions.includes("D4")) {
     const incompleteReq = (task.functional_requirements || []).find(
@@ -210,6 +248,16 @@ function vetTask(task) {
   ) {
     findings.push(
       finding("warning", "integration_risk_thin", "Integration-flavored task should state more explicit dependency or rollback constraints.", "D5")
+    );
+  }
+  if (
+    dimensions.includes("D5") &&
+    task.complexity === "复杂" &&
+    task.type !== "前端" &&
+    !task.functional_requirements.some((req) => /unit|integration|e2e/i.test(normalizeText(req.verification_method)))
+  ) {
+    findings.push(
+      finding("warning", "verification_strategy_thin", "Complex non-frontend task relies too heavily on manual review without stronger verification coverage.", "D5")
     );
   }
 

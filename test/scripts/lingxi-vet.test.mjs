@@ -233,4 +233,62 @@ Adjust homepage layout.
     assert.ok(Array.isArray(vetResult.next_step_options));
     assert.ok(vetResult.review_scope.tags.includes("库/SDK"));
   });
+
+  it("flags missing documentation audience and delivery framing for docs tasks", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(taskPath, tempDir, [], {
+      title: "Docs map",
+      goal: "Clarify the contributor documentation.",
+      complexity: "中等",
+      type: "其他",
+      tags: ["文档为主"],
+      background: "The repo docs are difficult to follow.",
+      problem: "New contributors cannot find the right doc path.",
+      solution_overview: "Restructure the docs guidance around contributor tasks.",
+      scope: ["Describe the contributor doc path", "Limit the change to docs structure"],
+      constraints: ["Do not change code behavior", "Keep the repo layout intact"],
+      acceptance_criteria: [
+        "Contributor documentation contains one explicit onboarding path",
+        "The update stays within the documentation scope"
+      ],
+      non_goals: ["不扩展为代码重构"],
+      user_stories: [
+        {
+          as_a: "new contributor",
+          i_want: "one clear doc path",
+          so_that: "I can find the right onboarding steps",
+          acceptance_criteria: ["Contributor documentation contains one explicit onboarding path"]
+        }
+      ],
+      functional_requirements: [
+        {
+          title: "Describe onboarding path",
+          description: "Explain the contributor documentation flow",
+          implementation_scheme: "Restructure existing docs guidance by contributor task",
+          acceptance_criteria: ["Contributor documentation contains one explicit onboarding path"],
+          verification_method: "manual",
+          edge_cases: ["Avoid expanding into code change guidance"],
+          evidence: "Documentation review",
+          priority: "必须"
+        },
+        {
+          title: "Limit scope",
+          description: "Keep the change inside the docs structure",
+          implementation_scheme: "Revise only the contributor-facing documentation structure",
+          acceptance_criteria: ["The update stays within the documentation scope"],
+          verification_method: "manual",
+          edge_cases: ["Do not create a new publication surface"],
+          evidence: "Diff review",
+          priority: "必须"
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "docs_audience_missing"));
+    assert.ok(vetResult.findings.some((item) => item.code === "docs_delivery_missing"));
+  });
 });
