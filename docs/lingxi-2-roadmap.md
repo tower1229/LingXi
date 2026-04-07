@@ -721,10 +721,232 @@ Acceptable revisions:
 - refining note schema
 - refining automation prompt structure
 
-Changes that should require explicit roadmap revision:
 
-- reintroducing removed workflows
-- abandoning plugin-first delivery
-- replacing background automation with real-time intrusive analysis
-- replacing `.lingxi/` as runtime home
-- expanding V1 to multiple subagents
+---
+
+## Appendix: Daemon Pattern Research And Possible LingXi Enhancements
+
+This appendix records the current technical research conclusion on the **daemon / background service** pattern, so the engineering team can review it as part of LingXi 2.0 planning.
+
+It is intentionally framed as a technical option analysis, not as a change to the fixed roadmap decisions above.
+
+### Reference Pattern Studied
+
+A useful recent reference is the `Claude-to-IM-skill` project, which uses a background daemon to bridge external message channels with Claude Code / Codex.
+
+The implementation pattern is broadly:
+
+1. install the skill into the Codex skill directory
+2. install dependencies and build a bundled daemon entrypoint
+3. start the daemon through a thin shell launcher
+4. hand process lifecycle to a platform-specific supervisor
+5. persist PID, status, and logs into a runtime directory
+6. let the daemon process update authoritative runtime state after successful startup
+
+The Codex install script in that project copies or symlinks the skill into `~/.codex/skills`, runs `npm install`, builds `dist/daemon.mjs`, and prunes dev dependencies before use. citeturn205659view0
+
+The daemon launcher then prepares runtime directories, checks whether a rebuild is needed, loads config, starts the process through a platform-specific supervisor, and confirms successful startup by polling a status file rather than assuming the child process is healthy immediately. citeturn205659view1
+
+On Linux, the supervisor pattern is intentionally simple: use `setsid` or `nohup`, redirect stdout/stderr to a log file, write a fallback PID immediately, and then let the real daemon overwrite the PID with the authoritative process id after it is fully running. citeturn205659view2turn205659view1
+
+On macOS, the same project uses `launchd` with a generated LaunchAgent plist, which forwards selected environment variables, registers the service, and lets `launchctl` become the source of truth for service lifecycle and status. citeturn205659view3
+
+This is the main technical takeaway: a good daemon implementation is usually **two-layered**.
+
+- Layer 1: a thin launcher / supervisor wrapper
+- Layer 2: the actual Node.js runtime that owns business state
+
+That separation is directly relevant to LingXi if the team ever chooses to add a background runtime helper.
+
+### Daemon Implementation Pattern Worth Reusing
+
+If LingXi ever adopts a daemon-style helper, the implementation should follow a similar pattern:
+
+#### 1. Thin launcher, thick runtime
+
+Use a small launcher script only for:
+
+- locating the workspace
+- ensuring required directories exist
+- checking whether the runtime bundle is stale
+- starting or stopping the background process
+- surfacing status and logs
+
+The launcher should **not** contain LingXi memory logic.
+
+All business logic should stay in the runtime entrypoint.
+
+#### 2. Platform-specific supervision
+
+If adopted, supervision should remain explicit:
+
+- macOS: `launchd`
+- Linux: `setsid` / `nohup` fallback, or later a stricter service manager if needed
+- Windows: only if truly required later; not necessary for LingXi V1 planning
+
+This keeps the daemon operationally understandable and avoids pretending that one process-control strategy works equally well everywhere.
+
+#### 3. Runtime state as files, not hidden memory
+
+A LingXi daemon helper should persist operational state into `.lingxi/state/`, for example:
+
+```text
+.lingxi/state/
+  daemon.pid
+  daemon-status.json
+  daemon-log.txt
+  processed-sessions.json
+  distill-journal.jsonl
+  dirty-sessions.json
+```
+
+The main lesson from the reference pattern is that PID, status, logs, and business state should be explicitly persisted and inspectable, not kept only in process memory. The reference daemon persists PID and status separately and uses status confirmation instead of assuming process spawn equals healthy startup. citeturn205659view1turn205659view2
+
+#### 4. Health confirmation after startup
+
+If LingXi uses a daemon helper, `start` should not mean merely “spawned a process.”
+
+It should mean:
+
+- process started
+- runtime initialized successfully
+- workspace paths resolved
+- required config loaded
+- status file written by the runtime itself
+
+That startup rule is important because it avoids false positives and stale PID issues. The reference implementation explicitly waits for a status file to report healthy state after launch. citeturn205659view1
+
+#### 5. Separation between operational state and semantic state
+
+If a daemon exists, it should manage operational concerns such as:
+
+- which sessions are dirty
+- which distill jobs are pending
+- whether a previous run failed
+- whether a retry is needed
+
+But semantic LingXi outputs should still be written through the existing memory contracts:
+
+- `.lingxi/memory/...`
+- `.lingxi/state/processed-sessions.json`
+- `.lingxi/state/distill-journal.jsonl`
+
+The daemon should not invent a second hidden memory system.
+
+### What LingXi Could Realistically Enhance With A Daemon Helper
+
+The roadmap already commits LingXi to **automation-backed session distillation** as the primary low-intrusion mechanism.
+
+That should remain the main path.
+
+However, a daemon helper could still be useful as an **optional enhancement layer** for a later phase if the team decides automation alone is not sufficient.
+
+The most plausible enhancements are below.
+
+### Enhancement A: Dirty-Session Queue Maintenance
+
+A daemon helper could watch for newly created or changed session artifacts and maintain a `dirty-sessions.json` queue.
+
+Possible responsibilities:
+
+- detect newly appeared sessions
+- detect content changes to already-known sessions
+- compute normalized content fingerprints
+- mark sessions as pending distillation
+- avoid rescanning the full session corpus every run
+
+This would make background distillation more incremental and cheaper without changing the visible product surface.
+
+### Enhancement B: Faster Incremental Distillation Scheduling
+
+Instead of waiting for a broad periodic scan every 6 hours, a daemon helper could pre-stage work continuously and let the official automation run consume that queue.
+
+Possible model:
+
+1. daemon detects changed sessions
+2. daemon updates queue and metadata only
+3. automation still performs the actual `session-distill`
+4. memory writes remain under the existing LingXi workflow
+
+This preserves the roadmap's “automation-backed” principle while reducing scan overhead.
+
+### Enhancement C: Retry And Recovery For Failed Distill Jobs
+
+A daemon helper could maintain operational recovery metadata, for example:
+
+- last failure timestamp
+- last attempted fingerprint
+- retry count
+- backoff state
+- interrupted run marker
+
+That would improve resilience for background distillation without changing the semantic memory model.
+
+### Enhancement D: Repo-Relevance Pre-Filtering
+
+A daemon helper could improve session selection before distillation by continuously maintaining repo-relevance metadata, such as:
+
+- working directory match
+- referenced file paths
+- repository root match
+- explicit exclusions for cross-repo sessions
+
+This would reduce noisy candidate sessions before the more expensive distillation logic runs.
+
+### Enhancement E: Operational Observability
+
+A daemon helper could expose better runtime introspection for engineering and debugging, for example:
+
+- current queue depth
+- last successful distill run
+- last failed distill run
+- current content fingerprint version
+- currently pending sessions
+- stale lock or PID detection
+
+This is especially useful if background processing becomes hard to reason about from automation logs alone.
+
+### Enhancement F: Coalescing Repeated Session Changes
+
+If one session changes many times in a short period, a daemon helper could coalesce those updates before distillation.
+
+For example:
+
+- session changed 15 times in 10 minutes
+- daemon keeps only the latest normalized fingerprint
+- automation later distills only the newest stable snapshot
+
+This can reduce duplicate work while still respecting the roadmap's dedupe contract.
+
+### What A LingXi Daemon Should Not Do
+
+Based on both the roadmap direction and the reference implementation study, the daemon pattern should **not** be used in LingXi as the main mechanism for:
+
+- analyzing every user message inline
+- injecting memory into every conversation turn by default
+- replacing the `task -> vet` visible workflow with hidden orchestration
+- writing memory opportunistically on transient signals
+- reintroducing Cursor-style hook-heavy runtime behavior under a new name
+
+If LingXi adopts a daemon helper at all, it should remain an infrastructure-level assistant, not the product's main intelligence path.
+
+### Recommendation For LingXi 2.0
+
+Current recommendation:
+
+1. **Do not** make daemon technology part of the LingXi 2.0 V1 critical path.
+2. Keep the roadmap's current default: automation-backed batch session distillation.
+3. If later needed, introduce a daemon only as an **optional runtime helper** for queueing, recovery, pre-filtering, and observability.
+4. Keep memory extraction and memory writing inside the existing LingXi contracts, not inside an opaque always-on service.
+
+### Decision Frame For Engineering Review
+
+If the team wants to evaluate a daemon helper later, review it against these questions:
+
+- Does it reduce rescanning or improve recovery enough to justify added operational complexity?
+- Does it preserve automation-backed distillation as the primary semantic path?
+- Does it keep all state inspectable inside `.lingxi/`?
+- Does it avoid per-message intrusive analysis?
+- Does it avoid reintroducing hybrid Cursor-era runtime complexity?
+
+If the answer to any of the last two questions is “no,” then the daemon direction should be rejected for LingXi.
