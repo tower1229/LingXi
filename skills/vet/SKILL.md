@@ -40,6 +40,7 @@ If neither is provided, use the latest existing task.
 - keep findings concrete and actionable
 - group related issues into revision themes instead of returning only flat reminders
 - keep the `VetReport` structure stable enough for revision and repair flows
+- retrieve relevant LingXi memory before review and flag when the task ignored material repository memory
 
 ## Review Dimensions
 

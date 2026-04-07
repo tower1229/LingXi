@@ -544,20 +544,45 @@ export function tokenizeQuery(query) {
     .filter(Boolean);
 }
 
-export function scoreNote(note, query) {
-  const tokens = tokenizeQuery(query);
-  if (tokens.length === 0) return 0;
-  const haystack = [
-    note.title,
-    ...(note.when_to_load || []),
-    note.one_liner,
-    note.decision,
-    ...(note.evidence || [])
-  ].join(" ").toLowerCase();
-  let score = note.scope === "project" ? 2 : 0;
+function meaningfulTokens(tokens) {
+  const stopwords = new Set([
+    "the", "a", "an", "and", "or", "to", "for", "of", "in", "on", "with", "by",
+    "when", "use", "using", "change", "changes", "task", "tasks", "work", "review",
+    "this", "that", "it", "is", "are", "be", "before", "after", "from",
+    "的", "了", "在", "和", "与", "及", "或", "一个", "当前", "任务", "变更", "工作", "时"
+  ]);
+  return tokens.filter((token) => token.length > 1 && !stopwords.has(token));
+}
+
+function scoreField(fieldValue, tokens, weight) {
+  const normalized = normalizeText(fieldValue).toLowerCase();
+  if (!normalized) return 0;
+  let score = 0;
   for (const token of tokens) {
-    if (haystack.includes(token)) score += 1;
-    if (String(note.title || "").toLowerCase().includes(token)) score += 2;
+    if (normalized.includes(token)) score += weight;
+  }
+  return score;
+}
+
+export function scoreNote(note, query) {
+  const tokens = meaningfulTokens(tokenizeQuery(query));
+  if (tokens.length === 0) return 0;
+  let score = 0;
+  score += scoreField(note.title, tokens, 4);
+  score += scoreField(note.one_liner, tokens, 3);
+  score += scoreField(note.decision, tokens, 3);
+  score += scoreField((note.when_to_load || []).join(" "), tokens, 2);
+  score += scoreField((note.evidence || []).join(" "), tokens, 1);
+
+  const joinedQuery = tokens.join(" ");
+  const title = normalizeText(note.title).toLowerCase();
+  const oneLiner = normalizeText(note.one_liner).toLowerCase();
+  const decision = normalizeText(note.decision).toLowerCase();
+  if (joinedQuery && (title.includes(joinedQuery) || oneLiner.includes(joinedQuery) || decision.includes(joinedQuery))) {
+    score += 4;
+  }
+  if (score > 0 && note.scope === "project") {
+    score += 3;
   }
   return score;
 }
@@ -565,13 +590,18 @@ export function scoreNote(note, query) {
 export function retrieveRelevantMemoryHits(projectRoot, query, limit = 3) {
   ensureRuntimeState(projectRoot);
   const resolvedLimit = Number.isFinite(limit) && limit > 0 ? limit : 3;
-  return loadMemoryNotes(projectRoot)
+  const ranked = loadMemoryNotes(projectRoot)
     .map((note) => ({
       ...note,
       score: scoreNote(note, query)
     }))
     .filter((note) => note.score > 0)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+    .sort((a, b) => b.score - a.score || (a.scope === "project" ? -1 : 1) || a.id.localeCompare(b.id));
+  if (ranked.length === 0) return [];
+  const topScore = ranked[0].score;
+  const minimumScore = Math.max(4, topScore - 3);
+  return ranked
+    .filter((note) => note.score >= minimumScore)
     .slice(0, resolvedLimit);
 }
 

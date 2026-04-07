@@ -85,4 +85,112 @@ Split changes into smaller reviewable units.
     assert.strictEqual(summary.hit_count, 1);
     assert.strictEqual(summary.hits[0].note_id, "MEM-001");
   });
+
+  it("prefers project memory over share memory when relevance is similar", async () => {
+    tempDir = createTempDir();
+    const projectDir = path.join(tempDir, ".lingxi", "memory", "project");
+    const shareDir = path.join(tempDir, ".lingxi", "memory", "share");
+    fs.mkdirSync(projectDir, { recursive: true });
+    fs.mkdirSync(shareDir, { recursive: true });
+
+    const noteBody = (id, scope) => `---
+id: ${id}
+title: Prefer explicit rollback notes
+kind: preference
+scope: ${scope}
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When reviewing backend integration changes
+---
+
+# One-liner
+
+Prefer explicit rollback notes for backend integration changes.
+
+# Decision / Preference
+
+Prefer explicit rollback notes for backend integration changes.
+
+# Evidence
+
+- Maintainers repeatedly ask for rollback visibility.
+`;
+
+    fs.writeFileSync(path.join(projectDir, "MEM-001.project.md"), noteBody("MEM-001", "project"), "utf8");
+    fs.writeFileSync(path.join(shareDir, "MEM-002.share.md"), noteBody("MEM-002", "share"), "utf8");
+
+    const result = await runRetrieve(tempDir, "backend integration rollback");
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.hit_count, 2);
+    assert.strictEqual(summary.hits[0].note_id, "MEM-001");
+    assert.strictEqual(summary.hits[0].scope, "project");
+  });
+
+  it("keeps the hit list minimal instead of returning weak tail matches", async () => {
+    tempDir = createTempDir();
+    const memoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-001.rollback.md"),
+      `---
+id: MEM-001
+title: Prefer explicit rollback notes
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When reviewing backend integration changes
+---
+
+# One-liner
+
+Prefer explicit rollback notes for backend integration changes.
+
+# Decision / Preference
+
+Prefer explicit rollback notes for backend integration changes.
+
+# Evidence
+
+- Rollback visibility repeatedly reduces review risk.
+`,
+      "utf8"
+    );
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-002.docs.md"),
+      `---
+id: MEM-002
+title: Prefer reader-first docs structure
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When updating contributor guides
+---
+
+# One-liner
+
+Prefer reader-first docs structure.
+
+# Decision / Preference
+
+Prefer reader-first docs structure for guide changes.
+
+# Evidence
+
+- Docs changes should optimize reader entrypoints.
+`,
+      "utf8"
+    );
+
+    const result = await runRetrieve(tempDir, "backend integration rollback");
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.hit_count, 1);
+    assert.strictEqual(summary.hits[0].note_id, "MEM-001");
+  });
 });

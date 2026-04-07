@@ -80,6 +80,7 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 - turn ambiguous demand into a document with demand framing, solution framing, and development guidance
 - strengthen weak or shaky solution ideas toward current best-practice-oriented defaults
 - compile a dynamic guidance layer for frontend/backend/docs/sdk/risk signals when the task is non-trivial
+- retrieve and apply relevant LingXi memory before drafting when `memory_refs[]` are not provided explicitly
 - record which memories informed the task when applicable
 - append change-log entries when vet feedback materially changed the task
 
@@ -88,11 +89,12 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 1. Read the structured input and the existing task file if `task_id` is present.
 2. Validate core fields, then run one-pass fail-fast checks for ambiguity, breadth, and missing framing.
 3. Infer task type and complexity when they are not supplied.
-4. Normalize user stories, functional requirements, and dynamic guidance blocks into deterministic structure.
-5. Allocate a new task id unless `task_id` is explicitly provided.
-6. Render a deterministic task document, inserting `开发指导` between functional requirements and the acceptance checklist when guidance blocks are present.
-7. Write or update the task file under `.lingxi/tasks/`.
-8. When validation fails in a schema-first flow, use the repair loop boundary: validate, repair the `TaskSpec`, re-validate, then compile.
+4. Retrieve relevant LingXi memory and carry it into `memory_refs[]` when it materially shapes the task.
+5. Normalize user stories, functional requirements, and dynamic guidance blocks into deterministic structure.
+6. Allocate a new task id unless `task_id` is explicitly provided.
+7. Render a deterministic task document, inserting `开发指导` between functional requirements and the acceptance checklist when guidance blocks are present.
+8. Write or update the task file under `.lingxi/tasks/`.
+9. When validation fails in a schema-first flow, use the repair loop boundary: validate, repair the `TaskSpec`, re-validate, then compile.
 
 ## Output
 

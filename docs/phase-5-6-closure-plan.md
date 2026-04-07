@@ -155,6 +155,10 @@ Current progress:
 - `task` should retrieve useful memory before drafting
 - `vet` should retrieve useful memory before review
 - `session-distill` should improve future task/vet quality instead of just writing notes
+Current progress:
+- `task` now auto-applies relevant memory into `Memory Applied` when the caller does not provide `memory_refs[]`
+- `vet` now checks whether relevant repository memory exists but was ignored by the task
+- regression coverage now proves a `session-distill -> task -> vet` path where distilled memory becomes visible to drafting and avoids stale-memory warnings
 
 4. Strengthen low-intrusion background behavior
 - keep the background path conservative

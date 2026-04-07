@@ -12,12 +12,35 @@ import {
   upsertMemoryNote
 } from "../../../scripts/_lingxi-memory.mjs";
 
+const ENGINEERING_SIGNAL_PATTERNS = [
+  /\b(api|contract|schema|interfaces?|module|service|backend|frontend|sdk|library|cli|review|rollback|migration|dependency|test|diff|patch(?:es)?|refactor|docs?|readme|guide|state|route|layout|performance|compat(?:ibility)?|consumer|entrypoint|coupling)\b/i,
+  /(接口|契约|模块|服务|后端|前端|库|SDK|命令行|审查|评审|回滚|迁移|依赖|测试|补丁|重构|文档|指南|状态|路由|布局|性能|兼容|调用方|入口|耦合)/,
+  /\b(code|repository|repo|implementation|reviewable|maintainer|maintainers)\b/i
+];
+
+const GENERIC_LOW_SIGNAL_PATTERNS = [
+  /\b(better|good|nice|careful|quickly|faster|cleaner)\b/i,
+  /(更好|不错|小心|快一点|更快|更整洁|高效一点)/
+];
+
 function determineRunReason({ existing, fingerprint, stateDistillVersion, force }) {
   if (!existing) return "first_distill";
   if (force) return "forced_reprocess";
   if (existing.content_fingerprint !== fingerprint) return "content_changed";
   if (stateDistillVersion !== DISTILL_VERSION) return "distill_version_changed";
   return "duplicate_unchanged";
+}
+
+function isEngineeringRelevant(detail, fullText) {
+  const normalizedDetail = normalizeText(detail);
+  const normalizedFull = normalizeText(fullText);
+  if (!normalizedDetail || normalizedDetail.length < 6) return false;
+  const hasSignal = ENGINEERING_SIGNAL_PATTERNS.some((pattern) => pattern.test(normalizedDetail) || pattern.test(normalizedFull));
+  if (!hasSignal) return false;
+  if (GENERIC_LOW_SIGNAL_PATTERNS.some((pattern) => pattern.test(normalizedDetail)) && normalizedDetail.split(" ").length < 4) {
+    return false;
+  }
+  return true;
 }
 
 function englishCandidates(text) {
@@ -34,6 +57,7 @@ function englishCandidates(text) {
       if (!match) return null;
       const detail = normalizeText(match[1]);
       if (detail.length < 8) return null;
+      if (!isEngineeringRelevant(detail, text)) return null;
       return {
         kind: pattern.kind,
         title: `${pattern.title} ${detail}`.slice(0, 96),
@@ -59,6 +83,7 @@ function chineseCandidates(text) {
       const detail = normalizeText(match[2]);
       if (detail.length < 2) return null;
       const normalizedSentence = normalizeText(text);
+      if (!isEngineeringRelevant(detail, normalizedSentence)) return null;
       return {
         kind: pattern.kind,
         title: `${pattern.title}${detail}`.slice(0, 96),

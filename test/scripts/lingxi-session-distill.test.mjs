@@ -128,4 +128,22 @@ describe("lingxi session distill", () => {
     assert.strictEqual(updatedState.summary.reprocessed_runs, 1);
     assert.strictEqual(updatedState.last_run.run_reason, "distill_version_changed");
   });
+
+  it("skips low-signal non-engineering preferences instead of writing noisy memory", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const input = {
+      session_id: "session-noise",
+      messages: [{ role: "user", content: "I prefer tea in the morning and nicer conversations." }]
+    };
+    const result = await runNode(scriptPath, tempDir, input);
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.operation, "skipped_no_signal");
+    assert.strictEqual(summary.candidate_count, 0);
+
+    const projectMemoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    const files = fs.existsSync(projectMemoryDir) ? fs.readdirSync(projectMemoryDir).filter((item) => item.endsWith(".md")) : [];
+    assert.strictEqual(files.length, 0);
+  });
 });
