@@ -23,24 +23,26 @@ describe("product surface coherence", () => {
     );
   });
 
-  it("describes the repository as a Codex-native rebuild while acknowledging retained Cursor assets", () => {
+  it("describes the repository as a Codex-native rebuild with no supported legacy install surface", () => {
     const readme = readText("README.md");
     const readmeZh = readText("README_ZH.md");
 
     assert.match(readme, /Codex-native/i);
-    assert.match(readme, /legacy `?\.cursor\/`? assets/i);
-    assert.match(readme, /rebuild phase|quality-first rebuild/i);
+    assert.match(readme, /historical `?\.cursor\/`? material|not part of the 2\.0 install surface/i);
+    assert.match(readme, /quality-first rebuild/i);
+    assert.doesNotMatch(readme, /transitional compatibility path|Cursor compatibility/i);
 
     assert.match(readmeZh, /Codex-native/i);
-    assert.match(readmeZh, /旧的 `?\.cursor\/`? 资产|保留中的 Cursor 时代资产/);
+    assert.match(readmeZh, /不属于 2\.0 的安装与支持表层|历史参考材料/);
     assert.match(readmeZh, /重建阶段|质量优先/);
+    assert.doesNotMatch(readmeZh, /兼容安装面|过渡期兼容路径/);
   });
 
-  it("marks install docs as a transitional Cursor compatibility path", () => {
+  it("describes install docs as the direct Codex-native 2.0 distribution path", () => {
     const installReadme = readText("install/README.md");
 
-    assert.match(installReadme, /过渡期|transitional/i);
-    assert.match(installReadme, /Cursor 兼容安装面|Cursor compatibility/i);
     assert.match(installReadme, /Codex-native/i);
+    assert.match(installReadme, /不再提供旧版 `?\.cursor\/`? 兼容安装|no longer install or manage `?\.cursor\/`? assets/i);
+    assert.doesNotMatch(installReadme, /过渡期|transitional|兼容安装面|Cursor compatibility/i);
   });
 });

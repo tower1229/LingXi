@@ -8,10 +8,10 @@ Quality-first rebuild for LingXi 2.0.
 
 This repository is in the LingXi 2.0 rebuild phase.
 
-- The intended 2.0 core is now **Codex-native**.
+- The intended 2.0 product surface is now fully **Codex-native**.
 - The visible 2.0 workflows are intentionally narrow: `task` and `vet`.
 - Durable memory remains the real core: `memory-retrieve`, `memory-write`, and `session-distill`.
-- Legacy `.cursor/` assets are still present for compatibility, reference, and migration safety. They are not the final 2.0 product shape.
+- Historical `.cursor/` material may still exist in the repository as reference only. It is not part of the 2.0 install surface.
 
 Current project policy is quality first:
 
@@ -44,16 +44,19 @@ Implemented or in active alignment:
 - `scripts/` — deterministic setup and runtime helpers
 - `templates/` — generated runtime artifacts
 - `docs/` — architecture, roadmap, and quality bar
-- `.cursor/` — retained legacy Cursor-era assets and compatibility surface
+- `.cursor/` — historical Cursor-era reference material outside the supported 2.0 surface
 
 ## Install Notes
 
-The repository currently contains two different surfaces:
+The remote install scripts in `install/` now provision the supported LingXi 2.0 surface directly:
 
-1. The **target 2.0 architecture**, which is Codex-native.
-2. A **retained legacy Cursor install surface**, which still provisions `.cursor/` assets.
+- `.codex-plugin/plugin.json`
+- `skills/`
+- `scripts/`
+- `templates/`
+- generated runtime under `.lingxi/` and `.codex/agents/`
 
-That means the remote install scripts in `install/` are currently a transitional compatibility path, not the final Codex-native 2.0 distribution model.
+They no longer install or manage `.cursor/` assets.
 
 For local verification of the 2.0 runtime shape, use the setup script inside a target repository:
 

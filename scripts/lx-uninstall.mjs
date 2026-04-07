@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 灵犀卸载脚本：按安装清单删除 .cursor/.lingxi 运行数据与灵犀核心文件。
+ * 灵犀卸载脚本：按安装清单删除 LingXi 2.0 的运行数据与核心文件。
  * 读取 install/install-manifest.json（安装时由安装程序写入），仅删除清单内路径。
  * 用法：node scripts/lx-uninstall.mjs [--yes]
  */
@@ -9,12 +9,12 @@ import path from "node:path";
 import readline from "node:readline";
 
 const projectRoot =
+  process.env.CODEX_PROJECT_DIR ||
   process.env.CURSOR_PROJECT_DIR ||
   process.env.CLAUDE_PROJECT_DIR ||
   process.cwd();
 
 const MANIFEST_RELATIVE = "install/install-manifest.json";
-const LINGXI_RUNTIME = ".cursor/.lingxi";
 
 function resolve(p) {
   return path.join(projectRoot, p.split("/").join(path.sep));
@@ -39,20 +39,8 @@ function loadManifest() {
 
 function collectPathsToDelete(manifest) {
   const out = [];
-
-  out.push(LINGXI_RUNTIME);
-
-  (manifest.commands || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.skills || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.hooks?.files || []).forEach((p) => out.push(".cursor/" + p));
-  (manifest.agents?.files || []).forEach((p) => out.push(".cursor/" + p));
-
-  const refs = manifest.references || {};
-  for (const key of Object.keys(refs)) {
-    (refs[key] || []).forEach((p) => out.push(".cursor/" + p));
-  }
-
-  (manifest.scripts || []).forEach((p) => out.push("scripts/" + p));
+  (manifest.files || []).forEach((p) => out.push(p));
+  (manifest.runtimeFiles || []).forEach((p) => out.push(p));
 
   if (manifest.manifestCopyPath) {
     out.push(manifest.manifestCopyPath);
@@ -65,12 +53,43 @@ function safeRemove(fullPath, isDir) {
   if (!fs.existsSync(fullPath)) return;
   try {
     if (isDir) {
-      fs.rmSync(fullPath, { recursive: true });
+      fs.rmSync(fullPath, { recursive: true, force: true });
     } else {
       fs.unlinkSync(fullPath);
     }
   } catch (e) {
     console.warn("[lx-uninstall] 删除失败 " + fullPath + ": " + e.message);
+  }
+}
+
+function candidateParentDirs(targetPath) {
+  const dirs = [];
+  let current = path.dirname(targetPath);
+  while (current.startsWith(projectRoot) && current !== projectRoot) {
+    dirs.push(current);
+    current = path.dirname(current);
+  }
+  return dirs;
+}
+
+function pruneEmptyParentDirs(paths) {
+  const dirs = new Set();
+  for (const rel of paths) {
+    for (const dir of candidateParentDirs(resolve(rel))) {
+      dirs.add(dir);
+    }
+  }
+
+  const ordered = [...dirs].sort((a, b) => b.length - a.length);
+  for (const dir of ordered) {
+    if (!fs.existsSync(dir)) continue;
+    try {
+      if (fs.readdirSync(dir).length === 0) {
+        fs.rmdirSync(dir);
+      }
+    } catch {
+      // Keep non-empty or concurrently modified directories intact.
+    }
   }
 }
 
@@ -96,6 +115,8 @@ function deletePaths(paths) {
   for (const { full } of sortedDirs) {
     safeRemove(full, true);
   }
+
+  pruneEmptyParentDirs(withStats.map(({ rel }) => rel));
 }
 
 function confirm(paths) {

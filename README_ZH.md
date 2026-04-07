@@ -8,10 +8,10 @@
 
 这个仓库正处于 LingXi 2.0 的重建阶段。
 
-- 2.0 的目标主线已经明确为 **Codex-native**。
+- 2.0 的产品主线已经明确为 **Codex-native**。
 - 2.0 的可见工作流刻意收敛为 `task` 和 `vet`。
 - 持久记忆仍然是核心能力：`memory-retrieve`、`memory-write`、`session-distill`。
-- 旧的 `.cursor/` 资产目前仍保留，用于兼容、参考和迁移安全；它们不是最终的 2.0 产品形态。
+- 仓库里即便仍有 `.cursor/` 历史材料，也只作为参考保留，不属于 2.0 的安装与支持表层。
 
 当前项目遵循“质量优先”原则：
 
@@ -44,16 +44,19 @@
 - `scripts/`：确定性 setup 与运行时辅助脚本
 - `templates/`：生成到目标仓库的运行时模板
 - `docs/`：架构、roadmap 与质量标准
-- `.cursor/`：保留中的 Cursor 时代资产与兼容面
+- `.cursor/`：仓库内保留的 Cursor 时代历史参考材料，不属于受支持的 2.0 表层
 
 ## 安装说明
 
-当前仓库同时存在两套表层：
+`install/` 里的远程安装脚本现在会直接分发受支持的 LingXi 2.0 表层：
 
-1. **目标中的 2.0 架构**：Codex-native。
-2. **保留中的 Cursor 安装表层**：仍会安装 `.cursor/` 资产。
+- `.codex-plugin/plugin.json`
+- `skills/`
+- `scripts/`
+- `templates/`
+- 生成到目标仓库中的 `.lingxi/` 与 `.codex/agents/`
 
-因此，`install/` 里的远程安装脚本目前属于过渡期兼容路径，还不是最终的 Codex-native 2.0 分发方式。
+它们不再安装或管理 `.cursor/` 资产。
 
 如果要在本地验证 2.0 运行时骨架，优先在目标仓库中执行：
 

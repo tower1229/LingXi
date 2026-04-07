@@ -1,7 +1,6 @@
 /**
  * Install manifest path existence check.
- * Asserts that all paths listed in install/install-manifest.json exist in the repo
- * (supports TC-001 / TC-004: manifest is self-consistent).
+ * Asserts that all static assets listed in install/install-manifest.json exist in the repo.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -11,12 +10,6 @@ import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-
-function resolveManifestPath(manifestPath) {
-  if (manifestPath.startsWith(".cursor/")) return path.join(REPO_ROOT, manifestPath);
-  if (manifestPath.startsWith("scripts/")) return path.join(REPO_ROOT, manifestPath);
-  return path.join(REPO_ROOT, ".cursor", manifestPath);
-}
 
 describe("install-manifest-exists", () => {
   it("manifest file exists", () => {
@@ -45,35 +38,8 @@ describe("install-manifest-exists", () => {
     }
     const missing = [];
 
-    (manifest.commands || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
-      if (!fs.existsSync(full)) missing.push(full);
-    });
-    (manifest.rules || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
-      if (!fs.existsSync(full)) missing.push(full);
-    });
-    (manifest.hooks?.files || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
-      if (!fs.existsSync(full)) missing.push(full);
-    });
-    (manifest.skills || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
-      if (!fs.existsSync(full)) missing.push(full);
-    });
-    (manifest.agents?.files || []).forEach((p) => {
-      const full = resolveManifestPath(".cursor/" + p);
-      if (!fs.existsSync(full)) missing.push(full);
-    });
-    const refs = manifest.references || {};
-    for (const key of Object.keys(refs)) {
-      (refs[key] || []).forEach((p) => {
-        const full = resolveManifestPath(".cursor/" + p);
-        if (!fs.existsSync(full)) missing.push(full);
-      });
-    }
-    (manifest.scripts || []).forEach((p) => {
-      const full = path.join(REPO_ROOT, "scripts", p);
+    (manifest.files || []).forEach((p) => {
+      const full = path.join(REPO_ROOT, p);
       if (!fs.existsSync(full)) missing.push(full);
     });
 

@@ -1,0 +1,35 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, it } from "node:test";
+import assert from "node:assert";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "../..");
+
+function loadManifest() {
+  return JSON.parse(fs.readFileSync(path.join(repoRoot, "install", "install-manifest.json"), "utf8"));
+}
+
+describe("install manifest codex runtime", () => {
+  it("ships the current 2.0 setup assets needed to bootstrap the Codex-native runtime", () => {
+    const manifest = loadManifest();
+    const files = new Set(manifest.files || []);
+
+    assert.ok(files.has(".codex-plugin/plugin.json"));
+    assert.ok(files.has("scripts/_lingxi-memory.mjs"));
+    assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
+    assert.ok(files.has("scripts/lingxi-setup.mjs"));
+    assert.ok(files.has("scripts/lx-uninstall.mjs"));
+    assert.ok(files.has("templates/agents/lingxi-session-distill.toml.tmpl"));
+    assert.ok(files.has("templates/automations/session-distill.toml.tmpl"));
+  });
+
+  it("declares generated runtime paths that the installer is expected to materialize", () => {
+    const manifest = loadManifest();
+    const runtimeFiles = new Set(manifest.runtimeFiles || []);
+
+    assert.ok(runtimeFiles.has(".lingxi"));
+    assert.ok(runtimeFiles.has(".codex/agents/lingxi-session-distill.toml"));
+  });
+});
