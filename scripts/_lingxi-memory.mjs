@@ -235,7 +235,8 @@ function parseFrontmatterBlock(block) {
 }
 
 function extractSection(body, heading) {
-  const pattern = new RegExp(`^##? ${heading}\\n\\n([\\s\\S]*?)(?=\\n##? |$)`, "m");
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`^#{1,3} ${escapedHeading}\\n\\n([\\s\\S]*?)(?=\\n#{1,3} |$)`, "m");
   const match = pattern.exec(body);
   return match ? match[1].trim() : "";
 }
@@ -462,51 +463,237 @@ export function sectionList(sectionContent) {
 }
 
 export function renderTaskDocument(task) {
-  const renderBullets = (items) => items.map((item) => `- ${item}`).join("\n");
+  const renderBullets = (items) => (items || []).map((item) => `- ${item}`).join("\n");
+  const renderRequirements = (requirements) =>
+    (requirements || [])
+      .map(
+        (req, index) => `### F${index + 1}: ${req.title}
+
+- 需求描述：${req.description}
+- 实现方案：${req.implementation_scheme}
+- 验收标准：
+${(req.acceptance_criteria || []).map((item) => `  - ${item}`).join("\n")}
+- 验证方式：${req.verification_method}
+- 边界/异常：
+${(req.edge_cases || []).map((item) => `  - ${item}`).join("\n")}
+- 证据形式：${req.evidence}
+- 优先级：${req.priority}`
+      )
+      .join("\n\n");
+  const renderStories = (stories) =>
+    (stories || [])
+      .map(
+        (story, index) => `### US-${index + 1}
+
+- 作为：${story.as_a}
+- 我想要：${story.i_want}
+- 以便：${story.so_that}
+- 验收标准：
+${(story.acceptance_criteria || []).map((item) => `  - ${item}`).join("\n")}`
+      )
+      .join("\n\n");
   const memoryApplied = (task.memory_refs || []).length > 0
-    ? `\n## Memory Applied\n\n${renderBullets(task.memory_refs)}\n`
+    ? `\n## 7. Memory Applied\n\n${renderBullets(task.memory_refs)}\n`
     : "";
-  return `# ${task.id} ${task.title}
+  const tagsLine = (task.tags || []).length > 0 ? `| 特性标签 | ${(task.tags || []).join(" / ")} |` : "";
+  const changelogRows = (task.changelog || []).length > 0
+    ? (task.changelog || [])
+        .map((item) => `| ${item.date} | ${item.source} | ${item.trigger} | ${item.summary} | ${item.related || ""} |`)
+        .join("\n")
+    : "| - | - | - | - | - |";
+  return `# ${task.id}.task.${slugify(task.title)}.md
 
-## Goal
+| 属性 | 值 |
+| --- | --- |
+| 版本 | ${task.version} |
+| 状态 | ${task.status} |
+| 创建日期 | ${task.created_at} |
+| 需求类型 | ${task.type} |
+| 复杂度 | ${task.complexity} |
+${tagsLine}
 
-${task.goal}
+---
 
-## Scope
+## 1. 概述
 
-${renderBullets(task.scope)}
+### 1.1 背景
 
-## Constraints
+${task.background}
+
+### 1.2 问题描述
+
+${task.problem}
+
+### 1.3 解决方案概述
+
+${task.solution_overview}
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+${renderBullets(task.goals)}
+
+### 2.2 非目标
+
+${renderBullets(task.non_goals)}
+
+### 2.3 成功标准
+
+${renderBullets(task.success_criteria)}
+
+---
+
+## 3. 用户故事
+
+${renderStories(task.user_stories)}
+
+---
+
+## 4. 功能需求
+
+${renderRequirements(task.functional_requirements)}
+
+---
+
+## 5. 约束
 
 ${renderBullets(task.constraints)}
 
-## Acceptance Criteria
+---
 
-${renderBullets(task.acceptance_criteria)}${memoryApplied}`;
+## 6. 验收检查清单
+
+${renderBullets(task.acceptance_criteria.map((item) => `[ ] ${item}`))}${memoryApplied}
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+${changelogRows}
+`;
 }
 
 export function parseTaskDocument(content, file) {
   const normalized = content.replace(/\r\n/g, "\n");
-  const titleMatch = /^#\s+(\d{3})\s+(.+)$/m.exec(normalized);
+  const titleMatch = /^#\s+(\d{3})\.task\.(.+)\.md$/m.exec(normalized);
   if (!titleMatch) {
     throw new Error(`Task document title line is invalid: ${file}`);
   }
   const [, id, title] = titleMatch;
-  const goal = extractSection(normalized, "Goal");
-  const scope = sectionList(extractSection(normalized, "Scope"));
-  const constraints = sectionList(extractSection(normalized, "Constraints"));
-  const acceptanceCriteria = sectionList(extractSection(normalized, "Acceptance Criteria"));
-  const memoryRefs = sectionList(extractSection(normalized, "Memory Applied"));
+  const metadata = {};
+  for (const line of normalized.split("\n")) {
+    const match = /^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/.exec(line);
+    if (!match) continue;
+    const key = normalizeText(match[1]);
+    const value = normalizeText(match[2]);
+    if (key === "属性" || key === "---") continue;
+    metadata[key] = value;
+  }
+  const goals = sectionList(extractSection(normalized, "2.1 目标"));
+  const nonGoals = sectionList(extractSection(normalized, "2.2 非目标"));
+  const successCriteria = sectionList(extractSection(normalized, "2.3 成功标准"));
+  const constraints = sectionList(extractSection(normalized, "5. 约束"));
+  const acceptanceChecklist = sectionList(extractSection(normalized, "6. 验收检查清单")).map((item) =>
+    item.replace(/^\[\s\]\s*/, "").trim()
+  );
+  const memoryRefs = sectionList(extractSection(normalized, "7. Memory Applied"));
+  const userStoryMatches = [...normalized.matchAll(/^###\s+US-(\d+)$/gm)];
+  const userStories = userStoryMatches.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = index + 1 < userStoryMatches.length
+      ? (userStoryMatches[index + 1].index ?? normalized.length)
+      : normalized.indexOf("\n---\n\n## 4. 功能需求");
+    const block = normalized.slice(start, end === -1 ? normalized.length : end);
+    const field = (label) => {
+      const regex = new RegExp(`- ${label}：(.+)`);
+      const matched = regex.exec(block);
+      return matched ? normalizeText(matched[1]) : "";
+    };
+    const acceptance = /- 验收标准：\n([\s\S]*?)(?=\n- [^\n]+：|$)/.exec(block);
+    return {
+      id: `US-${match[1]}`,
+      as_a: field("作为"),
+      i_want: field("我想要"),
+      so_that: field("以便"),
+      acceptance_criteria: acceptance ? sectionList(acceptance[1]) : []
+    };
+  });
+  const changelogSection = extractSection(normalized, "8. 变更记录");
+  const changelog = [...changelogSection.matchAll(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/gm)]
+    .map((match) => ({
+      date: normalizeText(match[1]),
+      source: normalizeText(match[2]),
+      trigger: normalizeText(match[3]),
+      summary: normalizeText(match[4]),
+      related: normalizeText(match[5])
+    }))
+    .filter((row) => row.date !== "日期" && row.date !== "---" && row.date !== "-");
+  const requirementMatches = [...normalized.matchAll(/^###\s+F(\d+):\s+(.+)$/gm)];
+  const functionalRequirements = requirementMatches.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = index + 1 < requirementMatches.length ? (requirementMatches[index + 1].index ?? normalized.length) : normalized.indexOf("\n---\n\n## 5. 约束");
+    const block = normalized.slice(start, end === -1 ? normalized.length : end);
+    const field = (label) => {
+      const regex = new RegExp(`- ${label}：(.+)`);
+      const matched = regex.exec(block);
+      return matched ? normalizeText(matched[1]) : "";
+    };
+    const listField = (label) => {
+      const regex = new RegExp(`- ${label}：\\n([\\s\\S]*?)(?=\\n- [^\\n]+：|$)`);
+      const matched = regex.exec(block);
+      return matched ? sectionList(matched[1]) : [];
+    };
+    return {
+      id: `F${match[1]}`,
+      title: normalizeText(match[2]),
+      description: field("需求描述"),
+      implementation_scheme: field("实现方案"),
+      acceptance_criteria: listField("验收标准"),
+      verification_method: field("验证方式"),
+      edge_cases: listField("边界/异常"),
+      evidence: field("证据形式"),
+      priority: field("优先级")
+    };
+  });
   return {
     id,
-    title: normalizeText(title),
-    goal,
-    scope,
+    title: title.replaceAll("-", " "),
+    version: metadata["版本"] || "1.0",
+    status: metadata["状态"] || "草稿",
+    created_at: metadata["创建日期"] || "",
+    type: metadata["需求类型"] || "简单功能",
+    complexity: metadata["复杂度"] || "简单",
+    tags: metadata["特性标签"]
+      ? metadata["特性标签"] === "库/SDK"
+        ? ["库/SDK"]
+        : metadata["特性标签"].split("/").map((item) => normalizeText(item)).filter(Boolean)
+      : [],
+    background: extractSection(normalized, "1.1 背景"),
+    problem: extractSection(normalized, "1.2 问题描述"),
+    solution_overview: extractSection(normalized, "1.3 解决方案概述"),
+    goals,
+    non_goals: nonGoals,
+    success_criteria: successCriteria,
+    user_stories: userStories,
     constraints,
-    acceptance_criteria: acceptanceCriteria,
+    acceptance_criteria: acceptanceChecklist,
     memory_refs: memoryRefs,
+    functional_requirements: functionalRequirements,
+    changelog,
     file
   };
+}
+
+export function incrementVersion(version) {
+  const normalized = normalizeText(version || "1.0");
+  const match = /^(\d+)\.(\d+)$/.exec(normalized);
+  if (!match) return "1.1";
+  const major = Number(match[1]);
+  const minor = Number(match[2]) + 1;
+  return `${major}.${minor}`;
 }
 
 export function findTaskFile(projectRoot, taskId) {

@@ -1,6 +1,6 @@
 ---
 name: vet
-description: Vet a LingXi task document for ambiguity, missing constraints, hidden risk, and poor task framing.
+description: Vet a LingXi task document with dimension-based review for ambiguity, missing constraints, hidden risk, and thin framing.
 ---
 
 # LingXi Vet
@@ -17,7 +17,7 @@ Vet should catch:
 - hidden breadth
 - weak problem framing
 
-This skill challenges the task definition before work proceeds.
+This skill challenges the task definition before work proceeds. It should review only task-level framing, not downstream implementation detail.
 
 ## Input Contract
 
@@ -32,6 +32,8 @@ If neither is provided, use the latest existing task.
 
 - inspect task quality
 - identify blocking gaps and warnings
+- adapt review dimensions to task type and complexity
+- make the implementation readiness explicit
 - keep findings concrete and actionable
 
 ## Review Dimensions
@@ -42,14 +44,26 @@ If neither is provided, use the latest existing task.
 - Acceptance testability
 - Broadness and split risk
 
+For non-trivial tasks, also inspect:
+
+- solution framing
+- functional requirement completeness
+- risk visibility
+- tag-specific contract requirements for documentation or SDK work
+
 ## Output
 
 Return JSON with:
 
 - `task_id`
 - `file`
+- `review_scope`
 - `summary`
 - `findings`
+- `dimension_summaries`
+- `review_range_statement`
+- `implementation_readiness`
+- `next_step_options`
 
 ## Implementation
 

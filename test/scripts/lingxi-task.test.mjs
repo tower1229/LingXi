@@ -52,7 +52,7 @@ describe("lingxi task", () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
     const result = await runNode(scriptPath, tempDir, {
-      title: "Add explicit API boundary",
+      title: "API seam",
       goal: "Clarify module boundaries for integration code.",
       scope: ["Create an explicit interface for the integration module"],
       constraints: ["Do not change runtime behavior"],
@@ -62,9 +62,117 @@ describe("lingxi task", () => {
     assert.strictEqual(result.code, 0, result.stderr);
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.task_id, "001");
+    assert.strictEqual(summary.quality_gate, "ready");
+    assert.ok(Array.isArray(summary.next_step_options));
     const content = fs.readFileSync(summary.file, "utf8");
-    assert.ok(content.includes("## Goal"));
-    assert.ok(content.includes("## Acceptance Criteria"));
+    assert.ok(content.includes("## 1. 概述"));
+    assert.ok(content.includes("## 4. 功能需求"));
+    assert.ok(content.includes("| 复杂度 | 简单 |"));
     assert.ok(content.includes("MEM-001"));
+  });
+
+  it("infers task type when the content clearly indicates backend work", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "API seam",
+      goal: "Clarify the backend API boundary.",
+      scope: ["Add an explicit API interface"],
+      constraints: ["Do not change database schema"],
+      acceptance_criteria: ["The backend API exposes one documented explicit entrypoint."]
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    const content = fs.readFileSync(summary.file, "utf8");
+    assert.ok(content.includes("| 需求类型 | 后端 |"));
+  });
+
+  it("increments version and prepends changelog when updating from vet feedback", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(scriptPath, tempDir, {
+      title: "API seam",
+      goal: "Clarify module boundaries for integration code.",
+      scope: ["Create an explicit interface for the integration module"],
+      constraints: ["Do not change runtime behavior"],
+      acceptance_criteria: ["Integration module exposes a documented explicit interface"]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const first = JSON.parse(created.stdout);
+
+    const updated = await runNode(scriptPath, tempDir, {
+      task_id: "001",
+      title: "API seam",
+      goal: "Clarify module boundaries for integration code.",
+      scope: ["Create an explicit interface for the integration module"],
+      constraints: ["Do not change runtime behavior", "Keep external API stable"],
+      acceptance_criteria: ["Integration module exposes a documented explicit interface"],
+      change_source: "vet",
+      change_trigger: "采纳 D2 改进建议",
+      change_summary: "补充约束并收紧任务边界",
+      change_related: "D2"
+    });
+    assert.strictEqual(updated.code, 0, updated.stderr);
+    const content = fs.readFileSync(first.file, "utf8");
+    assert.ok(content.includes("| 版本 | 1.1 |"));
+    assert.ok(content.includes("| vet | 采纳 D2 改进建议 | 补充约束并收紧任务边界 | D2 |"));
+  });
+
+  it("fails fast when acceptance criteria are ambiguous and not testable", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "Improve homepage",
+      goal: "Improve homepage experience.",
+      scope: ["Adjust homepage layout"],
+      constraints: ["Do not change routes"],
+      acceptance_criteria: ["Homepage is better for users"]
+    });
+    assert.notStrictEqual(result.code, 0);
+    assert.ok(result.stderr.includes("acceptance_criteria contains ambiguous non-binary item"), result.stderr);
+  });
+
+  it("fails fast when a non-trivial task lacks non-goals or user stories", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "API seam",
+      goal: "Clarify module boundaries for integration code.",
+      complexity: "中等",
+      type: "后端",
+      background: "Integration boundaries are currently implicit.",
+      problem: "The current module seam is hard to review safely.",
+      solution_overview: "Introduce an explicit interface and move call sites behind it.",
+      scope: ["Add an explicit integration interface"],
+      constraints: ["Do not change behavior"],
+      acceptance_criteria: ["The integration interface is documented with one explicit entrypoint."]
+    });
+    assert.notStrictEqual(result.code, 0);
+    assert.ok(
+      result.stderr.includes("non_goals") || result.stderr.includes("user_stories"),
+      result.stderr
+    );
+  });
+
+  it("reports multiple readiness gaps in one pass for non-trivial frontend tasks", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "Status flow",
+      goal: "Improve dashboard flow.",
+      complexity: "中等",
+      type: "前端",
+      background: "Dashboard needs clearer states.",
+      problem: "Users cannot understand the current flow.",
+      solution_overview: "Improve dashboard flow.",
+      scope: ["Update dashboard states", "Refine dashboard layout"],
+      constraints: ["Do not change routes"],
+      acceptance_criteria: ["Dashboard is better for users"]
+    });
+    assert.notStrictEqual(result.code, 0);
+    assert.ok(result.stderr.includes("Task input is not ready"), result.stderr);
+    assert.ok(result.stderr.includes("non_goals"), result.stderr);
+    assert.ok(result.stderr.includes("user_stories"), result.stderr);
+    assert.ok(result.stderr.includes("frontend task should include state-oriented edge cases"), result.stderr);
   });
 });
