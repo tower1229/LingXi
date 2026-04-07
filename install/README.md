@@ -1,6 +1,8 @@
 # 安装脚本
 
-本目录包含 LíngXī（灵犀）的远程安装相关文件，通过脚本将灵犀安装到当前项目。
+本目录包含 LíngXī（灵犀）的远程安装相关文件。
+
+注意：这些脚本当前仍属于**过渡期的 Cursor 兼容安装面**，会把灵犀安装到项目内的 `.cursor/` 结构中。它们不是最终的 Codex-native 2.0 分发方式。
 
 ## 文件说明
 
@@ -38,7 +40,13 @@ curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
-安装完成后，建议在 Cursor 中打开项目并运行 `/init` 初始化项目上下文（并按需进行可选记忆写入）。
+安装完成后，建议在 Cursor 中打开项目并按当前兼容工作流使用相关命令或 skill。
+
+如果你的目标是验证 LingXi 2.0 的 Codex-native 运行时骨架，应优先在目标仓库直接执行：
+
+```bash
+node scripts/lingxi-setup.mjs
+```
 
 ### 卸载
 
@@ -70,4 +78,4 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 ## 版本
 
-与主项目版本一致（当前 1.1.0）。
+与主项目版本一致（当前 2.0.0）。

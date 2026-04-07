@@ -1,6 +1,6 @@
 # LíngXī 远程安装脚本 (Windows PowerShell)
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.2.0
+# Version: 2.0.0
 
 # 配置
 $RepoOwner = "tower1229"
@@ -97,6 +97,8 @@ $Manifest = Load-Manifest
 
 Write-Info "Installing LingXi..."
 Write-Info "Source: ${RepoOwner}/${RepoName}"
+Write-Warning "This installer currently provisions the retained Cursor compatibility surface."
+Write-Warning "The final Codex-native LingXi 2.0 distribution path is still being finalized."
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
@@ -354,4 +356,6 @@ Write-Host ""
 if ($CursorExists -or $LingxiExists) {
   Write-Info "Merge mode: kept non-LingXi files and updated LingXi files"
 }
+Write-Warning "Installed surface: Cursor compatibility path (.cursor/...)."
+Write-Warning "Repository direction: Codex-native LingXi 2.0 core."
 Write-Info "Next: run /init in Cursor"

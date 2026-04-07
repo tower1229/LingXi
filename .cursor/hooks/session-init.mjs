@@ -15,15 +15,23 @@ function buildDynamicBaseContext(trigger_heartbeat, trigger_improvement) {
   let stepA = (trigger_heartbeat || trigger_improvement) ? 
     `  <rule id="A" condition="If [会话提炼心跳] or [自我迭代心跳] context is provided below">Invoke subagent using mcp_task in the background, no need to wait.</rule>\n` : "";
 
-  return `<execution_protocol>
+  return `【记忆提取约定】以下协议在整个会话内持续有效。每一轮都必须按步骤执行，不得跳步。
+
+<execution_protocol>
   <description>This protocol is effective for the entire session. Each turn is independent. Regardless of the user's input, you MUST execute in the following order. NO EXCEPTIONS.</description>
-${stepA}  <rule id="B">Memory Retrieval Agreement (Must choose one):
-    - [Skip]: If the user message is ONLY a command (like \`/task\`) or a command with parameters (like \`/remember <content>\`) without independent user intent, DO NOT execute memory-retrieve. Write \`memory.retrieve.skipped\` to audit.
-    - [Perform]: Otherwise, FIRST execute \`/memory-retrieve <current user message>\`. Then write \`memory.retrieve.performed\` to audit.
-    PROHIBITION: DO NOT start answering or doing requests before writing the audit log for step B!
-    Decision: If there are hits (top 0-2), you must make an adopt/reject/ask decision for each. Only give a one-line prompt for adopt, don't show reject. Cite the source (e.g., [MEM-003]) naturally when used.
+${stepA}  <rule id="B">步骤 B：Memory Retrieval Agreement（Must choose one）：
+    - [Skip]：如果用户消息仅是命令（如 \`/task\`）或命令参数（如 \`/remember <content>\`），且不包含独立用户意图，则不要执行 memory-retrieve；改为写入 \`memory.retrieve.skipped\` 审计。
+    - [Perform]：否则，先执行 \`/memory-retrieve <当前用户消息>\`，再写入 \`memory.retrieve.performed\` 审计。
+    - 禁止：在完成步骤 B 的检索审计前，不要开始回答或执行主请求。
+    - 决策：若有命中（top 0-2），必须逐条做 adopt / reject / ask 决策；仅对 adopt 给出一行极简提醒，reject 不对用户展示；引用记忆时自然带上来源（如 [MEM-003]）。
   </rule>
-  <rule id="C">Make responses and implement the user requests.</rule>
+  <rule id="C">步骤 C：执行主流程，回答用户并落实请求。</rule>
+  <rule id="D">步骤 D：若步骤 C 发生文件写入或其他实际产物变更，则进入 post 模式的 memory-retrieve：
+    - 用“实际变更摘要”作为检索 query 再执行一次 memory-retrieve。
+    - 仅对 \`trigger_timing=post\` 或 \`trigger_timing=both\` 的记忆执行 adopt / reject；\`trigger_timing=pre\` 在 post 模式跳过。
+    - 若 note 未声明 \`trigger_timing\`，默认按 \`pre\` 处理（向后兼容）。
+    - post 模式命中的义务要立即履约，例如运行测试、更新版本号、补齐发布动作等；不要把这些义务留到下一轮。
+  </rule>
 </execution_protocol>` + BASE_CONTEXT_FOOTER;
 }
 

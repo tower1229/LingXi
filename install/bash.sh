@@ -2,7 +2,7 @@
 
 # LíngXī 远程安装脚本
 # 直接从 GitHub 下载并安装到当前项目
-# Version: 1.2.0
+# Version: 2.0.0
 
 # 严格模式：遇到错误立即退出，未定义变量报错，管道中任何命令失败都视为失败
 set -euo pipefail
@@ -268,6 +268,8 @@ LINGXI_VERSION=$(get_json_string "version")
 
 info "Installing LingXi..."
 info "Source: ${REPO_OWNER}/${REPO_NAME}"
+warning "This installer currently provisions the retained Cursor compatibility surface."
+warning "The final Codex-native LingXi 2.0 distribution path is still being finalized."
 
 # 检查目标目录是否存在
 CURSOR_EXISTS=false
@@ -602,6 +604,8 @@ echo ""
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   info "Merge mode: kept non-LingXi files and updated LingXi files"
 fi
+warning "Installed surface: Cursor compatibility path (.cursor/...)."
+warning "Repository direction: Codex-native LingXi 2.0 core."
 info "Next: run /init in Cursor"
 
 # 清理临时文件

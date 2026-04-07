@@ -1,9 +1,9 @@
 {
   "name": "lingxi-workflow",
-  "description": "Cursor workflow with persistent memory.",
+  "description": "LingXi 2.0 quality-first rebuild with a Codex-native core and retained Cursor compatibility assets.",
   "private": true,
   "author": "tower1229@gmail.com",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "scripts": {
     "lx:validate-plugin": "node scripts/validate-template.mjs",
