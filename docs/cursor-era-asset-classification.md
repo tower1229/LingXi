@@ -118,6 +118,11 @@ Completed removals:
 - `.cursor/skills/plan/`
 - `.cursor/skills/build/`
 - `.cursor/skills/review/`
+- `.cursor/skills/reviewer-doc-consistency/`
+- `.cursor/skills/reviewer-e2e/`
+- `.cursor/skills/reviewer-performance/`
+- `.cursor/skills/reviewer-security/`
+- `.cursor/skills/testcase-designer/`
 
 ## Test Ownership
 
@@ -185,6 +190,7 @@ The next high-value cleanup targets are:
 Most recent completed removal slice:
 
 - first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
+- second-wave reviewer/testcase skills (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`)
 
 ## Removal End State
 
