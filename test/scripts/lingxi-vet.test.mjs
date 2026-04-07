@@ -600,4 +600,232 @@ Define one explicit public SDK surface for the integration layer.
     assert.ok(typeof vetResult.project_context_summary === "string");
     assert.ok(vetResult.project_context_summary.includes("backend-oriented workspace"));
   });
+
+  it("flags acceptance coverage gaps when top-level acceptance is not mapped into requirement criteria", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.coverage-gap.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.coverage-gap.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 后端 |
+| 复杂度 | 中等 |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+Integration behavior currently crosses module boundaries implicitly.
+
+### 1.2 问题描述
+
+The current seam is hard to review and validate.
+
+### 1.3 解决方案概述
+
+Define one explicit backend contract and keep the change inside the current integration seam.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the backend integration seam
+
+### 2.2 非目标
+
+- 不扩展为新的服务能力
+
+### 2.3 成功标准
+
+- The rollout path is documented for maintainers
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：service maintainer
+- 我想要：one explicit backend seam
+- 以便：I can validate the change against a clear contract
+- 验收标准：
+  - The rollout path is documented for maintainers
+
+---
+
+## 4. 功能需求
+
+### F1: Define backend seam
+
+- 需求描述：Describe the backend request and response boundary
+- 实现方案：Document one explicit request/response contract for the current integration seam
+- 验收标准：
+  - The backend contract is documented with one explicit request/response boundary
+- 验证方式：integration
+- 边界/异常：
+  - invalid input
+  - unexpected dependency response
+- 证据形式：Contract review with one integration check
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Do not change runtime behavior
+- Keep external API stable
+
+---
+
+## 6. 验收检查清单
+
+- [ ] The rollout path is documented for maintainers
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "acceptance_coverage_gap"), vet.stdout);
+    assert.ok(Array.isArray(vetResult.revision_targets), vet.stdout);
+  });
+
+  it("flags generic-only constraints and placeholder evidence for non-trivial tasks", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.generic-risk.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.generic-risk.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 后端 |
+| 复杂度 | 复杂 |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+An external integration path needs to be tightened for service reliability.
+
+### 1.2 问题描述
+
+The current integration boundary is hard to validate and carries hidden dependency risk.
+
+### 1.3 解决方案概述
+
+Define explicit integration contracts and keep the service change bounded to the current seam.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the integration contract
+
+### 2.2 非目标
+
+- 不扩展为新的业务能力
+
+### 2.3 成功标准
+
+- The integration contract is explicit and reviewable
+- The service change remains bounded to the current seam
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：service maintainer
+- 我想要：an explicit integration contract
+- 以便：I can review external dependency risk before implementation
+- 验收标准：
+  - The integration contract is explicit and reviewable
+
+---
+
+## 4. 功能需求
+
+### F1: Define integration contract
+
+- 需求描述：Describe the external request and response contract
+- 实现方案：Document the current integration boundary and route the service through one explicit contract
+- 验收标准：
+  - The integration contract is explicit and reviewable
+- 验证方式：manual
+- 边界/异常：
+  - invalid input
+  - dependency timeout
+- 证据形式：手工验证记录
+- 优先级：必须
+
+### F2: Bound the service change
+
+- 需求描述：Keep the change inside the current integration seam
+- 实现方案：Restrict the implementation to the current service boundary
+- 验收标准：
+  - The service change remains bounded to the current seam
+- 验证方式：manual
+- 边界/异常：
+  - rollback path unclear
+  - dependency rollback coordination
+- 证据形式：Diff review
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Do not change runtime behavior
+- Keep the diff minimal
+
+---
+
+## 6. 验收检查清单
+
+- [ ] The integration contract is explicit and reviewable
+- [ ] The service change remains bounded to the current seam
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "constraints_generic_only"), vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "evidence_specificity_thin"), vet.stdout);
+    assert.ok(vetResult.revision_targets.some((item) => item.includes("约束") || item.includes("constraints")), vet.stdout);
+  });
 });

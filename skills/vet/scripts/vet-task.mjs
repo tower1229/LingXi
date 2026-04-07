@@ -25,6 +25,32 @@ const AMBIGUOUS_TERMS = [
   "友好"
 ];
 
+const GENERIC_CONSTRAINT_TERMS = [
+  /do not change runtime behavior/i,
+  /keep (the )?diff minimal/i,
+  /keep (the )?repo layout/i,
+  /keep (the )?existing structure/i,
+  /do not change routes/i,
+  /do not alter backend apis/i,
+  /keep external api stable/i,
+  /不改运行时行为/,
+  /保持 diff 最小/,
+  /保持仓库结构/,
+  /不改路由/,
+  /保持外部 api 稳定/
+];
+
+const GENERIC_EVIDENCE_TERMS = [
+  /手工验证记录/i,
+  /documentation review/i,
+  /diff review/i,
+  /manual walkthrough/i,
+  /browser capture/i,
+  /文档评审/,
+  /diff review/i,
+  /截图/i
+];
+
 function parseArgs(argv) {
   const args = { taskId: "", taskPath: "" };
   for (let i = 0; i < argv.length; i += 1) {
@@ -123,6 +149,112 @@ function distinctFindingCodes(findings) {
   });
 }
 
+function normalizedUnique(items) {
+  return [...new Set((items || []).map((item) => normalizeText(item)).filter(Boolean))];
+}
+
+function criterionKey(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function looksGenericConstraint(value) {
+  const normalized = normalizeText(value);
+  return GENERIC_CONSTRAINT_TERMS.some((pattern) => pattern.test(normalized));
+}
+
+function looksGenericEvidence(value) {
+  const normalized = normalizeText(value);
+  return GENERIC_EVIDENCE_TERMS.some((pattern) => pattern.test(normalized));
+}
+
+function acceptanceCoverageGap(task) {
+  const topLevel = normalizedUnique(task.acceptance_criteria || []);
+  if (topLevel.length === 0) return [];
+  const requirementCriteria = new Set(
+    (task.functional_requirements || [])
+      .flatMap((req) => req.acceptance_criteria || [])
+      .map((item) => criterionKey(item))
+      .filter(Boolean)
+  );
+  return topLevel.filter((item) => !requirementCriteria.has(criterionKey(item)));
+}
+
+function genericOnlyConstraints(task) {
+  if (task.complexity === "简单") return false;
+  const constraints = normalizedUnique(task.constraints || []);
+  if (constraints.length === 0) return false;
+  return constraints.every((item) => looksGenericConstraint(item));
+}
+
+function genericEvidenceFootprint(task) {
+  const evidenceItems = normalizedUnique((task.functional_requirements || []).map((req) => req.evidence));
+  if (evidenceItems.length === 0) return false;
+  return evidenceItems.every((item) => looksGenericEvidence(item));
+}
+
+function revisionTargetForFinding(item) {
+  switch (item.code) {
+    case "goal_missing_or_weak":
+    case "goal_ambiguous":
+      return "重写目标与问题描述，让任务目标可判定且不含模糊措辞。";
+    case "acceptance_missing":
+    case "acceptance_ambiguous":
+      return "补强验收标准，确保每条都可二值判定并且可直接验证。";
+    case "acceptance_coverage_gap":
+      return "把顶层验收检查清单逐条映射到对应功能需求，避免出现无人承接的验收项。";
+    case "constraints_missing":
+    case "constraints_generic_only":
+    case "risk_underexplored":
+    case "integration_risk_thin":
+      return "补充与当前任务直接相关的约束、依赖边界和回滚/风险条件，不要只写模板化限制。";
+    case "solution_missing":
+    case "solution_too_thin":
+    case "solution_repeats_problem":
+      return "改写解决方案概述，明确 chosen direction、边界与为什么这样落地。";
+    case "non_goals_missing":
+    case "non_goals_overlap_scope":
+      return "补齐真正的非目标，明确这次不会做什么来防止 scope drift。";
+    case "requirement_spec_incomplete":
+    case "requirement_granularity_thin":
+      return "补全功能需求行，让实现方案、验收、验证方式和边界情况一一对应。";
+    case "frontend_state_coverage_weak":
+    case "frontend_interaction_surface_thin":
+    case "frontend_runtime_constraint_thin":
+      return "补强前端状态、交互面和运行时边界，让页面行为覆盖 loading/empty/error 与设备约束。";
+    case "backend_verification_weak":
+    case "backend_contract_surface_thin":
+      return "把后端接口/契约边界写清楚，并补足更可信的验证方式。";
+    case "docs_audience_missing":
+    case "docs_delivery_missing":
+      return "明确文档任务的目标读者与具体交付物，避免只有“改文档”这种宽泛表述。";
+    case "sdk_contract_missing":
+    case "sdk_compatibility_missing":
+      return "明确 SDK/public API contract、兼容策略和是否存在 breaking change。";
+    case "evidence_specificity_thin":
+      return "把证据形式从占位词改成可审阅的具体证据，例如哪类 diff、截图、契约检查或 walkthrough。";
+    case "verification_strategy_thin":
+      return "为复杂任务补上更强的验证策略，不要只依赖 manual/rubric。";
+    default:
+      return "";
+  }
+}
+
+function buildRevisionTargets(findings) {
+  const prioritized = [...findings].sort(
+    (a, b) => severityRank(b.severity) - severityRank(a.severity) || a.code.localeCompare(b.code)
+  );
+  const out = [];
+  const seen = new Set();
+  for (const item of prioritized) {
+    const target = revisionTargetForFinding(item);
+    if (!target || seen.has(target)) continue;
+    seen.add(target);
+    out.push(target);
+    if (out.length >= 4) break;
+  }
+  return out;
+}
+
 function tagSpecificD4Checks(task) {
   const findings = [];
   const tags = new Set((task.tags || []).map((item) => normalizeText(item)));
@@ -213,6 +345,17 @@ function vetTask(task, projectContext) {
   if (scopeCount > 0 && scopeCount !== (task.acceptance_criteria || []).length) {
     findings.push(finding("warning", "scope_acceptance_mismatch", "Scope and acceptance checklist are not obviously aligned one-to-one.", "D2"));
   }
+  const uncoveredAcceptance = acceptanceCoverageGap(task);
+  if (uncoveredAcceptance.length > 0) {
+    findings.push(
+      finding(
+        "warning",
+        "acceptance_coverage_gap",
+        `Top-level acceptance items are not clearly mapped into functional requirements: ${uncoveredAcceptance.join("; ")}`,
+        "D2"
+      )
+    );
+  }
   if (hasAmbiguousLanguage(goalText)) {
     findings.push(finding("high", "goal_ambiguous", "Goal uses ambiguous language without measurable detail.", "D1"));
   }
@@ -263,6 +406,11 @@ function vetTask(task, projectContext) {
   if (dimensions.includes("D5") && task.complexity !== "简单" && task.constraints.length < 2) {
     findings.push(finding("warning", "risk_underexplored", "Non-trivial task has too little explicit constraint or risk framing.", "D5"));
   }
+  if (dimensions.includes("D5") && genericOnlyConstraints(task)) {
+    findings.push(
+      finding("warning", "constraints_generic_only", "Non-trivial task currently lists only generic constraints; add task-specific operational boundaries and risk conditions.", "D5")
+    );
+  }
   if (dimensions.includes("D5") && task.complexity !== "简单" && (task.user_stories || []).length === 0) {
     findings.push(finding("warning", "user_story_missing", "Non-trivial task lacks explicit user stories, which weakens risk and scenario coverage.", "D5"));
   }
@@ -300,11 +448,17 @@ function vetTask(task, projectContext) {
       finding("warning", "frontend_runtime_constraint_thin", "Non-trivial frontend task should state runtime constraints such as responsive, browser, or performance boundaries.", "D5")
     );
   }
+  if (dimensions.includes("D4") && task.complexity !== "简单" && genericEvidenceFootprint(task)) {
+    findings.push(
+      finding("warning", "evidence_specificity_thin", "Evidence fields still look like placeholders; name the concrete artifact or proof the reviewer should expect.", "D4")
+    );
+  }
 
   const dedupedFindings = distinctFindingCodes(findings).sort(
     (a, b) => severityRank(b.severity) - severityRank(a.severity) || a.code.localeCompare(b.code)
   );
   const readiness = classifyReadiness(dedupedFindings);
+  const revisionTargets = buildRevisionTargets(dedupedFindings);
 
   const dimensionSummaries = dimensions.map((dimension) => {
     const dimensionFindings = dedupedFindings.filter((item) => item.section === dimension);
@@ -361,11 +515,14 @@ function vetTask(task, projectContext) {
       warning: dedupedFindings.filter((item) => item.severity === "warning")
     },
     issues_only_dimensions: dimensionSummaries.filter((item) => item.finding_count > 0).map((item) => item.dimension),
+    revision_targets: revisionTargets,
     recommended_next_action: dedupedFindings.some((item) => item.severity === "blocking")
-      ? "Revise the task document before implementation."
+      ? (revisionTargets[0] || "Revise the task document before implementation.")
       : dedupedFindings.some((item) => item.severity === "high")
-        ? "Address the high-priority issues, then continue."
-        : "Task can proceed after reviewing the warnings.",
+        ? (revisionTargets[0] || "Address the high-priority issues, then continue.")
+        : revisionTargets.length > 0
+          ? `Task can proceed after reviewing these points: ${revisionTargets.slice(0, 2).join(" ")}`
+          : "Task can proceed after reviewing the warnings.",
     next_step_options: dedupedFindings.some((item) => item.severity === "blocking" || item.severity === "high")
       ? [
           { id: "A", label: "调整 task", action: "revise_task" },
