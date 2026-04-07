@@ -101,6 +101,16 @@ describe("task spec contract", () => {
           priority: "必须"
         }
       ],
+      guidance_blocks: [
+        {
+          kind: "backend_contract_guidance",
+          title: "契约与边界指导",
+          bullets: [
+            "先明确 request/response contract，再落实现。",
+            "保持当前服务边界，不扩展到无关接口。"
+          ]
+        }
+      ],
       constraints: ["Do not change runtime behavior"],
       memory_refs: [],
       open_questions: [],
@@ -220,6 +230,58 @@ describe("task spec contract", () => {
     assert.ok(payload.issues.some((item) => item.path === "tags"));
   });
 
+  it("rejects malformed guidance blocks", () => {
+    const payload = buildTaskSpecValidationReport({
+      schema_version: TASK_SPEC_SCHEMA_VERSION,
+      title: "API seam",
+      type: "后端",
+      complexity: "中等",
+      project_context: null,
+      background: "Integration boundaries are currently implicit.",
+      problem: "The current module seam is hard to review safely.",
+      solution_overview: "Introduce one explicit backend contract and keep the change bounded.",
+      goals: ["Clarify the backend seam"],
+      non_goals: ["不扩展为新的服务能力"],
+      success_criteria: ["The backend seam is explicit and reviewable"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "one explicit backend seam",
+          so_that: "I can review the change against a stable contract",
+          acceptance_criteria: ["The backend seam is explicit and reviewable"]
+        }
+      ],
+      functional_requirements: [
+        {
+          id: "F1",
+          title: "Define seam",
+          description: "Describe the request and response boundary",
+          implementation_scheme: "Document one explicit contract for the current service seam",
+          acceptance_criteria: ["The backend seam is explicit and reviewable"],
+          verification_method: "integration",
+          edge_cases: ["invalid input"],
+          evidence: "Contract review with one integration check",
+          priority: "必须"
+        }
+      ],
+      guidance_blocks: [
+        {
+          kind: "backend",
+          title: "",
+          bullets: []
+        }
+      ],
+      constraints: ["Do not change runtime behavior"],
+      memory_refs: [],
+      open_questions: [],
+      confidence: 0.82
+    });
+    assert.strictEqual(payload.ok, false);
+    assert.ok(payload.issues.some((item) => item.path === "guidance_blocks[0].kind"));
+    assert.ok(payload.issues.some((item) => item.path === "guidance_blocks[0].title"));
+    assert.ok(payload.issues.some((item) => item.path === "guidance_blocks[0].bullets"));
+  });
+
   it("compile-task-spec CLI persists a valid TaskSpec independently of write-task", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
@@ -259,6 +321,16 @@ describe("task spec contract", () => {
           priority: "必须"
         }
       ],
+      guidance_blocks: [
+        {
+          kind: "backend_contract_guidance",
+          title: "契约与边界指导",
+          bullets: [
+            "先把 request/response contract 写清楚，再落实现。",
+            "把变更收在当前服务边界内。"
+          ]
+        }
+      ],
       constraints: ["Do not change runtime behavior"],
       memory_refs: [],
       open_questions: [],
@@ -268,5 +340,8 @@ describe("task spec contract", () => {
     const payload = JSON.parse(result.stdout);
     assert.strictEqual(payload.task_spec_version, TASK_SPEC_SCHEMA_VERSION);
     assert.ok(fs.existsSync(payload.file), result.stdout);
+    const document = fs.readFileSync(payload.file, "utf8");
+    assert.match(document, /## 5\. 开发指导/);
+    assert.match(document, /### 契约与边界指导/);
   });
 });

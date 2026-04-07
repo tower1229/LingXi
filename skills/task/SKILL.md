@@ -34,6 +34,7 @@ Provide structured task input with:
 - optional `success_criteria[]`
 - optional `user_stories[]`
 - optional `functional_requirements[]`
+- optional `guidance_blocks[]`
 - optional `memory_refs[]`
 - optional `task_id` for updates
 
@@ -48,6 +49,7 @@ Provide structured task input with:
 - Non-goals must be real exclusions, not restated goals or scope.
 - Frontend non-trivial tasks must carry state-oriented edge cases.
 - Backend non-trivial tasks must describe at least one explicit interface or contract boundary.
+- Non-trivial tasks should either carry or generate typed development guidance blocks so engineers do not need to infer boundary and rollout advice from fragments.
 
 ## Fail-Fast Expectations
 
@@ -77,6 +79,7 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 - enforce requirement quality before writing
 - turn ambiguous demand into a document with demand framing, solution framing, and development guidance
 - strengthen weak or shaky solution ideas toward current best-practice-oriented defaults
+- compile a dynamic guidance layer for frontend/backend/docs/sdk/risk signals when the task is non-trivial
 - record which memories informed the task when applicable
 - append change-log entries when vet feedback materially changed the task
 
@@ -85,9 +88,9 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 1. Read the structured input and the existing task file if `task_id` is present.
 2. Validate core fields, then run one-pass fail-fast checks for ambiguity, breadth, and missing framing.
 3. Infer task type and complexity when they are not supplied.
-4. Normalize user stories and functional requirements into deterministic structure.
+4. Normalize user stories, functional requirements, and dynamic guidance blocks into deterministic structure.
 5. Allocate a new task id unless `task_id` is explicitly provided.
-6. Render a deterministic task document.
+6. Render a deterministic task document, inserting `开发指导` between functional requirements and the acceptance checklist when guidance blocks are present.
 7. Write or update the task file under `.lingxi/tasks/`.
 8. When validation fails in a schema-first flow, use the repair loop boundary: validate, repair the `TaskSpec`, re-validate, then compile.
 

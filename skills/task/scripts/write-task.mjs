@@ -212,13 +212,147 @@ function buildTaskSignals(input, scope, constraints, type, tags) {
     .join(" ");
   const docs = /(docs|documentation|文档|guide|readme|onboarding|playbook|runbook)/i.test(corpus);
   const sdk = /(sdk|library|库|package|public api|entrypoint|cli)/i.test(corpus);
+  const integration = /(集成|integration|第三方|third-party|external|依赖|upstream|downstream|rollback|回滚|sync|webhook)/i.test(corpus);
+  const contract_surface = /(api|接口|request|response|schema|contract|payload|entrypoint|public api|surface)/i.test(corpus);
+  const frontend_surface = /(state|状态|loading|empty|error|交互|interaction|layout|screen|route|页面)/i.test(corpus);
+  const rationale = /(because|why|因此|所以|更稳|safer|稳妥|风险)/i.test(corpus);
   return {
     docs,
     sdk,
+    integration,
+    contract_surface,
+    frontend_surface,
+    rationale,
     audience: docs ? inferAudience(input, scope) : "",
     delivery_artifact: docs ? inferDeliveryArtifact(input, scope) : "",
     corpus
   };
+}
+
+const GUIDANCE_TITLE_BY_KIND = {
+  frontend_guidance: "前端实现指导",
+  backend_contract_guidance: "契约与边界指导",
+  integration_guidance: "集成与回滚指导",
+  docs_delivery_guidance: "文档交付指导",
+  sdk_surface_guidance: "SDK / Surface 指导",
+  risk_guidance: "风险与收口指导"
+};
+
+function firstRoleFromInput(input, signals) {
+  const firstStoryRole = Array.isArray(input.user_stories) && input.user_stories.length > 0
+    ? normalizeText(input.user_stories[0]?.as_a)
+    : "";
+  return firstStoryRole || signals.audience || "工程师";
+}
+
+function buildTaskRefinement(input, scope, constraints, acceptanceCriteria, signals) {
+  return {
+    why: normalizeText(input.goal),
+    for_whom: firstRoleFromInput(input, signals),
+    boundary: uniqueNormalizedList([...scope.slice(0, 2), ...constraints.slice(0, 2)]),
+    success_anchor: uniqueNormalizedList((acceptanceCriteria || []).slice(0, 2))
+  };
+}
+
+function guidanceBlock(kind, bullets) {
+  const normalizedBullets = uniqueNormalizedList(bullets);
+  if (normalizedBullets.length === 0) return null;
+  return {
+    kind,
+    title: GUIDANCE_TITLE_BY_KIND[kind],
+    bullets: normalizedBullets
+  };
+}
+
+function inferGuidanceBlocks({
+  type,
+  complexity,
+  scope,
+  constraints,
+  functionalRequirements,
+  signals,
+  refinement
+}) {
+  if (complexity === "简单") {
+    return [];
+  }
+
+  const scopeFocus = normalizeText(scope[0] || functionalRequirements[0]?.title || "当前主流程");
+  const secondaryFocus = normalizeText(scope[1] || functionalRequirements[1]?.title || "");
+  const primaryConstraint = normalizeText(constraints[0] || "");
+  const blocks = [];
+
+  if (type === "前端") {
+    blocks.push(
+      guidanceBlock("frontend_guidance", [
+        `先围绕“${scopeFocus}”拆清用户可见状态、触发条件和界面反馈，再进入具体样式调整。`,
+        `至少明确 loading / empty / error / success 中与本任务相关的状态切换，避免工程实现时自行补猜交互边界。`,
+        primaryConstraint
+          ? `保持“${primaryConstraint}”这类现有页面边界，不把当前任务扩散成跨页面或跨路由重构。`
+          : "保持现有页面与路由边界，不把当前任务扩散成跨页面或跨路由重构。"
+      ])
+    );
+  }
+
+  if (type === "后端") {
+    blocks.push(
+      guidanceBlock("backend_contract_guidance", [
+        `先把“${scopeFocus}”对应的 request/response、schema 或行为 contract 写清楚，再落具体实现。`,
+        `每条需求都应能对应到一个可审阅的边界说明，避免先改实现、再回头补契约。`,
+        primaryConstraint
+          ? `在实现时持续对照“${primaryConstraint}”，确保契约调整不会把任务推出当前服务边界。`
+          : "在实现时持续对照当前服务边界，确保契约调整不会把任务推出既有系统分层。"
+      ])
+    );
+  }
+
+  if (signals.docs) {
+    blocks.push(
+      guidanceBlock("docs_delivery_guidance", [
+        `从${refinement.for_whom}的阅读路径出发组织${signals.delivery_artifact}，明确入口、顺序和最终交付落点。`,
+        `文档只解释完成“${refinement.why}”所必需的信息，不把无关运行时实现细节直接暴露给读者。`,
+        secondaryFocus
+          ? `把“${secondaryFocus}”这类次级信息作为补充说明处理，避免冲淡主阅读路径。`
+          : "交付时保留可审阅证据，例如文档 diff、章节导航变化或读者 walkthrough。"
+      ])
+    );
+  }
+
+  if (signals.sdk) {
+    blocks.push(
+      guidanceBlock("sdk_surface_guidance", [
+        `先明确 public API / entrypoint / exported surface，再决定内部模块如何配合“${scopeFocus}”。`,
+        "显式说明 compatibility、migration 或 breaking-change 预期，让调用方能判断升级风险。",
+        "把 internal-only 能力与外部 contract 分开描述，避免实现过程中误扩 surface。"
+      ])
+    );
+  }
+
+  if (type === "后端" || signals.sdk || signals.integration) {
+    blocks.push(
+      guidanceBlock("integration_guidance", [
+        `列清“${scopeFocus}”涉及的上下游依赖、失败模式和回滚边界，不要把集成风险留给实现阶段自行发现。`,
+        secondaryFocus
+          ? `如果“${secondaryFocus}”需要跨模块配合，说明输入输出边界和变更顺序。`
+          : "如果需要跨模块配合，说明输入输出边界和变更顺序。",
+        "为关键集成路径准备至少一种可审阅的检查记录，例如 integration check、contract diff 或 rollback 验证。"
+      ])
+    );
+  }
+
+  blocks.push(
+    guidanceBlock("risk_guidance", [
+      `实现前先确认为什么做：${refinement.why || "任务目标"}，并确保开发动作始终服务于这个目标。`,
+      refinement.success_anchor.length > 0
+        ? `以“${refinement.success_anchor.join("；")}”作为收口标准，避免任务做到一半又重新解释成功条件。`
+        : "把成功条件前置成可判定检查项，避免实现过程中再临时解释验收标准。",
+      refinement.boundary.length > 0
+        ? `始终把边界收在“${refinement.boundary.join("；")}”之内；超出这些边界的内容应进入非目标或后续任务。`
+        : "始终把边界收在当前任务范围内；超出边界的内容应进入非目标或后续任务。"
+    ])
+  );
+
+  return blocks.filter(Boolean);
 }
 
 function inferSuccessCriteria(input, acceptanceCriteria, type, complexity, signals) {
@@ -301,6 +435,15 @@ function strengthenSolutionOverview(solution, type, signals) {
   }
   if (type === "前端" && !hasSignal(out, /state|状态|loading|empty|error|交互|layout/i)) {
     out = `${out} 实施时要覆盖 loading、empty、error 等关键状态与交互边界。`;
+  }
+  if (signals.docs && !hasSignal(out, /为什么|because|更稳|更安全|更易审阅|safer/i)) {
+    out = `${out} 这样比把范围扩散到代码或额外发布面更稳，因为交付面和读者入口可以先被固定。`;
+  } else if (signals.sdk && !hasSignal(out, /为什么|because|更稳|更安全|更易审阅|safer/i)) {
+    out = `${out} 这样更稳，因为 external surface 会先被固定，兼容风险可以在实现前被审阅。`;
+  } else if (type === "后端" && !hasSignal(out, /为什么|because|更稳|更安全|更易审阅|safer/i)) {
+    out = `${out} 这样更稳，因为 contract 可以先被审查，再决定最小实现改动。`;
+  } else if (type === "前端" && !hasSignal(out, /为什么|because|更稳|更安全|更易审阅|safer/i)) {
+    out = `${out} 这样更稳，因为关键状态和交互边界会先被固定，而不是在实现中临时补齐。`;
   }
   return out;
 }
@@ -724,6 +867,7 @@ function validateInput(input, projectRoot) {
     ...inferredTags
   ])];
   const signals = buildTaskSignals(input, scope, constraints, type, tags);
+  const refinement = buildTaskRefinement(input, scope, constraints, acceptanceCriteria, signals);
   const goals = Array.isArray(input.goals) && input.goals.length > 0
     ? input.goals.map((item) => normalizeText(item)).filter(Boolean)
     : [normalizeText(input.goal)];
@@ -765,6 +909,21 @@ function validateInput(input, projectRoot) {
         priority: normalizeText(req.priority || "必须")
       }))
     : scope.map((item, index) => inferGeneratedRequirement(item, index, acceptanceCriteria, constraints, type, complexity, signals));
+  const guidanceBlocks = Array.isArray(input.guidance_blocks) && input.guidance_blocks.length > 0
+    ? input.guidance_blocks.map((block) => ({
+        kind: normalizeText(block.kind),
+        title: normalizeText(block.title || GUIDANCE_TITLE_BY_KIND[normalizeText(block.kind)] || ""),
+        bullets: uniqueNormalizedList(block.bullets || [])
+      }))
+    : inferGuidanceBlocks({
+        type,
+        complexity,
+        scope,
+        constraints,
+        functionalRequirements,
+        signals,
+        refinement
+      });
   validateTaskReadiness({
     input,
     complexity,
@@ -805,6 +964,7 @@ function validateInput(input, projectRoot) {
     success_criteria: successCriteria,
     user_stories: userStories,
     functional_requirements: functionalRequirements,
+    guidance_blocks: guidanceBlocks,
     open_questions: Array.isArray(input.open_questions)
       ? input.open_questions.map((item) => normalizeText(item)).filter(Boolean)
       : [],

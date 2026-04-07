@@ -478,6 +478,7 @@ Current draft fields:
 - `success_criteria[]`
 - `user_stories[]`
 - `functional_requirements[]`
+- `guidance_blocks[]`
 - `constraints[]`
 - `memory_refs[]`
 - `open_questions[]`
@@ -516,6 +517,12 @@ Current stable fields:
 - `next_step_options`
 - `implementation_readiness`
 
+Current review behavior already expects:
+
+- solution rationale quality, not just solution presence
+- dynamic development-guidance sufficiency, not just requirement row completeness
+- grouped revision themes that tell the human what to fix first
+
 ### Repair Loop Requirement
 
 The intended task path is:
@@ -529,6 +536,12 @@ The intended task path is:
 The same repair-loop pattern now also applies to `VetReport`, with report acceptance replacing markdown compilation at the terminal step.
 
 This should become the standard LingXi path instead of relying on raw script exceptions as the main user-facing refinement mechanism.
+
+Current compiler behavior already treats markdown as a deterministic compiled artifact:
+
+- `TaskSpec.guidance_blocks[]` compile into a dynamic `开发指导` section
+- the guidance section sits between `功能需求` and the acceptance checklist
+- missing guidance should be fixed by updating `TaskSpec`, not by hand-editing markdown as the source of truth
 
 ---
 

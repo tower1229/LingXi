@@ -286,12 +286,15 @@ describe("lingxi task", () => {
     assert.ok(content.includes("目标读者是贡献者"), content);
     assert.ok(content.includes("文档 diff 与读者 walkthrough"), content);
     assert.ok(content.includes("Contributor guide"), content);
+    assert.ok(content.includes("## 5. 开发指导"), content);
+    assert.ok(content.includes("### 文档交付指导"), content);
 
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
     assert.ok(!vetResult.findings.some((item) => item.code === "docs_audience_missing"), vet.stdout);
     assert.ok(!vetResult.findings.some((item) => item.code === "docs_delivery_missing"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "docs_delivery_guidance_missing"), vet.stdout);
   });
 
   it("generates backend functional requirements with explicit contract and verification defaults", async () => {
@@ -330,11 +333,15 @@ describe("lingxi task", () => {
     assert.ok(content.includes("request/response 或 schema contract"), content);
     assert.ok(content.includes("- 验证方式：integration"), content);
     assert.ok(content.includes("接口契约验证、集成测试结果或回滚检查记录"), content);
+    assert.ok(content.includes("### 契约与边界指导"), content);
+    assert.ok(content.includes("### 集成与回滚指导"), content);
 
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
     assert.ok(!vetResult.findings.some((item) => item.code === "backend_contract_surface_thin"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "backend_contract_guidance_missing"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "integration_guidance_missing"), vet.stdout);
   });
 
   it("generates frontend state coverage defaults for non-trivial tasks without explicit requirement rows", async () => {
@@ -375,10 +382,57 @@ describe("lingxi task", () => {
     assert.ok(content.includes("empty state"), content);
     assert.ok(content.includes("error state"), content);
     assert.ok(content.includes("状态切换 walkthrough 与关键界面差异记录"), content);
+    assert.ok(content.includes("### 前端实现指导"), content);
 
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
     assert.ok(!vetResult.findings.some((item) => item.code === "frontend_state_coverage_weak"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "frontend_guidance_missing"), vet.stdout);
+  });
+
+  it("generates sdk surface guidance that survives vet review", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(scriptPath, tempDir, {
+      title: "SDK seam",
+      goal: "Clarify the public SDK surface.",
+      complexity: "中等",
+      type: "其他",
+      tags: ["库/SDK"],
+      background: "Consumers depend on a stable package surface.",
+      problem: "Current external entrypoints and compatibility boundaries are implicit.",
+      solution_overview: "Define one explicit public SDK entrypoint and keep compatibility expectations reviewable.",
+      scope: [
+        "Define the public SDK entrypoint",
+        "Constrain compatibility expectations for existing consumers"
+      ],
+      constraints: ["Do not change runtime behavior", "Keep migration cost low"],
+      acceptance_criteria: [
+        "The SDK surface is documented with one explicit public entrypoint",
+        "Existing consumers can continue without an unplanned migration step"
+      ],
+      non_goals: ["不扩展为新的功能包"],
+      user_stories: [
+        {
+          as_a: "SDK consumer",
+          i_want: "a clear public entrypoint",
+          so_that: "integration code remains predictable across upgrades",
+          acceptance_criteria: ["The SDK surface is documented with one explicit public entrypoint"]
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const createdSummary = JSON.parse(created.stdout);
+    const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.ok(content.includes("### SDK / Surface 指导"), content);
+    assert.ok(content.includes("### 集成与回滚指导"), content);
+    assert.ok(content.includes("compatibility"), content);
+
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "sdk_surface_guidance_missing"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "sdk_compatibility_missing"), vet.stdout);
   });
 });

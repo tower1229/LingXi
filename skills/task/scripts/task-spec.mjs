@@ -1,4 +1,12 @@
 export const TASK_SPEC_SCHEMA_VERSION = "draft-2026-04-07";
+export const TASK_GUIDANCE_KINDS = [
+  "frontend_guidance",
+  "backend_contract_guidance",
+  "integration_guidance",
+  "docs_delivery_guidance",
+  "sdk_surface_guidance",
+  "risk_guidance"
+];
 
 export const TASK_SPEC_REQUIRED_FIELDS = [
   "schema_version",
@@ -23,6 +31,7 @@ export const TASK_SPEC_REQUIRED_FIELDS = [
 const ALLOWED_VERIFICATION_METHODS = new Set(["unit", "integration", "e2e", "manual", "rubric"]);
 const ALLOWED_PRIORITIES = new Set(["必须", "应该", "可选"]);
 const ALLOWED_PROJECT_CONTEXT_KINDS = new Set(["docs", "frontend", "backend", "mixed", "unknown"]);
+const ALLOWED_GUIDANCE_KINDS = new Set(TASK_GUIDANCE_KINDS);
 
 function issue(path, code, message) {
   return { path, code, message };
@@ -149,6 +158,33 @@ function validateFunctionalRequirementShape(req, index) {
   return issues;
 }
 
+function validateGuidanceBlockShape(block, index) {
+  const issues = [];
+  const base = `guidance_blocks[${index}]`;
+  if (!isPlainObject(block)) {
+    issues.push(issue(base, "invalid_type", `${base} must be an object.`));
+    return issues;
+  }
+  if (!isNonEmptyString(block?.kind)) {
+    issues.push(issue(`${base}.kind`, "missing_field", "Guidance block must include kind."));
+  } else if (!ALLOWED_GUIDANCE_KINDS.has(block.kind)) {
+    issues.push(
+      issue(
+        `${base}.kind`,
+        "invalid_type",
+        `Guidance block kind must be one of: ${[...ALLOWED_GUIDANCE_KINDS].join(", ")}.`
+      )
+    );
+  }
+  if (!isNonEmptyString(block?.title)) {
+    issues.push(issue(`${base}.title`, "missing_field", "Guidance block must include title."));
+  }
+  if (!isStringArray(block?.bullets) || block.bullets.length === 0) {
+    issues.push(issue(`${base}.bullets`, "missing_field", "Guidance block must include bullets[]."));
+  }
+  return issues;
+}
+
 export function validateTaskSpecShape(spec) {
   const issues = [];
 
@@ -223,6 +259,15 @@ export function validateTaskSpecShape(spec) {
   }
   if ("tags" in (spec || {}) && !isLooseStringArray(spec.tags)) {
     issues.push(issue("tags", "invalid_type", "TaskSpec.tags must be a string array when provided."));
+  }
+  if ("guidance_blocks" in (spec || {})) {
+    if (!Array.isArray(spec.guidance_blocks)) {
+      issues.push(issue("guidance_blocks", "invalid_type", "TaskSpec.guidance_blocks must be an array when provided."));
+    } else {
+      spec.guidance_blocks.forEach((block, index) => {
+        issues.push(...validateGuidanceBlockShape(block, index));
+      });
+    }
   }
 
   return issues;

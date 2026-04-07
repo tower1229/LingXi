@@ -222,6 +222,142 @@ function genericOnlyNonGoals(task) {
   return nonGoals.every((item) => looksGenericNonGoal(item));
 }
 
+function taskReviewSignals(task) {
+  const corpus = [
+    task.title,
+    task.type,
+    ...(task.tags || []),
+    task.background,
+    task.problem,
+    task.solution_overview,
+    ...(task.goals || []),
+    ...(task.non_goals || []),
+    ...(task.success_criteria || []),
+    ...(task.constraints || []),
+    ...(task.acceptance_criteria || []),
+    ...((task.functional_requirements || []).flatMap((req) => [
+      req.title,
+      req.description,
+      req.implementation_scheme,
+      req.evidence,
+      ...(req.acceptance_criteria || []),
+      ...(req.edge_cases || [])
+    ])),
+    ...((task.guidance_blocks || []).flatMap((block) => [block.title, ...(block.bullets || [])]))
+  ]
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    docs: /(docs|documentation|文档|guide|readme|onboarding|playbook|runbook)/i.test(corpus),
+    sdk: /(sdk|library|库|package|public api|entrypoint|surface|compat|兼容|migration|breaking)/i.test(corpus),
+    integration: /(集成|integration|第三方|third-party|external|依赖|rollback|回滚|timeout|webhook|sync|upstream|downstream)/i.test(corpus),
+    contract_surface: /(api|接口|request|response|schema|contract|payload|entrypoint|surface)/i.test(corpus),
+    frontend_surface: /(state|状态|loading|empty|error|交互|interaction|layout|screen|route|页面)/i.test(corpus)
+  };
+}
+
+function guidanceBullets(task, kind) {
+  return normalizedUnique(
+    (task.guidance_blocks || [])
+      .filter((block) => normalizeText(block.kind) === kind)
+      .flatMap((block) => block.bullets || [])
+  );
+}
+
+function guidanceContentLooksSubstantive(task, kind) {
+  const bullets = guidanceBullets(task, kind);
+  if (bullets.length >= 2) return true;
+  const joined = bullets.join(" ");
+  if (kind === "frontend_guidance") return /loading|empty|error|state|状态|交互|layout|route/i.test(joined);
+  if (kind === "backend_contract_guidance") return /request|response|schema|contract|api|接口/i.test(joined);
+  if (kind === "integration_guidance") return /integration|依赖|rollback|回滚|timeout|external|第三方/i.test(joined);
+  if (kind === "docs_delivery_guidance") return /reader|audience|读者|文档|guide|readme|交付|publish/i.test(joined);
+  if (kind === "sdk_surface_guidance") return /public api|entrypoint|surface|compat|兼容|migration|breaking/i.test(joined);
+  if (kind === "risk_guidance") return /风险|risk|边界|scope|success|验收|why|为什么/i.test(joined);
+  return bullets.length > 0;
+}
+
+function equivalentGuidanceCoverage(task, kind) {
+  const corpus = [
+    task.solution_overview,
+    ...(task.constraints || []),
+    ...(task.success_criteria || []),
+    ...(task.acceptance_criteria || []),
+    ...((task.functional_requirements || []).flatMap((req) => [
+      req.implementation_scheme,
+      req.evidence,
+      ...(req.edge_cases || []),
+      ...(req.acceptance_criteria || [])
+    ]))
+  ]
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .join(" ");
+  if (kind === "frontend_guidance") return /loading|empty|error|state|状态|交互|layout|route/i.test(corpus);
+  if (kind === "backend_contract_guidance") return /request|response|schema|contract|api|接口/i.test(corpus);
+  if (kind === "integration_guidance") return /integration|依赖|rollback|回滚|timeout|external|第三方|upstream|downstream/i.test(corpus);
+  if (kind === "docs_delivery_guidance") return /reader|audience|读者|文档|guide|readme|交付|publish|章节/i.test(corpus);
+  if (kind === "sdk_surface_guidance") return /public api|entrypoint|surface|compat|兼容|migration|breaking/i.test(corpus);
+  return false;
+}
+
+function expectedGuidanceKinds(task, signals) {
+  if (task.complexity === "简单" || task.type === "简单功能") return [];
+  const kinds = [];
+  if (task.type === "前端") kinds.push("frontend_guidance");
+  if (task.type === "后端" || signals.contract_surface) kinds.push("backend_contract_guidance");
+  if (signals.integration || task.type === "后端" || signals.sdk) kinds.push("integration_guidance");
+  if (signals.docs) kinds.push("docs_delivery_guidance");
+  if (signals.sdk) kinds.push("sdk_surface_guidance");
+  return [...new Set(kinds)];
+}
+
+function guidanceMissingFindings(task, signals) {
+  const findings = [];
+  for (const kind of expectedGuidanceKinds(task, signals)) {
+    if (guidanceContentLooksSubstantive(task, kind) || equivalentGuidanceCoverage(task, kind)) continue;
+    if (kind === "frontend_guidance") {
+      findings.push(finding("warning", "frontend_guidance_missing", "Frontend task should include implementation guidance for states, interaction boundaries, and route/layout constraints.", "D4"));
+    }
+    if (kind === "backend_contract_guidance") {
+      findings.push(finding("warning", "backend_contract_guidance_missing", "Backend task should include explicit guidance for contract-first implementation and service boundaries.", "D4"));
+    }
+    if (kind === "integration_guidance") {
+      findings.push(finding("warning", "integration_guidance_missing", "Integration-flavored task should describe dependency edges, rollback expectations, and change order before implementation starts.", "D5"));
+    }
+    if (kind === "docs_delivery_guidance") {
+      findings.push(finding("warning", "docs_delivery_guidance_missing", "Documentation-oriented task should include reader-path and delivery-surface guidance, not just generic doc edits.", "D4"));
+    }
+    if (kind === "sdk_surface_guidance") {
+      findings.push(finding("warning", "sdk_surface_guidance_missing", "Library/SDK task should include public-surface and compatibility guidance for implementers.", "D4"));
+    }
+  }
+  return findings;
+}
+
+function guidanceSufficiencyThin(task, signals) {
+  const expectedKinds = expectedGuidanceKinds(task, signals);
+  if (expectedKinds.length === 0) return false;
+  const satisfied = expectedKinds.filter((kind) => guidanceContentLooksSubstantive(task, kind) || equivalentGuidanceCoverage(task, kind));
+  const totalGuidanceBullets = normalizedUnique((task.guidance_blocks || []).flatMap((block) => block.bullets || [])).length;
+  if (satisfied.length === 0) return true;
+  if (task.guidance_blocks?.length > 0 && totalGuidanceBullets < Math.min(3, expectedKinds.length + 1)) return true;
+  if (task.complexity === "复杂" && satisfied.length < Math.min(expectedKinds.length, 2)) return true;
+  return false;
+}
+
+function solutionRationaleThin(task) {
+  if (task.complexity === "简单" || task.type === "简单功能") return false;
+  const normalized = normalizeText(task.solution_overview);
+  if (!normalized) return false;
+  if (/因为|因此|所以|why|because|更稳|更安全|safer|risk|风险|审阅|review|兼容|rollback|回滚/i.test(normalized)) {
+    return false;
+  }
+  return true;
+}
+
 function revisionTargetForFinding(item) {
   switch (item.code) {
     case "goal_missing_or_weak":
@@ -241,7 +377,10 @@ function revisionTargetForFinding(item) {
     case "solution_missing":
     case "solution_too_thin":
     case "solution_repeats_problem":
+    case "solution_rationale_thin":
       return "改写解决方案概述，明确 chosen direction、边界与为什么这样落地。";
+    case "guidance_sufficiency_thin":
+      return "补强开发指导，让工程师在开工前就知道边界、顺序、验证与回滚，不要只靠功能需求自行推断。";
     case "non_goals_missing":
     case "non_goals_overlap_scope":
     case "non_goals_generic_only":
@@ -252,16 +391,22 @@ function revisionTargetForFinding(item) {
     case "frontend_state_coverage_weak":
     case "frontend_interaction_surface_thin":
     case "frontend_runtime_constraint_thin":
+    case "frontend_guidance_missing":
       return "补强前端状态、交互面和运行时边界，让页面行为覆盖 loading/empty/error 与设备约束。";
     case "backend_verification_weak":
     case "backend_contract_surface_thin":
+    case "backend_contract_guidance_missing":
       return "把后端接口/契约边界写清楚，并补足更可信的验证方式。";
     case "docs_audience_missing":
     case "docs_delivery_missing":
+    case "docs_delivery_guidance_missing":
       return "明确文档任务的目标读者与具体交付物，避免只有“改文档”这种宽泛表述。";
     case "sdk_contract_missing":
     case "sdk_compatibility_missing":
+    case "sdk_surface_guidance_missing":
       return "明确 SDK/public API contract、兼容策略和是否存在 breaking change。";
+    case "integration_guidance_missing":
+      return "补一段集成指导，明确上下游依赖、失败模式、回滚路径和变更顺序。";
     case "evidence_specificity_thin":
       return "把证据形式从占位词改成可审阅的具体证据，例如哪类 diff、截图、契约检查或 walkthrough。";
     case "verification_strategy_thin":
@@ -272,28 +417,85 @@ function revisionTargetForFinding(item) {
 }
 
 function buildRevisionTargets(findings) {
-  const prioritized = [...findings].sort(
-    (a, b) => severityRank(b.severity) - severityRank(a.severity) || a.code.localeCompare(b.code)
-  );
-  const out = [];
-  const seen = new Set();
-  for (const item of prioritized) {
-    const target = revisionTargetForFinding(item);
-    if (!target || seen.has(target)) continue;
-    seen.add(target);
+  const themeDefinitions = [
+    {
+      id: "goal_acceptance",
+      message: "先收紧目标、成功标准与验收映射，让工程师知道什么算完成。",
+      codes: ["goal_missing_or_weak", "goal_ambiguous", "acceptance_missing", "acceptance_ambiguous", "success_criteria_ambiguous", "acceptance_coverage_gap", "scope_acceptance_mismatch"]
+    },
+    {
+      id: "solution_guidance",
+      message: "补强方案与开发指导，说明 chosen direction 为什么成立、实现顺序是什么、为什么这样更稳。",
+      codes: ["solution_missing", "solution_too_thin", "solution_repeats_problem", "solution_rationale_thin", "guidance_sufficiency_thin"]
+    },
+    {
+      id: "scope_risk",
+      message: "补齐非目标、约束与风险边界，把任务收回到当前真正负责的范围。",
+      codes: ["constraints_missing", "constraints_generic_only", "risk_underexplored", "integration_risk_thin", "non_goals_missing", "non_goals_overlap_scope", "non_goals_generic_only", "scope_too_broad"]
+    },
+    {
+      id: "frontend",
+      message: "补强前端指导：明确状态、交互面、布局/路由边界与运行时约束。",
+      codes: ["frontend_state_coverage_weak", "frontend_interaction_surface_thin", "frontend_runtime_constraint_thin", "frontend_guidance_missing"]
+    },
+    {
+      id: "backend",
+      message: "补强后端契约与集成指导：先写清 contract、依赖边界、失败模式和回滚路径，再进入实现。",
+      codes: ["backend_verification_weak", "backend_contract_surface_thin", "backend_contract_guidance_missing", "integration_guidance_missing"]
+    },
+    {
+      id: "docs",
+      message: "补强文档任务的读者与交付指导：明确谁来读、从哪里进入、最终交付到哪一个文档 surface。",
+      codes: ["docs_audience_missing", "docs_delivery_missing", "docs_delivery_guidance_missing"]
+    },
+    {
+      id: "sdk",
+      message: "补强 SDK/public surface 指导：明确 exported surface、compatibility/migration 和 breaking-change 预期。",
+      codes: ["sdk_contract_missing", "sdk_compatibility_missing", "sdk_surface_guidance_missing"]
+    },
+    {
+      id: "evidence_verification",
+      message: "把验证策略和证据形式具体化，让 reviewer 知道该看什么、如何确认改动可接受。",
+      codes: ["requirement_spec_incomplete", "requirement_granularity_thin", "evidence_specificity_thin", "verification_strategy_thin"]
+    }
+  ];
+
+  const prioritized = themeDefinitions
+    .map((theme) => {
+      const matched = findings.filter((item) => theme.codes.includes(item.code));
+      if (matched.length === 0) return null;
+      return {
+        id: theme.id,
+        target: theme.message,
+        matched,
+        severity: Math.max(...matched.map((item) => severityRank(item.severity)))
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.severity - a.severity || a.id.localeCompare(b.id));
+
+  const out = prioritized.map((item) => item.target);
+  const fallbackTargets = [...new Set(findings.map((item) => revisionTargetForFinding(item)).filter(Boolean))];
+  for (const target of fallbackTargets) {
+    if (out.includes(target)) continue;
     out.push(target);
-    if (out.length >= 4) break;
   }
-  return out;
+  return out.slice(0, 4);
 }
 
-function tagSpecificD4Checks(task) {
+function tagSpecificD4Checks(task, signals) {
   const findings = [];
   const tags = new Set((task.tags || []).map((item) => normalizeText(item)));
-  const hasDocsTag = tags.has("文档为主") || tags.has("文档") || tags.has("docs");
-  const hasSdkTag = tags.has("库/SDK") || tags.has("库") || tags.has("SDK");
+  const hasDocsTag = signals.docs || tags.has("文档为主") || tags.has("文档") || tags.has("docs");
+  const hasSdkTag = signals.sdk || tags.has("库/SDK") || tags.has("库") || tags.has("SDK");
   if (hasDocsTag) {
-    const hasAudienceSignal = [task.background, task.problem, ...task.goals, ...task.success_criteria]
+    const hasAudienceSignal = [
+      task.background,
+      task.problem,
+      ...task.goals,
+      ...task.success_criteria,
+      ...(guidanceBullets(task, "docs_delivery_guidance") || [])
+    ]
       .join(" ")
       .match(/读者|受众|reader|audience|用户文档|文档/i);
     if (!hasAudienceSignal) {
@@ -301,11 +503,12 @@ function tagSpecificD4Checks(task) {
         finding("warning", "docs_audience_missing", "Documentation-oriented task should state target readers or audience explicitly.", "D4")
       );
     }
-    const hasDeliverySignal = (task.functional_requirements || []).some((req) =>
-      /readme|guide|publish|release|交付|文档页面|章节|section/i.test(
-        [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
-      )
-    );
+    const hasDeliverySignal =
+      (task.functional_requirements || []).some((req) =>
+        /readme|guide|publish|release|交付|文档页面|章节|section/i.test(
+          [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
+        )
+      ) || guidanceContentLooksSubstantive(task, "docs_delivery_guidance");
     if (!hasDeliverySignal) {
       findings.push(
         finding("warning", "docs_delivery_missing", "Documentation-oriented task should describe the concrete delivery artifact or publication surface.", "D4")
@@ -313,17 +516,23 @@ function tagSpecificD4Checks(task) {
     }
   }
   if (hasSdkTag) {
-    const hasContractSignal = (task.functional_requirements || []).some((req) =>
-      /api|接口|signature|参数|返回|public|entrypoint|surface|contract|兼容/i.test(
-        [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
-      )
-    );
+    const hasContractSignal =
+      (task.functional_requirements || []).some((req) =>
+        /api|接口|signature|参数|返回|public|entrypoint|surface|contract|兼容/i.test(
+          [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
+        )
+      ) || guidanceContentLooksSubstantive(task, "sdk_surface_guidance");
     if (!hasContractSignal) {
       findings.push(
         finding("warning", "sdk_contract_missing", "Library/SDK task should define external API or behavior contract expectations.", "D4")
       );
     }
-    const hasCompatibilitySignal = [task.solution_overview, ...(task.constraints || []), ...(task.acceptance_criteria || [])]
+    const hasCompatibilitySignal = [
+      task.solution_overview,
+      ...(task.constraints || []),
+      ...(task.acceptance_criteria || []),
+      ...(guidanceBullets(task, "sdk_surface_guidance") || [])
+    ]
       .join(" ")
       .match(/兼容|compat|breaking|migration|semver/i);
     if (!hasCompatibilitySignal) {
@@ -340,6 +549,7 @@ function vetTask(task, projectContext) {
   const goalText = [task.background, task.problem, ...(task.goals || [])].filter(Boolean).join(" ");
   const scopeCount = (task.functional_requirements || []).length;
   const dimensions = reviewDimensions(task);
+  const signals = taskReviewSignals(task);
   const goalScopeSet = new Set([...(task.goals || []), ...(task.functional_requirements || []).map((req) => req.title)]
     .map((item) => normalizeText(item).toLowerCase())
     .filter(Boolean));
@@ -419,6 +629,16 @@ function vetTask(task, projectContext) {
   ) {
     findings.push(finding("warning", "solution_repeats_problem", "Solution overview mostly repeats the goal/problem instead of explaining the chosen direction.", "D3"));
   }
+  if (dimensions.includes("D3") && solutionRationaleThin(task)) {
+    findings.push(
+      finding(
+        "warning",
+        "solution_rationale_thin",
+        "Solution overview states the direction, but does not explain why this path is safer or more appropriate than nearby alternatives.",
+        "D3"
+      )
+    );
+  }
   if (dimensions.includes("D3") && task.type !== "简单功能" && (task.non_goals || []).length === 0) {
     findings.push(finding("warning", "non_goals_missing", "Non-trivial task should state non-goals to prevent scope drift.", "D3"));
   }
@@ -449,7 +669,18 @@ function vetTask(task, projectContext) {
     if (typeSpecific) {
       findings.push(typeSpecific);
     }
-    findings.push(...tagSpecificD4Checks(task));
+    findings.push(...guidanceMissingFindings(task, signals));
+    findings.push(...tagSpecificD4Checks(task, signals));
+    if (guidanceSufficiencyThin(task, signals)) {
+      findings.push(
+        finding(
+          "warning",
+          "guidance_sufficiency_thin",
+          "Task still lacks enough implementation guidance for engineers to start safely without filling key gaps themselves.",
+          "D4"
+        )
+      );
+    }
   }
   if (dimensions.includes("D5") && task.complexity !== "简单" && task.constraints.length < 2) {
     findings.push(finding("warning", "risk_underexplored", "Non-trivial task has too little explicit constraint or risk framing.", "D5"));
@@ -507,6 +738,7 @@ function vetTask(task, projectContext) {
   );
   const readiness = classifyReadiness(dedupedFindings);
   const revisionTargets = buildRevisionTargets(dedupedFindings);
+  const topFixes = revisionTargets.slice(0, 3);
 
   const dimensionSummaries = dimensions.map((dimension) => {
     const dimensionFindings = dedupedFindings.filter((item) => item.section === dimension);
@@ -561,16 +793,21 @@ function vetTask(task, projectContext) {
     improvement_priority: {
       blockers: dedupedFindings.filter((item) => item.severity === "blocking"),
       high: dedupedFindings.filter((item) => item.severity === "high"),
-      warning: dedupedFindings.filter((item) => item.severity === "warning")
+      warning: dedupedFindings.filter((item) => item.severity === "warning"),
+      top_fixes: topFixes
     },
     issues_only_dimensions: dimensionSummaries.filter((item) => item.finding_count > 0).map((item) => item.dimension),
     revision_targets: revisionTargets,
     recommended_next_action: dedupedFindings.some((item) => item.severity === "blocking")
-      ? (revisionTargets[0] || "Revise the task document before implementation.")
+      ? (topFixes.length > 0
+          ? `先补这${topFixes.length}件事再开工：${topFixes.map((item, index) => `${index + 1}. ${item}`).join(" ")} 这些问题会让工程师在关键边界上自行补猜。`
+          : "Revise the task document before implementation.")
       : dedupedFindings.some((item) => item.severity === "high")
-        ? (revisionTargets[0] || "Address the high-priority issues, then continue.")
+        ? (topFixes.length > 0
+            ? `继续前先补这${topFixes.length}件事：${topFixes.map((item, index) => `${index + 1}. ${item}`).join(" ")} 这些问题会直接影响工程师是否能安全开工。`
+            : "Address the high-priority issues, then continue.")
         : revisionTargets.length > 0
-          ? `Task can proceed after reviewing these points: ${revisionTargets.slice(0, 2).join(" ")}`
+          ? `建议先补前 ${Math.min(3, topFixes.length || revisionTargets.length)} 项修订：${(topFixes.length > 0 ? topFixes : revisionTargets).slice(0, 3).join(" ")} 这样能减少实现阶段返工。`
           : "Task can proceed after reviewing the warnings.",
     next_step_options: dedupedFindings.some((item) => item.severity === "blocking" || item.severity === "high")
       ? [

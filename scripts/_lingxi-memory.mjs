@@ -360,7 +360,14 @@ function parseFrontmatterBlock(block) {
 
 function extractSection(body, heading) {
   const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(`^#{1,3} ${escapedHeading}\\n\\n([\\s\\S]*?)(?=\\n#{1,3} |$)`, "m");
+  const pattern = new RegExp(`(?:^|\\n)#{1,3} ${escapedHeading}\\n\\n([\\s\\S]*?)(?=\\n(?:---\\n\\n)?#{1,3} |\\s*$)`);
+  const match = pattern.exec(body);
+  return match ? match[1].trim() : "";
+}
+
+function extractTopLevelSection(body, heading) {
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(?:^|\\n)## ${escapedHeading}\\n\\n([\\s\\S]*?)(?=\\n(?:---\\n\\n)?## |\\s*$)`);
   const match = pattern.exec(body);
   return match ? match[1].trim() : "";
 }
@@ -586,6 +593,64 @@ export function sectionList(sectionContent) {
     .filter(Boolean);
 }
 
+const GUIDANCE_TITLE_BY_KIND = {
+  frontend_guidance: "前端实现指导",
+  backend_contract_guidance: "契约与边界指导",
+  integration_guidance: "集成与回滚指导",
+  docs_delivery_guidance: "文档交付指导",
+  sdk_surface_guidance: "SDK / Surface 指导",
+  risk_guidance: "风险与收口指导"
+};
+
+function normalizeGuidanceBlocks(blocks) {
+  const out = [];
+  const seen = new Set();
+  for (const block of blocks || []) {
+    const kind = normalizeText(block?.kind);
+    const title = normalizeText(block?.title) || GUIDANCE_TITLE_BY_KIND[kind] || "";
+    const bullets = (block?.bullets || []).map((item) => normalizeText(item)).filter(Boolean);
+    if (!kind || !title || bullets.length === 0) continue;
+    if (seen.has(kind)) continue;
+    seen.add(kind);
+    out.push({
+      kind,
+      title,
+      bullets
+    });
+  }
+  return out;
+}
+
+function guidanceKindFromTitle(title) {
+  const normalized = normalizeText(title);
+  const matched = Object.entries(GUIDANCE_TITLE_BY_KIND).find(([, label]) => label === normalized);
+  if (matched) return matched[0];
+  if (/前端|状态|交互/i.test(normalized)) return "frontend_guidance";
+  if (/契约|边界|contract/i.test(normalized)) return "backend_contract_guidance";
+  if (/集成|回滚|integration/i.test(normalized)) return "integration_guidance";
+  if (/文档|交付|reader|读者/i.test(normalized)) return "docs_delivery_guidance";
+  if (/sdk|surface|api|兼容/i.test(normalized)) return "sdk_surface_guidance";
+  if (/风险|收口|risk/i.test(normalized)) return "risk_guidance";
+  return "";
+}
+
+function parseGuidanceBlocks(sectionContent) {
+  const normalized = normalizeText(sectionContent) ? sectionContent.replace(/\r\n/g, "\n") : "";
+  if (!normalized) return [];
+  const headingMatches = [...normalized.matchAll(/^###\s+(.+)$/gm)];
+  return headingMatches.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = index + 1 < headingMatches.length ? (headingMatches[index + 1].index ?? normalized.length) : normalized.length;
+    const block = normalized.slice(start, end);
+    const title = normalizeText(match[1]);
+    return {
+      kind: guidanceKindFromTitle(title),
+      title,
+      bullets: sectionList(block.replace(/^###\s+.+\n?/m, ""))
+    };
+  }).filter((item) => item.kind && item.bullets.length > 0);
+}
+
 export function renderTaskDocument(task) {
   const renderBullets = (items) => (items || []).map((item) => `- ${item}`).join("\n");
   const renderRequirements = (requirements) =>
@@ -616,8 +681,21 @@ ${(req.edge_cases || []).map((item) => `  - ${item}`).join("\n")}
 ${(story.acceptance_criteria || []).map((item) => `  - ${item}`).join("\n")}`
       )
       .join("\n\n");
+  const guidanceBlocks = normalizeGuidanceBlocks(task.guidance_blocks || []);
+  const renderGuidance = (blocks) =>
+    blocks
+      .map((block) => `### ${block.title}\n\n${renderBullets(block.bullets)}`)
+      .join("\n\n");
+  const hasGuidance = guidanceBlocks.length > 0;
+  const constraintsSectionNumber = hasGuidance ? 6 : 5;
+  const acceptanceSectionNumber = hasGuidance ? 7 : 6;
+  const memorySectionNumber = hasGuidance ? 8 : 7;
+  const changelogSectionNumber = hasGuidance ? 9 : 8;
+  const guidanceSection = hasGuidance
+    ? `\n---\n\n## 5. 开发指导\n\n${renderGuidance(guidanceBlocks)}\n`
+    : "";
   const memoryApplied = (task.memory_refs || []).length > 0
-    ? `\n## 7. Memory Applied\n\n${renderBullets(task.memory_refs)}\n`
+    ? `\n## ${memorySectionNumber}. Memory Applied\n\n${renderBullets(task.memory_refs)}\n`
     : "";
   const projectContext = task.project_context?.summary
     ? `### 1.0 项目上下文\n\n- 栈概览：${task.project_context.summary}\n- 线索：${(task.project_context.cues || []).join(", ")}\n- 对本任务的影响：${task.project_context.impact}\n\n`
@@ -682,20 +760,21 @@ ${renderStories(task.user_stories)}
 ## 4. 功能需求
 
 ${renderRequirements(task.functional_requirements)}
+${guidanceSection}
 
 ---
 
-## 5. 约束
+## ${constraintsSectionNumber}. 约束
 
 ${renderBullets(task.constraints)}
 
 ---
 
-## 6. 验收检查清单
+## ${acceptanceSectionNumber}. 验收检查清单
 
 ${renderBullets(task.acceptance_criteria.map((item) => `[ ] ${item}`))}${memoryApplied}
 
-## 8. 变更记录
+## ${changelogSectionNumber}. 变更记录
 
 | 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
 | --- | --- | --- | --- | --- |
@@ -722,18 +801,20 @@ export function parseTaskDocument(content, file) {
   const goals = sectionList(extractSection(normalized, "2.1 目标"));
   const nonGoals = sectionList(extractSection(normalized, "2.2 非目标"));
   const successCriteria = sectionList(extractSection(normalized, "2.3 成功标准"));
-  const constraints = sectionList(extractSection(normalized, "5. 约束"));
-  const acceptanceChecklist = sectionList(extractSection(normalized, "6. 验收检查清单")).map((item) =>
+  const guidanceBlocks = parseGuidanceBlocks(extractTopLevelSection(normalized, "5. 开发指导"));
+  const constraints = sectionList(extractSection(normalized, "6. 约束") || extractSection(normalized, "5. 约束"));
+  const acceptanceChecklist = sectionList(extractSection(normalized, "7. 验收检查清单") || extractSection(normalized, "6. 验收检查清单")).map((item) =>
     item.replace(/^\[\s\]\s*/, "").trim()
   );
-  const memoryRefs = sectionList(extractSection(normalized, "7. Memory Applied"));
-  const userStoryMatches = [...normalized.matchAll(/^###\s+US-(\d+)$/gm)];
+  const memoryRefs = sectionList(extractSection(normalized, "8. Memory Applied") || extractSection(normalized, "7. Memory Applied"));
+  const userStoriesSection = extractTopLevelSection(normalized, "3. 用户故事");
+  const userStoryMatches = [...userStoriesSection.matchAll(/^###\s+US-(\d+)$/gm)];
   const userStories = userStoryMatches.map((match, index) => {
     const start = match.index ?? 0;
     const end = index + 1 < userStoryMatches.length
-      ? (userStoryMatches[index + 1].index ?? normalized.length)
-      : normalized.indexOf("\n---\n\n## 4. 功能需求");
-    const block = normalized.slice(start, end === -1 ? normalized.length : end);
+      ? (userStoryMatches[index + 1].index ?? userStoriesSection.length)
+      : userStoriesSection.length;
+    const block = userStoriesSection.slice(start, end === -1 ? userStoriesSection.length : end);
     const field = (label) => {
       const regex = new RegExp(`- ${label}：(.+)`);
       const matched = regex.exec(block);
@@ -748,7 +829,7 @@ export function parseTaskDocument(content, file) {
       acceptance_criteria: acceptance ? sectionList(acceptance[1]) : []
     };
   });
-  const changelogSection = extractSection(normalized, "8. 变更记录");
+  const changelogSection = extractSection(normalized, "9. 变更记录") || extractSection(normalized, "8. 变更记录");
   const changelog = [...changelogSection.matchAll(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/gm)]
     .map((match) => ({
       date: normalizeText(match[1]),
@@ -758,11 +839,12 @@ export function parseTaskDocument(content, file) {
       related: normalizeText(match[5])
     }))
     .filter((row) => row.date !== "日期" && row.date !== "---" && row.date !== "-");
-  const requirementMatches = [...normalized.matchAll(/^###\s+F(\d+):\s+(.+)$/gm)];
+  const requirementsSection = extractTopLevelSection(normalized, "4. 功能需求");
+  const requirementMatches = [...requirementsSection.matchAll(/^###\s+F(\d+):\s+(.+)$/gm)];
   const functionalRequirements = requirementMatches.map((match, index) => {
     const start = match.index ?? 0;
-    const end = index + 1 < requirementMatches.length ? (requirementMatches[index + 1].index ?? normalized.length) : normalized.indexOf("\n---\n\n## 5. 约束");
-    const block = normalized.slice(start, end === -1 ? normalized.length : end);
+    const end = index + 1 < requirementMatches.length ? (requirementMatches[index + 1].index ?? requirementsSection.length) : requirementsSection.length;
+    const block = requirementsSection.slice(start, end === -1 ? requirementsSection.length : end);
     const field = (label) => {
       const regex = new RegExp(`- ${label}：(.+)`);
       const matched = regex.exec(block);
@@ -806,6 +888,7 @@ export function parseTaskDocument(content, file) {
     non_goals: nonGoals,
     success_criteria: successCriteria,
     user_stories: userStories,
+    guidance_blocks: guidanceBlocks,
     constraints,
     acceptance_criteria: acceptanceChecklist,
     memory_refs: memoryRefs,

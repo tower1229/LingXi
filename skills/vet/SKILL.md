@@ -38,6 +38,7 @@ If neither is provided, use the latest existing task.
 - adapt review dimensions to task type and complexity
 - make the implementation readiness explicit
 - keep findings concrete and actionable
+- group related issues into revision themes instead of returning only flat reminders
 - keep the `VetReport` structure stable enough for revision and repair flows
 
 ## Review Dimensions
@@ -55,6 +56,7 @@ For non-trivial tasks, also inspect:
 - risk visibility
 - tag-specific contract requirements for documentation or SDK work
 - whether the proposed guidance is strong enough for an engineer to implement from safely
+- whether the solution explains why the chosen direction is safer or more reviewable than nearby alternatives
 
 ## Output
 
@@ -69,6 +71,8 @@ Return JSON with:
 - `dimension_summaries`
 - `review_range_statement`
 - `implementation_readiness`
+- `revision_targets`
+- `recommended_next_action`
 - `next_step_options`
 
 When `VetReport` validation is part of a schema-first flow, use the repair loop boundary: validate, repair the report, then re-validate before accepting it as the stable review artifact.

@@ -50,6 +50,16 @@ function buildValidTaskSpec(overrides = {}) {
         priority: "必须"
       }
     ],
+    guidance_blocks: [
+      {
+        kind: "backend_contract_guidance",
+        title: "契约与边界指导",
+        bullets: [
+          "先把 request/response contract 写清楚，再进入实现。",
+          "把变更收在当前服务边界和既有回滚路径内。"
+        ]
+      }
+    ],
     constraints: ["Do not change runtime behavior"],
     memory_refs: [],
     open_questions: [],
@@ -147,6 +157,7 @@ describe("task repair loop", () => {
     const document = fs.readFileSync(payload.compiled_task.file, "utf8");
     assert.match(document, /^# \d+\.task\.api-seam\.md/m);
     assert.match(document, /## 4\. 功能需求/);
+    assert.match(document, /## 5\. 开发指导/);
     assert.match(document, /### F1: Define seam/);
   });
 
@@ -170,6 +181,7 @@ describe("task repair loop", () => {
     assert.ok(fs.existsSync(payload.compiled_task.file), result.stdout);
     const document = fs.readFileSync(payload.compiled_task.file, "utf8");
     assert.match(document, /## 4\. 功能需求/);
+    assert.match(document, /## 5\. 开发指导/);
     assert.match(document, /Define seam/);
   });
 });

@@ -175,61 +175,123 @@ Adjust homepage layout.
     assert.strictEqual(vetResult.task_id, "001");
   });
 
-  it("flags missing SDK contract framing for library tasks", async () => {
+  it("flags missing SDK contract guidance for library tasks", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
-    const created = await runNode(taskPath, tempDir, [], {
-      title: "SDK guard",
-      goal: "Clarify the package seam.",
-      complexity: "中等",
-      type: "其他",
-      tags: ["库/SDK"],
-      background: "Consumers depend on a stable package surface.",
-      problem: "Current module seam is implicit.",
-      solution_overview: "Introduce a stable package boundary for internal modules.",
-      scope: ["Define the package seam", "Constrain behavior changes"],
-      constraints: ["Do not change runtime behavior", "Keep migration cost low"],
-      acceptance_criteria: [
-        "The package seam is documented for maintainers",
-        "The change stays within the scoped package modules"
-      ],
-      non_goals: ["不扩展为新的功能包"],
-      user_stories: [
-        {
-          as_a: "SDK consumer",
-          i_want: "a clear package boundary",
-          so_that: "integration code remains predictable",
-          acceptance_criteria: ["The package seam is documented for maintainers"]
-        }
-      ],
-      functional_requirements: [
-        {
-          title: "Define package seam",
-          description: "Describe the package boundary for integration modules",
-          implementation_scheme: "Document the module seam and route internal modules behind it",
-          acceptance_criteria: ["The package seam is documented for maintainers"],
-          verification_method: "manual",
-          edge_cases: ["Do not expose internal-only modules"],
-          evidence: "Documentation review",
-          priority: "必须"
-        },
-        {
-          title: "Constrain behavior changes",
-          description: "Constrain the refactor while the seam is introduced",
-          implementation_scheme: "Keep the change inside the scoped modules",
-          acceptance_criteria: ["The change stays within the scoped package modules"],
-          verification_method: "manual",
-          edge_cases: ["Avoid accidental package surface expansion"],
-          evidence: "Diff review",
-          priority: "必须"
-        }
-      ]
-    });
-    assert.strictEqual(created.code, 0, created.stderr);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.sdk-guard.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.sdk-guard.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 其他 |
+| 复杂度 | 中等 |
+| 特性标签 | 库/SDK |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+Consumers depend on a stable package surface.
+
+### 1.2 问题描述
+
+Current module seam is implicit.
+
+### 1.3 解决方案概述
+
+Introduce a stable package boundary for internal modules.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the package seam
+
+### 2.2 非目标
+
+- 不扩展为新的功能包
+
+### 2.3 成功标准
+
+- The package seam is documented for maintainers
+- The change stays within the scoped package modules
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：SDK consumer
+- 我想要：a clear package boundary
+- 以便：integration code remains predictable
+- 验收标准：
+  - The package seam is documented for maintainers
+
+---
+
+## 4. 功能需求
+
+### F1: Define package seam
+
+- 需求描述：Describe the package boundary for integration modules
+- 实现方案：Document the module seam and route internal modules behind it
+- 验收标准：
+  - The package seam is documented for maintainers
+- 验证方式：manual
+- 边界/异常：
+  - Do not expose internal-only modules
+- 证据形式：Documentation review
+- 优先级：必须
+
+### F2: Constrain behavior changes
+
+- 需求描述：Constrain the refactor while the seam is introduced
+- 实现方案：Keep the change inside the scoped modules
+- 验收标准：
+  - The change stays within the scoped package modules
+- 验证方式：manual
+- 边界/异常：
+  - Avoid accidental package surface expansion
+- 证据形式：Diff review
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Do not change runtime behavior
+- Keep migration cost low
+
+---
+
+## 6. 验收检查清单
+
+- [ ] The package seam is documented for maintainers
+- [ ] The change stays within the scoped package modules
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
-    assert.ok(vetResult.findings.some((item) => item.code === "sdk_contract_missing"));
+    assert.ok(vetResult.findings.some((item) => item.code === "sdk_contract_missing" || item.code === "sdk_surface_guidance_missing"), vet.stdout);
     assert.ok(Array.isArray(vetResult.next_step_options));
     assert.ok(vetResult.review_scope.tags.includes("库/SDK"));
   });

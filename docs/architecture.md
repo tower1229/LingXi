@@ -186,12 +186,15 @@ Stage 2 should:
 - validate the `TaskSpec`
 - reject under-specified or contradictory specs with structured errors
 - normalize the accepted spec
+- preserve any typed `guidance_blocks[]` as the development-guidance layer
 - render the task markdown deterministically
 - persist changelog/version updates
 
 `task` should not let the LLM write free-form markdown directly as the source of truth.
 
 The stable source of truth should be `TaskSpec`, with markdown treated as a compiled artifact.
+
+When `guidance_blocks[]` are present, the deterministic compiler should emit a dynamic `开发指导` section between functional requirements and the acceptance checklist instead of restoring the old full-template chapter sprawl.
 
 ### `vet`
 
@@ -230,6 +233,7 @@ Stage 2 should:
 - preserve the dimension matrix
 - preserve severity buckets
 - preserve readiness classification
+- group nearby findings into revision themes
 - emit a stable `VetReport` structure
 
 This keeps `vet` from collapsing into either:
@@ -354,6 +358,7 @@ Current draft contract fields:
 - `success_criteria[]`
 - `user_stories[]`
 - `functional_requirements[]`
+- `guidance_blocks[]`
 - `constraints[]`
 - `memory_refs[]`
 - `open_questions[]`
@@ -373,6 +378,7 @@ Current compatibility/pass-through fields carried by the deterministic compiler 
 - project context
 - retrieved memory
 - LLM requirement refinement
+- a dynamic development-guidance layer that can be compiled into markdown without reintroducing rigid templates
 
 ### `VetReport`
 
@@ -404,6 +410,12 @@ Current stable contract fields:
 - free-form review reasoning
 - downstream task revision
 - testable review contracts
+
+Current review logic is expected to challenge at least three things explicitly:
+
+- whether the chosen solution includes enough rationale to trust
+- whether the task carries enough development guidance for safe implementation
+- whether grouped revision targets clearly tell the human what to fix first
 
 ---
 

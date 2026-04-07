@@ -39,11 +39,15 @@
 - 对模糊需求按 5W1H 澄清。
 - 通过一次性澄清把目标、边界、成功标准收敛出来。
 
-当前 2.0 状态：`已部分继承`
+当前 2.0 状态：`已实现第一版提纯层`
 
 - 已有 project context 探测、fail-fast、goal/scope/constraints/acceptance 收紧。
-- 但“系统性 5W1H 提纯”还没有真正成为独立能力层。
-- 当前更多是 deterministic fail-fast，而不是完整的提纯式理解。
+- 已在 `TaskSpec` 生成前显式收敛：
+  - 为什么做
+  - 给谁做
+  - 真正边界是什么
+  - 成功意味着什么
+- 当前仍更偏 deterministic refinement，而不是开放式调研型提纯。
 
 下一步重点：
 
@@ -66,12 +70,12 @@
   - 架构思路
   - 关键技术点
 
-当前 2.0 状态：`已起步，但仍偏弱`
+当前 2.0 状态：`已起步并有明确增强`
 
 - 已能对 docs/sdk/frontend/backend 场景做一定程度的默认增强。
 - 已能把较弱方案往 contract、状态、交付面方向拉。
-- 但还没有稳定达到“核心技术方案”那种信息密度。
-- 当前更多是“避免太差”，还不是“把方案放大成明显更优”。
+- 现在 `solution_overview` 已明确要求给出“为什么这个方向更稳”的理由。
+- 但复杂任务上的技术选型深度仍然不如原版最强形态。
 
 下一步重点：
 
@@ -99,20 +103,26 @@
   - 依赖与集成
   - 技术可行性
 
-当前 2.0 状态：`能力存在，但信息密度不足`
+当前 2.0 状态：`第一版动态 guidance layer 已落地`
 
 - 当前文档已经能指导开发，不再只是 vague summary。
-- 但“指导开发”的深度仍主要集中在 F 行级别。
-- 缺少原版那种更明确的类型化指导层。
+- 已新增 `guidance_blocks[]`，并在 markdown 中编译为 `开发指导` 区块。
+- 已支持：
+  - 前端实现指导
+  - 契约与边界指导
+  - 集成与回滚指导
+  - 文档交付指导
+  - SDK / Surface 指导
+  - 风险与收口指导
+- 当前短板不在“有没有 guidance”，而在复杂任务上的信息密度还能继续提升。
 
 下一步重点：
 
-- 不直接恢复“全量旧模板”。
-- 改为补一种按信号触发的 guidance layer：
-  - 前端任务：UI/交互/状态指导块
-  - 后端任务：API/contract/集成指导块
-  - 中高复杂度后端：数据模型/风险/可行性指导块
-  - docs/sdk：交付与对外接口指导块
+- 继续增强 guidance block 的工程密度，而不是增加更多 kind。
+- 重点提高：
+  - 复杂前端任务的交互/状态覆盖质量
+  - 复杂后端任务的 contract / rollback / dependency 顺序表达
+  - docs/sdk 任务的对外交付与兼容说明强度
 
 ### 4. Fail-Fast 与信息汇总能力
 
@@ -187,13 +197,14 @@
 - 原版 D3 明确审“技术选型是否合理、架构思路是否清晰、选型理由是否充分”。
 - 这说明原版 vet 审的不是字段齐没齐，而是方案质量本身。
 
-当前 2.0 状态：`部分继承，但仍偏保守`
+当前 2.0 状态：`已增强到会主动质疑方案理由`
 
 - 现在已经会抓：
   - solution too thin
   - solution repeats problem
   - sdk/docs/frontend/backend 的专项问题
-- 但“方案为什么不够稳、应该往哪种更优方向走”还不够强。
+- 现在已经会抓 `solution_rationale_thin`，会直接指出“方向说了，但为什么这样更稳还没说明”。
+- `revision_targets` 也开始按修订主题聚合，而不是只平铺单条提醒。
 
 下一步重点：
 
@@ -209,12 +220,12 @@
   - 规范是否足够完整
   - 风险是否已暴露
 
-当前 2.0 状态：`已起步`
+当前 2.0 状态：`已进入 guidance sufficiency 审查`
 
-- 当前已经会抓 requirement completeness、acceptance coverage、frontend runtime constraints、risk framing 等。
-- 但还没有非常直接地表达：
-  - “这份文档是否足以指导开发”
-  - “缺的不是字段，而是工程执行所需的指导信息”
+- 当前已经会抓 requirement completeness、acceptance coverage、frontend runtime constraints、risk framing，以及 guidance sufficiency / guidance missing 这类问题。
+- 已能直接指出：
+  - 哪类 guidance 缺失
+  - 为什么这会阻碍工程师安全开工
 
 下一步重点：
 
@@ -233,14 +244,15 @@
   - 详细问题清单
   - 改进优先级
 
-当前 2.0 状态：`结构已到位，表达仍可加强`
+当前 2.0 状态：`结构已到位，聚合表达已落地第一版`
 
 - 已有：
   - readiness
   - improvement_priority
   - revision_targets
   - next_step_options
-- 但 revision package 的聚合度还不够高。
+- `revision_targets` 已按修订主题聚合第一版。
+- `recommended_next_action` 已会优先提示前 2-3 件最值得先修的事情。
 
 下一步重点：
 
@@ -261,7 +273,7 @@
 
 ## 下一阶段建议
 
-### 优先级 1：增强 `task` 的 guidance layer
+### 优先级 1：继续增强 `task` guidance 的信息密度
 
 目标：
 
@@ -269,11 +281,11 @@
 
 具体方向：
 
-- 为不同类型/复杂度补动态 guidance blocks
+- 在现有 dynamic guidance blocks 上继续增强信息密度
 - 强化 solution 放大能力
 - 提升 implementation_scheme 的工程含量
 
-### 优先级 2：增强 `vet` 的方案质疑与修订包表达
+### 优先级 2：继续增强 `vet` 的方案质疑与修订聚合能力
 
 目标：
 
@@ -281,9 +293,9 @@
 
 具体方向：
 
-- 增强 D3/D4/D5 的高质量质疑
-- 聚合 revision targets
-- 更直接判断 task 是否足以指导开发
+- 继续增强 D3/D4/D5 的高质量质疑
+- 继续优化 revision targets 的聚合质量
+- 继续降低 guidance sufficiency 类 findings 的误报
 
 ### 优先级 3：用少量 golden samples 做能力校准
 
@@ -304,9 +316,9 @@
 
 ## 结论
 
-如果按原版能力来衡量，当前 2.0 最主要的短板已经不是结构层，而是：
+如果按原版能力来衡量，当前 2.0 的主要工作重心已经从“结构缺失”转成“内容密度提升”：
 
-1. `task` 还需要更强的“方案放大 + 开发指导”能力。
-2. `vet` 还需要更强的“方案质疑 + 修订聚合”能力。
+1. `task` 还需要继续增强“方案放大 + 开发指导”的内容强度。
+2. `vet` 还需要继续增强“方案质疑 + 修订聚合”的判断质量。
 
 这两件事补好之后，2.0 的 `task/vet` 才会真正达到“原版精神被继承，但没有退化成僵硬模板系统”的状态。
