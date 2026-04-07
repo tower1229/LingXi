@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   VET_REPORT_REQUIRED_FIELDS,
   VET_REPORT_SCHEMA_VERSION,
+  buildVetReportValidationReport,
   validateVetReportShape
 } from "../../skills/vet/scripts/vet-report.mjs";
 
@@ -120,5 +121,16 @@ describe("vet report contract", () => {
     assert.strictEqual(payload.validator, "vet_report");
     assert.strictEqual(payload.schema_version, VET_REPORT_SCHEMA_VERSION);
     assert.strictEqual(payload.issue_count, 0);
+  });
+
+  it("builds a stable validator payload for invalid VetReport input", () => {
+    const payload = buildVetReportValidationReport({
+      task_id: "001",
+      file: "/tmp/example.md"
+    });
+    assert.strictEqual(payload.ok, false);
+    assert.strictEqual(payload.validator, "vet_report");
+    assert.strictEqual(payload.schema_version, VET_REPORT_SCHEMA_VERSION);
+    assert.ok(payload.issue_count > 0);
   });
 });

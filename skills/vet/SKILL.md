@@ -35,6 +35,7 @@ If neither is provided, use the latest existing task.
 - adapt review dimensions to task type and complexity
 - make the implementation readiness explicit
 - keep findings concrete and actionable
+- keep the `VetReport` structure stable enough for revision and repair flows
 
 ## Review Dimensions
 
@@ -66,11 +67,15 @@ Return JSON with:
 - `implementation_readiness`
 - `next_step_options`
 
+When `VetReport` validation is part of a schema-first flow, use the repair loop boundary: validate, repair the report, then re-validate before accepting it as the stable review artifact.
+
 ## Implementation
 
 Use:
 
 - `scripts/vet-report.mjs`
+- `scripts/validate-vet-report.mjs`
+- `scripts/vet-repair-loop.mjs`
 - `scripts/vet-task.mjs`
 - `references/vet-report.schema.json`
 - `references/vet-checklist.md`

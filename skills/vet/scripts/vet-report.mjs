@@ -22,6 +22,17 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+export function buildVetReportValidationReport(report) {
+  const issues = validateVetReportShape(report);
+  return {
+    ok: issues.length === 0,
+    validator: "vet_report",
+    schema_version: VET_REPORT_SCHEMA_VERSION,
+    issue_count: issues.length,
+    issues
+  };
+}
+
 export function validateVetReportShape(report) {
   const issues = [];
 

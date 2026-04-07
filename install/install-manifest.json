@@ -25,6 +25,7 @@
     "skills/vet/SKILL.md",
     "skills/vet/references/vet-checklist.md",
     "skills/vet/references/vet-report.schema.json",
+    "skills/vet/scripts/vet-repair-loop.mjs",
     "skills/vet/scripts/vet-report.mjs",
     "skills/vet/scripts/validate-vet-report.mjs",
     "skills/vet/scripts/vet-task.mjs",

@@ -3,7 +3,7 @@
 import process from "node:process";
 import {
   VET_REPORT_SCHEMA_VERSION,
-  validateVetReportShape
+  buildVetReportValidationReport
 } from "./vet-report.mjs";
 
 async function readJsonStdin() {
@@ -20,16 +20,9 @@ async function readJsonStdin() {
 
 async function main() {
   const report = await readJsonStdin();
-  const issues = validateVetReportShape(report);
-  const payload = {
-    ok: issues.length === 0,
-    validator: "vet_report",
-    schema_version: VET_REPORT_SCHEMA_VERSION,
-    issue_count: issues.length,
-    issues
-  };
+  const payload = buildVetReportValidationReport(report);
   process.stdout.write(JSON.stringify(payload, null, 2) + "\n");
-  if (issues.length > 0) {
+  if (!payload.ok) {
     process.exit(1);
   }
 }
