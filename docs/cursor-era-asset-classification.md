@@ -35,7 +35,7 @@ That includes the original quality signals that informed:
 
 ## Retirement Outcome
 
-The removal work is complete in the main repository:
+The retirement work is complete in the main repository:
 
 - `.cursor/` no longer exists as a live directory
 - no active test suite requires `.cursor/` paths

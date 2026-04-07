@@ -281,10 +281,6 @@ async function validateSinglePluginManifest() {
   }
 
   await validateComponentFrontmatter(repoRoot, pluginName, pluginManifest);
-
-  if (!pluginManifest.hooks && !(await pathExists(path.join(repoRoot, ".cursor/hooks.json")))) {
-    addWarning(`${pluginName}: no .cursor/hooks.json found (only needed when using hooks).`);
-  }
 }
 
 async function main() {
