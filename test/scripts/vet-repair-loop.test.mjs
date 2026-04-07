@@ -33,7 +33,7 @@ function buildValidVetReport(overrides = {}) {
       should_revise_first: false,
       primary_risk_area: "none"
     },
-    improvement_priority: { blockers: [], high: [], warning: [] },
+    improvement_priority: { blockers: [], high: [], warning: [], top_fixes: [] },
     issues_only_dimensions: [],
     revision_targets: [],
     recommended_next_action: "Task framing is solid and can proceed.",

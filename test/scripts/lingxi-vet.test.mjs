@@ -292,6 +292,7 @@ Introduce a stable package boundary for internal modules.
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
     assert.ok(vetResult.findings.some((item) => item.code === "sdk_contract_missing" || item.code === "sdk_surface_guidance_missing"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "backend_contract_guidance_missing"), vet.stdout);
     assert.ok(Array.isArray(vetResult.next_step_options));
     assert.ok(vetResult.review_scope.tags.includes("库/SDK"));
   });

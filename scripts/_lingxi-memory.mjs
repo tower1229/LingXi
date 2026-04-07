@@ -637,16 +637,14 @@ function guidanceKindFromTitle(title) {
 function parseGuidanceBlocks(sectionContent) {
   const normalized = normalizeText(sectionContent) ? sectionContent.replace(/\r\n/g, "\n") : "";
   if (!normalized) return [];
-  const headingMatches = [...normalized.matchAll(/^###\s+(.+)$/gm)];
-  return headingMatches.map((match, index) => {
-    const start = match.index ?? 0;
-    const end = index + 1 < headingMatches.length ? (headingMatches[index + 1].index ?? normalized.length) : normalized.length;
-    const block = normalized.slice(start, end);
-    const title = normalizeText(match[1]);
+  const blockPattern = /(?:<!--\s*lingxi_guidance_kind:\s*([a-z_]+)\s*-->\n)?###\s+(.+)\n([\s\S]*?)(?=(?:\n<!--\s*lingxi_guidance_kind:|\n###\s+)|\s*$)/g;
+  return [...normalized.matchAll(blockPattern)].map((match) => {
+    const explicitKind = normalizeText(match[1] || "");
+    const title = normalizeText(match[2]);
     return {
-      kind: guidanceKindFromTitle(title),
+      kind: explicitKind || guidanceKindFromTitle(title),
       title,
-      bullets: sectionList(block.replace(/^###\s+.+\n?/m, ""))
+      bullets: sectionList(match[3] || "")
     };
   }).filter((item) => item.kind && item.bullets.length > 0);
 }
@@ -684,7 +682,7 @@ ${(story.acceptance_criteria || []).map((item) => `  - ${item}`).join("\n")}`
   const guidanceBlocks = normalizeGuidanceBlocks(task.guidance_blocks || []);
   const renderGuidance = (blocks) =>
     blocks
-      .map((block) => `### ${block.title}\n\n${renderBullets(block.bullets)}`)
+      .map((block) => `<!-- lingxi_guidance_kind: ${block.kind} -->\n### ${block.title}\n\n${renderBullets(block.bullets)}`)
       .join("\n\n");
   const hasGuidance = guidanceBlocks.length > 0;
   const constraintsSectionNumber = hasGuidance ? 6 : 5;

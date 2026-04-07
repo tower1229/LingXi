@@ -268,15 +268,46 @@ function guidanceBullets(task, kind) {
 
 function guidanceContentLooksSubstantive(task, kind) {
   const bullets = guidanceBullets(task, kind);
-  if (bullets.length >= 2) return true;
+  if (bullets.length === 0) return false;
   const joined = bullets.join(" ");
-  if (kind === "frontend_guidance") return /loading|empty|error|state|状态|交互|layout|route/i.test(joined);
-  if (kind === "backend_contract_guidance") return /request|response|schema|contract|api|接口/i.test(joined);
-  if (kind === "integration_guidance") return /integration|依赖|rollback|回滚|timeout|external|第三方/i.test(joined);
-  if (kind === "docs_delivery_guidance") return /reader|audience|读者|文档|guide|readme|交付|publish/i.test(joined);
-  if (kind === "sdk_surface_guidance") return /public api|entrypoint|surface|compat|兼容|migration|breaking/i.test(joined);
-  if (kind === "risk_guidance") return /风险|risk|边界|scope|success|验收|why|为什么/i.test(joined);
-  return bullets.length > 0;
+  const coverage = new Set();
+  if (kind === "frontend_guidance") {
+    if (/loading|empty|error|state|状态/i.test(joined)) coverage.add("state");
+    if (/交互|interaction|layout|route|页面|screen/i.test(joined)) coverage.add("surface");
+    if (/边界|不扩散|保持|route|layout/i.test(joined)) coverage.add("boundary");
+    return coverage.size >= 2;
+  }
+  if (kind === "backend_contract_guidance") {
+    if (/request|response|schema|contract|api|接口/i.test(joined)) coverage.add("contract");
+    if (/边界|service|模块|interface|scope/i.test(joined)) coverage.add("boundary");
+    if (/实现|审阅|review|before/i.test(joined)) coverage.add("workflow");
+    return coverage.size >= 2;
+  }
+  if (kind === "integration_guidance") {
+    if (/integration|依赖|external|第三方|upstream|downstream/i.test(joined)) coverage.add("dependency");
+    if (/rollback|回滚|失败|failure|timeout|change order|顺序/i.test(joined)) coverage.add("risk");
+    if (/check|record|验证|contract diff|integration check/i.test(joined)) coverage.add("verification");
+    return coverage.size >= 2;
+  }
+  if (kind === "docs_delivery_guidance") {
+    if (/reader|audience|读者|受众/i.test(joined)) coverage.add("audience");
+    if (/文档|guide|readme|交付|publish|章节|入口/i.test(joined)) coverage.add("delivery");
+    if (/diff|walkthrough|导航|evidence|证据/i.test(joined)) coverage.add("reviewability");
+    return coverage.size >= 2;
+  }
+  if (kind === "sdk_surface_guidance") {
+    if (/public api|entrypoint|surface|export/i.test(joined)) coverage.add("surface");
+    if (/compat|兼容|migration|breaking/i.test(joined)) coverage.add("compatibility");
+    if (/internal-only|contract|调用方|consumer/i.test(joined)) coverage.add("boundary");
+    return coverage.size >= 2;
+  }
+  if (kind === "risk_guidance") {
+    if (/why|为什么|目标|goal/i.test(joined)) coverage.add("why");
+    if (/success|验收|完成|标准/i.test(joined)) coverage.add("success");
+    if (/边界|scope|后续|非目标/i.test(joined)) coverage.add("boundary");
+    return coverage.size >= 2;
+  }
+  return bullets.length >= 2;
 }
 
 function equivalentGuidanceCoverage(task, kind) {
@@ -307,7 +338,7 @@ function expectedGuidanceKinds(task, signals) {
   if (task.complexity === "简单" || task.type === "简单功能") return [];
   const kinds = [];
   if (task.type === "前端") kinds.push("frontend_guidance");
-  if (task.type === "后端" || signals.contract_surface) kinds.push("backend_contract_guidance");
+  if (task.type === "后端") kinds.push("backend_contract_guidance");
   if (signals.integration || task.type === "后端" || signals.sdk) kinds.push("integration_guidance");
   if (signals.docs) kinds.push("docs_delivery_guidance");
   if (signals.sdk) kinds.push("sdk_surface_guidance");

@@ -124,7 +124,7 @@
     "improvement_priority": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["blockers", "high", "warning"],
+      "required": ["blockers", "high", "warning", "top_fixes"],
       "properties": {
         "blockers": {
           "type": "array",
@@ -137,6 +137,10 @@
         "warning": {
           "type": "array",
           "items": { "$ref": "#/$defs/finding" }
+        },
+        "top_fixes": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },

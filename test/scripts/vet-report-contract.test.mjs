@@ -120,7 +120,7 @@ describe("vet report contract", () => {
         should_revise_first: false,
         primary_risk_area: "none"
       },
-      improvement_priority: { blockers: [], high: [], warning: [] },
+      improvement_priority: { blockers: [], high: [], warning: [], top_fixes: [] },
       issues_only_dimensions: [],
       revision_targets: [],
       recommended_next_action: "Task framing is solid and can proceed.",
@@ -168,7 +168,7 @@ describe("vet report contract", () => {
         should_revise_first: "no",
         primary_risk_area: ""
       },
-      improvement_priority: { blockers: [{}], high: [], warning: [] },
+      improvement_priority: { blockers: [{}], high: [], warning: [], top_fixes: [12] },
       issues_only_dimensions: ["DX"],
       revision_targets: [12],
       recommended_next_action: "",
@@ -179,6 +179,7 @@ describe("vet report contract", () => {
     assert.ok(payload.issues.some((item) => item.path === "review_scope.dimensions[1]"));
     assert.ok(payload.issues.some((item) => item.path === "summary.readiness"));
     assert.ok(payload.issues.some((item) => item.path === "findings[0].severity"));
+    assert.ok(payload.issues.some((item) => item.path === "improvement_priority.top_fixes"));
     assert.ok(payload.issues.some((item) => item.path === "next_step_options[0].action"));
   });
 });

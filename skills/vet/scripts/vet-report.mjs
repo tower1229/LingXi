@@ -263,6 +263,15 @@ export function validateVetReportShape(report) {
         issues.push(...validateFindingShape(item, `improvement_priority.${key}[${index}]`));
       });
     }
+    if (!isStringArray(report.improvement_priority.top_fixes)) {
+      issues.push(
+        issue(
+          "improvement_priority.top_fixes",
+          "invalid_type",
+          "VetReport.improvement_priority.top_fixes must be a string array."
+        )
+      );
+    }
   }
   if (!isStringArray(report?.issues_only_dimensions)) {
     issues.push(issue("issues_only_dimensions", "invalid_type", "VetReport.issues_only_dimensions must be a string array."));

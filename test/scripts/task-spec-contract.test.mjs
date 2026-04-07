@@ -11,6 +11,7 @@ import {
   buildTaskSpecValidationReport,
   validateTaskSpecShape
 } from "../../skills/task/scripts/task-spec.mjs";
+import { parseTaskDocument } from "../../scripts/_lingxi-memory.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
@@ -343,5 +344,73 @@ describe("task spec contract", () => {
     const document = fs.readFileSync(payload.file, "utf8");
     assert.match(document, /## 5\. 开发指导/);
     assert.match(document, /### 契约与边界指导/);
+  });
+
+  it("preserves custom guidance kind metadata across markdown round-trip", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(compileTaskSpecPath, tempDir, {
+      schema_version: TASK_SPEC_SCHEMA_VERSION,
+      title: "API seam",
+      type: "后端",
+      complexity: "中等",
+      project_context: null,
+      background: "Integration boundaries are currently implicit.",
+      problem: "The current module seam is hard to review safely.",
+      solution_overview: "Introduce one explicit backend contract and keep the change bounded.",
+      goals: ["Clarify the backend seam"],
+      non_goals: ["不扩展为新的服务能力"],
+      success_criteria: ["The backend seam is explicit and reviewable"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "one explicit backend seam",
+          so_that: "I can review the change against a stable contract",
+          acceptance_criteria: ["The backend seam is explicit and reviewable"]
+        }
+      ],
+      functional_requirements: [
+        {
+          id: "F1",
+          title: "Define seam",
+          description: "Describe the request and response boundary",
+          implementation_scheme: "Document one explicit contract for the current service seam",
+          acceptance_criteria: ["The backend seam is explicit and reviewable"],
+          verification_method: "integration",
+          edge_cases: ["invalid input"],
+          evidence: "Contract review with one integration check",
+          priority: "必须"
+        }
+      ],
+      guidance_blocks: [
+        {
+          kind: "backend_contract_guidance",
+          title: "服务边界指导",
+          bullets: [
+            "先写清 request/response contract，再进入实现。",
+            "把变更收在当前服务边界内。"
+          ]
+        }
+      ],
+      constraints: ["Do not change runtime behavior"],
+      memory_refs: [],
+      open_questions: [],
+      confidence: 0.82
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const payload = JSON.parse(result.stdout);
+    const document = fs.readFileSync(payload.file, "utf8");
+    assert.match(document, /<!-- lingxi_guidance_kind: backend_contract_guidance -->/);
+    const parsed = parseTaskDocument(document, payload.file);
+    assert.deepStrictEqual(parsed.guidance_blocks, [
+      {
+        kind: "backend_contract_guidance",
+        title: "服务边界指导",
+        bullets: [
+          "先写清 request/response contract，再进入实现。",
+          "把变更收在当前服务边界内。"
+        ]
+      }
+    ]);
   });
 });
