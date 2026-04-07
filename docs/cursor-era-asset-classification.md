@@ -102,7 +102,6 @@ These paths belong to the old broad Cursor workflow and should be removed from t
 - `.cursor/skills/reviewer-performance/`
 - `.cursor/skills/reviewer-security/`
 - `.cursor/skills/testcase-designer/`
-- `.cursor/skills/skill-creator/`
 
 Reason:
 
@@ -121,6 +120,7 @@ Completed removals:
 - `.cursor/skills/reviewer-performance/`
 - `.cursor/skills/reviewer-security/`
 - `.cursor/skills/testcase-designer/`
+- `.cursor/skills/skill-creator/`
 - `.cursor/commands/`
 - `.cursor/agents/lingxi-memory-write.md`
 - `.cursor/agents/lingxi-self-iterate.md`
@@ -193,6 +193,7 @@ Most recent completed removal slice:
 - first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
 - second-wave reviewer/testcase skills (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`)
 - third-wave command/agent-doc removals (`commands`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`)
+- fourth-wave toolchain removal (`skill-creator`)
 
 ## Removal End State
 
