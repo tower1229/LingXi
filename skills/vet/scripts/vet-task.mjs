@@ -10,6 +10,7 @@ import {
   parseTaskDocument,
   resolveProjectRoot
 } from "../../../scripts/_lingxi-memory.mjs";
+import { VET_REPORT_SCHEMA_VERSION, assertValidVetReport } from "./vet-report.mjs";
 
 const AMBIGUOUS_TERMS = [
   "optimize",
@@ -476,6 +477,7 @@ function vetTask(task, projectContext) {
   });
 
   return {
+    report_version: VET_REPORT_SCHEMA_VERSION,
     review_scope: {
       type: task.type,
       complexity: task.complexity,
@@ -559,16 +561,14 @@ function main() {
 
   const task = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
   const result = vetTask(task, detectProjectContext(projectRoot));
+  const report = {
+    task_id: task.id,
+    file,
+    ...result
+  };
+  assertValidVetReport(report);
   process.stdout.write(
-    JSON.stringify(
-      {
-        task_id: task.id,
-        file,
-        ...result
-      },
-      null,
-      2
-    ) + "\n"
+    JSON.stringify(report, null, 2) + "\n"
   );
 }
 

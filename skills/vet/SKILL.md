@@ -57,6 +57,7 @@ Return JSON with:
 
 - `task_id`
 - `file`
+- `report_version`
 - `review_scope`
 - `summary`
 - `findings`
@@ -69,5 +70,7 @@ Return JSON with:
 
 Use:
 
+- `scripts/vet-report.mjs`
 - `scripts/vet-task.mjs`
+- `references/vet-report.schema.json`
 - `references/vet-checklist.md`

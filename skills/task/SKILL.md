@@ -95,13 +95,19 @@ Return JSON with:
 - `operation`
 - `task_id`
 - `file`
+- `task_spec_version`
 - `quality_gate`
 - `next_step_options`
+
+When validation fails, return a structured validator payload instead of only a raw error string.
 
 ## Implementation
 
 Use:
 
+- `scripts/task-spec.mjs`
+- `scripts/task-compiler.mjs`
 - `scripts/write-task.mjs`
 - `scripts/next-task-id.mjs`
+- `references/task-spec.schema.json`
 - `references/task-doc-template.md`

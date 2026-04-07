@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import path from "node:path";
 import process from "node:process";
 import {
   detectProjectContext,
   ensureLingxiLayout,
-  findTaskFile,
-  incrementVersion,
-  parseTaskDocument,
-  nextTaskId,
   normalizeText,
-  renderTaskDocument,
   resolveProjectRoot,
-  slugify,
-  tasksDir
+  nextTaskId
 } from "../../../scripts/_lingxi-memory.mjs";
+import {
+  TASK_SPEC_SCHEMA_VERSION,
+  assertValidTaskSpec,
+  coerceTaskSpecValidationError,
+  renderTaskSpecValidationFailure
+} from "./task-spec.mjs";
+import { compileTaskDocument } from "./task-compiler.mjs";
 
 async function readJsonStdin() {
   const chunks = [];
@@ -110,6 +110,17 @@ function inferSimpleNonGoals(type, goal) {
     defaults.push("不在本任务内改动运行时代码行为");
   }
   return defaults;
+}
+
+function inferTaskSpecConfidence(input, projectContext, complexity) {
+  let confidence = 0.68;
+  if (normalizeText(input.type)) confidence += 0.05;
+  if (normalizeText(input.complexity)) confidence += 0.04;
+  if (normalizeText(input.background) && normalizeText(input.problem) && normalizeText(input.solution_overview)) confidence += 0.08;
+  if (Array.isArray(input.functional_requirements) && input.functional_requirements.length > 0) confidence += 0.05;
+  if (projectContext.kind && projectContext.kind !== "unknown") confidence += 0.05;
+  if (complexity === "简单") confidence += 0.03;
+  return Number(Math.min(0.95, confidence).toFixed(2));
 }
 
 function uniqueNormalizedList(items) {
@@ -675,6 +686,7 @@ function validateInput(input, projectRoot) {
     functionalRequirements
   });
   return {
+    schema_version: TASK_SPEC_SCHEMA_VERSION,
     title: normalizeText(input.title),
     goal: normalizeText(input.goal),
     scope,
@@ -700,6 +712,10 @@ function validateInput(input, projectRoot) {
     success_criteria: successCriteria,
     user_stories: userStories,
     functional_requirements: functionalRequirements,
+    open_questions: Array.isArray(input.open_questions)
+      ? input.open_questions.map((item) => normalizeText(item)).filter(Boolean)
+      : [],
+    confidence: inferTaskSpecConfidence(input, projectContext, complexity),
     changelog: Array.isArray(input.changelog) ? input.changelog : [],
     change_source: normalizeText(input.change_source || ""),
     change_trigger: normalizeText(input.change_trigger || ""),
@@ -711,52 +727,21 @@ function validateInput(input, projectRoot) {
 async function main() {
   const projectRoot = resolveProjectRoot();
   ensureLingxiLayout(projectRoot);
-  const input = validateInput(await readJsonStdin(), projectRoot);
-
-  const taskId = input.task_id || nextTaskId(projectRoot);
-  let file = findTaskFile(projectRoot, taskId);
-  const operation = file ? "updated" : "created";
-  let existing = null;
-  if (file) {
-    existing = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
-  }
-  if (!file) {
-    file = path.join(tasksDir(projectRoot), `${taskId}.task.${slugify(input.title)}.md`);
-  }
-
-  const shouldAppendChangeLog =
-    operation === "updated" &&
-    input.change_source === "vet" &&
-    input.change_trigger &&
-    input.change_summary;
-  const changelog = shouldAppendChangeLog
-    ? [
-        {
-          date: new Date().toISOString().slice(0, 10),
-          source: input.change_source,
-          trigger: input.change_trigger,
-          summary: input.change_summary,
-          related: input.change_related || ""
-        },
-        ...(existing?.changelog || [])
-      ]
-    : existing?.changelog || input.changelog;
-  const document = renderTaskDocument({
-    ...input,
-    id: taskId,
-    version: shouldAppendChangeLog ? incrementVersion(existing?.version || "1.0") : existing?.version || "1.0",
-    status: existing?.status || "草稿",
-    created_at: existing?.created_at || new Date().toISOString().slice(0, 10),
-    changelog
+  const taskSpec = validateInput(await readJsonStdin(), projectRoot);
+  assertValidTaskSpec(taskSpec);
+  const compilation = compileTaskDocument(projectRoot, {
+    ...taskSpec,
+    task_id: taskSpec.task_id || nextTaskId(projectRoot)
   });
-  fs.writeFileSync(file, document, "utf8");
+  fs.writeFileSync(compilation.file, compilation.document, "utf8");
 
   process.stdout.write(
     JSON.stringify(
       {
-        operation,
-        task_id: taskId,
-        file,
+        operation: compilation.operation,
+        task_id: compilation.task_id,
+        file: compilation.file,
+        task_spec_version: TASK_SPEC_SCHEMA_VERSION,
         quality_gate: "ready",
         next_step_options: [
           { id: "A", label: "执行 vet", action: "run_vet" },
@@ -771,6 +756,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`${error.message}\n`);
+  const validationError = coerceTaskSpecValidationError(error);
+  process.stderr.write(JSON.stringify(renderTaskSpecValidationFailure(validationError), null, 2) + "\n");
   process.exit(1);
 });

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lingxi.local/vet-report.schema.json",
+  "title": "LingXi VetReport",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "task_id",
+    "file",
+    "review_scope",
+    "project_context_summary",
+    "summary",
+    "findings",
+    "findings_by_dimension",
+    "dimension_summaries",
+    "improvement_priority",
+    "recommended_next_action",
+    "implementation_readiness"
+  ],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "file": { "type": "string", "minLength": 1 },
+    "review_scope": { "type": "object" },
+    "project_context_summary": { "type": "string" },
+    "summary": { "type": "object" },
+    "findings": { "type": "array" },
+    "findings_by_dimension": { "type": "object" },
+    "dimension_summaries": { "type": "array" },
+    "improvement_priority": { "type": "object" },
+    "recommended_next_action": { "type": "string", "minLength": 1 },
+    "implementation_readiness": { "type": "string", "minLength": 1 }
+  }
+}
