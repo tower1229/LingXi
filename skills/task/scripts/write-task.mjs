@@ -100,16 +100,59 @@ function inferSolutionOverview(type, scope, constraints) {
   return [firstScope ? `优先围绕“${firstScope}”展开，` : "", mode, firstConstraint ? `，并保持“${firstConstraint}”` : ""].join("");
 }
 
-function inferSimpleNonGoals(type, goal) {
-  const defaults = ["不扩展为大范围重构", "不在本任务内引入额外能力面"];
-  if (type === "前端") {
-    defaults.push("不在本任务内重做整套页面视觉");
+function inferSimpleNonGoals(type, goal, scope, constraints, signals) {
+  const defaults = [];
+  if (signals.docs) {
+    defaults.push(
+      `不新增独立的${signals.delivery_artifact}之外的发布面`,
+      "不把运行时实现细节混入面向读者的说明",
+      "不在本任务内改动运行时代码行为"
+    );
+  } else if (signals.sdk) {
+    defaults.push(
+      "不暴露 internal-only surface",
+      "不引入未声明的 breaking change",
+      "不把本任务扩展为新的 public API 能力面"
+    );
+  } else if (type === "前端") {
+    defaults.push(
+      "不在本任务内改动无关路由或跨页面交互流",
+      "不在本任务内重做整套页面视觉",
+      "不把当前页面调整扩展为跨模块前端重构"
+    );
   } else if (type === "后端") {
-    defaults.push("不在本任务内调整无关接口或数据模型");
-  } else if (/(docs|documentation|文档|guide|readme)/i.test(normalizeText(goal))) {
+    defaults.push(
+      "不在本任务内扩展到额外服务边界、数据库 schema 或无关接口",
+      "不引入未声明的外部 contract 变化",
+      "不把当前收口扩展为新的服务能力"
+    );
+  } else {
+    defaults.push(
+      "不把当前任务扩展为跨模块重构",
+      "不在本任务内引入额外能力面"
+    );
+  }
+
+  if (
+    constraints.some((item) => /route|路由/i.test(normalizeText(item))) &&
+    !defaults.some((item) => /route|路由/i.test(item))
+  ) {
+    defaults.push("不在本任务内改动现有路由结构");
+  }
+  if (
+    scope.some((item) => /api|接口|schema|contract|entrypoint/i.test(normalizeText(item))) &&
+    !defaults.some((item) => /api|接口|schema|contract|entrypoint/i.test(item))
+  ) {
+    defaults.push("不在本任务内扩展到无关 API 或额外 contract surface");
+  }
+  if (
+    /docs|documentation|文档|guide|readme/i.test(normalizeText(goal)) &&
+    !defaults.some((item) => /运行时|runtime/i.test(item))
+  ) {
     defaults.push("不在本任务内改动运行时代码行为");
   }
-  return defaults;
+
+  return uniqueNormalizedList(defaults);
 }
 
 function inferTaskSpecConfidence(input, projectContext, complexity) {
@@ -178,6 +221,42 @@ function buildTaskSignals(input, scope, constraints, type, tags) {
   };
 }
 
+function inferSuccessCriteria(input, acceptanceCriteria, type, complexity, signals) {
+  if (Array.isArray(input.success_criteria) && input.success_criteria.length > 0) {
+    return input.success_criteria.map((item) => normalizeText(item)).filter(Boolean);
+  }
+
+  const out = uniqueNormalizedList(acceptanceCriteria);
+  if (
+    signals.docs &&
+    !out.some((item) => /读者|受众|reader|audience|contributor|贡献者|developer|开发者|operator|管理员|maintainer|用户/i.test(item))
+  ) {
+    out.push(`${signals.audience}可以在${signals.delivery_artifact}中定位到明确入口`);
+  }
+  if (
+    signals.sdk &&
+    !out.some((item) => /兼容|compat|breaking|migration|public api|entrypoint/i.test(item))
+  ) {
+    out.push("现有消费者无需额外迁移即可继续使用当前 public API 入口");
+  }
+  if (
+    type === "后端" &&
+    complexity !== "简单" &&
+    !out.some((item) => /api|接口|request|response|schema|contract/i.test(item))
+  ) {
+    out.push("至少一个 request/response 或 schema contract 边界被明确记录");
+  }
+  if (
+    type === "前端" &&
+    !out.some((item) => /loading|empty|error/i.test(item))
+  ) {
+    out.push(complexity === "简单"
+      ? "关键页面状态与当前路由边界对用户可见且可理解"
+      : "loading、empty、error 等关键状态都有明确界面反馈");
+  }
+  return uniqueNormalizedList(out);
+}
+
 function strengthenBackground(background, signals) {
   let out = normalizeText(background);
   if (!out) return out;
@@ -226,6 +305,22 @@ function strengthenSolutionOverview(solution, type, signals) {
   return out;
 }
 
+function inferGeneratedEvidence(type, signals) {
+  if (signals.docs) {
+    return "文档 diff 与读者 walkthrough";
+  }
+  if (signals.sdk) {
+    return "public API diff、compat 检查或 integration record";
+  }
+  if (type === "后端") {
+    return "接口契约验证、集成测试结果或回滚检查记录";
+  }
+  if (type === "前端") {
+    return "状态切换 walkthrough 与关键界面差异记录";
+  }
+  return "关键差异说明与验收 walkthrough 记录";
+}
+
 function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints, type, complexity, signals) {
   const title = normalizeText(item) || `需求 ${index + 1}`;
   const matchedAcceptance = acceptanceCriteria.slice(index, index + 1).length > 0
@@ -263,7 +358,7 @@ function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints,
         "避免暴露 internal-only surface",
         "避免引入 breaking change"
       ]),
-      evidence: "API contract review 或集成验证记录",
+      evidence: inferGeneratedEvidence(type, signals),
       priority: "必须"
     };
   }
@@ -281,7 +376,7 @@ function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints,
         "invalid input",
         "unexpected dependency response"
       ]),
-      evidence: "接口契约验证或集成测试结果",
+      evidence: inferGeneratedEvidence(type, signals),
       priority: "必须"
     };
   }
@@ -298,7 +393,7 @@ function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints,
         ...constraints.slice(0, 2),
         ...(complexity === "简单" ? [] : ["loading state", "empty state", "error state"])
       ]),
-      evidence: "交互 walkthrough 或界面截图",
+      evidence: inferGeneratedEvidence(type, signals),
       priority: "必须"
     };
   }
@@ -311,7 +406,7 @@ function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints,
     acceptance_criteria: matchedAcceptance,
     verification_method: "manual",
     edge_cases: uniqueNormalizedList(constraints.slice(0, 2)),
-    evidence: "手工验证记录",
+    evidence: inferGeneratedEvidence(type, signals),
     priority: "必须"
   };
 }
@@ -632,13 +727,11 @@ function validateInput(input, projectRoot) {
   const goals = Array.isArray(input.goals) && input.goals.length > 0
     ? input.goals.map((item) => normalizeText(item)).filter(Boolean)
     : [normalizeText(input.goal)];
-  const successCriteria = Array.isArray(input.success_criteria) && input.success_criteria.length > 0
-    ? input.success_criteria.map((item) => normalizeText(item)).filter(Boolean)
-    : acceptanceCriteria;
+  const successCriteria = inferSuccessCriteria(input, acceptanceCriteria, type, complexity, signals);
   const nonGoals = Array.isArray(input.non_goals)
     ? input.non_goals.map((item) => normalizeText(item)).filter(Boolean)
     : complexity === "简单"
-      ? inferSimpleNonGoals(type, input.goal)
+      ? inferSimpleNonGoals(type, input.goal, scope, constraints, signals)
       : [];
   const userStories = Array.isArray(input.user_stories) && input.user_stories.length > 0
     ? input.user_stories.map((story) => ({

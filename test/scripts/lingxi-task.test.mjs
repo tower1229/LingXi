@@ -207,6 +207,7 @@ describe("lingxi task", () => {
     const content = fs.readFileSync(summary.file, "utf8");
     assert.ok(content.includes("当前任务聚焦于：Clarify the contributor guide."));
     assert.ok(content.includes("当前缺少一份可以直接驱动实现的任务边界说明"));
+    assert.ok(content.includes("不新增独立的guide之外的发布面"), content);
     assert.ok(content.includes("不在本任务内改动运行时代码行为"));
     assert.ok(content.includes("| 特性标签 | 文档为主 |"));
   });
@@ -328,7 +329,7 @@ describe("lingxi task", () => {
     const content = fs.readFileSync(createdSummary.file, "utf8");
     assert.ok(content.includes("request/response 或 schema contract"), content);
     assert.ok(content.includes("- 验证方式：integration"), content);
-    assert.ok(content.includes("接口契约验证或集成测试结果"), content);
+    assert.ok(content.includes("接口契约验证、集成测试结果或回滚检查记录"), content);
 
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
@@ -369,9 +370,11 @@ describe("lingxi task", () => {
     assert.strictEqual(created.code, 0, created.stderr);
     const createdSummary = JSON.parse(created.stdout);
     const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.ok(content.includes("关键页面状态与当前路由边界对用户可见且可理解") || content.includes("loading、empty、error 等关键状态都有明确界面反馈"), content);
     assert.ok(content.includes("loading state"), content);
     assert.ok(content.includes("empty state"), content);
     assert.ok(content.includes("error state"), content);
+    assert.ok(content.includes("状态切换 walkthrough 与关键界面差异记录"), content);
 
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);

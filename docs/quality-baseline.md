@@ -132,6 +132,7 @@ Legacy quality signals to preserve:
 - acceptance criteria are binary and testable
 - every functional requirement is structurally complete
 - output is a usable execution starting point, not a vague summary
+- output includes requirement description, solution description, and concrete development guidance
 
 Highest current LingXi 2.0 quality bar:
 
@@ -142,6 +143,7 @@ Highest current LingXi 2.0 quality bar:
 - Must preserve deterministic task file creation and update behavior.
 - Must preserve update/changelog behavior when vet feedback changes the task.
 - Must produce a task document that is directly usable for implementation handoff.
+- Must strengthen shaky solution ideas instead of merely restating them.
 
 Evidence required before calling `task` aligned:
 
@@ -167,7 +169,8 @@ Legacy quality signals to preserve:
 - dimension-based review depth
 - explicit readiness judgment
 - concrete issue prioritization
-- review stays at task-framing level, not code-review drift
+- review stays at task-document quality level, not code-review drift
+- review can challenge weak solution guidance, not only shallow framing defects
 
 Highest current LingXi 2.0 quality bar:
 

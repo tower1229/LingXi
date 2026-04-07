@@ -153,13 +153,15 @@ Responsibilities:
 
 - create or update a task document
 - define objective, boundaries, constraints, and acceptance criteria
+- refine ambiguous user demand into a task document an engineer can directly build from
+- strengthen weak or partial solution ideas toward current best-practice guidance
 - retrieve and apply relevant LingXi memory before drafting
-- refine weak user requests into a usable task framing
+- produce requirement description, solution description, and development guidance in one coherent artifact
 - surface missing information in one pass instead of dribbling out validation failures
 
 Non-responsibilities:
 
-- implementation planning
+- low-level build choreography or commit-by-commit execution scripting
 - build execution
 - delivery review
 
@@ -197,6 +199,7 @@ Responsibilities:
 
 - review a task document
 - identify ambiguity, missing constraints, hidden risk, and poor framing
+- challenge weak solution guidance and shaky best-practice assumptions in the task document
 - produce concrete challenge points
 - optionally inform task revision
 - use task type, complexity, memory, and project context to adapt review depth
@@ -220,7 +223,7 @@ Stage 1 should:
 - read relevant project context
 - retrieve relevant LingXi memory
 - challenge the task from the appropriate dimensions
-- identify implicit risk, ambiguity, and framing weakness
+- identify implicit risk, ambiguity, framing weakness, and weak development guidance
 
 Stage 2 should:
 

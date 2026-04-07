@@ -12,9 +12,10 @@ Produce a task document that is actually usable as the start of execution:
 - refine the request into a bounded task
 - make the problem framing explicit
 - record binary acceptance criteria
-- preserve just enough solution intent to guide safe implementation
+- strengthen tentative solution ideas toward safer best-practice defaults
+- provide enough solution and implementation guidance that an engineer can start building from it
 
-The task document is not an implementation plan. It is the execution starting point and acceptance contract.
+The task document is not a vague summary or a low-level build script. It is the engineer-facing task artifact that carries requirement description, solution description, and practical development guidance.
 
 ## Input Contract
 
@@ -43,7 +44,7 @@ Provide structured task input with:
 - Gather missing or weak fields into one rejection so the caller can fix them in one pass.
 - Keep task titles concise: no more than 10 Chinese characters or 20 English characters in intent, even if the file slug is normalized.
 - Record memory references only when they materially shaped the task.
-- Do not drift into plan/build detail.
+- Do not drift into line-by-line build choreography or direct code execution.
 - Non-goals must be real exclusions, not restated goals or scope.
 - Frontend non-trivial tasks must carry state-oriented edge cases.
 - Backend non-trivial tasks must describe at least one explicit interface or contract boundary.
@@ -74,7 +75,8 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 
 - create or update a LingXi task document
 - enforce requirement quality before writing
-- keep the task at the framing/acceptance level
+- turn ambiguous demand into a document with demand framing, solution framing, and development guidance
+- strengthen weak or shaky solution ideas toward current best-practice-oriented defaults
 - record which memories informed the task when applicable
 - append change-log entries when vet feedback materially changed the task
 

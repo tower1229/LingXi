@@ -16,8 +16,10 @@ Vet should catch:
 - non-testable acceptance criteria
 - hidden breadth
 - weak problem framing
+- weak solution guidance
+- fragile best-practice assumptions
 
-This skill challenges the task definition before work proceeds. It should review only task-level framing, not downstream implementation detail.
+This skill challenges the `task` output before work proceeds. It should help a human question whether the requirement description, solution description, and development guidance are actually robust enough to trust.
 
 ## Input Contract
 
@@ -31,6 +33,7 @@ If neither is provided, use the latest existing task.
 ## Responsibilities
 
 - inspect task quality
+- inspect requirement, solution, and development-guidance quality
 - identify blocking gaps and warnings
 - adapt review dimensions to task type and complexity
 - make the implementation readiness explicit
@@ -51,6 +54,7 @@ For non-trivial tasks, also inspect:
 - functional requirement completeness
 - risk visibility
 - tag-specific contract requirements for documentation or SDK work
+- whether the proposed guidance is strong enough for an engineer to implement from safely
 
 ## Output
 

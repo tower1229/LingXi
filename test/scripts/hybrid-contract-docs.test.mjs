@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const architecturePath = path.join(repoRoot, "docs", "architecture.md");
 const roadmapPath = path.join(repoRoot, "docs", "lingxi-2-roadmap.md");
+const taskSkillPath = path.join(repoRoot, "skills", "task", "SKILL.md");
+const vetSkillPath = path.join(repoRoot, "skills", "vet", "SKILL.md");
 
 describe("hybrid contract docs", () => {
   it("documents the current TaskSpec and VetReport contract surfaces in architecture", () => {
@@ -40,5 +42,24 @@ describe("hybrid contract docs", () => {
     assert.match(roadmap, /`next_step_options`/);
     assert.match(roadmap, /`TaskSpec` validation and repair-loop behavior/);
     assert.match(roadmap, /`VetReport` structure stability/);
+  });
+
+  it("keeps task and vet role definitions aligned with engineer-facing task creation and challenge", () => {
+    const taskSkill = fs.readFileSync(taskSkillPath, "utf8");
+    const vetSkill = fs.readFileSync(vetSkillPath, "utf8");
+    const architecture = fs.readFileSync(architecturePath, "utf8");
+
+    assert.match(taskSkill, /requirement description, solution description, and practical development guidance/);
+    assert.doesNotMatch(taskSkill, /The task document is not an implementation plan\./);
+    assert.match(taskSkill, /strengthen weak or shaky solution ideas toward current best-practice-oriented defaults/);
+
+    assert.match(vetSkill, /This skill challenges the `task` output before work proceeds\./);
+    assert.match(vetSkill, /inspect requirement, solution, and development-guidance quality/);
+    assert.match(vetSkill, /weak solution guidance/);
+
+    assert.match(architecture, /refine ambiguous user demand into a task document an engineer can directly build from/);
+    assert.match(architecture, /strengthen weak or partial solution ideas toward current best-practice guidance/);
+    assert.match(architecture, /challenge weak solution guidance and shaky best-practice assumptions/);
+    assert.doesNotMatch(architecture, /Non-responsibilities:\n\n- implementation planning/);
   });
 });
