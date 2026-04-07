@@ -61,10 +61,8 @@ Current LingXi 2.0 target direction:
 
 Legacy quality reference:
 
-- `.cursor/skills/task/SKILL.md`
-- `.cursor/skills/vet/SKILL.md`
-- `.cursor/skills/memory-retrieve/SKILL.md`
-- `.cursor/skills/memory-write/SKILL.md`
+- `docs/task-vet-original-capability-map.md`
+- absorbed Cursor-era task/vet/memory guidance distilled into the current 2.0 docs, contracts, and regression tests
 
 Current 2.0 implementation surface:
 

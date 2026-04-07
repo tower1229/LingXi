@@ -11,7 +11,7 @@
 - 2.0 的产品主线已经明确为 **Codex-native**。
 - 2.0 的可见工作流刻意收敛为 `task` 和 `vet`。
 - 持久记忆仍然是核心能力：`memory-retrieve`、`memory-write`、`session-distill`。
-- 仓库里即便仍有 `.cursor/` 历史材料，也只是收尾阶段的临时参考物，不属于 2.0 的安装与支持表层，并且最终要从主仓库中移除。
+- Cursor 时代的仓库内容已经从主树中移除，相关退役记录保留在 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)。
 
 当前项目遵循“质量优先”原则：
 
@@ -45,7 +45,6 @@
 - `scripts/`：确定性 setup 与运行时辅助脚本
 - `templates/`：生成到目标仓库的运行时模板
 - `docs/`：架构、roadmap 与质量标准
-- `.cursor/`：仓库内暂时保留的 Cursor 时代参考材料，不属于受支持的 2.0 表层，并以最终移除为目标；具体分层见 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)
 
 ## 安装说明
 
@@ -76,17 +75,5 @@ npm test
 ```
 
 这条命令只运行当前受支持的 LingXi 2.0 产品测试套件。
-
-如果要运行 Cursor 时代遗留迁移保护测试：
-
-```bash
-npm run test:legacy
-```
-
-如果改动同时涉及产品面与历史剥离工作：
-
-```bash
-npm run test:all
-```
 
 当前仓库把“当前产品测试全绿”和“产品表层一致性”都视为继续推进 roadmap 之前的强制质量门槛。

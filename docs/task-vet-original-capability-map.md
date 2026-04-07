@@ -20,12 +20,9 @@
 2. `task` 不只整理需求，还会把偏弱方案放大到更稳的最佳实践方向。
 3. `vet` 不是 checklist lint，而是帮助人类质疑 `task` 产出的审查助手。
 
-对应原版依据见：
+对应原版依据已经在 2.0 收口过程中被提炼并吸收进当前仓库文档、contract 与 regression tests。
 
-- [.cursor/skills/task/SKILL.md](/mnt/c/Workspace/tower1229/LingXi/.cursor/skills/task/SKILL.md)
-- [.cursor/skills/vet/SKILL.md](/mnt/c/Workspace/tower1229/LingXi/.cursor/skills/vet/SKILL.md)
-- [.cursor/skills/task/references/task-doc-template-full.md](/mnt/c/Workspace/tower1229/LingXi/.cursor/skills/task/references/task-doc-template-full.md)
-- [.cursor/skills/task/references/task-doc-template-simple.md](/mnt/c/Workspace/tower1229/LingXi/.cursor/skills/task/references/task-doc-template-simple.md)
+这份对照文档保留的是“原版为什么好”的能力结论，而不是继续依赖 Cursor 时代文件路径本身。
 
 ---
 

@@ -1,17 +1,12 @@
 # Cursor-Era Asset Classification
 
-## Purpose
+## Final State
 
-This document makes the remaining `.cursor/` material explicit.
+Cursor-era repository content has now been removed from the main LingXi repository.
 
-It also makes the final repository target explicit:
+This document remains as the closure record for that retirement work.
 
-- LingXi 2.0 should ultimately remove `.cursor/` content from the main product repository
-- the current classification exists only to guide an orderly removal, not to justify indefinite retention
-
-LingXi 2.0 does **not** treat any `.cursor/` path as supported product surface.
-
-Supported 2.0 runtime and distribution live under:
+LingXi 2.0 now treats the following as the supported product surface:
 
 - `.codex-plugin/`
 - `skills/`
@@ -20,191 +15,49 @@ Supported 2.0 runtime and distribution live under:
 - generated `.lingxi/`
 - generated `.codex/agents/`
 
-The remaining `.cursor/` tree exists only as historical reference or as short-term migration material during Phase 5/6 closure.
+No active runtime, shipped asset, or supported test suite depends on `.cursor/` paths.
 
-Final target:
+## What Was Preserved
 
-- no supported runtime depends on `.cursor/`
-- no shipped asset depends on `.cursor/`
-- no active product claim depends on `.cursor/`
-- the repository should eventually remove the `.cursor/` tree rather than keep it as a permanent sidecar
+The repository did not keep `.cursor/` as a permanent sidecar.
 
-## Classification Rules
+Instead, the useful parts were absorbed into:
 
-Use these buckets when deciding whether a `.cursor/` path should remain:
+- current 2.0 skill implementations
+- contract and regression tests under `test/scripts/`
+- architecture, roadmap, and quality documents under `docs/`
 
-- `reference-only`: preserves original LingXi behavior, writing style, or heuristics that still inform 2.0 quality, but is not shipped or supported
-- `migration-artifact`: not part of the supported 2.0 surface, but temporarily retained because it still informs or protects an in-flight closure area
-- `delete-later`: old workflow or utility material with no intended place in the final 2.0 product story
+That includes the original quality signals that informed:
 
-There is currently no `.cursor/` path in the `supported product surface` bucket.
+- `task` / `vet` capability alignment
+- memory write/retrieve quality expectations
+- repository retirement sequencing
 
-Every bucket below is temporary in a different way:
+## Retirement Outcome
 
-- `reference-only` means "keep only until the needed 2.0 knowledge is absorbed elsewhere"
-- `migration-artifact` means "remove after the dependent closure work is finished"
-- `delete-later` means "remove as soon as removal sequencing is safe"
+The removal work is complete in the main repository:
 
-## Asset Classification
+- `.cursor/` no longer exists as a live directory
+- no active test suite requires `.cursor/` paths
+- the historical `test/legacy/` suite has been retired together with the final `.cursor/` remnants
+- repository docs now describe one Codex-native product shape instead of a dual-tree transition state
 
-### Reference-Only
+## Completed Removal Slices
 
-These paths remain because they preserve original capability baselines that 2.0 still studies.
+- broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
+- reviewer/testcase skills
+- command and agent docs
+- toolchain and self-iterate runtime assets
+- reference docs that were no longer needed in-tree
+- hook runtime and session-init mechanics
+- migration utilities such as `memory-govern` and `workspace-bootstrap`
+- final reference implementations for Cursor-era `task`, `vet`, `memory-retrieve`, `memory-write`
+- local Cursor-era scratch content such as `.cursor/.lingxi/`
 
-They are temporary and should either be:
+## Phase 6 Closure Gate
 
-- distilled into 2.0 docs/tests/contracts, then removed
-- or archived outside the main repository, then removed from the working tree
- 
-- `.cursor/skills/task/`
-- `.cursor/skills/vet/`
-- `.cursor/skills/memory-retrieve/`
-- `.cursor/skills/memory-write/`
+The repository-level Cursor retirement gate is now satisfied:
 
-Reason:
-
-- they help explain what "good" looked like in the original system
-- they still inform 2.0 quality alignment
-- they are not installed, generated, or documented as live runtime
-
-### Migration Artifacts
-
-These paths are not part of the final 2.0 product, but still protect or inform unfinished closure work.
-
-They should be removed as soon as their 2.0 replacements or retirement decisions are complete:
-
-- `.cursor/hooks.json`
-- `.cursor/hooks/`
-- `.cursor/hooks/schemas/`
-- `.cursor/skills/task/scripts/latest-task-id.mjs`
-- `.cursor/skills/task/scripts/next-task-id.mjs`
-- local scratch directories such as `.cursor/.lingxi/`
-
-Reason:
-
-- they represent Cursor-era runtime mechanics or helper flows that still have test coverage
-- some still preserve background-memory or legacy task-runtime behavior that Phase 5/6 work has not fully retired yet
-- they should be reduced over time, not treated as stable 2.0 surface
-
-### Delete-Later Candidates
-
-These paths belong to the old broad Cursor workflow and should be removed from the main repository once archival value is judged low:
-
-- `.cursor/skills/reviewer-doc-consistency/`
-- `.cursor/skills/reviewer-e2e/`
-- `.cursor/skills/reviewer-performance/`
-- `.cursor/skills/reviewer-security/`
-- `.cursor/skills/testcase-designer/`
-
-Reason:
-
-- they encode the retired broad Cursor-era workflow rather than the narrow 2.0 `task` / `vet` workflow
-- they are not part of the install surface
-- current architecture and roadmap do not describe them as part of the final 2.0 product
-
-Completed removals:
-
-- `.cursor/skills/ask-questions/`
-- `.cursor/skills/plan/`
-- `.cursor/skills/build/`
-- `.cursor/skills/review/`
-- `.cursor/skills/reviewer-doc-consistency/`
-- `.cursor/skills/reviewer-e2e/`
-- `.cursor/skills/reviewer-performance/`
-- `.cursor/skills/reviewer-security/`
-- `.cursor/skills/testcase-designer/`
-- `.cursor/skills/skill-creator/`
-- `.cursor/commands/`
-- `.cursor/agents/lingxi-memory-write.md`
-- `.cursor/agents/lingxi-self-iterate.md`
-- `.cursor/agents/lingxi-self-iterate/`
-- `.cursor/skills/about-lingxi/`
-- `.cursor/skills/taste-recognition/`
-- `.cursor/agents/lingxi-session-distill.md`
-- `.cursor/hooks/session-init.mjs`
-- `.cursor/hooks/heartbeat-check.mjs`
-- `.cursor/hooks/lingxi-audit.mjs`
-- `.cursor/hooks/append-memory-audit.mjs`
-- `.cursor/hooks/_hook-utils.mjs`
-- `.cursor/hooks.json`
-- `.cursor/hooks/schemas/memory-audit-events.schema.json`
-- `.cursor/skills/memory-govern/`
-- `.cursor/skills/workspace-bootstrap/`
-
-## Test Ownership
-
-### Current 2.0 Product Tests
-
-These primarily protect the supported LingXi 2.0 surface:
-
-- `test/scripts/codex-plugin-shape.test.mjs`
-- `test/scripts/install-manifest-*.test.mjs`
-- `test/scripts/product-surface-coherence.test.mjs`
-- `test/scripts/lingxi-setup.test.mjs`
-- `test/scripts/lingxi-memory-*.test.mjs`
-- `test/scripts/lingxi-task.test.mjs`
-- `test/scripts/lingxi-vet.test.mjs`
-- `test/scripts/task-*.test.mjs`
-- `test/scripts/vet-*.test.mjs`
-- `test/scripts/hybrid-contract-docs.test.mjs`
-- `test/scripts/lx-uninstall.test.mjs`
-
-Operationally:
-
-- `npm test` should map to this suite
-
-### Historical Reference Or Migration Tests
-
-These still provide value, but they protect `.cursor/` behavior rather than the supported 2.0 runtime:
-
-- `test/legacy/hooks/*.test.mjs`
-- `test/legacy/skills/task-id.test.mjs`
-- `test/legacy/skills/memory-governance-decision.test.mjs`
-- `test/legacy/skills/governance-context-validator.test.mjs`
-
-Recommended direction:
-
-- keep them green while they still inform migration work
-- eventually move them under a clearly named historical or legacy test area
-- then remove them once the equivalent 2.0 surface is either retired or re-expressed in supported contracts
-
-Operationally:
-
-- `npm run test:legacy` should map to this suite
-- `npm run test:all` should run both current and legacy suites during repository retirement work
-
-## Current Repository Policy
-
-- `.cursor/` is a historical directory, not a supported runtime surface
-- no installer or setup flow should depend on `.cursor/`
-- docs may cite `.cursor/` only as reference or migration context
-- new 2.0 features should not be added under `.cursor/`
-- the end state is full removal of `.cursor/` from the main repository
-
-## Next Reduction Targets
-
-The next high-value cleanup targets are:
-
-1. move historical test ownership out of the main "current product" mental model
-2. retire Cursor hook/runtime artifacts once Phase 5 background memory productization no longer depends on them as reference
-3. archive or absorb any remaining reference value, then remove the old broad workflow skills from the main repository tree
-
-Most recent completed removal slice:
-
-- first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
-- second-wave reviewer/testcase skills (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`)
-- third-wave command/agent-doc removals (`commands`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`)
-- fifth-wave self-iterate runtime removal (`.cursor/agents/lingxi-self-iterate/` and related legacy tests)
-- fourth-wave toolchain removal (`skill-creator`)
-- sixth-wave reference-doc removal (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, `memory-fusion-strength-contract.test.mjs`)
-- seventh-wave session-init retirement (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests)
-- eighth-wave hook-runtime removal (`lingxi-audit`, `append-memory-audit`, hook schema, hooks.json, and remaining legacy hook tests)
-- ninth-wave migration-tool removal (`memory-govern`, `workspace-bootstrap`, `memory-index-sync.test.mjs`, `workspace-bootstrap.test.mjs`)
-
-## Removal End State
-
-Phase 6 closure should be considered complete only when:
-
-1. `.cursor/` no longer exists as a live directory in the main repository
-2. any retained historical material has been moved to separate archival storage or fully absorbed into 2.0 docs/tests/contracts
-3. the active test suite no longer requires `.cursor/` paths
+1. `.cursor/` no longer exists in the main repository
+2. useful historical knowledge has been absorbed into 2.0 docs/tests/contracts
+3. active repository validation runs only against the supported 2.0 surface

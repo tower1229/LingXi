@@ -633,7 +633,7 @@ Potential reuse candidates:
 
 These should not define the new architecture:
 
-- `.cursor/hooks/`
+- `.cursor/hooks/` (already retired from the main repository)
 - Cursor runtime plugin files
 - multi-stage workflow artifacts
 - self-iterate background system

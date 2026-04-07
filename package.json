@@ -9,10 +9,6 @@
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",
     "test": "node --test \"test/scripts/**/*.test.mjs\"",
-    "test:all": "node --test \"test/scripts/**/*.test.mjs\" \"test/legacy/**/*.test.mjs\"",
-    "test:legacy": "node --test \"test/legacy/**/*.test.mjs\"",
-    "test:scripts": "node --test \"test/scripts/**/*.test.mjs\"",
-    "test:legacy:hooks": "node --test \"test/legacy/hooks/**/*.test.mjs\"",
-    "test:legacy:skills": "node --test \"test/legacy/skills/**/*.test.mjs\""
+    "test:scripts": "node --test \"test/scripts/**/*.test.mjs\""
   }
 }

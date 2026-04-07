@@ -15,9 +15,11 @@ It assumes the following are already substantially complete:
 
 That means the next step is no longer "keep expanding `task` / `vet` structure."
 
+Repository retirement work has now completed the `.cursor/` removal objective.
+
 The next step is:
 
-1. make the repository and shipped product surface fully coherent
+1. keep the repository and shipped product surface coherent
 2. make the background memory loop feel product-ready rather than merely implemented
 
 Important end-state clarification:
@@ -33,7 +35,7 @@ Against [lingxi-2-roadmap.md](/mnt/c/Workspace/tower1229/LingXi/docs/lingxi-2-ro
 
 - `Phase 1` to `Phase 4.5` are effectively in place
 - `Phase 5` exists at the capability level, but not yet fully productized
-- `Phase 6` is partially done at the docs/install layer, but the repository is not yet fully retired/coherent
+- `Phase 6` repository-retirement work is now substantially complete
 
 Against [architecture.md](/mnt/c/Workspace/tower1229/LingXi/docs/architecture.md):
 
@@ -44,38 +46,30 @@ Against [architecture.md](/mnt/c/Workspace/tower1229/LingXi/docs/architecture.md
 
 So the next development direction should be:
 
-- first complete `Phase 6` coherence and retirement
-- then complete `Phase 5` productization of the background memory loop
+- keep Phase 6 coherence intact now that `.cursor/` retirement is done
+- complete `Phase 5` productization of the background memory loop
 - only after that return to deeper content-quality upgrades
 
 ---
 
 ## Priority Order
 
-### Priority 1: Phase 6 Repository And Product Coherence
+### Priority 1: Keep Phase 6 Repository And Product Coherence Closed
 
 Goal:
 
-- make the repository, docs, tests, shipped assets, and runtime story describe the same product
-- remove `.cursor/` content from the main repository once its remaining value has been absorbed or archived
+- keep the repository, docs, tests, shipped assets, and runtime story describing the same product
+- prevent any reintroduction of a dual-tree Codex-plus-Cursor repository shape
 
-Why first:
+Why still first:
 
 - current `task` / `vet` quality is already strong enough to continue
-- the biggest remaining product risk is contradiction or ambiguity at the repository level
-- delaying this work keeps LingXi in a "core is good, product surface is still mixed" state
+- the main repository-level risk is now regression back into ambiguity or mixed product surfaces
+- Phase 5 work should happen on top of a clean, single-surface repository
 
 Work packages:
 
-1. Define the final status of `.cursor/`
-- classify each remaining `.cursor/` path as one of:
-  - migration artifact
-  - reference-only historical material
-  - deletion candidate
-- write that classification down explicitly before deleting anything
-- treat the classification as a removal map, not a permanent repository shape
-
-2. Shrink the supported product surface
+1. Keep the supported product surface narrow
 - ensure supported runtime/setup/install paths are only:
   - `.codex-plugin/`
   - `skills/`
@@ -83,22 +77,20 @@ Work packages:
   - `templates/`
   - generated `.lingxi/`
   - generated `.codex/agents/`
-- make unsupported historical paths clearly non-product
+- keep unsupported historical paths out of the working tree
 
-3. Clean test ownership
-- separate "current product tests" from "historical reference tests"
-- remove or relocate tests that only protect retired Cursor-era mechanics
-- keep historical materials only when they still serve as quality references
-- make `npm test` mean "current supported 2.0 product suite" rather than "everything still in the repository"
+2. Keep test ownership clean
+- keep `npm test` mapped to the supported 2.0 product suite
+- prevent retired migration suites from creeping back in
+- express any future historical notes as docs or supported contract tests rather than a second runtime tree
 
-4. Remove `.cursor/` from the main tree
-- absorb still-useful quality baselines into `docs/`, `skills/`, `scripts/`, or supported tests
-- archive anything worth retaining outside the active product tree
-- delete the remaining `.cursor/` paths once they are no longer needed for active closure work
+3. Preserve the retirement outcome
+- keep useful quality baselines absorbed into `docs/`, `skills/`, `scripts/`, or supported tests
+- do not reintroduce `.cursor/` as a sidecar for convenience
 
 Current progress:
 
-- test ownership has been split into current-product and legacy suites
+- test ownership has been reduced to the current-product suite
 - the first broad-workflow removal slice (`ask-questions`, `plan`, `build`, `review`) has been deleted from `.cursor/`
 - the second reviewer/testcase removal slice (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`) has been deleted from `.cursor/`
 - the third command/agent-doc removal slice (`.cursor/commands/*`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`) has been deleted from `.cursor/`
@@ -108,8 +100,9 @@ Current progress:
 - the seventh session-init slice (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests) has been deleted from `.cursor/`
 - the eighth hook-runtime slice (`lingxi-audit`, `append-memory-audit`, hook schema, `hooks.json`, and remaining legacy hook tests) has been deleted from `.cursor/`
 - the ninth migration-tool slice (`memory-govern`, `workspace-bootstrap`, and their legacy tests) has been deleted from `.cursor/`
+- the tenth final-reference slice (remaining Cursor-era `task`, `vet`, `memory-retrieve`, `memory-write`, `.cursor/.lingxi`, and the last `test/legacy/` tests) has been deleted from the main repository
 
-5. Final coherence pass for docs
+4. Final coherence pass for docs
 - README
 - install docs
 - architecture
@@ -121,7 +114,7 @@ Exit criteria:
 
 - a new reader can identify the supported LingXi 2.0 surface without ambiguity
 - no repository path appears simultaneously as "historical reference" and "supported runtime"
-- current tests primarily protect the real 2.0 surface rather than retired leftovers
+- current tests protect the real 2.0 surface rather than retired leftovers
 - `.cursor/` no longer remains in the main repository as an active directory
 
 Release gate:
@@ -208,13 +201,10 @@ This is where LingXi should improve craftsmanship, not product shape.
 
 ## Suggested Execution Sequence
 
-1. audit and classify remaining `.cursor/` material
-2. move useful knowledge and test intent out of `.cursor/`
-3. remove `.cursor/` from the main repository
-4. clean docs/tests so the repository has one product story
-5. tighten automation/session-distill/state contracts
-6. verify background memory usefulness in real task/vet flows
-7. only then resume content-quality deepening
+1. keep docs/tests/install/runtime describing one Codex-native product story
+2. tighten automation/session-distill/state contracts
+3. verify background memory usefulness in real task/vet flows
+4. only then resume content-quality deepening
 
 ---
 
