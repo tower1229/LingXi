@@ -125,6 +125,11 @@ Completed removals:
 - `.cursor/agents/lingxi-session-distill.md`
 - `.cursor/hooks/session-init.mjs`
 - `.cursor/hooks/heartbeat-check.mjs`
+- `.cursor/hooks/lingxi-audit.mjs`
+- `.cursor/hooks/append-memory-audit.mjs`
+- `.cursor/hooks/_hook-utils.mjs`
+- `.cursor/hooks.json`
+- `.cursor/hooks/schemas/memory-audit-events.schema.json`
 
 ## Test Ownership
 
@@ -194,6 +199,8 @@ Most recent completed removal slice:
 - fifth-wave self-iterate runtime removal (`.cursor/agents/lingxi-self-iterate/` and related legacy tests)
 - fourth-wave toolchain removal (`skill-creator`)
 - sixth-wave reference-doc removal (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, `memory-fusion-strength-contract.test.mjs`)
+- seventh-wave session-init retirement (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests)
+- eighth-wave hook-runtime removal (`lingxi-audit`, `append-memory-audit`, hook schema, hooks.json, and remaining legacy hook tests)
 - seventh-wave session-init retirement (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests)
 
 ## Removal End State

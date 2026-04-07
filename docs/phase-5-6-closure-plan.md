@@ -106,6 +106,7 @@ Current progress:
 - the fifth self-iterate runtime slice (`.cursor/agents/lingxi-self-iterate/` plus related legacy tests and hook triggers) has been deleted from `.cursor/`
 - the sixth reference-doc slice (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, and their legacy doc contract test) has been deleted from `.cursor/`
 - the seventh session-init slice (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests) has been deleted from `.cursor/`
+- the eighth hook-runtime slice (`lingxi-audit`, `append-memory-audit`, hook schema, `hooks.json`, and remaining legacy hook tests) has been deleted from `.cursor/`
 
 5. Final coherence pass for docs
 - README
