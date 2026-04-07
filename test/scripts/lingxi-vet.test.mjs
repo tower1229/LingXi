@@ -291,4 +291,189 @@ Adjust homepage layout.
     assert.ok(vetResult.findings.some((item) => item.code === "docs_audience_missing"));
     assert.ok(vetResult.findings.some((item) => item.code === "docs_delivery_missing"));
   });
+
+  it("flags missing frontend runtime constraints for non-trivial frontend tasks", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(taskPath, tempDir, [], {
+      title: "Status pane",
+      goal: "Clarify the dashboard state surface.",
+      complexity: "复杂",
+      type: "前端",
+      background: "Dashboard states are hard to understand.",
+      problem: "Users cannot tell what the page is doing in each state.",
+      solution_overview: "Define explicit state handling and layout boundaries for the dashboard pane.",
+      scope: ["Add state-specific dashboard panes", "Clarify dashboard interaction layout"],
+      constraints: ["Keep routes unchanged", "Do not alter backend APIs"],
+      acceptance_criteria: [
+        "Dashboard states render with one explicit state pane per user-visible condition",
+        "Dashboard interaction layout stays within the existing route"
+      ],
+      non_goals: ["不重做整套页面视觉"],
+      user_stories: [
+        {
+          as_a: "dashboard user",
+          i_want: "clear state feedback",
+          so_that: "I can understand loading and failure conditions",
+          acceptance_criteria: ["Dashboard states render with one explicit state pane per user-visible condition"]
+        }
+      ],
+      functional_requirements: [
+        {
+          title: "State panes",
+          description: "Render separate loading, empty, and error panes",
+          implementation_scheme: "Split the dashboard pane into explicit visual states",
+          acceptance_criteria: ["Dashboard states render with one explicit state pane per user-visible condition"],
+          verification_method: "manual",
+          edge_cases: ["loading state", "empty state", "error state"],
+          evidence: "Browser capture",
+          priority: "必须"
+        },
+        {
+          title: "Interaction layout",
+          description: "Keep the dashboard interactions within the existing layout",
+          implementation_scheme: "Adjust the dashboard pane structure without changing routes",
+          acceptance_criteria: ["Dashboard interaction layout stays within the existing route"],
+          verification_method: "manual",
+          edge_cases: ["state switch without route change"],
+          evidence: "Manual walkthrough",
+          priority: "必须"
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "frontend_runtime_constraint_thin"));
+  });
+
+  it("flags missing SDK compatibility framing", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(taskPath, tempDir, [], {
+      title: "SDK surf",
+      goal: "Clarify the SDK surface.",
+      complexity: "中等",
+      type: "其他",
+      tags: ["库/SDK"],
+      background: "Consumers depend on a stable SDK surface.",
+      problem: "The current SDK surface is implicit.",
+      solution_overview: "Define one explicit public SDK surface for the integration layer.",
+      scope: ["Define the public SDK surface", "Constrain the SDK change"],
+      constraints: ["Do not change runtime behavior", "Keep the diff minimal"],
+      acceptance_criteria: [
+        "The SDK surface is documented with one explicit public entrypoint",
+        "The change stays within the scoped SDK modules"
+      ],
+      non_goals: ["不扩展为新的功能包"],
+      user_stories: [
+        {
+          as_a: "SDK consumer",
+          i_want: "a clear SDK surface",
+          so_that: "integration usage remains predictable",
+          acceptance_criteria: ["The SDK surface is documented with one explicit public entrypoint"]
+        }
+      ],
+      functional_requirements: [
+        {
+          title: "Define SDK surface",
+          description: "Describe the public SDK entrypoint",
+          implementation_scheme: "Document the public SDK surface and route internal modules behind it",
+          acceptance_criteria: ["The SDK surface is documented with one explicit public entrypoint"],
+          verification_method: "manual",
+          edge_cases: ["Do not expose internal-only modules"],
+          evidence: "Documentation review",
+          priority: "必须"
+        },
+        {
+          title: "Constrain scope",
+          description: "Keep the change inside the scoped SDK modules",
+          implementation_scheme: "Restrict the update to the scoped SDK modules",
+          acceptance_criteria: ["The change stays within the scoped SDK modules"],
+          verification_method: "manual",
+          edge_cases: ["Avoid accidental package surface expansion"],
+          evidence: "Diff review",
+          priority: "必须"
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "sdk_compatibility_missing"));
+  });
+
+  it("flags mismatch between task type and repository context", async () => {
+    tempDir = createTempDir();
+    fs.writeFileSync(
+      path.join(tempDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "service-app",
+          dependencies: {
+            express: "^5.0.0"
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    await runNode(setupPath, tempDir);
+    const created = await runNode(taskPath, tempDir, [], {
+      title: "UI polish",
+      goal: "Clarify the admin dashboard.",
+      complexity: "中等",
+      type: "前端",
+      background: "Operators need clearer state visibility.",
+      problem: "Current state transitions are hard to understand.",
+      solution_overview: "Add explicit dashboard state panes and keep the interaction surface bounded.",
+      scope: ["Add dashboard state panes", "Clarify dashboard layout"],
+      constraints: ["Do not change API behavior", "Keep routes unchanged", "Do not add new endpoints"],
+      acceptance_criteria: [
+        "Dashboard exposes one explicit pane for each visible state",
+        "Dashboard layout stays within the current route"
+      ],
+      non_goals: ["不扩展为新的后端接口"],
+      user_stories: [
+        {
+          as_a: "operator",
+          i_want: "clear dashboard states",
+          so_that: "I can understand the current service condition",
+          acceptance_criteria: ["Dashboard exposes one explicit pane for each visible state"]
+        }
+      ],
+      functional_requirements: [
+        {
+          title: "Dashboard state panes",
+          description: "Render separate loading and error panes for the dashboard",
+          implementation_scheme: "Split the dashboard surface into explicit visual states",
+          acceptance_criteria: ["Dashboard exposes one explicit pane for each visible state"],
+          verification_method: "manual",
+          edge_cases: ["loading state", "error state"],
+          evidence: "Browser capture",
+          priority: "必须"
+        },
+        {
+          title: "Dashboard layout",
+          description: "Keep the dashboard interaction layout bounded",
+          implementation_scheme: "Adjust the admin layout without changing routes",
+          acceptance_criteria: ["Dashboard layout stays within the current route"],
+          verification_method: "manual",
+          edge_cases: ["state switch without route change"],
+          evidence: "Manual walkthrough",
+          priority: "必须"
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "repo_context_frontend_mismatch"));
+    assert.ok(typeof vetResult.project_context_summary === "string");
+    assert.ok(vetResult.project_context_summary.includes("backend-oriented workspace"));
+  });
 });

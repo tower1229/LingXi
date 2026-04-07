@@ -54,6 +54,8 @@ The following product decisions are fixed for the current refactor direction:
 11. `AGENTS.md` should be generated only when missing; otherwise setup should avoid overwriting it.
 12. Session distillation must prevent duplicate processing of unchanged session content.
 13. Session dedupe identity is `session_id + content_fingerprint + distill_version`.
+14. `task` and `vet` should evolve toward a hybrid architecture: LLM reasoning for refinement/judgment, deterministic scripts for validation/rendering/persistence.
+15. LingXi should not treat rule scripts as the primary place for high-level task refinement logic.
 
 ---
 
@@ -213,23 +215,30 @@ So LingXi 2.0 should treat these as **setup-generated runtime artifacts**, not p
 
 1. User invokes LingXi task workflow.
 2. LingXi retrieves relevant project memory.
-3. LingXi creates or updates a task document.
-4. Task document captures:
+3. LingXi reads relevant project context.
+4. LingXi refines the request into a structured task spec.
+5. LingXi validates and compiles that spec into a task document.
+6. Task document captures:
    - goal
    - scope
    - constraints
    - acceptance criteria
+   - non-goals
+   - user stories
+   - project context signals when relevant
 
 ### Flow B: Task Vetting
 
 1. User invokes LingXi vet workflow.
 2. LingXi retrieves relevant project memory.
-3. LingXi audits the task document for:
+3. LingXi reads relevant project context.
+4. LingXi audits the task document for:
    - ambiguity
    - missing constraints
    - hidden risk
    - contradictory acceptance criteria
    - poor task framing
+5. LingXi emits a structured vet report, not only free-form commentary.
 
 ### Flow C: Background Session Distillation
 
@@ -420,6 +429,91 @@ Planned plugin intent:
 
 ---
 
+## Task/Vet Direction
+
+The next major quality phase should stop pushing more high-level judgment into deterministic scripts alone.
+
+Instead, LingXi should explicitly adopt:
+
+- LLM reasoning for refinement and review
+- deterministic rules for validation, compilation, and persistence
+
+### Why
+
+Pure rules are good at enforcing a floor, but weak at:
+
+- extracting the real user goal
+- surfacing hidden assumptions
+- generating strong non-goals
+- challenging weak success criteria
+- doing nuanced review adapted to repo context
+
+Pure prompting is good at those tasks, but weak at:
+
+- schema stability
+- deterministic output structure
+- changelog/version safety
+- testable output contracts
+
+So the design target is a hybrid path, not a choice between the two.
+
+### `TaskSpec` Direction
+
+`task` should move toward an explicit intermediate schema, tentatively called `TaskSpec`.
+
+`TaskSpec` should become the source of truth before markdown rendering.
+
+Planned fields:
+
+- `title`
+- `type`
+- `complexity`
+- `project_context`
+- `background`
+- `problem`
+- `solution_overview`
+- `goals[]`
+- `non_goals[]`
+- `success_criteria[]`
+- `user_stories[]`
+- `functional_requirements[]`
+- `constraints[]`
+- `memory_refs[]`
+- `open_questions[]`
+- `confidence`
+
+### `VetReport` Direction
+
+`vet` should move toward an explicit intermediate schema, tentatively called `VetReport`.
+
+Planned fields:
+
+- `task_id`
+- `file`
+- `review_scope`
+- `project_context_summary`
+- `summary`
+- `findings`
+- `findings_by_dimension`
+- `dimension_summaries`
+- `improvement_priority`
+- `recommended_next_action`
+- `implementation_readiness`
+
+### Repair Loop Requirement
+
+The intended task path is:
+
+1. LLM produces `TaskSpec`
+2. validator returns structured errors
+3. LLM repairs the spec
+4. validator re-checks
+5. compiler renders task markdown
+
+This should become the standard LingXi path instead of relying on raw script exceptions as the main user-facing refinement mechanism.
+
+---
+
 ## Planned Subagent Surface
 
 V1 uses exactly one project-local subagent:
@@ -572,7 +666,7 @@ Goal:
 
 - establish the real LingXi core
 
-## Phase 4 - Task And Vet
+## Phase 4 - Task And Vet Baseline
 
 Deliverables:
 
@@ -585,6 +679,21 @@ Deliverables:
 Goal:
 
 - complete the visible user workflow
+
+## Phase 4.5 - Hybrid Task/Vet Refactor
+
+Deliverables:
+
+- `TaskSpec` schema draft
+- `VetReport` schema draft
+- rewritten `task` skill instructions oriented around LLM refinement
+- rewritten `vet` skill instructions oriented around LLM review
+- validator/compiler split for task
+- clearer validator output contracts
+
+Goal:
+
+- shift `task/vet` from script-heavy judgment to hybrid LLM-plus-rules architecture without losing deterministic outputs
 
 ## Phase 5 - Background Session Distillation
 
@@ -624,11 +733,12 @@ Recommended work order:
 4. implement memory core
 5. implement `task`
 6. implement `vet`
-7. implement `session-distill`
-8. remove obsolete Cursor runtime pieces
-9. rewrite README and product docs
+7. refactor `task/vet` toward `TaskSpec` and `VetReport`
+8. implement `session-distill`
+9. remove obsolete Cursor runtime pieces
+10. rewrite README and product docs
 
-This order minimizes rework because memory is the real dependency under both `task` and `vet`, while session distillation depends on memory-write being settled first.
+This order minimizes rework because memory is the real dependency under both `task` and `vet`, while session distillation depends on memory-write being settled first. It also avoids baking too much high-level refinement logic into deterministic task scripts before the hybrid contract is defined.
 
 ---
 
@@ -643,6 +753,8 @@ Tests should shift from platform-specific Cursor runtime coverage to LingXi 2.0 
 - task id generation
 - task document creation/update
 - vet behavior against task docs
+- `TaskSpec` validation and repair-loop behavior
+- `VetReport` structure stability
 - memory note write/update/index sync
 - memory retrieval behavior
 - session distillation filtering and persistence
@@ -694,6 +806,14 @@ Mitigation:
 - version distillation rules
 - keep memory-level merge logic independent from session-level dedupe
 
+### Risk 6: Overfitting Task/Vet To Deterministic Rules
+
+Mitigation:
+
+- move high-level refinement into LLM-guided `TaskSpec` generation
+- keep deterministic scripts focused on validation and compilation
+- test the schema contracts rather than hard-coding all reasoning into scripts
+
 ---
 
 ## Definition Of Success
@@ -707,6 +827,8 @@ LingXi 2.0 V1 succeeds when all of the following are true:
 5. task and vet both retrieve relevant LingXi memory
 6. background automation can distill historical sessions into durable project memory
 7. future tasks actually improve from those memories
+8. task quality improves through LLM refinement without losing deterministic task document quality
+9. vet quality improves through LLM review without losing stable review contracts
 
 ---
 
@@ -720,6 +842,7 @@ Acceptable revisions:
 - changing exact script names
 - refining note schema
 - refining automation prompt structure
+- refining `TaskSpec` and `VetReport` schemas
 
 
 ---

@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import process from "node:process";
 import {
+  detectProjectContext,
   findTaskFile,
   latestTaskId,
   normalizeText,
@@ -75,9 +76,18 @@ function severityRank(severity) {
 
 function typeSpecificD4Check(task) {
   if (task.type === "前端") {
-    return task.functional_requirements.some((req) => !req.edge_cases.some((item) => /状态|state|loading|error/i.test(item)))
-      ? finding("warning", "frontend_state_coverage_weak", "Frontend task lacks explicit state-oriented edge case coverage.", "D4")
-      : null;
+    if (task.functional_requirements.some((req) => !req.edge_cases.some((item) => /状态|state|loading|error/i.test(item)))) {
+      return finding("warning", "frontend_state_coverage_weak", "Frontend task lacks explicit state-oriented edge case coverage.", "D4");
+    }
+    const hasInteractionSignal = task.functional_requirements.some((req) =>
+      /click|input|form|交互|点击|提交|响应式|layout|screen/i.test(
+        [req.title, req.description, req.implementation_scheme, ...(req.acceptance_criteria || [])].join(" ")
+      )
+    );
+    if (!hasInteractionSignal && task.complexity !== "简单") {
+      return finding("warning", "frontend_interaction_surface_thin", "Frontend task should describe interaction or layout surface more explicitly.", "D4");
+    }
+    return null;
   }
   if (task.type === "后端") {
     if (task.functional_requirements.some((req) => !/unit|integration|manual/i.test(req.verification_method))) {
@@ -149,11 +159,19 @@ function tagSpecificD4Checks(task) {
         finding("warning", "sdk_contract_missing", "Library/SDK task should define external API or behavior contract expectations.", "D4")
       );
     }
+    const hasCompatibilitySignal = [task.solution_overview, ...(task.constraints || []), ...(task.acceptance_criteria || [])]
+      .join(" ")
+      .match(/兼容|compat|breaking|migration|semver/i);
+    if (!hasCompatibilitySignal) {
+      findings.push(
+        finding("warning", "sdk_compatibility_missing", "Library/SDK task should state compatibility or migration expectations.", "D4")
+      );
+    }
   }
   return findings;
 }
 
-function vetTask(task) {
+function vetTask(task, projectContext) {
   const findings = [];
   const goalText = [task.background, task.problem, ...(task.goals || [])].filter(Boolean).join(" ");
   const scopeCount = (task.functional_requirements || []).length;
@@ -164,6 +182,18 @@ function vetTask(task) {
 
   if (!goalText || goalText.length < 12) {
     findings.push(finding("blocking", "goal_missing_or_weak", "Goal framing is missing or too weak to guide implementation.", "D1"));
+  }
+  if (projectContext?.summary) {
+    if (task.type === "前端" && projectContext.frontend_strength === 0 && projectContext.backend_strength > 0) {
+      findings.push(
+        finding("warning", "repo_context_frontend_mismatch", "Task is marked as frontend, but the repository currently looks backend-oriented.", "D3")
+      );
+    }
+    if (task.type === "后端" && projectContext.backend_strength === 0 && projectContext.frontend_strength > 0) {
+      findings.push(
+        finding("warning", "repo_context_backend_mismatch", "Task is marked as backend, but the repository currently looks frontend-oriented.", "D3")
+      );
+    }
   }
   if (scopeCount === 0) {
     findings.push(finding("blocking", "scope_missing", "Functional scope is missing.", "D1"));
@@ -260,6 +290,16 @@ function vetTask(task) {
       finding("warning", "verification_strategy_thin", "Complex non-frontend task relies too heavily on manual review without stronger verification coverage.", "D5")
     );
   }
+  if (
+    dimensions.includes("D5") &&
+    task.type === "前端" &&
+    task.complexity !== "简单" &&
+    !task.constraints.some((item) => /responsive|mobile|desktop|浏览器|兼容|性能/i.test(normalizeText(item)))
+  ) {
+    findings.push(
+      finding("warning", "frontend_runtime_constraint_thin", "Non-trivial frontend task should state runtime constraints such as responsive, browser, or performance boundaries.", "D5")
+    );
+  }
 
   const dedupedFindings = distinctFindingCodes(findings).sort(
     (a, b) => severityRank(b.severity) - severityRank(a.severity) || a.code.localeCompare(b.code)
@@ -288,6 +328,7 @@ function vetTask(task) {
       tags: task.tags || [],
       dimensions
     },
+    project_context_summary: projectContext?.summary || "",
     findings: dedupedFindings,
     findings_by_dimension: dimensions.reduce((acc, dimension) => {
       acc[dimension] = dedupedFindings.filter((item) => item.section === dimension);
@@ -360,7 +401,7 @@ function main() {
   }
 
   const task = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
-  const result = vetTask(task);
+  const result = vetTask(task, detectProjectContext(projectRoot));
   process.stdout.write(
     JSON.stringify(
       {

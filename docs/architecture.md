@@ -69,6 +69,8 @@ Primary runtime roots:
 2. Make Codex task vetting sharper over time.
 3. Distill durable engineering taste with low user interruption.
 4. Keep the product legible and maintainable.
+5. Make LingXi task writing strong through LLM reasoning constrained by deterministic structure.
+6. Make LingXi vetting strong through LLM judgment constrained by stable review contracts.
 
 ### Non-Goals
 
@@ -138,6 +140,13 @@ AGENTS.md
 
 V1 keeps the skill surface intentionally small.
 
+The core implementation strategy for `task` and `vet` is a hybrid model:
+
+- LLM reasoning for understanding, refinement, challenge, and judgment
+- deterministic scripts for validation, normalization, parsing, rendering, and stable persistence
+
+LingXi should not choose between "pure prompting" and "pure rules." It should use LLMs for the parts rules are bad at, and use rules for the parts that must stay stable.
+
 ### `task`
 
 Responsibilities:
@@ -145,12 +154,42 @@ Responsibilities:
 - create or update a task document
 - define objective, boundaries, constraints, and acceptance criteria
 - retrieve and apply relevant LingXi memory before drafting
+- refine weak user requests into a usable task framing
+- surface missing information in one pass instead of dribbling out validation failures
 
 Non-responsibilities:
 
 - implementation planning
 - build execution
 - delivery review
+
+#### `task` Hybrid Flow
+
+`task` should be implemented in two explicit stages:
+
+1. LLM refinement stage
+2. deterministic compile stage
+
+Stage 1 should:
+
+- read relevant project context
+- read relevant LingXi memory
+- infer task type and complexity
+- refine the request into a structured `TaskSpec`
+- detect missing information and ask once when required
+- run a self-check rubric before attempting persistence
+
+Stage 2 should:
+
+- validate the `TaskSpec`
+- reject under-specified or contradictory specs with structured errors
+- normalize the accepted spec
+- render the task markdown deterministically
+- persist changelog/version updates
+
+`task` should not let the LLM write free-form markdown directly as the source of truth.
+
+The stable source of truth should be `TaskSpec`, with markdown treated as a compiled artifact.
 
 ### `vet`
 
@@ -160,12 +199,40 @@ Responsibilities:
 - identify ambiguity, missing constraints, hidden risk, and poor framing
 - produce concrete challenge points
 - optionally inform task revision
+- use task type, complexity, memory, and project context to adapt review depth
 
 Non-responsibilities:
 
 - code review
 - test execution
 - performance/security deep audits outside task framing
+
+#### `vet` Hybrid Flow
+
+`vet` should also be implemented in two explicit stages:
+
+1. LLM review stage
+2. deterministic structuring stage
+
+Stage 1 should:
+
+- read the current task document
+- read relevant project context
+- retrieve relevant LingXi memory
+- challenge the task from the appropriate dimensions
+- identify implicit risk, ambiguity, and framing weakness
+
+Stage 2 should:
+
+- preserve the dimension matrix
+- preserve severity buckets
+- preserve readiness classification
+- emit a stable `VetReport` structure
+
+This keeps `vet` from collapsing into either:
+
+- a weak checklist linter
+- or an unstable free-form review essay
 
 ### `memory-retrieve`
 
@@ -258,6 +325,126 @@ Background automation is preferred because it:
 - preserves conversational flow
 - reduces prompt overhead
 - enables batch distillation
+
+---
+
+## Task/Vet Hybrid Contracts
+
+The next development phase should formalize explicit intermediate schemas.
+
+### `TaskSpec`
+
+`TaskSpec` is the structured artifact produced after LLM refinement and before deterministic compilation.
+
+Expected fields:
+
+- `title`
+- `type`
+- `complexity`
+- `project_context`
+- `background`
+- `problem`
+- `solution_overview`
+- `goals[]`
+- `non_goals[]`
+- `success_criteria[]`
+- `user_stories[]`
+- `functional_requirements[]`
+- `constraints[]`
+- `memory_refs[]`
+- `open_questions[]`
+- `confidence`
+
+`TaskSpec` is the point where LingXi should combine:
+
+- user intent
+- project context
+- retrieved memory
+- LLM requirement refinement
+
+### `VetReport`
+
+`VetReport` is the structured artifact produced after LLM review and deterministic review aggregation.
+
+Expected fields:
+
+- `task_id`
+- `file`
+- `review_scope`
+- `project_context_summary`
+- `summary`
+- `findings`
+- `findings_by_dimension`
+- `dimension_summaries`
+- `improvement_priority`
+- `recommended_next_action`
+- `implementation_readiness`
+
+`VetReport` is the stable interface between:
+
+- free-form review reasoning
+- downstream task revision
+- testable review contracts
+
+---
+
+## Hybrid Design Rules
+
+The following rules should guide subsequent implementation work.
+
+### Use LLM Reasoning For
+
+- demand refinement
+- surfacing implicit assumptions
+- proposing better non-goals
+- challenging weak success criteria
+- identifying hidden scope drift
+- adapting review language to task type and repo context
+
+### Use Deterministic Rules For
+
+- schema validation
+- task id allocation
+- file naming
+- markdown rendering
+- changelog/version updates
+- severity bucketing
+- review dimension scaffolding
+- dedupe and persistence logic
+
+### Required Repair Loop
+
+When `TaskSpec` validation fails, LingXi should not stop at raw script errors.
+
+The intended flow is:
+
+1. LLM produces `TaskSpec`
+2. validator returns structured errors
+3. LLM repairs `TaskSpec`
+4. validator re-checks
+5. compiler writes final task document
+
+The same general pattern should later apply to `VetReport` generation.
+
+---
+
+## Project Context Role
+
+Project context should remain an input signal, not a hidden source of authority.
+
+It should help LingXi:
+
+- align task type with the repository's actual stack
+- avoid proposing task framing that fights the current repo shape
+- make vet warnings more specific
+
+It should not:
+
+- force task type when the user explicitly wants a cross-stack change
+- replace user intent
+- become a brittle repo classifier that blocks legitimate work
+
+Project context is a biasing signal for better judgment, not a hard gate by itself.
 - keeps memory accumulation mostly invisible
 
 ### Distillation Flow

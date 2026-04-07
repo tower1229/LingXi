@@ -69,6 +69,7 @@ describe("lingxi task", () => {
     assert.ok(content.includes("## 4. 功能需求"));
     assert.ok(content.includes("| 复杂度 | 简单 |"));
     assert.ok(content.includes("MEM-001"));
+    assert.ok(!content.includes("### 1.1 背景\n\nClarify module boundaries for integration code."));
   });
 
   it("infers task type when the content clearly indicates backend work", async () => {
@@ -188,5 +189,61 @@ describe("lingxi task", () => {
     });
     assert.notStrictEqual(result.code, 0);
     assert.ok(result.stderr.includes("scope item is too vague"), result.stderr);
+  });
+
+  it("infers richer framing and simple non-goals for simple tasks", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "Doc guide",
+      goal: "Clarify the contributor guide.",
+      scope: ["Add one onboarding section to the contributor guide"],
+      constraints: ["Keep the repo structure unchanged"],
+      acceptance_criteria: ["Contributor guide contains one explicit onboarding section"]
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    const content = fs.readFileSync(summary.file, "utf8");
+    assert.ok(content.includes("当前任务聚焦于：Clarify the contributor guide."));
+    assert.ok(content.includes("当前缺少一份可以直接驱动实现的任务边界说明"));
+    assert.ok(content.includes("不在本任务内改动运行时代码行为"));
+    assert.ok(content.includes("| 特性标签 | 文档为主 |"));
+  });
+
+  it("captures project context from repository cues", async () => {
+    tempDir = createTempDir();
+    fs.writeFileSync(
+      path.join(tempDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "demo-app",
+          dependencies: {
+            react: "^19.0.0"
+          },
+          devDependencies: {
+            typescript: "^5.0.0"
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    fs.writeFileSync(path.join(tempDir, "tsconfig.json"), "{}\n", "utf8");
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      title: "Status pane",
+      goal: "Clarify the dashboard pane.",
+      scope: ["Add one explicit dashboard state pane"],
+      constraints: ["Keep the current React structure"],
+      acceptance_criteria: ["Dashboard pane renders one explicit state surface"]
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    const content = fs.readFileSync(summary.file, "utf8");
+    assert.ok(content.includes("### 1.0 项目上下文"));
+    assert.ok(content.includes("Detected a frontend-oriented workspace"));
+    assert.ok(content.includes("package.json"));
+    assert.ok(content.includes("tsconfig.json"));
   });
 });

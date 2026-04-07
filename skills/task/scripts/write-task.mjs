@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
+  detectProjectContext,
   ensureLingxiLayout,
   findTaskFile,
   incrementVersion,
@@ -39,16 +40,20 @@ function normalizeList(value, field) {
   return items;
 }
 
-function inferTaskType(input, scope, constraints) {
+function inferTaskType(input, scope, constraints, projectContext) {
   if (normalizeText(input.type)) {
     return normalizeText(input.type);
   }
   const corpus = [input.title, input.goal, ...(scope || []), ...(constraints || [])]
     .map((item) => normalizeText(item).toLowerCase())
     .join(" ");
-  if (/(ui|页面|前端|组件|样式|交互|homepage|screen|layout)/i.test(corpus)) return "前端";
+  if (/(docs|documentation|文档|手册|guide|readme)/i.test(corpus)) return "其他";
+  if (/(\bui\b|页面|前端|组件|样式|交互|homepage|screen|layout)/i.test(corpus)) return "前端";
   if (/(api|后端|接口|数据库|service|endpoint|schema|migration)/i.test(corpus)) return "后端";
   if (/(sdk|library|库|包|cli|command)/i.test(corpus)) return "其他";
+  if (projectContext.kind === "frontend") return "前端";
+  if (projectContext.kind === "backend") return "后端";
+  if (projectContext.kind === "docs") return "其他";
   return scope.length <= 2 ? "简单功能" : "其他";
 }
 
@@ -62,6 +67,49 @@ function inferComplexity(input, scope, constraints) {
     ((Array.isArray(input.functional_requirements) && input.functional_requirements.length >= 3) ? 1 : 0);
   if (score >= 2) return "中等";
   return "简单";
+}
+
+function inferBackground(goal, scope, constraints) {
+  const normalizedGoal = normalizeText(goal);
+  const firstScope = normalizeText(scope[0]);
+  const firstConstraint = normalizeText(constraints[0]);
+  if (!normalizedGoal) return "";
+  return [
+    `当前任务聚焦于：${normalizedGoal}`,
+    firstScope ? `核心工作项是：${firstScope}` : "",
+    firstConstraint ? `同时必须满足约束：${firstConstraint}` : ""
+  ].filter(Boolean).join(" ");
+}
+
+function inferProblem(goal, scope) {
+  const normalizedGoal = normalizeText(goal);
+  const firstScope = normalizeText(scope[0]);
+  if (!normalizedGoal) return "";
+  return `当前缺少一份可以直接驱动实现的任务边界说明；需要把“${normalizedGoal}”收敛成可执行的范围${firstScope ? `，并明确“${firstScope}”` : ""}。`;
+}
+
+function inferSolutionOverview(type, scope, constraints) {
+  const firstScope = normalizeText(scope[0]);
+  const firstConstraint = normalizeText(constraints[0]);
+  const mode =
+    type === "前端"
+      ? "通过收敛交互状态与界面边界来落地"
+      : type === "后端"
+        ? "通过明确接口/契约边界来落地"
+        : "通过最小变更收敛任务边界来落地";
+  return [firstScope ? `优先围绕“${firstScope}”展开，` : "", mode, firstConstraint ? `，并保持“${firstConstraint}”` : ""].join("");
+}
+
+function inferSimpleNonGoals(type, goal) {
+  const defaults = ["不扩展为大范围重构", "不在本任务内引入额外能力面"];
+  if (type === "前端") {
+    defaults.push("不在本任务内重做整套页面视觉");
+  } else if (type === "后端") {
+    defaults.push("不在本任务内调整无关接口或数据模型");
+  } else if (/(docs|documentation|文档|guide|readme)/i.test(normalizeText(goal))) {
+    defaults.push("不在本任务内改动运行时代码行为");
+  }
+  return defaults;
 }
 
 function assertTitleQuality(title) {
@@ -352,7 +400,8 @@ function validateTaskReadiness({
   }
 }
 
-function validateInput(input) {
+function validateInput(input, projectRoot) {
+  const projectContext = detectProjectContext(projectRoot);
   if (!normalizeText(input.title)) throw new Error("Missing required field: title");
   assertTitleQuality(input.title);
   if (!normalizeText(input.goal)) throw new Error("Missing required field: goal");
@@ -360,7 +409,7 @@ function validateInput(input) {
   const constraints = normalizeList(input.constraints, "constraints");
   const acceptanceCriteria = normalizeList(input.acceptance_criteria, "acceptance_criteria");
   const complexity = inferComplexity(input, scope, constraints);
-  const type = inferTaskType(input, scope, constraints);
+  const type = inferTaskType(input, scope, constraints, projectContext);
   const goals = Array.isArray(input.goals) && input.goals.length > 0
     ? input.goals.map((item) => normalizeText(item)).filter(Boolean)
     : [normalizeText(input.goal)];
@@ -369,7 +418,9 @@ function validateInput(input) {
     : acceptanceCriteria;
   const nonGoals = Array.isArray(input.non_goals)
     ? input.non_goals.map((item) => normalizeText(item)).filter(Boolean)
-    : [];
+    : complexity === "简单"
+      ? inferSimpleNonGoals(type, input.goal)
+      : [];
   const userStories = Array.isArray(input.user_stories) && input.user_stories.length > 0
     ? input.user_stories.map((story) => ({
         as_a: normalizeText(story.as_a),
@@ -448,9 +499,10 @@ function validateInput(input) {
     type,
     complexity,
     tags: [...new Set(tags)],
-    background: normalizeText(input.background || input.goal),
-    problem: normalizeText(input.problem || input.goal),
-    solution_overview: normalizeText(input.solution_overview || scope.join("；")),
+    project_context: projectContext.summary ? projectContext : null,
+    background: normalizeText(input.background || inferBackground(input.goal, scope, constraints)),
+    problem: normalizeText(input.problem || inferProblem(input.goal, scope)),
+    solution_overview: normalizeText(input.solution_overview || inferSolutionOverview(type, scope, constraints)),
     goals,
     non_goals: nonGoals,
     success_criteria: successCriteria,
@@ -467,7 +519,7 @@ function validateInput(input) {
 async function main() {
   const projectRoot = resolveProjectRoot();
   ensureLingxiLayout(projectRoot);
-  const input = validateInput(await readJsonStdin());
+  const input = validateInput(await readJsonStdin(), projectRoot);
 
   const taskId = input.task_id || nextTaskId(projectRoot);
   let file = findTaskFile(projectRoot, taskId);

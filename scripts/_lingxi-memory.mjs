@@ -54,6 +54,130 @@ export function normalizeText(value) {
     .trim();
 }
 
+function readJsonFile(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function hasFile(projectRoot, file) {
+  return fs.existsSync(path.join(projectRoot, file));
+}
+
+function summarizeStack(parts) {
+  return [...new Set(parts.filter(Boolean))].join(" / ");
+}
+
+export function detectProjectContext(projectRoot) {
+  const stack = [];
+  const cues = [];
+  let frontendStrength = 0;
+  let backendStrength = 0;
+  let docsStrength = 0;
+
+  const packageJsonFile = path.join(projectRoot, "package.json");
+  if (fs.existsSync(packageJsonFile)) {
+    const pkg = readJsonFile(packageJsonFile);
+    if (pkg) {
+      stack.push("Node.js");
+      cues.push("package.json");
+      const deps = {
+        ...(pkg.dependencies || {}),
+        ...(pkg.devDependencies || {})
+      };
+      const depNames = Object.keys(deps);
+      if (depNames.some((name) => /react|next|vue|nuxt|svelte|solid|vite/i.test(name))) frontendStrength += 2;
+      if (depNames.some((name) => /express|koa|fastify|hono|nest|prisma|drizzle/i.test(name))) backendStrength += 2;
+      if (depNames.some((name) => /docusaurus|vitepress|docsify|mdx|mkdocs/i.test(name))) docsStrength += 2;
+    }
+  }
+
+  if (hasFile(projectRoot, "tsconfig.json")) {
+    stack.push("TypeScript");
+    cues.push("tsconfig.json");
+  }
+  if (hasFile(projectRoot, "next.config.js") || hasFile(projectRoot, "next.config.mjs")) {
+    frontendStrength += 2;
+    cues.push("next.config");
+  }
+  if (hasFile(projectRoot, "vite.config.js") || hasFile(projectRoot, "vite.config.ts")) {
+    frontendStrength += 1;
+    cues.push("vite.config");
+  }
+  if (hasFile(projectRoot, "pyproject.toml")) {
+    stack.push("Python");
+    cues.push("pyproject.toml");
+    backendStrength += 1;
+  }
+  if (hasFile(projectRoot, "Cargo.toml")) {
+    stack.push("Rust");
+    cues.push("Cargo.toml");
+    backendStrength += 1;
+  }
+  if (hasFile(projectRoot, "go.mod")) {
+    stack.push("Go");
+    cues.push("go.mod");
+    backendStrength += 1;
+  }
+  if (hasFile(projectRoot, "README.md")) {
+    cues.push("README.md");
+    docsStrength += 1;
+  }
+  if (fs.existsSync(path.join(projectRoot, "docs"))) {
+    cues.push("docs/");
+    docsStrength += 1;
+  }
+
+  const kind =
+    docsStrength > 0 && frontendStrength === 0 && backendStrength === 0
+      ? "docs"
+      : frontendStrength > 0 && backendStrength > 0
+        ? "mixed"
+        : frontendStrength > 0
+          ? "frontend"
+          : backendStrength > 0
+            ? "backend"
+            : "unknown";
+
+  const stackSummary = summarizeStack(stack);
+  const summary =
+    cues.length === 0
+      ? ""
+      : kind === "docs"
+        ? `Detected a documentation-oriented workspace${stackSummary ? ` built around ${stackSummary}` : ""}.`
+        : kind === "frontend"
+          ? `Detected a frontend-oriented workspace${stackSummary ? ` using ${stackSummary}` : ""}.`
+          : kind === "backend"
+            ? `Detected a backend-oriented workspace${stackSummary ? ` using ${stackSummary}` : ""}.`
+            : kind === "mixed"
+              ? `Detected a mixed frontend/backend workspace${stackSummary ? ` using ${stackSummary}` : ""}.`
+              : `Detected workspace cues${stackSummary ? ` for ${stackSummary}` : ""}.`;
+
+  const impact =
+    cues.length === 0
+      ? ""
+      : kind === "frontend"
+        ? "Prefer existing frontend structure and avoid inventing a parallel backend-heavy path."
+        : kind === "backend"
+          ? "Prefer existing service and contract boundaries instead of introducing UI-shaped scope."
+          : kind === "docs"
+            ? "Keep the task inside documentation surfaces unless the user explicitly expands scope."
+            : "Prefer existing repo structure and avoid cross-stack rewrites unless they are explicitly required.";
+
+  return {
+    kind,
+    stack: [...new Set(stack)],
+    cues: [...new Set(cues)],
+    summary,
+    impact,
+    frontend_strength: frontendStrength,
+    backend_strength: backendStrength,
+    docs_strength: docsStrength
+  };
+}
+
 export function slugify(value) {
   return normalizeText(value)
     .toLowerCase()
@@ -495,6 +619,9 @@ ${(story.acceptance_criteria || []).map((item) => `  - ${item}`).join("\n")}`
   const memoryApplied = (task.memory_refs || []).length > 0
     ? `\n## 7. Memory Applied\n\n${renderBullets(task.memory_refs)}\n`
     : "";
+  const projectContext = task.project_context?.summary
+    ? `### 1.0 项目上下文\n\n- 栈概览：${task.project_context.summary}\n- 线索：${(task.project_context.cues || []).join(", ")}\n- 对本任务的影响：${task.project_context.impact}\n\n`
+    : "";
   const tagsLine = (task.tags || []).length > 0 ? `| 特性标签 | ${(task.tags || []).join(" / ")} |` : "";
   const changelogRows = (task.changelog || []).length > 0
     ? (task.changelog || [])
@@ -516,7 +643,7 @@ ${tagsLine}
 
 ## 1. 概述
 
-### 1.1 背景
+${projectContext}### 1.1 背景
 
 ${task.background}
 
@@ -671,6 +798,7 @@ export function parseTaskDocument(content, file) {
         ? ["库/SDK"]
         : metadata["特性标签"].split("/").map((item) => normalizeText(item)).filter(Boolean)
       : [],
+    project_context: extractSection(normalized, "1.0 项目上下文"),
     background: extractSection(normalized, "1.1 背景"),
     problem: extractSection(normalized, "1.2 问题描述"),
     solution_overview: extractSection(normalized, "1.3 解决方案概述"),
