@@ -11,7 +11,7 @@ import { describe, it, afterEach } from "node:test";
 import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "../..");
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 const SCRIPT_PATH = path.join(REPO_ROOT, ".cursor", "skills", "workspace-bootstrap", "scripts", "workspace-bootstrap.mjs");
 
 function createTempDir() {

@@ -9,10 +9,10 @@ import {
   MERGE_KINDS,
   normalizeGovernanceContext,
   validateMergeKind,
-} from "../../.cursor/skills/memory-write/scripts/governance-context-validator.mjs";
+} from "../../../.cursor/skills/memory-write/scripts/governance-context-validator.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "../..");
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 
 describe("governance context validator", () => {
   it("accepts valid governance_context", () => {
@@ -70,4 +70,3 @@ describe("governance context validator", () => {
     assert.ok(schema.required.includes("conclusion_relation"));
   });
 });
-

@@ -20,6 +20,11 @@ The next step is:
 1. make the repository and shipped product surface fully coherent
 2. make the background memory loop feel product-ready rather than merely implemented
 
+Important end-state clarification:
+
+- `.cursor/` is not meant to remain indefinitely as a permanent reference area
+- Phase 6 should end with `.cursor/` content removed from the main product repository
+
 ---
 
 ## Current Read
@@ -52,6 +57,7 @@ So the next development direction should be:
 Goal:
 
 - make the repository, docs, tests, shipped assets, and runtime story describe the same product
+- remove `.cursor/` content from the main repository once its remaining value has been absorbed or archived
 
 Why first:
 
@@ -63,11 +69,11 @@ Work packages:
 
 1. Define the final status of `.cursor/`
 - classify each remaining `.cursor/` path as one of:
-  - product surface
   - migration artifact
   - reference-only historical material
   - deletion candidate
 - write that classification down explicitly before deleting anything
+- treat the classification as a removal map, not a permanent repository shape
 
 2. Shrink the supported product surface
 - ensure supported runtime/setup/install paths are only:
@@ -83,8 +89,13 @@ Work packages:
 - separate "current product tests" from "historical reference tests"
 - remove or relocate tests that only protect retired Cursor-era mechanics
 - keep historical materials only when they still serve as quality references
+- make `npm test` mean "current supported 2.0 product suite" rather than "everything still in the repository"
 
-4. Final coherence pass for docs
+4. Remove `.cursor/` from the main tree
+- absorb still-useful quality baselines into `docs/`, `skills/`, `scripts/`, or supported tests
+- archive anything worth retaining outside the active product tree
+- delete the remaining `.cursor/` paths once they are no longer needed for active closure work
+5. Final coherence pass for docs
 - README
 - install docs
 - architecture
@@ -97,6 +108,7 @@ Exit criteria:
 - a new reader can identify the supported LingXi 2.0 surface without ambiguity
 - no repository path appears simultaneously as "historical reference" and "supported runtime"
 - current tests primarily protect the real 2.0 surface rather than retired leftovers
+- `.cursor/` no longer remains in the main repository as an active directory
 
 Release gate:
 
@@ -183,11 +195,12 @@ This is where LingXi should improve craftsmanship, not product shape.
 ## Suggested Execution Sequence
 
 1. audit and classify remaining `.cursor/` material
-2. reduce the effective supported runtime surface to the true 2.0 surface
-3. clean docs/tests so the repository has one product story
-4. tighten automation/session-distill/state contracts
-5. verify background memory usefulness in real task/vet flows
-6. only then resume content-quality deepening
+2. move useful knowledge and test intent out of `.cursor/`
+3. remove `.cursor/` from the main repository
+4. clean docs/tests so the repository has one product story
+5. tighten automation/session-distill/state contracts
+6. verify background memory usefulness in real task/vet flows
+7. only then resume content-quality deepening
 
 ---
 
@@ -197,6 +210,7 @@ This is where LingXi should improve craftsmanship, not product shape.
 - do not add new high-level workflow abstractions before repository coherence is finished
 - do not add daemon/service complexity before the current automation path is fully productized
 - do not treat historical `.cursor/` materials as both reference and supported runtime indefinitely
+- do not normalize a permanent dual-tree repository shape where `.cursor/` stays forever
 
 ---
 
@@ -216,6 +230,10 @@ Reason:
 - it reduces hidden ambiguity
 - it gives a clean base for the `Phase 5` productization pass that follows
 
+Immediate follow-up after this inventory:
+
+- convert it into a removal sequence until `.cursor/` no longer exists in the main repository
+
 ---
 
 ## Completion Signal
@@ -223,3 +241,5 @@ Reason:
 This closure plan is complete when LingXi 2.0 can be described in one clean sentence:
 
 "LingXi is a Codex-native plugin with a strong task/vet workflow and a conservative background memory loop, and the repository only ships what that sentence claims."
+
+That sentence should be true without needing `.cursor/` to remain in the repository.

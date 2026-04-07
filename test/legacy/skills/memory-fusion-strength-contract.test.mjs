@@ -10,7 +10,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "../..");
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 
 const DISTILL_AGENT_PATH = path.join(REPO_ROOT, ".cursor", "agents", "lingxi-session-distill.md");
 const TASTE_RECOGNITION_PATH = path.join(REPO_ROOT, ".cursor", "skills", "taste-recognition", "SKILL.md");

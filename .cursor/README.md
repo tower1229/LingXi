@@ -2,6 +2,8 @@
 
 This directory is kept only as historical reference and short-term migration material.
 
+It is scheduled for eventual removal from the main repository during Phase 6 closure.
+
 It is **not** part of the supported LingXi 2.0 product surface.
 
 For the current classification of what remains here, see:

@@ -10,7 +10,7 @@ import { describe, it, afterEach } from "node:test";
 import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "../..");
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 const { runHeartbeatCheck } = await import(pathToFileURL(path.join(REPO_ROOT, ".cursor", "hooks", "heartbeat-check.mjs")));
 
 const CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";

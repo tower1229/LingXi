@@ -21,6 +21,10 @@ describe("product surface coherence", () => {
       plugin.version,
       `package.json version (${pkg.version}) must match .codex-plugin/plugin.json version (${plugin.version})`
     );
+
+    assert.strictEqual(pkg.scripts.test, "node --test \"test/scripts/**/*.test.mjs\"");
+    assert.strictEqual(pkg.scripts["test:legacy"], "node --test \"test/legacy/**/*.test.mjs\"");
+    assert.strictEqual(pkg.scripts["test:all"], "node --test \"test/scripts/**/*.test.mjs\" \"test/legacy/**/*.test.mjs\"");
   });
 
   it("describes the repository as a Codex-native rebuild with no supported legacy install surface", () => {
@@ -29,11 +33,13 @@ describe("product surface coherence", () => {
 
     assert.match(readme, /Codex-native/i);
     assert.match(readme, /historical `?\.cursor\/`? material|not part of the 2\.0 install surface/i);
+    assert.match(readme, /intended to be removed from the main repository|path to removal/i);
     assert.match(readme, /quality-first rebuild/i);
     assert.doesNotMatch(readme, /transitional compatibility path|Cursor compatibility/i);
 
     assert.match(readmeZh, /Codex-native/i);
     assert.match(readmeZh, /不属于 2\.0 的安装与支持表层|历史参考材料/);
+    assert.match(readmeZh, /最终要从主仓库中移除|最终移除为目标/);
     assert.match(readmeZh, /重建阶段|质量优先/);
     assert.doesNotMatch(readmeZh, /兼容安装面|过渡期兼容路径/);
   });
@@ -51,12 +57,15 @@ describe("product surface coherence", () => {
     const cursorReadme = readText(".cursor/README.md");
 
     assert.match(classification, /does \*\*not\*\* treat any `?\.cursor\/`? path as supported product surface/i);
+    assert.match(classification, /ultimately remove `?\.cursor\/`? content from the main product repository/i);
+    assert.match(classification, /full removal of `?\.cursor\/`? from the main repository/i);
     assert.match(classification, /Reference-Only/);
     assert.match(classification, /Migration Artifacts/);
     assert.match(classification, /Delete-Later Candidates/);
 
     assert.match(cursorReadme, /historical reference/i);
     assert.match(cursorReadme, /not(?:\s|\*+)+part of the supported LingXi 2\.0 product surface/i);
+    assert.match(cursorReadme, /scheduled for eventual removal/i);
     assert.match(cursorReadme, /cursor-era-asset-classification\.md/i);
   });
 });

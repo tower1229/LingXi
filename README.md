@@ -11,7 +11,7 @@ This repository is in the LingXi 2.0 rebuild phase.
 - The intended 2.0 product surface is now fully **Codex-native**.
 - The visible 2.0 workflows are intentionally narrow: `task` and `vet`.
 - Durable memory remains the real core: `memory-retrieve`, `memory-write`, and `session-distill`.
-- Historical `.cursor/` material may still exist in the repository as reference only. It is not part of the 2.0 install surface.
+- Historical `.cursor/` material may still exist in the repository as reference only during closure work. It is not part of the 2.0 install surface and is intended to be removed from the main repository.
 
 Current project policy is quality first:
 
@@ -45,7 +45,7 @@ Implemented or in active alignment:
 - `scripts/` — deterministic setup and runtime helpers
 - `templates/` — generated runtime artifacts
 - `docs/` — architecture, roadmap, and quality bar
-- `.cursor/` — historical Cursor-era reference material outside the supported 2.0 surface; see [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
+- `.cursor/` — temporary Cursor-era reference material outside the supported 2.0 surface and on the path to removal; see [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
 
 ## Install Notes
 
@@ -75,4 +75,18 @@ Run the test suite:
 npm test
 ```
 
-The repository currently treats green tests and product-surface coherence as mandatory quality gates before further roadmap expansion.
+This runs the supported LingXi 2.0 product suite.
+
+For Cursor-era migration guardrails:
+
+```bash
+npm run test:legacy
+```
+
+For repository-shape changes that touch both:
+
+```bash
+npm run test:all
+```
+
+The repository currently treats green current-product tests and product-surface coherence as mandatory quality gates before further roadmap expansion.

@@ -4,6 +4,11 @@
 
 This document makes the remaining `.cursor/` material explicit.
 
+It also makes the final repository target explicit:
+
+- LingXi 2.0 should ultimately remove `.cursor/` content from the main product repository
+- the current classification exists only to guide an orderly removal, not to justify indefinite retention
+
 LingXi 2.0 does **not** treat any `.cursor/` path as supported product surface.
 
 Supported 2.0 runtime and distribution live under:
@@ -17,6 +22,13 @@ Supported 2.0 runtime and distribution live under:
 
 The remaining `.cursor/` tree exists only as historical reference or as short-term migration material during Phase 5/6 closure.
 
+Final target:
+
+- no supported runtime depends on `.cursor/`
+- no shipped asset depends on `.cursor/`
+- no active product claim depends on `.cursor/`
+- the repository should eventually remove the `.cursor/` tree rather than keep it as a permanent sidecar
+
 ## Classification Rules
 
 Use these buckets when deciding whether a `.cursor/` path should remain:
@@ -27,12 +39,23 @@ Use these buckets when deciding whether a `.cursor/` path should remain:
 
 There is currently no `.cursor/` path in the `supported product surface` bucket.
 
+Every bucket below is temporary in a different way:
+
+- `reference-only` means "keep only until the needed 2.0 knowledge is absorbed elsewhere"
+- `migration-artifact` means "remove after the dependent closure work is finished"
+- `delete-later` means "remove as soon as removal sequencing is safe"
+
 ## Asset Classification
 
 ### Reference-Only
 
-These paths remain because they preserve original capability baselines that 2.0 still studies:
+These paths remain because they preserve original capability baselines that 2.0 still studies.
 
+They are temporary and should either be:
+
+- distilled into 2.0 docs/tests/contracts, then removed
+- or archived outside the main repository, then removed from the working tree
+ 
 - `.cursor/skills/task/`
 - `.cursor/skills/vet/`
 - `.cursor/skills/memory-retrieve/`
@@ -50,7 +73,9 @@ Reason:
 
 ### Migration Artifacts
 
-These paths are not part of the final 2.0 product, but still protect or inform unfinished closure work:
+These paths are not part of the final 2.0 product, but still protect or inform unfinished closure work.
+
+They should be removed as soon as their 2.0 replacements or retirement decisions are complete:
 
 - `.cursor/hooks.json`
 - `.cursor/hooks/`
@@ -71,7 +96,7 @@ Reason:
 
 ### Delete-Later Candidates
 
-These paths belong to the old broad Cursor workflow and should not remain indefinitely once archival value is judged low:
+These paths belong to the old broad Cursor workflow and should be removed from the main repository once archival value is judged low:
 
 - `.cursor/skills/ask-questions/`
 - `.cursor/skills/plan/`
@@ -109,25 +134,34 @@ These primarily protect the supported LingXi 2.0 surface:
 - `test/scripts/hybrid-contract-docs.test.mjs`
 - `test/scripts/lx-uninstall.test.mjs`
 
+Operationally:
+
+- `npm test` should map to this suite
+
 ### Historical Reference Or Migration Tests
 
 These still provide value, but they protect `.cursor/` behavior rather than the supported 2.0 runtime:
 
-- `test/hooks/*.test.mjs`
-- `test/skills/workspace-bootstrap.test.mjs`
-- `test/skills/task-id.test.mjs`
-- `test/skills/memory-governance-decision.test.mjs`
-- `test/skills/memory-index-sync.test.mjs`
-- `test/skills/governance-context-validator.test.mjs`
-- `test/skills/memory-fusion-strength-contract.test.mjs`
-- `test/scripts/memory-improvement-proposal.test.mjs`
-- `test/scripts/memory-improvement-apply.test.mjs`
+- `test/legacy/hooks/*.test.mjs`
+- `test/legacy/skills/workspace-bootstrap.test.mjs`
+- `test/legacy/skills/task-id.test.mjs`
+- `test/legacy/skills/memory-governance-decision.test.mjs`
+- `test/legacy/skills/memory-index-sync.test.mjs`
+- `test/legacy/skills/governance-context-validator.test.mjs`
+- `test/legacy/skills/memory-fusion-strength-contract.test.mjs`
+- `test/legacy/scripts/memory-improvement-proposal.test.mjs`
+- `test/legacy/scripts/memory-improvement-apply.test.mjs`
 
 Recommended direction:
 
 - keep them green while they still inform migration work
 - eventually move them under a clearly named historical or legacy test area
-- remove them once the equivalent 2.0 surface is either retired or re-expressed in supported contracts
+- then remove them once the equivalent 2.0 surface is either retired or re-expressed in supported contracts
+
+Operationally:
+
+- `npm run test:legacy` should map to this suite
+- `npm run test:all` should run both current and legacy suites during repository retirement work
 
 ## Current Repository Policy
 
@@ -135,6 +169,7 @@ Recommended direction:
 - no installer or setup flow should depend on `.cursor/`
 - docs may cite `.cursor/` only as reference or migration context
 - new 2.0 features should not be added under `.cursor/`
+- the end state is full removal of `.cursor/` from the main repository
 
 ## Next Reduction Targets
 
@@ -142,4 +177,12 @@ The next high-value cleanup targets are:
 
 1. move historical test ownership out of the main "current product" mental model
 2. retire Cursor hook/runtime artifacts once Phase 5 background memory productization no longer depends on them as reference
-3. evaluate whether the old broad workflow skills should be archived outside the main repository tree
+3. archive or absorb any remaining reference value, then remove the old broad workflow skills from the main repository tree
+
+## Removal End State
+
+Phase 6 closure should be considered complete only when:
+
+1. `.cursor/` no longer exists as a live directory in the main repository
+2. any retained historical material has been moved to separate archival storage or fully absorbed into 2.0 docs/tests/contracts
+3. the active test suite no longer requires `.cursor/` paths

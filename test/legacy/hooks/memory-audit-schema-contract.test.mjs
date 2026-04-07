@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "../..");
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 const SCHEMA_PATH = path.join(
   REPO_ROOT,
   ".cursor",
@@ -43,4 +43,3 @@ describe("memory audit schema contract", () => {
     assert.deepStrictEqual(actual, EXPECTED_EVENTS);
   });
 });
-
