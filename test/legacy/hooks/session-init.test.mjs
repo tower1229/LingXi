@@ -50,13 +50,13 @@ describe("session-init", () => {
     assert.ok(out.additional_context.includes("conversation_id"));
   });
 
-  it("injects background self-iteration context", async () => {
+  it("does not inject retired self-iteration context", async () => {
     const tempRoot = createTempProjectRoot();
     const { code, stdout } = await runSessionInit("{}", { CURSOR_PROJECT_DIR: tempRoot });
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
-    assert.ok(out.additional_context.includes("lingxi-self-iterate"));
-    assert.ok(out.additional_context.includes("run_in_background=true"));
+    assert.ok(!out.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(!out.additional_context.includes("run_in_background=true"));
   });
 
   it("TC-step-D: additional_context contains step D post-execution check convention", async () => {
@@ -69,7 +69,7 @@ describe("session-init", () => {
     assert.ok(out.additional_context.includes("trigger_timing"), "should mention trigger_timing");
   });
 
-  it("injects self-iteration context only once per session id", async () => {
+  it("does not mention retired self-iteration context across repeated session ids", async () => {
     const tempRoot = createTempProjectRoot();
     const input = JSON.stringify({ conversation_id: "session-once" });
     const first = await runSessionInit(input, { CURSOR_PROJECT_DIR: tempRoot });
@@ -78,7 +78,7 @@ describe("session-init", () => {
     assert.strictEqual(second.code, 0);
     const out1 = JSON.parse(first.stdout.trim());
     const out2 = JSON.parse(second.stdout.trim());
-    assert.ok(out1.additional_context.includes("lingxi-self-iterate"));
+    assert.ok(!out1.additional_context.includes("lingxi-self-iterate"));
     assert.ok(!out2.additional_context.includes("lingxi-self-iterate"));
   });
 });

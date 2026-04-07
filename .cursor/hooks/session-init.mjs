@@ -11,9 +11,9 @@ const BASE_CONTEXT_FOOTER = `
 【conversation_id 传入约定】调用 lingxi-memory-write 子代理时在 input 中传入 conversation_id（及可选 generation_id）。
 `;
 
-function buildDynamicBaseContext(trigger_heartbeat, trigger_improvement) {
-  let stepA = (trigger_heartbeat || trigger_improvement) ? 
-    `  <rule id="A" condition="If [会话提炼心跳] or [自我迭代心跳] context is provided below">Invoke subagent using mcp_task in the background, no need to wait.</rule>\n` : "";
+function buildDynamicBaseContext(trigger_heartbeat) {
+  let stepA = trigger_heartbeat ?
+    `  <rule id="A" condition="If [会话提炼心跳] context is provided below">Invoke subagent using mcp_task in the background, no need to wait.</rule>\n` : "";
 
   return `【记忆提取约定】以下协议在整个会话内持续有效。每一轮都必须按步骤执行，不得跳步。
 
@@ -48,25 +48,16 @@ function buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId)
 `;
 }
 
-function buildImprovementContext(triggerImprovementDiagnosis) {
-  if (!triggerImprovementDiagnosis) return "";
-  return `
-
-【自我迭代心跳】本会话已进入 24h 低频窗口。**本会话仅触发一次**：在首次触发轮次的步骤 A 中必须使用 mcp_task 工具发起 **lingxi-self-iterate** 子代理（subagent_type=lingxi-self-iterate），并设置 **run_in_background=true**，在 prompt 中说明执行“诊断 + 自动改进（仅 low risk）”。同一会话后续轮次无需重复触发。无需等待子代理完成即进入步骤 B。
-`;
-}
-
 async function main() {
   const input = await readStdinJson();
   const projectRoot = process.env.CURSOR_PROJECT_DIR || process.cwd();
   const conversationId = (input.conversation_id ?? input.session_id ?? "").trim();
-  const { trigger_heartbeat, candidate_ids, trigger_improvement_diagnosis } = runHeartbeatCheck(
+  const { trigger_heartbeat, candidate_ids } = runHeartbeatCheck(
     projectRoot,
     conversationId
   );
   const heartbeatContext = buildHeartbeatContext(trigger_heartbeat, candidate_ids, conversationId);
-  const improvementContext = buildImprovementContext(trigger_improvement_diagnosis);
-  const additional_context = buildDynamicBaseContext(trigger_heartbeat, trigger_improvement_diagnosis) + heartbeatContext + improvementContext;
+  const additional_context = buildDynamicBaseContext(trigger_heartbeat) + heartbeatContext;
   writeStdoutJson({
     continue: true,
     additional_context,

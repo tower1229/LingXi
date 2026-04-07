@@ -67,7 +67,6 @@ describe("heartbeat-check", () => {
     const out = runHeartbeatCheck(tmpDir, "cur-conv");
     assert.strictEqual(out.trigger_heartbeat, false);
     assert.deepStrictEqual(out.candidate_ids, []);
-    assert.strictEqual(out.trigger_improvement_diagnosis, true);
   });
 
   it("returns no trigger when transcript root has no files", () => {
@@ -99,43 +98,6 @@ describe("heartbeat-check", () => {
     const out = runHeartbeatCheck(tmpDir, "cur-conv");
     assert.strictEqual(out.trigger_heartbeat, false);
     assert.deepStrictEqual(out.candidate_ids, []);
-    assert.strictEqual(out.trigger_improvement_diagnosis, true);
-  });
-
-  it("does not trigger 24h diagnosis when last_improvement_cycle_at is recent", () => {
-    tmpDir = createTempDir();
-    transcriptRoot = path.join(tmpDir, "agent-transcripts");
-    fs.mkdirSync(transcriptRoot, { recursive: true });
-    prevTranscriptEnv = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR;
-    process.env.CURSOR_AGENT_TRANSCRIPTS_DIR = transcriptRoot;
-    writeControl(tmpDir, {
-      last_distillation_completed_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      last_improvement_cycle_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      processed_conversation_ids: [],
-    });
-    const out = runHeartbeatCheck(tmpDir, "cur-conv");
-    assert.strictEqual(out.trigger_heartbeat, false);
-    assert.strictEqual(out.trigger_improvement_diagnosis, false);
-  });
-
-  it("triggers 24h diagnosis at most once per conversation session", () => {
-    tmpDir = createTempDir();
-    transcriptRoot = path.join(tmpDir, "agent-transcripts");
-    fs.mkdirSync(transcriptRoot, { recursive: true });
-    prevTranscriptEnv = process.env.CURSOR_AGENT_TRANSCRIPTS_DIR;
-    process.env.CURSOR_AGENT_TRANSCRIPTS_DIR = transcriptRoot;
-
-    writeControl(tmpDir, {
-      last_distillation_completed_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      last_improvement_cycle_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-      processed_conversation_ids: [],
-    });
-
-    const first = runHeartbeatCheck(tmpDir, "same-session");
-    const second = runHeartbeatCheck(tmpDir, "same-session");
-
-    assert.strictEqual(first.trigger_improvement_diagnosis, true);
-    assert.strictEqual(second.trigger_improvement_diagnosis, false);
   });
 
   it("returns no trigger when lock is running and not stale", () => {

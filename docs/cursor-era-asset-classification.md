@@ -63,7 +63,6 @@ They are temporary and should either be:
 - `.cursor/skills/about-lingxi/`
 - `.cursor/skills/taste-recognition/`
 - `.cursor/agents/lingxi-session-distill.md`
-- `.cursor/agents/lingxi-memory-write.md`
 
 Reason:
 
@@ -80,7 +79,6 @@ They should be removed as soon as their 2.0 replacements or retirement decisions
 - `.cursor/hooks.json`
 - `.cursor/hooks/`
 - `.cursor/hooks/schemas/`
-- `.cursor/agents/lingxi-self-iterate/`
 - `.cursor/skills/memory-govern/`
 - `.cursor/skills/workspace-bootstrap/`
 - `.cursor/skills/task/scripts/latest-task-id.mjs`
@@ -124,6 +122,7 @@ Completed removals:
 - `.cursor/commands/`
 - `.cursor/agents/lingxi-memory-write.md`
 - `.cursor/agents/lingxi-self-iterate.md`
+- `.cursor/agents/lingxi-self-iterate/`
 
 ## Test Ownership
 
@@ -158,8 +157,6 @@ These still provide value, but they protect `.cursor/` behavior rather than the 
 - `test/legacy/skills/memory-index-sync.test.mjs`
 - `test/legacy/skills/governance-context-validator.test.mjs`
 - `test/legacy/skills/memory-fusion-strength-contract.test.mjs`
-- `test/legacy/scripts/memory-improvement-proposal.test.mjs`
-- `test/legacy/scripts/memory-improvement-apply.test.mjs`
 
 Recommended direction:
 
@@ -193,6 +190,7 @@ Most recent completed removal slice:
 - first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
 - second-wave reviewer/testcase skills (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`)
 - third-wave command/agent-doc removals (`commands`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`)
+- fifth-wave self-iterate runtime removal (`.cursor/agents/lingxi-self-iterate/` and related legacy tests)
 - fourth-wave toolchain removal (`skill-creator`)
 
 ## Removal End State

@@ -4,7 +4,6 @@
  * 读 heartbeat-control.json 与 transcript 增量索引，判断是否距上次会话提炼超过 30 分钟；
  * 若是且锁可用，则从 transcript 增量中选出最多 3 个未提炼会话（按 mtime 倒序），
  * 写入 pending_distillation 与锁，返回 trigger_heartbeat 与 candidate_ids。
- * 同时判断是否需要触发 24h 低频诊断（trigger_improvement_diagnosis）。
  * 主 Agent 据此调用后台会话提炼子代理，无需等待。
  *
  * heartbeat.running：首次入队时设为 true；仅会话提炼子代理在收尾步骤会置为 false。
@@ -19,7 +18,6 @@ const THRESHOLD_MINUTES = 30;
 const LOCK_STALE_MINUTES = 5;
 const MAX_CANDIDATES = 3;
 const INDEX_VERSION = 1;
-const IMPROVEMENT_THRESHOLD_HOURS = 24;
 
 function resolveTranscriptRoot(projectRoot) {
   // 1. 最高优先级：环境变量接管
@@ -172,7 +170,7 @@ function collectTranscriptCandidates({
  * 执行心跳检查。可被 session-init 调用。
  * @param {string} projectRoot - 项目根目录
  * @param {string} [currentConversationId] - 当前会话 id（sessionStart 入参），用于排除当前会话与写 run_id
- * @returns {{ trigger_heartbeat: boolean, candidate_ids: string[], trigger_improvement_diagnosis: boolean }}
+ * @returns {{ trigger_heartbeat: boolean, candidate_ids: string[] }}
  */
 export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const controlPath = path.join(projectRoot, HEARTBEAT_CONTROL_REL);
@@ -180,16 +178,12 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
   const transcriptRoot = resolveTranscriptRoot(projectRoot);
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
-  const improvementThresholdMs = IMPROVEMENT_THRESHOLD_HOURS * 60 * 60 * 1000;
   const thresholdMs = THRESHOLD_MINUTES * 60 * 1000;
   const lockStaleMs = LOCK_STALE_MINUTES * 60 * 1000;
 
   let control = {
     last_distillation_completed_at: null,
     heartbeat: { running: false, started_at: null, run_id: null },
-    last_improvement_cycle_at: null,
-    last_improvement_prompted_session_id: null,
-    last_improvement_prompted_at: null,
     pending_distillation: null,
     processed_conversation_ids: [],
   };
@@ -199,32 +193,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
       control = { ...control, ...JSON.parse(raw) };
     } catch (err) {
       console.error("[heartbeat-check] read control failed:", err.message);
-    }
-  }
-
-  const lastImprovementAt = control.last_improvement_cycle_at
-    ? new Date(control.last_improvement_cycle_at).getTime()
-    : 0;
-  const triggerImprovementByTime =
-    lastImprovementAt === 0 || now - lastImprovementAt > improvementThresholdMs;
-  const promptedSessionId = typeof control.last_improvement_prompted_session_id === "string"
-    ? control.last_improvement_prompted_session_id
-    : "";
-  const alreadyPromptedThisSession = !!currentConversationId && promptedSessionId === currentConversationId;
-  const triggerImprovementDiagnosis = triggerImprovementByTime && !alreadyPromptedThisSession;
-
-  // 24h 诊断在同一会话内只提示一次，避免主流程每轮重复触发 self-iterate。
-  if (triggerImprovementDiagnosis && currentConversationId) {
-    const nextControl = {
-      ...control,
-      last_improvement_prompted_session_id: currentConversationId,
-      last_improvement_prompted_at: nowIso,
-    };
-    try {
-      writeControlFile(controlPath, nextControl);
-      control = nextControl;
-    } catch (err) {
-      console.error("[heartbeat-check] write improvement prompt marker failed:", err.message);
     }
   }
 
@@ -246,7 +214,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
@@ -263,7 +230,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: true,
       candidate_ids: resurrected_ids,
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
@@ -271,7 +237,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
@@ -291,7 +256,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
@@ -299,7 +263,6 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
@@ -328,13 +291,11 @@ export function runHeartbeatCheck(projectRoot, currentConversationId = "") {
     return {
       trigger_heartbeat: false,
       candidate_ids: [],
-      trigger_improvement_diagnosis: triggerImprovementDiagnosis,
     };
   }
 
   return {
     trigger_heartbeat: true,
     candidate_ids,
-    trigger_improvement_diagnosis: triggerImprovementDiagnosis,
   };
 }
