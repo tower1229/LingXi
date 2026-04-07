@@ -1,0 +1,68 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawn } from "node:child_process";
+import { afterEach, describe, it } from "node:test";
+import assert from "node:assert";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "../..");
+const scriptPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
+
+function createTempDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-setup-test-"));
+}
+
+function runSetup(projectRoot) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [scriptPath], {
+      cwd: repoRoot,
+      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot },
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (data) => {
+      stdout += data;
+    });
+    child.stderr.on("data", (data) => {
+      stderr += data;
+    });
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ code, stdout, stderr }));
+  });
+}
+
+describe("lingxi-setup", () => {
+  let tempDir;
+
+  afterEach(() => {
+    if (tempDir && fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("creates the runtime skeleton", async () => {
+    tempDir = createTempDir();
+    const result = await runSetup(tempDir);
+    assert.strictEqual(result.code, 0, result.stderr);
+    assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "memory", "INDEX.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
+    assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
+    const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
+    assert.strictEqual(state.distill_version, "v1");
+    assert.deepStrictEqual(state.sessions, {});
+  });
+
+  it("does not overwrite an existing AGENTS.md", async () => {
+    tempDir = createTempDir();
+    const agentsMd = path.join(tempDir, "AGENTS.md");
+    fs.writeFileSync(agentsMd, "# Existing\n", "utf8");
+    const result = await runSetup(tempDir);
+    assert.strictEqual(result.code, 0, result.stderr);
+    assert.strictEqual(fs.readFileSync(agentsMd, "utf8"), "# Existing\n");
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.wrote_agents_md, false);
+  });
+});

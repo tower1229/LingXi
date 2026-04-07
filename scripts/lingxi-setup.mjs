@@ -4,19 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { buildIndexMarkdown, defaultProcessedSessionsState, ensureLingxiLayout, processedSessionsPath, distillJournalPath } from "./_lingxi-memory.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const targetRoot = path.resolve(process.env.CODEX_PROJECT_DIR || process.cwd());
-
-const runtimeDirs = [
-  ".lingxi/tasks",
-  ".lingxi/memory/project",
-  ".lingxi/memory/share",
-  ".lingxi/state",
-  ".lingxi/setup",
-  ".codex/agents"
-];
 
 function resolveTarget(...parts) {
   return path.join(targetRoot, ...parts);
@@ -58,22 +50,20 @@ When working in this repository:
 }
 
 function main() {
-  for (const dir of runtimeDirs) {
-    ensureDir(resolveTarget(...dir.split("/")));
-  }
+  ensureLingxiLayout(targetRoot);
 
   writeIfMissing(
     resolveTarget(".lingxi", "memory", "INDEX.md"),
-    renderTemplate("memory/INDEX.default.md")
+    buildIndexMarkdown([], targetRoot)
   );
 
   writeIfMissing(
-    resolveTarget(".lingxi", "state", "processed-sessions.json"),
-    JSON.stringify({ processed_session_ids: [] }, null, 2) + "\n"
+    processedSessionsPath(targetRoot),
+    JSON.stringify(defaultProcessedSessionsState(), null, 2) + "\n"
   );
 
   writeIfMissing(
-    resolveTarget(".lingxi", "state", "distill-journal.jsonl"),
+    distillJournalPath(targetRoot),
     ""
   );
 
