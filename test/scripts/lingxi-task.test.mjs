@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const setupPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
 const scriptPath = path.join(repoRoot, "skills", "task", "scripts", "write-task.mjs");
+const vetPath = path.join(repoRoot, "skills", "vet", "scripts", "vet-task.mjs");
 
 function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-task-test-"));
@@ -174,7 +175,7 @@ describe("lingxi task", () => {
     assert.ok(result.stderr.includes("Task input is not ready"), result.stderr);
     assert.ok(result.stderr.includes("non_goals"), result.stderr);
     assert.ok(result.stderr.includes("user_stories"), result.stderr);
-    assert.ok(result.stderr.includes("frontend task should include state-oriented edge cases"), result.stderr);
+    assert.ok(result.stderr.includes("solution_overview is too thin"), result.stderr);
   });
 
   it("fails fast when scope wording is vague instead of concrete", async () => {
@@ -245,5 +246,136 @@ describe("lingxi task", () => {
     assert.ok(content.includes("Detected a frontend-oriented workspace"));
     assert.ok(content.includes("package.json"));
     assert.ok(content.includes("tsconfig.json"));
+  });
+
+  it("strengthens docs-oriented non-trivial tasks even when functional requirements are omitted", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(scriptPath, tempDir, {
+      title: "Guide map",
+      goal: "Clarify the contributor guide.",
+      complexity: "中等",
+      type: "其他",
+      background: "Current onboarding information is fragmented across files.",
+      problem: "The current documentation path is hard to follow safely.",
+      solution_overview: "Restructure the documentation around one explicit onboarding path.",
+      scope: [
+        "Add one onboarding section to the contributor guide",
+        "Keep the change inside existing documentation surfaces"
+      ],
+      constraints: ["Do not change runtime behavior", "Keep the repo layout unchanged"],
+      acceptance_criteria: [
+        "Contributor guide contains one explicit onboarding path",
+        "The update stays within the documentation scope"
+      ],
+      non_goals: ["不扩展为代码重构"],
+      user_stories: [
+        {
+          as_a: "new contributor",
+          i_want: "one clear onboarding path",
+          so_that: "I can find the right guide entrypoint quickly",
+          acceptance_criteria: ["Contributor guide contains one explicit onboarding path"]
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const createdSummary = JSON.parse(created.stdout);
+    const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.ok(content.includes("| 特性标签 | 文档为主 |"), content);
+    assert.ok(content.includes("目标读者是贡献者"), content);
+    assert.ok(content.includes("文档 diff 与读者 walkthrough"), content);
+    assert.ok(content.includes("Contributor guide"), content);
+
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "docs_audience_missing"), vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "docs_delivery_missing"), vet.stdout);
+  });
+
+  it("generates backend functional requirements with explicit contract and verification defaults", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(scriptPath, tempDir, {
+      title: "API seam",
+      goal: "Clarify the backend API boundary.",
+      complexity: "中等",
+      type: "后端",
+      background: "Service behavior currently crosses modules implicitly.",
+      problem: "The current integration seam is difficult to review safely.",
+      solution_overview: "Introduce one explicit backend seam for the service layer.",
+      scope: [
+        "Add one explicit integration interface",
+        "Constrain the service change to the current module seam"
+      ],
+      constraints: ["Do not change runtime behavior", "Keep external API stable"],
+      acceptance_criteria: [
+        "The backend API exposes one explicit documented seam",
+        "The change stays inside the current service boundary"
+      ],
+      non_goals: ["不调整无关接口或数据模型"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "a clear backend seam",
+          so_that: "I can review the change against an explicit contract",
+          acceptance_criteria: ["The backend API exposes one explicit documented seam"]
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const createdSummary = JSON.parse(created.stdout);
+    const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.ok(content.includes("request/response 或 schema contract"), content);
+    assert.ok(content.includes("- 验证方式：integration"), content);
+    assert.ok(content.includes("接口契约验证或集成测试结果"), content);
+
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "backend_contract_surface_thin"), vet.stdout);
+  });
+
+  it("generates frontend state coverage defaults for non-trivial tasks without explicit requirement rows", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const created = await runNode(scriptPath, tempDir, {
+      title: "State pane",
+      goal: "Clarify the dashboard state surface.",
+      complexity: "复杂",
+      type: "前端",
+      background: "Dashboard states are hard to understand.",
+      problem: "Users cannot tell what the page is doing in each state.",
+      solution_overview: "Define explicit state handling and layout boundaries for the dashboard pane.",
+      scope: [
+        "Add state-specific dashboard panes",
+        "Clarify dashboard interaction layout"
+      ],
+      constraints: ["Keep routes unchanged", "Keep mobile and desktop layouts aligned"],
+      acceptance_criteria: [
+        "Dashboard states render with one explicit state pane per user-visible condition",
+        "Dashboard interaction layout stays within the existing route"
+      ],
+      non_goals: ["不重做整套页面视觉"],
+      user_stories: [
+        {
+          as_a: "dashboard user",
+          i_want: "clear state feedback",
+          so_that: "I can understand loading and failure conditions",
+          acceptance_criteria: ["Dashboard states render with one explicit state pane per user-visible condition"]
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const createdSummary = JSON.parse(created.stdout);
+    const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.ok(content.includes("loading state"), content);
+    assert.ok(content.includes("empty state"), content);
+    assert.ok(content.includes("error state"), content);
+
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "frontend_state_coverage_weak"), vet.stdout);
   });
 });

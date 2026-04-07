@@ -112,6 +112,199 @@ function inferSimpleNonGoals(type, goal) {
   return defaults;
 }
 
+function uniqueNormalizedList(items) {
+  const out = [];
+  const seen = new Set();
+  for (const item of items || []) {
+    const normalized = normalizeText(item);
+    if (!normalized) continue;
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function hasSignal(text, pattern) {
+  return pattern.test(normalizeText(text));
+}
+
+function inferAudience(input, scope) {
+  const corpus = [input.title, input.goal, ...(scope || [])].join(" ");
+  if (/contributor|贡献者|maintainer|维护者/i.test(corpus)) return "贡献者";
+  if (/developer|dev|开发者/i.test(corpus)) return "开发者";
+  if (/operator|ops|运维/i.test(corpus)) return "运维人员";
+  if (/admin|管理员/i.test(corpus)) return "管理员";
+  if (/reader|读者/i.test(corpus)) return "读者";
+  if (/user|用户/i.test(corpus)) return "用户";
+  return "目标读者";
+}
+
+function inferDeliveryArtifact(input, scope) {
+  const corpus = [input.title, input.goal, ...(scope || [])].join(" ");
+  if (/readme/i.test(corpus)) return "README";
+  if (/runbook|playbook/i.test(corpus)) return "runbook";
+  if (/guide|指南|onboarding/i.test(corpus)) return "guide";
+  if (/api doc|api guide|接口文档/i.test(corpus)) return "API 文档";
+  if (/section|章节/i.test(corpus)) return "文档章节";
+  if (/doc|documentation|文档/i.test(corpus)) return "文档交付面";
+  return "目标交付面";
+}
+
+function buildTaskSignals(input, scope, constraints, type, tags) {
+  const corpus = [input.title, input.goal, ...(scope || []), ...(constraints || []), ...(tags || [])]
+    .map((item) => normalizeText(item))
+    .join(" ");
+  const docs = /(docs|documentation|文档|guide|readme|onboarding|playbook|runbook)/i.test(corpus);
+  const sdk = /(sdk|library|库|package|public api|entrypoint|cli)/i.test(corpus);
+  return {
+    docs,
+    sdk,
+    audience: docs ? inferAudience(input, scope) : "",
+    delivery_artifact: docs ? inferDeliveryArtifact(input, scope) : "",
+    corpus
+  };
+}
+
+function strengthenBackground(background, signals) {
+  let out = normalizeText(background);
+  if (!out) return out;
+  if (
+    signals.docs &&
+    !hasSignal(out, /读者|受众|reader|audience|contributor|maintainer|developer|用户|operator|管理员/i)
+  ) {
+    out = `${out} 目标读者是${signals.audience}。`;
+  }
+  if (signals.sdk && !hasSignal(out, /兼容|compat|breaking|migration|semver|public api|contract/i)) {
+    out = `${out} 同时需要把外部可见契约与兼容预期说明清楚。`;
+  }
+  return out;
+}
+
+function strengthenProblem(problem, signals) {
+  let out = normalizeText(problem);
+  if (!out) return out;
+  if (signals.docs && !hasSignal(out, /读者|受众|reader|audience|contributor|maintainer|developer|用户/i)) {
+    out = `${out} 当前${signals.audience}仍缺少稳定、可定位的阅读路径。`;
+  }
+  if (signals.sdk && !hasSignal(out, /contract|surface|public api|兼容|breaking|entrypoint/i)) {
+    out = `${out} 当前外部 surface 与 compatibility 边界也不够明确。`;
+  }
+  return out;
+}
+
+function strengthenSolutionOverview(solution, type, signals) {
+  let out = normalizeText(solution);
+  if (!out) return out;
+  if (
+    signals.docs &&
+    !hasSignal(out, /readme|guide|publish|release|交付|文档页面|章节|section|documentation/i)
+  ) {
+    out = `${out} 交付物聚焦于${signals.delivery_artifact}，并保持读者入口清晰。`;
+  }
+  if (signals.sdk && !hasSignal(out, /兼容|compat|breaking|migration|semver/i)) {
+    out = `${out} 同时保持现有消费者兼容，不引入未声明的 breaking change。`;
+  }
+  if (type === "后端" && !hasSignal(out, /api|接口|endpoint|request|response|schema|contract|payload/i)) {
+    out = `${out} 实施时要先明确 request/response 或 schema contract 边界。`;
+  }
+  if (type === "前端" && !hasSignal(out, /state|状态|loading|empty|error|交互|layout/i)) {
+    out = `${out} 实施时要覆盖 loading、empty、error 等关键状态与交互边界。`;
+  }
+  return out;
+}
+
+function inferGeneratedRequirement(item, index, acceptanceCriteria, constraints, type, complexity, signals) {
+  const title = normalizeText(item) || `需求 ${index + 1}`;
+  const matchedAcceptance = acceptanceCriteria.slice(index, index + 1).length > 0
+    ? [acceptanceCriteria[index]]
+    : acceptanceCriteria;
+
+  if (signals.docs) {
+    return {
+      id: `F${index + 1}`,
+      title,
+      description: title,
+      implementation_scheme: `在现有${signals.delivery_artifact}中明确${signals.audience}的阅读路径和交付边界，不扩展到无关实现表层。`,
+      acceptance_criteria: matchedAcceptance,
+      verification_method: "rubric",
+      edge_cases: uniqueNormalizedList([
+        ...constraints.slice(0, 2),
+        `避免让${signals.audience}无法定位入口`,
+        "避免把运行时实现细节混入面向读者的说明"
+      ]),
+      evidence: "文档 diff 与读者 walkthrough",
+      priority: "必须"
+    };
+  }
+
+  if (signals.sdk) {
+    return {
+      id: `F${index + 1}`,
+      title,
+      description: title,
+      implementation_scheme: "围绕 public API / entrypoint 明确外部 contract，并保持 compatibility 预期与变更边界可审阅。",
+      acceptance_criteria: matchedAcceptance,
+      verification_method: "integration",
+      edge_cases: uniqueNormalizedList([
+        ...constraints.slice(0, 2),
+        "避免暴露 internal-only surface",
+        "避免引入 breaking change"
+      ]),
+      evidence: "API contract review 或集成验证记录",
+      priority: "必须"
+    };
+  }
+
+  if (type === "后端") {
+    return {
+      id: `F${index + 1}`,
+      title,
+      description: title,
+      implementation_scheme: "在现有服务边界内先明确 request/response 或 schema contract，再以最小实现变更完成交付。",
+      acceptance_criteria: matchedAcceptance,
+      verification_method: "integration",
+      edge_cases: uniqueNormalizedList([
+        ...constraints.slice(0, 2),
+        "invalid input",
+        "unexpected dependency response"
+      ]),
+      evidence: "接口契约验证或集成测试结果",
+      priority: "必须"
+    };
+  }
+
+  if (type === "前端") {
+    return {
+      id: `F${index + 1}`,
+      title,
+      description: title,
+      implementation_scheme: "在现有交互和布局边界内明确状态切换与界面反馈，不扩散到无关页面。",
+      acceptance_criteria: matchedAcceptance,
+      verification_method: "manual",
+      edge_cases: uniqueNormalizedList([
+        ...constraints.slice(0, 2),
+        ...(complexity === "简单" ? [] : ["loading state", "empty state", "error state"])
+      ]),
+      evidence: "交互 walkthrough 或界面截图",
+      priority: "必须"
+    };
+  }
+
+  return {
+    id: `F${index + 1}`,
+    title,
+    description: title,
+    implementation_scheme: "遵循现有架构，以最小变更满足验收标准",
+    acceptance_criteria: matchedAcceptance,
+    verification_method: "manual",
+    edge_cases: uniqueNormalizedList(constraints.slice(0, 2)),
+    evidence: "手工验证记录",
+    priority: "必须"
+  };
+}
+
 function assertTitleQuality(title) {
   const normalized = normalizeText(title);
   const chineseChars = (normalized.match(/[\u4e00-\u9fff]/g) || []).length;
@@ -410,6 +603,21 @@ function validateInput(input, projectRoot) {
   const acceptanceCriteria = normalizeList(input.acceptance_criteria, "acceptance_criteria");
   const complexity = inferComplexity(input, scope, constraints);
   const type = inferTaskType(input, scope, constraints, projectContext);
+  const inferredTags = [];
+  const tagCorpus = [input.title, input.goal, input.background, input.problem, ...scope]
+    .map((item) => normalizeText(item))
+    .join(" ");
+  if (/(docs|documentation|文档|手册|guide|readme)/i.test(tagCorpus)) {
+    inferredTags.push("文档为主");
+  }
+  if (type === "其他" && /(sdk|库|package|library|cli)/i.test([input.title, input.goal].join(" "))) {
+    inferredTags.push("库/SDK");
+  }
+  const tags = [...new Set([
+    ...(Array.isArray(input.tags) ? input.tags.map((item) => normalizeText(item)).filter(Boolean) : []),
+    ...inferredTags
+  ])];
+  const signals = buildTaskSignals(input, scope, constraints, type, tags);
   const goals = Array.isArray(input.goals) && input.goals.length > 0
     ? input.goals.map((item) => normalizeText(item)).filter(Boolean)
     : [normalizeText(input.goal)];
@@ -452,17 +660,7 @@ function validateInput(input, projectRoot) {
         evidence: normalizeText(req.evidence || "手工验证记录"),
         priority: normalizeText(req.priority || "必须")
       }))
-    : scope.map((item, index) => ({
-        id: `F${index + 1}`,
-        title: item,
-        description: item,
-        implementation_scheme: "遵循现有架构，以最小变更满足验收标准",
-        acceptance_criteria: acceptanceCriteria.slice(index, index + 1).length > 0 ? [acceptanceCriteria[index]] : acceptanceCriteria,
-        verification_method: "manual",
-        edge_cases: constraints.slice(0, 2),
-        evidence: "手工验证记录",
-        priority: "必须"
-      }));
+    : scope.map((item, index) => inferGeneratedRequirement(item, index, acceptanceCriteria, constraints, type, complexity, signals));
   validateTaskReadiness({
     input,
     complexity,
@@ -476,16 +674,6 @@ function validateInput(input, projectRoot) {
     userStories,
     functionalRequirements
   });
-  const tags = Array.isArray(input.tags) ? input.tags.map((item) => normalizeText(item)).filter(Boolean) : [];
-  const corpus = [input.title, input.goal, input.background, input.problem, ...scope]
-    .map((item) => normalizeText(item))
-    .join(" ");
-  if (/(docs|documentation|文档|手册|guide|readme)/i.test(corpus)) {
-    tags.push("文档为主");
-  }
-  if (type === "其他" && /(sdk|库|package|library|cli)/i.test([input.title, input.goal].join(" "))) {
-    tags.push("库/SDK");
-  }
   return {
     title: normalizeText(input.title),
     goal: normalizeText(input.goal),
@@ -498,11 +686,15 @@ function validateInput(input, projectRoot) {
     task_id: input.task_id ? normalizeText(input.task_id) : "",
     type,
     complexity,
-    tags: [...new Set(tags)],
+    tags,
     project_context: projectContext.summary ? projectContext : null,
-    background: normalizeText(input.background || inferBackground(input.goal, scope, constraints)),
-    problem: normalizeText(input.problem || inferProblem(input.goal, scope)),
-    solution_overview: normalizeText(input.solution_overview || inferSolutionOverview(type, scope, constraints)),
+    background: strengthenBackground(normalizeText(input.background || inferBackground(input.goal, scope, constraints)), signals),
+    problem: strengthenProblem(normalizeText(input.problem || inferProblem(input.goal, scope)), signals),
+    solution_overview: strengthenSolutionOverview(
+      normalizeText(input.solution_overview || inferSolutionOverview(type, scope, constraints)),
+      type,
+      signals
+    ),
     goals,
     non_goals: nonGoals,
     success_criteria: successCriteria,

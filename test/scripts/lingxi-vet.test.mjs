@@ -237,54 +237,116 @@ Adjust homepage layout.
   it("flags missing documentation audience and delivery framing for docs tasks", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
-    const created = await runNode(taskPath, tempDir, [], {
-      title: "Docs map",
-      goal: "Clarify the contributor documentation.",
-      complexity: "中等",
-      type: "其他",
-      tags: ["文档为主"],
-      background: "The repo docs are difficult to follow.",
-      problem: "New contributors cannot find the right doc path.",
-      solution_overview: "Restructure the docs guidance around contributor tasks.",
-      scope: ["Describe the contributor doc path", "Limit the change to docs structure"],
-      constraints: ["Do not change code behavior", "Keep the repo layout intact"],
-      acceptance_criteria: [
-        "Contributor documentation contains one explicit onboarding path",
-        "The update stays within the documentation scope"
-      ],
-      non_goals: ["不扩展为代码重构"],
-      user_stories: [
-        {
-          as_a: "new contributor",
-          i_want: "one clear doc path",
-          so_that: "I can find the right onboarding steps",
-          acceptance_criteria: ["Contributor documentation contains one explicit onboarding path"]
-        }
-      ],
-      functional_requirements: [
-        {
-          title: "Describe onboarding path",
-          description: "Explain the contributor documentation flow",
-          implementation_scheme: "Restructure existing docs guidance by contributor task",
-          acceptance_criteria: ["Contributor documentation contains one explicit onboarding path"],
-          verification_method: "manual",
-          edge_cases: ["Avoid expanding into code change guidance"],
-          evidence: "Documentation review",
-          priority: "必须"
-        },
-        {
-          title: "Limit scope",
-          description: "Keep the change inside the docs structure",
-          implementation_scheme: "Revise only the contributor-facing documentation structure",
-          acceptance_criteria: ["The update stays within the documentation scope"],
-          verification_method: "manual",
-          edge_cases: ["Do not create a new publication surface"],
-          evidence: "Diff review",
-          priority: "必须"
-        }
-      ]
-    });
-    assert.strictEqual(created.code, 0, created.stderr);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.docs-map.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.docs-map.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 其他 |
+| 复杂度 | 中等 |
+| 特性标签 | 文档为主 |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+The repo docs are difficult to follow.
+
+### 1.2 问题描述
+
+The current docs path is fragmented.
+
+### 1.3 解决方案概述
+
+Restructure the docs guidance around contributor tasks.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the contributor documentation
+
+### 2.2 非目标
+
+- 不扩展为代码重构
+
+### 2.3 成功标准
+
+- Contributor documentation contains one explicit onboarding path
+- The update stays within the documentation scope
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：new contributor
+- 我想要：one clear doc path
+- 以便：I can find the right onboarding steps
+- 验收标准：
+  - Contributor documentation contains one explicit onboarding path
+
+---
+
+## 4. 功能需求
+
+### F1: Describe onboarding path
+
+- 需求描述：Explain the contributor documentation flow
+- 实现方案：Restructure existing docs guidance by contributor task
+- 验收标准：
+  - Contributor documentation contains one explicit onboarding path
+- 验证方式：manual
+- 边界/异常：
+  - Avoid expanding into code change guidance
+- 证据形式：Documentation review
+- 优先级：必须
+
+### F2: Limit scope
+
+- 需求描述：Keep the change inside the docs structure
+- 实现方案：Revise the existing structure only
+- 验收标准：
+  - The update stays within the documentation scope
+- 验证方式：manual
+- 边界/异常：
+  - Do not create a new publication surface
+- 证据形式：Diff review
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Do not change code behavior
+- Keep the repo layout intact
+
+---
+
+## 6. 验收检查清单
+
+- [ ] Contributor documentation contains one explicit onboarding path
+- [ ] The update stays within the documentation scope
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
@@ -351,54 +413,116 @@ Adjust homepage layout.
   it("flags missing SDK compatibility framing", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);
-    const created = await runNode(taskPath, tempDir, [], {
-      title: "SDK surf",
-      goal: "Clarify the SDK surface.",
-      complexity: "中等",
-      type: "其他",
-      tags: ["库/SDK"],
-      background: "Consumers depend on a stable SDK surface.",
-      problem: "The current SDK surface is implicit.",
-      solution_overview: "Define one explicit public SDK surface for the integration layer.",
-      scope: ["Define the public SDK surface", "Constrain the SDK change"],
-      constraints: ["Do not change runtime behavior", "Keep the diff minimal"],
-      acceptance_criteria: [
-        "The SDK surface is documented with one explicit public entrypoint",
-        "The change stays within the scoped SDK modules"
-      ],
-      non_goals: ["不扩展为新的功能包"],
-      user_stories: [
-        {
-          as_a: "SDK consumer",
-          i_want: "a clear SDK surface",
-          so_that: "integration usage remains predictable",
-          acceptance_criteria: ["The SDK surface is documented with one explicit public entrypoint"]
-        }
-      ],
-      functional_requirements: [
-        {
-          title: "Define SDK surface",
-          description: "Describe the public SDK entrypoint",
-          implementation_scheme: "Document the public SDK surface and route internal modules behind it",
-          acceptance_criteria: ["The SDK surface is documented with one explicit public entrypoint"],
-          verification_method: "manual",
-          edge_cases: ["Do not expose internal-only modules"],
-          evidence: "Documentation review",
-          priority: "必须"
-        },
-        {
-          title: "Constrain scope",
-          description: "Keep the change inside the scoped SDK modules",
-          implementation_scheme: "Restrict the update to the scoped SDK modules",
-          acceptance_criteria: ["The change stays within the scoped SDK modules"],
-          verification_method: "manual",
-          edge_cases: ["Avoid accidental package surface expansion"],
-          evidence: "Diff review",
-          priority: "必须"
-        }
-      ]
-    });
-    assert.strictEqual(created.code, 0, created.stderr);
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.sdk-surf.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.sdk-surf.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 其他 |
+| 复杂度 | 中等 |
+| 特性标签 | 库/SDK |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+Consumers depend on a stable SDK surface.
+
+### 1.2 问题描述
+
+The current SDK surface is implicit.
+
+### 1.3 解决方案概述
+
+Define one explicit public SDK surface for the integration layer.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the SDK surface
+
+### 2.2 非目标
+
+- 不扩展为新的功能包
+
+### 2.3 成功标准
+
+- The SDK surface is documented with one explicit public entrypoint
+- The change stays within the scoped SDK modules
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：SDK consumer
+- 我想要：a clear SDK surface
+- 以便：integration usage remains predictable
+- 验收标准：
+  - The SDK surface is documented with one explicit public entrypoint
+
+---
+
+## 4. 功能需求
+
+### F1: Define SDK surface
+
+- 需求描述：Describe the public SDK entrypoint
+- 实现方案：Document the public SDK surface and route internal modules behind it
+- 验收标准：
+  - The SDK surface is documented with one explicit public entrypoint
+- 验证方式：manual
+- 边界/异常：
+  - Do not expose internal-only modules
+- 证据形式：Documentation review
+- 优先级：必须
+
+### F2: Constrain scope
+
+- 需求描述：Keep the change inside the scoped SDK modules
+- 实现方案：Restrict the update to the scoped SDK modules
+- 验收标准：
+  - The change stays within the scoped SDK modules
+- 验证方式：manual
+- 边界/异常：
+  - Avoid accidental package surface expansion
+- 证据形式：Diff review
+- 优先级：必须
+
+---
+
+## 5. 约束
+
+- Do not change runtime behavior
+- Keep the diff minimal
+
+---
+
+## 6. 验收检查清单
+
+- [ ] The SDK surface is documented with one explicit public entrypoint
+- [ ] The change stays within the scoped SDK modules
+
+## 8. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
     const vet = await runNode(vetPath, tempDir);
     assert.strictEqual(vet.code, 0, vet.stderr);
     const vetResult = JSON.parse(vet.stdout);
