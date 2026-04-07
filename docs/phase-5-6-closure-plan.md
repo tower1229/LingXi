@@ -101,6 +101,7 @@ Current progress:
 - test ownership has been split into current-product and legacy suites
 - the first broad-workflow removal slice (`ask-questions`, `plan`, `build`, `review`) has been deleted from `.cursor/`
 - the second reviewer/testcase removal slice (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`) has been deleted from `.cursor/`
+- the third command/agent-doc removal slice (`.cursor/commands/*`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`) has been deleted from `.cursor/`
 
 5. Final coherence pass for docs
 - README

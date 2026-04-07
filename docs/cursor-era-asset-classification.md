@@ -81,7 +81,6 @@ They should be removed as soon as their 2.0 replacements or retirement decisions
 - `.cursor/hooks/`
 - `.cursor/hooks/schemas/`
 - `.cursor/agents/lingxi-self-iterate/`
-- `.cursor/commands/`
 - `.cursor/skills/memory-govern/`
 - `.cursor/skills/workspace-bootstrap/`
 - `.cursor/skills/task/scripts/latest-task-id.mjs`
@@ -104,7 +103,6 @@ These paths belong to the old broad Cursor workflow and should be removed from t
 - `.cursor/skills/reviewer-security/`
 - `.cursor/skills/testcase-designer/`
 - `.cursor/skills/skill-creator/`
-- `.cursor/agents/lingxi-self-iterate.md`
 
 Reason:
 
@@ -123,6 +121,9 @@ Completed removals:
 - `.cursor/skills/reviewer-performance/`
 - `.cursor/skills/reviewer-security/`
 - `.cursor/skills/testcase-designer/`
+- `.cursor/commands/`
+- `.cursor/agents/lingxi-memory-write.md`
+- `.cursor/agents/lingxi-self-iterate.md`
 
 ## Test Ownership
 
@@ -191,6 +192,7 @@ Most recent completed removal slice:
 
 - first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
 - second-wave reviewer/testcase skills (`reviewer-doc-consistency`, `reviewer-e2e`, `reviewer-performance`, `reviewer-security`, `testcase-designer`)
+- third-wave command/agent-doc removals (`commands`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`)
 
 ## Removal End State
 
