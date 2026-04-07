@@ -67,4 +67,20 @@ describe("lingxi vet", () => {
     assert.ok(vetResult.findings.some((item) => item.code === "goal_ambiguous"));
     assert.ok(vetResult.findings.some((item) => item.code === "acceptance_ambiguous"));
   });
+
+  it("falls back to the latest task when no task id is provided", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    await runNode(taskPath, tempDir, [], {
+      title: "Add explicit module seam",
+      goal: "Clarify the integration seam.",
+      scope: ["Introduce an explicit integration boundary"],
+      constraints: ["Do not change behavior"],
+      acceptance_criteria: ["Integration boundary is documented and explicit"]
+    });
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.strictEqual(vetResult.task_id, "001");
+  });
 });

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import process from "node:process";
 import {
   findTaskFile,
+  latestTaskId,
   normalizeText,
   parseTaskDocument,
   resolveProjectRoot
@@ -91,9 +92,9 @@ function main() {
   const projectRoot = resolveProjectRoot();
   let file = normalizeText(args.taskPath);
   if (!file) {
-    const taskId = normalizeText(args.taskId);
+    const taskId = normalizeText(args.taskId) || latestTaskId(projectRoot);
     if (!taskId) {
-      throw new Error("Provide --task-id or --task-path");
+      throw new Error("Provide --task-id or --task-path, or create a task first");
     }
     file = findTaskFile(projectRoot, taskId);
     if (!file) {

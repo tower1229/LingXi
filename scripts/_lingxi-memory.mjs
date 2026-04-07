@@ -4,6 +4,13 @@ import path from "node:path";
 
 export const INDEX_COLUMNS = ["Id", "Kind", "Title", "When to load", "Source", "UpdatedAt", "File"];
 export const DISTILL_VERSION = "v1";
+export const MEMORY_KIND_VALUES = new Set([
+  "preference",
+  "constraint",
+  "anti_pattern",
+  "review_tendency",
+  "heuristic"
+]);
 export const SESSION_RESULT_VALUES = new Set([
   "written",
   "merged",
@@ -141,6 +148,16 @@ export function nextTaskId(projectRoot) {
     .map((match) => Number(match[1]));
   const nextId = ids.length === 0 ? 1 : Math.max(...ids) + 1;
   return String(nextId).padStart(3, "0");
+}
+
+export function latestTaskId(projectRoot) {
+  ensureLingxiLayout(projectRoot);
+  const ids = fs.readdirSync(tasksDir(projectRoot))
+    .map((name) => /^(\d{3})\./.exec(name))
+    .filter(Boolean)
+    .map((match) => Number(match[1]));
+  if (ids.length === 0) return null;
+  return String(Math.max(...ids)).padStart(3, "0");
 }
 
 export function renderFrontmatterArray(key, values) {
@@ -366,9 +383,13 @@ export function upsertMemoryNote(projectRoot, input, scope = "project") {
   ensureRuntimeState(projectRoot);
   const notes = loadMemoryNotes(projectRoot);
   const updatedAt = new Date().toISOString();
+  const kind = normalizeText(input.kind);
+  if (!MEMORY_KIND_VALUES.has(kind)) {
+    throw new Error(`Unsupported memory kind: ${kind}`);
+  }
   const candidate = {
     title: normalizeText(input.title),
-    kind: normalizeText(input.kind),
+    kind,
     scope,
     source: normalizeText(input.source),
     updated_at: updatedAt,
@@ -383,7 +404,7 @@ export function upsertMemoryNote(projectRoot, input, scope = "project") {
   if (existing) {
     const merged = {
       ...existing,
-      source: existing.source === candidate.source ? existing.source : `${existing.source}, ${candidate.source}`,
+      source: mergeStringArrays(String(existing.source || "").split(","), String(candidate.source || "").split(",")).join(", "),
       updated_at: updatedAt,
       when_to_load: mergeStringArrays(existing.when_to_load, candidate.when_to_load),
       evidence: mergeStringArrays(existing.evidence, candidate.evidence)

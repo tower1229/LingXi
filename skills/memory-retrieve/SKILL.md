@@ -5,6 +5,10 @@ description: Retrieve minimal, task-relevant LingXi memory from `.lingxi/memory/
 
 # LingXi Memory Retrieve
 
+## Intent
+
+Retrieve only the smallest useful set of LingXi memories that can improve the current `task` or `vet` work.
+
 Use this skill before `task` or `vet` work.
 
 ## Responsibilities
@@ -19,6 +23,26 @@ Use this skill before `task` or `vet` work.
 2. Return only a small number of hits.
 3. Retrieve to improve current work, not to display the archive.
 4. If nothing matches, return an empty result.
+5. Prefer project memory over share memory when relevance is otherwise similar.
+
+## Output
+
+Return JSON with:
+
+- `query`
+- `hit_count`
+- `hits[]`
+
+Each hit should include:
+
+- `note_id`
+- `title`
+- `kind`
+- `scope`
+- `score`
+- `when_to_load`
+- `one_liner`
+- `file`
 
 ## Implementation
 
