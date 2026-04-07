@@ -24,6 +24,7 @@ See:
 - [Architecture](./docs/architecture.md)
 - [Roadmap](./docs/lingxi-2-roadmap.md)
 - [Quality Bar](./docs/quality-baseline.md)
+- [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
 
 ## Current 2.0 Core
 
@@ -44,7 +45,7 @@ Implemented or in active alignment:
 - `scripts/` — deterministic setup and runtime helpers
 - `templates/` — generated runtime artifacts
 - `docs/` — architecture, roadmap, and quality bar
-- `.cursor/` — historical Cursor-era reference material outside the supported 2.0 surface
+- `.cursor/` — historical Cursor-era reference material outside the supported 2.0 surface; see [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
 
 ## Install Notes
 

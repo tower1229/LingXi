@@ -24,6 +24,7 @@
 - [架构文档](./docs/architecture.md)
 - [Roadmap](./docs/lingxi-2-roadmap.md)
 - [质量标准](./docs/quality-baseline.md)
+- [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)
 
 ## 当前 2.0 核心
 
@@ -44,7 +45,7 @@
 - `scripts/`：确定性 setup 与运行时辅助脚本
 - `templates/`：生成到目标仓库的运行时模板
 - `docs/`：架构、roadmap 与质量标准
-- `.cursor/`：仓库内保留的 Cursor 时代历史参考材料，不属于受支持的 2.0 表层
+- `.cursor/`：仓库内保留的 Cursor 时代历史参考材料，不属于受支持的 2.0 表层；具体分层见 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)
 
 ## 安装说明
 

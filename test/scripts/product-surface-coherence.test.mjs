@@ -45,4 +45,18 @@ describe("product surface coherence", () => {
     assert.match(installReadme, /不再提供旧版 `?\.cursor\/`? 兼容安装|no longer install or manage `?\.cursor\/`? assets/i);
     assert.doesNotMatch(installReadme, /过渡期|transitional|兼容安装面|Cursor compatibility/i);
   });
+
+  it("keeps the remaining .cursor tree explicitly documented as historical only", () => {
+    const classification = readText("docs/cursor-era-asset-classification.md");
+    const cursorReadme = readText(".cursor/README.md");
+
+    assert.match(classification, /does \*\*not\*\* treat any `?\.cursor\/`? path as supported product surface/i);
+    assert.match(classification, /Reference-Only/);
+    assert.match(classification, /Migration Artifacts/);
+    assert.match(classification, /Delete-Later Candidates/);
+
+    assert.match(cursorReadme, /historical reference/i);
+    assert.match(cursorReadme, /not(?:\s|\*+)+part of the supported LingXi 2\.0 product surface/i);
+    assert.match(cursorReadme, /cursor-era-asset-classification\.md/i);
+  });
 });
