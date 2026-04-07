@@ -249,6 +249,71 @@ describe("lingxi task", () => {
     assert.ok(content.includes("tsconfig.json"));
   });
 
+  it("auto-applies relevant memory when drafting a task", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const memoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-001.rollback-contracts.md"),
+      `---
+id: MEM-001
+title: Prefer explicit contracts and rollback notes
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When drafting backend integration tasks
+---
+
+# One-liner
+
+Prefer explicit contracts and rollback notes for backend integration changes.
+
+# Decision / Preference
+
+Prefer explicit contracts and rollback notes for backend integration changes.
+
+# Evidence
+
+- The team repeatedly wants explicit backend seams and rollback visibility.
+`,
+      "utf8"
+    );
+
+    const result = await runNode(scriptPath, tempDir, {
+      title: "API seam",
+      goal: "Clarify the backend integration seam.",
+      complexity: "中等",
+      type: "后端",
+      background: "External dependency behavior currently crosses module boundaries implicitly.",
+      problem: "The current seam is hard to review and rollback safely.",
+      solution_overview: "Introduce one explicit backend seam for the service layer.",
+      scope: ["Define the backend request/response seam", "Constrain the integration rollout path"],
+      constraints: ["Do not change runtime behavior", "Keep external API stable"],
+      acceptance_criteria: [
+        "The backend request/response seam is explicit and reviewable",
+        "The rollback path is documented for maintainers"
+      ],
+      non_goals: ["不扩展为新的服务能力"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "one explicit backend seam",
+          so_that: "I can reason about integration changes before rollout",
+          acceptance_criteria: ["The backend request/response seam is explicit and reviewable"]
+        }
+      ]
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    const content = fs.readFileSync(summary.file, "utf8");
+    assert.match(content, /## 8\. Memory Applied|## 7\. Memory Applied/);
+    assert.match(content, /MEM-001/);
+    assert.match(content, /Prefer explicit contracts and rollback notes/);
+  });
+
   it("strengthens docs-oriented non-trivial tasks even when functional requirements are omitted", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);

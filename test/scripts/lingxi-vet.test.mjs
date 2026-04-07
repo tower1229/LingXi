@@ -175,6 +175,170 @@ Adjust homepage layout.
     assert.strictEqual(vetResult.task_id, "001");
   });
 
+  it("flags when relevant LingXi memory exists but is not reflected in the task", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const memoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-001.backend-seam.md"),
+      `---
+id: MEM-001
+title: Prefer explicit backend seams
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When drafting backend integration tasks
+---
+
+# One-liner
+
+Prefer explicit backend seams and rollback notes for integration changes.
+
+# Decision / Preference
+
+Prefer explicit backend seams and rollback notes for integration changes.
+
+# Evidence
+
+- This repository repeatedly prefers explicit seams for reviewability.
+`,
+      "utf8"
+    );
+
+    const taskFile = path.join(tempDir, ".lingxi", "tasks", "001.task.backend-seam.md");
+    fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+    fs.writeFileSync(
+      taskFile,
+      `# 001.task.backend-seam.md
+
+| 属性 | 值 |
+| --- | --- |
+| 版本 | 1.0 |
+| 状态 | 草稿 |
+| 创建日期 | 2026-04-07 |
+| 需求类型 | 后端 |
+| 复杂度 | 中等 |
+
+---
+
+## 1. 概述
+
+### 1.1 背景
+
+External dependency behavior currently crosses module boundaries implicitly.
+
+### 1.2 问题描述
+
+The current seam is hard to review and rollback safely.
+
+### 1.3 解决方案概述
+
+Introduce one explicit backend seam for the service layer.
+
+---
+
+## 2. 目标与指标
+
+### 2.1 目标
+
+- Clarify the backend integration seam
+
+### 2.2 非目标
+
+- 不扩展为新的服务能力
+
+### 2.3 成功标准
+
+- The backend request/response seam is explicit and reviewable
+- The rollback path is documented for maintainers
+
+---
+
+## 3. 用户故事
+
+### US-1
+
+- 作为：service maintainer
+- 我想要：one explicit backend seam
+- 以便：I can reason about integration changes before rollout
+- 验收标准：
+  - The backend request/response seam is explicit and reviewable
+
+---
+
+## 4. 功能需求
+
+### F1: Define backend seam
+
+- 需求描述：Describe the backend request and response boundary
+- 实现方案：Document one explicit request/response contract for the current integration seam
+- 验收标准：
+  - The backend request/response seam is explicit and reviewable
+- 验证方式：integration
+- 边界/异常：
+  - invalid input
+- 证据形式：Contract diff with one integration check
+- 优先级：必须
+
+### F2: Constrain rollout path
+
+- 需求描述：Keep the implementation inside the current integration seam
+- 实现方案：Restrict the change to the current service boundary
+- 验收标准：
+  - The rollback path is documented for maintainers
+- 验证方式：integration
+- 边界/异常：
+  - dependency timeout
+- 证据形式：Rollback note with one dependency coordination record
+- 优先级：必须
+
+---
+
+## 5. 开发指导
+
+### 契约与边界指导
+
+- 先把 request/response contract 写清楚，再进入实现。
+- 让每条需求都能对应到可审阅的 contract 或 schema 边界。
+
+### 集成与回滚指导
+
+- 列清 dependency edge、失败模式和 rollback 顺序，再决定实施步骤。
+- 为关键集成路径准备 integration check 和 rollback record。
+
+---
+
+## 6. 约束
+
+- Do not change runtime behavior
+- Keep external API stable
+
+---
+
+## 7. 验收检查清单
+
+- [ ] The backend request/response seam is explicit and reviewable
+- [ ] The rollback path is documented for maintainers
+
+## 9. 变更记录
+
+| 日期 | 来源 | 触发 | 变更摘要 | 关联维度/问题 |
+| --- | --- | --- | --- | --- |
+| - | - | - | - | - |
+`,
+      "utf8"
+    );
+
+    const vet = await runNode(vetPath, tempDir, ["--task-id", "001"]);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(vetResult.findings.some((item) => item.code === "memory_context_missing"), vet.stdout);
+    assert.ok(vetResult.revision_targets.some((item) => item.includes("LingXi memory")), vet.stdout);
+  });
+
   it("flags missing SDK contract guidance for library tasks", async () => {
     tempDir = createTempDir();
     await runNode(setupPath, tempDir);

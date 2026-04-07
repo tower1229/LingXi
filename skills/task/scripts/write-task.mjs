@@ -5,7 +5,9 @@ import process from "node:process";
 import {
   detectProjectContext,
   ensureLingxiLayout,
+  formatMemoryRef,
   normalizeText,
+  retrieveRelevantMemoryHits,
   resolveProjectRoot,
   nextTaskId
 } from "../../../scripts/_lingxi-memory.mjs";
@@ -252,6 +254,20 @@ function buildTaskRefinement(input, scope, constraints, acceptanceCriteria, sign
     boundary: uniqueNormalizedList([...scope.slice(0, 2), ...constraints.slice(0, 2)]),
     success_anchor: uniqueNormalizedList((acceptanceCriteria || []).slice(0, 2))
   };
+}
+
+function buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags) {
+  return [
+    input.title,
+    input.goal,
+    ...(scope || []),
+    ...(constraints || []),
+    ...(acceptanceCriteria || []),
+    ...(tags || [])
+  ]
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .join(" ");
 }
 
 function guidanceBlock(kind, bullets) {
@@ -946,7 +962,11 @@ function validateInput(input, projectRoot) {
     acceptance_criteria: acceptanceCriteria,
     memory_refs: Array.isArray(input.memory_refs)
       ? input.memory_refs.map((item) => normalizeText(item)).filter(Boolean)
-      : [],
+      : retrieveRelevantMemoryHits(
+          projectRoot,
+          buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),
+          3
+        ).map((note) => formatMemoryRef(note)),
     task_id: input.task_id ? normalizeText(input.task_id) : "",
     type,
     complexity,

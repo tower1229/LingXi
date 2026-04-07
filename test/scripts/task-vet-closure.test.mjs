@@ -11,6 +11,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 const setupPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
 const taskPath = path.join(repoRoot, "skills", "task", "scripts", "write-task.mjs");
 const vetPath = path.join(repoRoot, "skills", "vet", "scripts", "vet-task.mjs");
+const distillPath = path.join(repoRoot, "skills", "session-distill", "scripts", "distill-session.mjs");
 
 function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-task-vet-closure-"));
@@ -213,5 +214,63 @@ describe("task vet closure", () => {
     assert.ok(!updatedReport.findings.some((item) => item.code === "guidance_sufficiency_thin"), updatedVet.stdout);
     assert.ok(!updatedReport.findings.some((item) => item.code === "constraints_generic_only"), updatedVet.stdout);
     assert.ok(!updatedReport.findings.some((item) => item.code === "non_goals_generic_only"), updatedVet.stdout);
+  });
+
+  it("feeds distilled memory into task drafting and keeps vet from flagging missing memory context", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+
+    const distilled = await runNode(distillPath, tempDir, [], {
+      session_id: "session-memory-loop",
+      messages: [
+        {
+          role: "user",
+          content: "For backend integration seam changes, prefer small reviewable patches and document rollback path before implementation."
+        }
+      ]
+    });
+    assert.strictEqual(distilled.code, 0, distilled.stderr);
+    const distillSummary = JSON.parse(distilled.stdout);
+    assert.ok(distillSummary.notes.length > 0, distilled.stdout);
+
+    const created = await runNode(taskPath, tempDir, [], {
+      title: "API seam",
+      goal: "Clarify the backend integration seam.",
+      complexity: "中等",
+      type: "后端",
+      background: "External dependency behavior currently crosses module boundaries implicitly.",
+      problem: "The current seam is hard to review and rollback safely.",
+      solution_overview: "Introduce one explicit backend seam for the service layer. 这样更稳，因为 request/response contract 和 rollback 边界可以先被审阅。",
+      scope: ["Define the backend request/response seam", "Constrain the integration rollout path"],
+      constraints: [
+        "Do not change runtime behavior",
+        "Keep external API stable",
+        "Document rollback order before implementation"
+      ],
+      acceptance_criteria: [
+        "The backend request/response seam is explicit and reviewable",
+        "The rollback path is documented for maintainers"
+      ],
+      non_goals: ["不扩展为新的服务能力", "不在本任务内扩展到无关接口或数据模型"],
+      user_stories: [
+        {
+          as_a: "service maintainer",
+          i_want: "one explicit backend seam",
+          so_that: "I can reason about integration changes before rollout",
+          acceptance_criteria: ["The backend request/response seam is explicit and reviewable"]
+        }
+      ]
+    });
+    assert.strictEqual(created.code, 0, created.stderr);
+    const createdSummary = JSON.parse(created.stdout);
+    const content = fs.readFileSync(createdSummary.file, "utf8");
+    assert.match(content, /Memory Applied/);
+    assert.match(content, /MEM-001/);
+    assert.match(content, /rollback path before implementation|small reviewable patches/i);
+
+    const vet = await runNode(vetPath, tempDir);
+    assert.strictEqual(vet.code, 0, vet.stderr);
+    const vetResult = JSON.parse(vet.stdout);
+    assert.ok(!vetResult.findings.some((item) => item.code === "memory_context_missing"), vet.stdout);
   });
 });

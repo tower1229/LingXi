@@ -562,6 +562,37 @@ export function scoreNote(note, query) {
   return score;
 }
 
+export function retrieveRelevantMemoryHits(projectRoot, query, limit = 3) {
+  ensureRuntimeState(projectRoot);
+  const resolvedLimit = Number.isFinite(limit) && limit > 0 ? limit : 3;
+  return loadMemoryNotes(projectRoot)
+    .map((note) => ({
+      ...note,
+      score: scoreNote(note, query)
+    }))
+    .filter((note) => note.score > 0)
+    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+    .slice(0, resolvedLimit);
+}
+
+export function formatMemoryRef(note) {
+  const id = normalizeText(note?.id);
+  const title = normalizeText(note?.title);
+  const oneLiner = normalizeText(note?.one_liner);
+  const whenToLoad = Array.isArray(note?.when_to_load) ? note.when_to_load.map((item) => normalizeText(item)).filter(Boolean) : [];
+  const parts = [];
+  if (id || title) {
+    parts.push([id, title].filter(Boolean).join(" "));
+  }
+  if (oneLiner) {
+    parts.push(oneLiner);
+  }
+  if (whenToLoad.length > 0) {
+    parts.push(`When to load: ${whenToLoad.join("; ")}`);
+  }
+  return parts.join(" — ");
+}
+
 export function normalizeSignaturePart(value) {
   return normalizeText(value).toLowerCase();
 }

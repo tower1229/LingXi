@@ -5,9 +5,11 @@ import process from "node:process";
 import {
   detectProjectContext,
   findTaskFile,
+  formatMemoryRef,
   latestTaskId,
   normalizeText,
   parseTaskDocument,
+  retrieveRelevantMemoryHits,
   resolveProjectRoot
 } from "../../../scripts/_lingxi-memory.mjs";
 import { VET_REPORT_SCHEMA_VERSION, assertValidVetReport } from "./vet-report.mjs";
@@ -258,6 +260,37 @@ function taskReviewSignals(task) {
   };
 }
 
+function buildVetMemoryQuery(task) {
+  return [
+    task.title,
+    task.type,
+    task.background,
+    task.problem,
+    task.solution_overview,
+    ...(task.tags || []),
+    ...(task.goals || []),
+    ...(task.constraints || []),
+    ...(task.acceptance_criteria || []),
+    ...((task.functional_requirements || []).flatMap((req) => [
+      req.title,
+      req.description,
+      req.implementation_scheme,
+      ...(req.acceptance_criteria || [])
+    ]))
+  ]
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .join(" ");
+}
+
+function taskAppliesMemory(task, note) {
+  const refs = (task.memory_refs || []).map((item) => normalizeText(item).toLowerCase());
+  if (refs.length === 0) return false;
+  const id = normalizeText(note.id).toLowerCase();
+  const title = normalizeText(note.title).toLowerCase();
+  return refs.some((item) => (id && item.includes(id)) || (title && item.includes(title)));
+}
+
 function guidanceBullets(task, kind) {
   return normalizedUnique(
     (task.guidance_blocks || [])
@@ -416,6 +449,8 @@ function revisionTargetForFinding(item) {
     case "non_goals_overlap_scope":
     case "non_goals_generic_only":
       return "补齐真正的非目标，明确这次不会做什么来防止 scope drift。";
+    case "memory_context_missing":
+      return "先应用当前仓库里已经存在的相关 LingXi memory，把可复用偏好或约束写进 task，避免重复踩同样的工程判断。";
     case "requirement_spec_incomplete":
     case "requirement_granularity_thin":
       return "补全功能需求行，让实现方案、验收、验证方式和边界情况一一对应。";
@@ -575,7 +610,7 @@ function tagSpecificD4Checks(task, signals) {
   return findings;
 }
 
-function vetTask(task, projectContext) {
+function vetTask(task, projectContext, relevantMemory = []) {
   const findings = [];
   const goalText = [task.background, task.problem, ...(task.goals || [])].filter(Boolean).join(" ");
   const scopeCount = (task.functional_requirements || []).length;
@@ -685,6 +720,16 @@ function vetTask(task, projectContext) {
         "warning",
         "non_goals_generic_only",
         "Non-goals currently read like generic template exclusions; add task-specific boundaries that clarify what this task still will not cover.",
+        "D3"
+      )
+    );
+  }
+  if (relevantMemory.length > 0 && !relevantMemory.some((note) => taskAppliesMemory(task, note))) {
+    findings.push(
+      finding(
+        "warning",
+        "memory_context_missing",
+        `Relevant LingXi memory exists but is not reflected in the task yet: ${relevantMemory.map((note) => formatMemoryRef(note)).join(" | ")}`,
         "D3"
       )
     );
@@ -875,7 +920,11 @@ function main() {
   }
 
   const task = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
-  const result = vetTask(task, detectProjectContext(projectRoot));
+  const result = vetTask(
+    task,
+    detectProjectContext(projectRoot),
+    retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3)
+  );
   const report = {
     task_id: task.id,
     file,
