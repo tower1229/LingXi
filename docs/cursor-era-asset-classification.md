@@ -98,10 +98,6 @@ Reason:
 
 These paths belong to the old broad Cursor workflow and should be removed from the main repository once archival value is judged low:
 
-- `.cursor/skills/ask-questions/`
-- `.cursor/skills/plan/`
-- `.cursor/skills/build/`
-- `.cursor/skills/review/`
 - `.cursor/skills/reviewer-doc-consistency/`
 - `.cursor/skills/reviewer-e2e/`
 - `.cursor/skills/reviewer-performance/`
@@ -115,6 +111,13 @@ Reason:
 - they encode the retired broad Cursor-era workflow rather than the narrow 2.0 `task` / `vet` workflow
 - they are not part of the install surface
 - current architecture and roadmap do not describe them as part of the final 2.0 product
+
+Completed removals:
+
+- `.cursor/skills/ask-questions/`
+- `.cursor/skills/plan/`
+- `.cursor/skills/build/`
+- `.cursor/skills/review/`
 
 ## Test Ownership
 
@@ -178,6 +181,10 @@ The next high-value cleanup targets are:
 1. move historical test ownership out of the main "current product" mental model
 2. retire Cursor hook/runtime artifacts once Phase 5 background memory productization no longer depends on them as reference
 3. archive or absorb any remaining reference value, then remove the old broad workflow skills from the main repository tree
+
+Most recent completed removal slice:
+
+- first-wave broad workflow skills (`ask-questions`, `plan`, `build`, `review`)
 
 ## Removal End State
 

@@ -95,6 +95,12 @@ Work packages:
 - absorb still-useful quality baselines into `docs/`, `skills/`, `scripts/`, or supported tests
 - archive anything worth retaining outside the active product tree
 - delete the remaining `.cursor/` paths once they are no longer needed for active closure work
+
+Current progress:
+
+- test ownership has been split into current-product and legacy suites
+- the first broad-workflow removal slice (`ask-questions`, `plan`, `build`, `review`) has been deleted from `.cursor/`
+
 5. Final coherence pass for docs
 - README
 - install docs
