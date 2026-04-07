@@ -76,8 +76,6 @@ They should be removed as soon as their 2.0 replacements or retirement decisions
 - `.cursor/hooks.json`
 - `.cursor/hooks/`
 - `.cursor/hooks/schemas/`
-- `.cursor/skills/memory-govern/`
-- `.cursor/skills/workspace-bootstrap/`
 - `.cursor/skills/task/scripts/latest-task-id.mjs`
 - `.cursor/skills/task/scripts/next-task-id.mjs`
 - local scratch directories such as `.cursor/.lingxi/`
@@ -130,6 +128,8 @@ Completed removals:
 - `.cursor/hooks/_hook-utils.mjs`
 - `.cursor/hooks.json`
 - `.cursor/hooks/schemas/memory-audit-events.schema.json`
+- `.cursor/skills/memory-govern/`
+- `.cursor/skills/workspace-bootstrap/`
 
 ## Test Ownership
 
@@ -158,10 +158,8 @@ Operationally:
 These still provide value, but they protect `.cursor/` behavior rather than the supported 2.0 runtime:
 
 - `test/legacy/hooks/*.test.mjs`
-- `test/legacy/skills/workspace-bootstrap.test.mjs`
 - `test/legacy/skills/task-id.test.mjs`
 - `test/legacy/skills/memory-governance-decision.test.mjs`
-- `test/legacy/skills/memory-index-sync.test.mjs`
 - `test/legacy/skills/governance-context-validator.test.mjs`
 
 Recommended direction:
@@ -201,7 +199,7 @@ Most recent completed removal slice:
 - sixth-wave reference-doc removal (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, `memory-fusion-strength-contract.test.mjs`)
 - seventh-wave session-init retirement (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests)
 - eighth-wave hook-runtime removal (`lingxi-audit`, `append-memory-audit`, hook schema, hooks.json, and remaining legacy hook tests)
-- seventh-wave session-init retirement (`session-init.mjs`, `heartbeat-check.mjs`, and their legacy tests)
+- ninth-wave migration-tool removal (`memory-govern`, `workspace-bootstrap`, `memory-index-sync.test.mjs`, `workspace-bootstrap.test.mjs`)
 
 ## Removal End State
 
