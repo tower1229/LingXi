@@ -51,8 +51,27 @@ describe("lingxi-setup", () => {
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
+    const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.default_distill_rrule, "FREQ=HOURLY;INTERVAL=6");
+    assert.strictEqual(state.state_schema_version, "v2");
     assert.strictEqual(state.distill_version, "v1");
+    assert.deepStrictEqual(state.summary, {
+      tracked_sessions: 0,
+      total_runs: 0,
+      written_runs: 0,
+      merged_runs: 0,
+      skipped_duplicate_runs: 0,
+      skipped_no_signal_runs: 0,
+      failed_runs: 0,
+      reprocessed_runs: 0
+    });
+    assert.strictEqual(state.last_run, null);
     assert.deepStrictEqual(state.sessions, {});
+    assert.match(automation, /rrule = "FREQ=HOURLY;INTERVAL=6"/);
+    assert.match(automation, /agent = "\.codex\/agents\/lingxi-session-distill\.toml"/);
+    assert.match(automation, /state_file = "\.lingxi\/state\/processed-sessions\.json"/);
+    assert.match(automation, /journal_file = "\.lingxi\/state\/distill-journal\.jsonl"/);
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {

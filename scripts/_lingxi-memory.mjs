@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const INDEX_COLUMNS = ["Id", "Kind", "Title", "When to load", "Source", "UpdatedAt", "File"];
 export const DISTILL_VERSION = "v1";
+export const PROCESSED_SESSIONS_SCHEMA_VERSION = "v2";
 export const MEMORY_KIND_VALUES = new Set([
   "preference",
   "constraint",
@@ -17,6 +18,14 @@ export const SESSION_RESULT_VALUES = new Set([
   "skipped_no_signal",
   "skipped_duplicate",
   "failed"
+]);
+
+export const SESSION_RUN_REASON_VALUES = new Set([
+  "first_distill",
+  "content_changed",
+  "distill_version_changed",
+  "forced_reprocess",
+  "duplicate_unchanged"
 ]);
 
 export function resolveProjectRoot(explicitRoot) {
@@ -202,8 +211,79 @@ export function ensureLingxiLayout(projectRoot) {
 
 export function defaultProcessedSessionsState() {
   return {
+    state_schema_version: PROCESSED_SESSIONS_SCHEMA_VERSION,
     distill_version: DISTILL_VERSION,
+    summary: {
+      tracked_sessions: 0,
+      total_runs: 0,
+      written_runs: 0,
+      merged_runs: 0,
+      skipped_duplicate_runs: 0,
+      skipped_no_signal_runs: 0,
+      failed_runs: 0,
+      reprocessed_runs: 0
+    },
+    last_run: null,
     sessions: {}
+  };
+}
+
+function normalizeProcessedSessionsSummary(summary, sessions) {
+  return {
+    tracked_sessions: Number.isInteger(summary?.tracked_sessions) ? summary.tracked_sessions : Object.keys(sessions).length,
+    total_runs: Number.isInteger(summary?.total_runs) ? summary.total_runs : 0,
+    written_runs: Number.isInteger(summary?.written_runs) ? summary.written_runs : 0,
+    merged_runs: Number.isInteger(summary?.merged_runs) ? summary.merged_runs : 0,
+    skipped_duplicate_runs: Number.isInteger(summary?.skipped_duplicate_runs) ? summary.skipped_duplicate_runs : 0,
+    skipped_no_signal_runs: Number.isInteger(summary?.skipped_no_signal_runs) ? summary.skipped_no_signal_runs : 0,
+    failed_runs: Number.isInteger(summary?.failed_runs) ? summary.failed_runs : 0,
+    reprocessed_runs: Number.isInteger(summary?.reprocessed_runs) ? summary.reprocessed_runs : 0
+  };
+}
+
+function normalizeLastRun(lastRun) {
+  if (!lastRun || typeof lastRun !== "object") {
+    return null;
+  }
+  return {
+    occurred_at: normalizeText(lastRun.occurred_at),
+    session_id: normalizeText(lastRun.session_id),
+    operation: normalizeText(lastRun.operation),
+    run_reason: normalizeText(lastRun.run_reason),
+    content_fingerprint: normalizeText(lastRun.content_fingerprint),
+    candidate_count: Number.isInteger(lastRun.candidate_count) ? lastRun.candidate_count : 0,
+    note_count: Number.isInteger(lastRun.note_count) ? lastRun.note_count : 0
+  };
+}
+
+function normalizeProcessedSessionEntry(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+  return {
+    content_fingerprint: normalizeText(entry.content_fingerprint),
+    distilled_at: normalizeText(entry.distilled_at),
+    result: normalizeText(entry.result),
+    run_reason: normalizeText(entry.run_reason),
+    candidate_count: Number.isInteger(entry.candidate_count) ? entry.candidate_count : 0,
+    notes: Array.isArray(entry.notes) ? entry.notes.map((item) => normalizeText(item)).filter(Boolean) : []
+  };
+}
+
+function normalizeProcessedSessionsState(parsed) {
+  const sessionsRaw = parsed?.sessions && typeof parsed.sessions === "object" ? parsed.sessions : {};
+  const sessions = Object.fromEntries(
+    Object.entries(sessionsRaw)
+      .map(([sessionId, entry]) => [normalizeText(sessionId), normalizeProcessedSessionEntry(entry)])
+      .filter(([sessionId, entry]) => sessionId && entry)
+  );
+
+  return {
+    state_schema_version: String(parsed?.state_schema_version || PROCESSED_SESSIONS_SCHEMA_VERSION),
+    distill_version: String(parsed?.distill_version || DISTILL_VERSION),
+    summary: normalizeProcessedSessionsSummary(parsed?.summary, sessions),
+    last_run: normalizeLastRun(parsed?.last_run),
+    sessions
   };
 }
 
@@ -231,11 +311,7 @@ export function readProcessedSessionsState(projectRoot) {
     if (!parsed || typeof parsed !== "object") {
       return defaultProcessedSessionsState();
     }
-    const sessions = parsed.sessions && typeof parsed.sessions === "object" ? parsed.sessions : {};
-    return {
-      distill_version: String(parsed.distill_version || DISTILL_VERSION),
-      sessions
-    };
+    return normalizeProcessedSessionsState(parsed);
   } catch {
     return defaultProcessedSessionsState();
   }
@@ -243,7 +319,11 @@ export function readProcessedSessionsState(projectRoot) {
 
 export function writeProcessedSessionsState(projectRoot, state) {
   ensureRuntimeState(projectRoot);
-  fs.writeFileSync(processedSessionsPath(projectRoot), JSON.stringify(state, null, 2) + "\n", "utf8");
+  const normalized = normalizeProcessedSessionsState(state);
+  normalized.state_schema_version = PROCESSED_SESSIONS_SCHEMA_VERSION;
+  normalized.distill_version = DISTILL_VERSION;
+  normalized.summary.tracked_sessions = Object.keys(normalized.sessions).length;
+  fs.writeFileSync(processedSessionsPath(projectRoot), JSON.stringify(normalized, null, 2) + "\n", "utf8");
 }
 
 export function appendDistillJournal(projectRoot, event) {
@@ -580,9 +660,34 @@ export function fingerprintMessages(messages) {
     .digest("hex")}`;
 }
 
-export function recordProcessedSession(projectRoot, sessionId, entry) {
+export function recordProcessedSession(projectRoot, sessionId, entry, runMeta = null) {
   const state = readProcessedSessionsState(projectRoot);
-  state.sessions[sessionId] = entry;
+  state.state_schema_version = PROCESSED_SESSIONS_SCHEMA_VERSION;
+  state.distill_version = DISTILL_VERSION;
+  state.sessions[sessionId] = normalizeProcessedSessionEntry(entry);
+  state.summary.tracked_sessions = Object.keys(state.sessions).length;
+
+  if (runMeta && typeof runMeta === "object") {
+    state.summary.total_runs += 1;
+    if (runMeta.operation === "written") state.summary.written_runs += 1;
+    if (runMeta.operation === "merged") state.summary.merged_runs += 1;
+    if (runMeta.operation === "skipped_duplicate") state.summary.skipped_duplicate_runs += 1;
+    if (runMeta.operation === "skipped_no_signal") state.summary.skipped_no_signal_runs += 1;
+    if (runMeta.operation === "failed") state.summary.failed_runs += 1;
+    if (runMeta.run_reason && runMeta.run_reason !== "first_distill" && runMeta.run_reason !== "duplicate_unchanged") {
+      state.summary.reprocessed_runs += 1;
+    }
+    state.last_run = normalizeLastRun({
+      occurred_at: runMeta.occurred_at || new Date().toISOString(),
+      session_id: sessionId,
+      operation: runMeta.operation,
+      run_reason: runMeta.run_reason,
+      content_fingerprint: runMeta.content_fingerprint,
+      candidate_count: runMeta.candidate_count,
+      note_count: runMeta.note_count
+    });
+  }
+
   writeProcessedSessionsState(projectRoot, state);
 }
 

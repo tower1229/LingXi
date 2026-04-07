@@ -706,19 +706,43 @@ Suggested contract:
 
 ```json
 {
+  "state_schema_version": "v2",
   "distill_version": "v1",
+  "summary": {
+    "tracked_sessions": 2,
+    "total_runs": 3,
+    "written_runs": 1,
+    "merged_runs": 1,
+    "skipped_duplicate_runs": 1,
+    "skipped_no_signal_runs": 0,
+    "failed_runs": 0,
+    "reprocessed_runs": 1
+  },
+  "last_run": {
+    "occurred_at": "2026-04-07T18:00:00Z",
+    "session_id": "session-456",
+    "operation": "merged",
+    "run_reason": "distill_version_changed",
+    "content_fingerprint": "sha256:def456",
+    "candidate_count": 1,
+    "note_count": 1
+  },
   "sessions": {
     "session-123": {
       "content_fingerprint": "sha256:abc123",
       "distilled_at": "2026-04-07T12:00:00Z",
       "result": "written",
+      "run_reason": "first_distill",
+      "candidate_count": 2,
       "notes": ["MEM-001", "MEM-004"]
     },
     "session-456": {
       "content_fingerprint": "sha256:def456",
       "distilled_at": "2026-04-07T18:00:00Z",
-      "result": "skipped_no_signal",
-      "notes": []
+      "result": "merged",
+      "run_reason": "distill_version_changed",
+      "candidate_count": 1,
+      "notes": ["MEM-007"]
     }
   }
 }
@@ -728,7 +752,10 @@ Suggested contract:
 
 Top-level:
 
+- `state_schema_version`
 - `distill_version`
+- `summary`
+- `last_run`
 - `sessions`
 
 Per session:
@@ -736,6 +763,8 @@ Per session:
 - `content_fingerprint`
 - `distilled_at`
 - `result`
+- `run_reason`
+- `candidate_count`
 - `notes`
 
 ### Result Enum
@@ -744,8 +773,19 @@ V1 should support at least:
 
 - `written`
 - `merged`
+- `skipped_duplicate`
 - `skipped_no_signal`
 - `failed`
+
+### Run Reason Enum
+
+V1 should make rerun semantics explicit with:
+
+- `first_distill`
+- `content_changed`
+- `distill_version_changed`
+- `forced_reprocess`
+- `duplicate_unchanged`
 
 This is enough for:
 

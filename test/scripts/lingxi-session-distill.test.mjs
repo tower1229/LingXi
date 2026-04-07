@@ -62,10 +62,19 @@ describe("lingxi session distill", () => {
     assert.strictEqual(result.code, 0, result.stderr);
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.operation, "written");
+    assert.strictEqual(summary.run_reason, "first_distill");
+    assert.strictEqual(summary.note_count, summary.notes.length);
     assert.ok(summary.notes.length > 0);
 
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
     assert.strictEqual(state.sessions["session-001"].result, "written");
+    assert.strictEqual(state.sessions["session-001"].run_reason, "first_distill");
+    assert.ok(Number.isInteger(state.sessions["session-001"].candidate_count));
+    assert.strictEqual(state.summary.total_runs, 1);
+    assert.strictEqual(state.summary.written_runs, 1);
+    assert.strictEqual(state.summary.tracked_sessions, 1);
+    assert.strictEqual(state.last_run.operation, "written");
+    assert.strictEqual(state.last_run.run_reason, "first_distill");
   });
 
   it("skips duplicate distillation for unchanged session content", async () => {
@@ -81,5 +90,42 @@ describe("lingxi session distill", () => {
     assert.strictEqual(second.code, 0, second.stderr);
     const summary = JSON.parse(second.stdout);
     assert.strictEqual(summary.operation, "skipped_duplicate");
+    assert.strictEqual(summary.run_reason, "duplicate_unchanged");
+    assert.strictEqual(summary.previous_result, "written");
+
+    const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
+    assert.strictEqual(state.summary.total_runs, 2);
+    assert.strictEqual(state.summary.written_runs, 1);
+    assert.strictEqual(state.summary.skipped_duplicate_runs, 1);
+    assert.strictEqual(state.last_run.operation, "skipped_duplicate");
+    assert.strictEqual(state.last_run.run_reason, "duplicate_unchanged");
+  });
+
+  it("re-distills when the distill version changes and records the reason explicitly", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const input = {
+      session_id: "session-version-bump",
+      messages: [{ role: "user", content: "Prefer stable contracts over clever shortcuts." }]
+    };
+    const first = await runNode(scriptPath, tempDir, input);
+    assert.strictEqual(first.code, 0, first.stderr);
+
+    const stateFile = path.join(tempDir, ".lingxi", "state", "processed-sessions.json");
+    const state = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+    state.distill_version = "v0";
+    fs.writeFileSync(stateFile, JSON.stringify(state, null, 2) + "\n", "utf8");
+
+    const second = await runNode(scriptPath, tempDir, input);
+    assert.strictEqual(second.code, 0, second.stderr);
+    const summary = JSON.parse(second.stdout);
+    assert.notStrictEqual(summary.operation, "skipped_duplicate");
+    assert.strictEqual(summary.run_reason, "distill_version_changed");
+
+    const updatedState = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+    assert.strictEqual(updatedState.distill_version, "v1");
+    assert.strictEqual(updatedState.summary.total_runs, 2);
+    assert.strictEqual(updatedState.summary.reprocessed_runs, 1);
+    assert.strictEqual(updatedState.last_run.run_reason, "distill_version_changed");
   });
 });

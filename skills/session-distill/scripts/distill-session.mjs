@@ -12,6 +12,14 @@ import {
   upsertMemoryNote
 } from "../../../scripts/_lingxi-memory.mjs";
 
+function determineRunReason({ existing, fingerprint, stateDistillVersion, force }) {
+  if (!existing) return "first_distill";
+  if (force) return "forced_reprocess";
+  if (existing.content_fingerprint !== fingerprint) return "content_changed";
+  if (stateDistillVersion !== DISTILL_VERSION) return "distill_version_changed";
+  return "duplicate_unchanged";
+}
+
 function englishCandidates(text) {
   const patterns = [
     { kind: "preference", regex: /\bprefer(?:s|red)?\s+(.+?)(?:\.|$)/i, title: "Prefer" },
@@ -113,6 +121,12 @@ async function main() {
   const state = readProcessedSessionsState(projectRoot);
   const fingerprint = fingerprintMessages(messages);
   const existing = state.sessions[sessionId];
+  const runReason = determineRunReason({
+    existing,
+    fingerprint,
+    stateDistillVersion: state.distill_version,
+    force: Boolean(input.force)
+  });
 
   if (
     !input.force &&
@@ -123,10 +137,22 @@ async function main() {
     const result = {
       operation: "skipped_duplicate",
       session_id: sessionId,
+      run_reason: runReason,
       content_fingerprint: fingerprint,
       distill_version: state.distill_version,
-      notes: existing.notes || []
+      previous_result: existing.result || "",
+      candidate_count: existing.candidate_count || 0,
+      notes: existing.notes || [],
+      note_count: Array.isArray(existing.notes) ? existing.notes.length : 0
     };
+    recordProcessedSession(projectRoot, sessionId, existing, {
+      occurred_at: new Date().toISOString(),
+      operation: result.operation,
+      run_reason: result.run_reason,
+      content_fingerprint: fingerprint,
+      candidate_count: result.candidate_count,
+      note_count: result.note_count
+    });
     appendDistillJournal(projectRoot, result);
     process.stdout.write(JSON.stringify(result, null, 2) + "\n");
     return;
@@ -145,15 +171,26 @@ async function main() {
     const result = {
       operation: "skipped_no_signal",
       session_id: sessionId,
+      run_reason: runReason,
       content_fingerprint: fingerprint,
       distill_version: DISTILL_VERSION,
+      candidate_count: 0,
       notes: []
     };
     recordProcessedSession(projectRoot, sessionId, {
       content_fingerprint: fingerprint,
       distilled_at: new Date().toISOString(),
       result: "skipped_no_signal",
+      run_reason: runReason,
+      candidate_count: 0,
       notes: []
+    }, {
+      occurred_at: new Date().toISOString(),
+      operation: result.operation,
+      run_reason: result.run_reason,
+      content_fingerprint: fingerprint,
+      candidate_count: 0,
+      note_count: 0
     });
     appendDistillJournal(projectRoot, result);
     process.stdout.write(JSON.stringify(result, null, 2) + "\n");
@@ -164,21 +201,38 @@ async function main() {
     upsertMemoryNote(projectRoot, { ...candidate, source: "session-distill" }, "project")
   );
   const noteIds = noteResults.map((result) => result.note_id);
+  const createdCount = noteResults.filter((result) => result.operation === "created").length;
+  const mergedCount = noteResults.filter((result) => result.operation === "merged").length;
   const overallOperation = noteResults.every((result) => result.operation === "merged") ? "merged" : "written";
   const output = {
     operation: overallOperation,
     session_id: sessionId,
+    run_reason: runReason,
     content_fingerprint: fingerprint,
     distill_version: DISTILL_VERSION,
     candidate_count: extracted.length,
-    notes: noteIds
+    note_operations: {
+      created_count: createdCount,
+      merged_count: mergedCount
+    },
+    notes: noteIds,
+    note_count: noteIds.length
   };
 
   recordProcessedSession(projectRoot, sessionId, {
     content_fingerprint: fingerprint,
     distilled_at: new Date().toISOString(),
     result: overallOperation,
+    run_reason: runReason,
+    candidate_count: extracted.length,
     notes: noteIds
+  }, {
+    occurred_at: new Date().toISOString(),
+    operation: output.operation,
+    run_reason: output.run_reason,
+    content_fingerprint: fingerprint,
+    candidate_count: output.candidate_count,
+    note_count: output.note_count
   });
   appendDistillJournal(projectRoot, output);
   process.stdout.write(JSON.stringify(output, null, 2) + "\n");

@@ -50,9 +50,20 @@ Return JSON with:
 
 - `operation`
 - `session_id`
+- `run_reason`
 - `content_fingerprint`
 - `distill_version`
+- `candidate_count`
+- `note_count`
 - `notes`
+
+`run_reason` should explain whether the run is:
+
+- `first_distill`
+- `content_changed`
+- `distill_version_changed`
+- `forced_reprocess`
+- `duplicate_unchanged`
 
 ## Implementation
 

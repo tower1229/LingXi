@@ -360,7 +360,7 @@ AGENTS.md
 ### Notes
 
 - `.lingxi/state/processed-sessions.json` tracks what has already been distilled.
-- `.lingxi/setup/automation.session-distill.toml` preserves generated automation config.
+- `.lingxi/setup/automation.session-distill.toml` preserves generated automation config, including the default `FREQ=HOURLY;INTERVAL=6` cadence and linked state/journal files.
 - `.codex/agents/lingxi-session-distill.toml` is the project-local background agent definition.
 
 ### Session Distillation State
@@ -373,6 +373,7 @@ It exists to:
 - allow re-distillation after content changes
 - allow re-distillation after distill rule upgrades
 - record the previous result of each processed session
+- record the latest run reason and summary counters so background behavior is inspectable without reading source code
 
 ---
 

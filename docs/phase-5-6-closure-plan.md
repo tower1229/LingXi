@@ -141,11 +141,15 @@ Work packages:
 - align generated automation artifacts with current docs and templates
 - make cadence/state behavior legible
 - confirm what is generated locally vs what is only documented
+Current progress:
+- generated automation artifacts now carry explicit `FREQ=HOURLY;INTERVAL=6` cadence and link the state/journal files they operate on
 
 2. Make distillation state more explainable
 - processed-session behavior should be easy to inspect and reason about
 - rerun / reprocess behavior should be intentional, not incidental
 - versioned reprocessing rules should be documented and tested where needed
+Current progress:
+- `processed-sessions.json` now records state schema version, summary counters, last run metadata, and explicit run reasons such as `first_distill`, `content_changed`, and `distill_version_changed`
 
 3. Verify end-user memory loop quality
 - `task` should retrieve useful memory before drafting
