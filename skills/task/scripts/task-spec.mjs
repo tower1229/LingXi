@@ -117,6 +117,17 @@ export function validateTaskSpecShape(spec) {
   return issues;
 }
 
+export function buildTaskSpecValidationReport(spec) {
+  const issues = validateTaskSpecShape(spec);
+  return {
+    ok: issues.length === 0,
+    validator: "task_spec",
+    schema_version: TASK_SPEC_SCHEMA_VERSION,
+    issue_count: issues.length,
+    issues
+  };
+}
+
 export class TaskSpecValidationError extends Error {
   constructor(issues, summary = "TaskSpec validation failed.") {
     super(summary);

@@ -9,6 +9,22 @@ import {
   tasksDir
 } from "../../../scripts/_lingxi-memory.mjs";
 
+function normalizedUnique(items) {
+  return [...new Set((items || []).map((item) => String(item || "").trim()).filter(Boolean))];
+}
+
+function compiledAcceptanceCriteria(taskSpec) {
+  if (Array.isArray(taskSpec.acceptance_criteria) && taskSpec.acceptance_criteria.length > 0) {
+    return normalizedUnique(taskSpec.acceptance_criteria);
+  }
+  if (Array.isArray(taskSpec.success_criteria) && taskSpec.success_criteria.length > 0) {
+    return normalizedUnique(taskSpec.success_criteria);
+  }
+  return normalizedUnique(
+    (taskSpec.functional_requirements || []).flatMap((req) => req.acceptance_criteria || [])
+  );
+}
+
 export function compileTaskDocument(projectRoot, taskSpec) {
   const taskId = taskSpec.task_id || taskSpec.id;
   let file = findTaskFile(projectRoot, taskId);
@@ -42,6 +58,7 @@ export function compileTaskDocument(projectRoot, taskSpec) {
 
   const document = renderTaskDocument({
     ...taskSpec,
+    acceptance_criteria: compiledAcceptanceCriteria(taskSpec),
     id: taskId,
     version: shouldAppendChangeLog ? incrementVersion(existing?.version || "1.0") : existing?.version || "1.0",
     status: existing?.status || "草稿",

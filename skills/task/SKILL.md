@@ -87,6 +87,7 @@ For non-trivial tasks, also reject or ask for completion when these are weak:
 5. Allocate a new task id unless `task_id` is explicitly provided.
 6. Render a deterministic task document.
 7. Write or update the task file under `.lingxi/tasks/`.
+8. When validation fails in a schema-first flow, use the repair loop boundary: validate, repair the `TaskSpec`, re-validate, then compile.
 
 ## Output
 
@@ -106,7 +107,10 @@ When validation fails, return a structured validator payload instead of only a r
 Use:
 
 - `scripts/task-spec.mjs`
+- `scripts/validate-task-spec.mjs`
 - `scripts/task-compiler.mjs`
+- `scripts/compile-task-spec.mjs`
+- `scripts/task-repair-loop.mjs`
 - `scripts/write-task.mjs`
 - `scripts/next-task-id.mjs`
 - `references/task-spec.schema.json`

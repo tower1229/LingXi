@@ -16,6 +16,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 const setupPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
 const taskPath = path.join(repoRoot, "skills", "task", "scripts", "write-task.mjs");
 const vetPath = path.join(repoRoot, "skills", "vet", "scripts", "vet-task.mjs");
+const validateVetReportPath = path.join(repoRoot, "skills", "vet", "scripts", "validate-vet-report.mjs");
 const schemaPath = path.join(repoRoot, "skills", "vet", "references", "vet-report.schema.json");
 
 function createTempDir() {
@@ -97,5 +98,27 @@ describe("vet report contract", () => {
     assert.strictEqual(report.report_version, VET_REPORT_SCHEMA_VERSION);
     assert.deepStrictEqual(validateVetReportShape(report), []);
     assert.ok(Array.isArray(report.revision_targets));
+  });
+
+  it("validate-vet-report CLI validates a stable VetReport payload", async () => {
+    tempDir = createTempDir();
+    const result = await runNode(validateVetReportPath, tempDir, [], {
+      task_id: "001",
+      file: "/tmp/example.md",
+      review_scope: { type: "后端", complexity: "中等", tags: [], dimensions: ["D1", "D2"] },
+      project_context_summary: "",
+      summary: { blocking_count: 0, high_count: 0, warning_count: 0, readiness: "ready" },
+      findings: [],
+      findings_by_dimension: { D1: [], D2: [] },
+      dimension_summaries: [],
+      improvement_priority: { blockers: [], high: [], warning: [] },
+      recommended_next_action: "Task framing is solid and can proceed.",
+      implementation_readiness: "Task can proceed."
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const payload = JSON.parse(result.stdout);
+    assert.strictEqual(payload.validator, "vet_report");
+    assert.strictEqual(payload.schema_version, VET_REPORT_SCHEMA_VERSION);
+    assert.strictEqual(payload.issue_count, 0);
   });
 });
