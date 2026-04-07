@@ -183,13 +183,13 @@ async function main() {
     return;
   }
 
-  const userTexts = messages
-    .filter((message) => message.role === "user")
+  const candidateTexts = messages
+    .filter((message) => message.role === "user" || message.role === "assistant")
     .map((message) => normalizeText(message.content))
     .filter(Boolean);
 
   const extracted = dedupeCandidates(
-    userTexts.flatMap((text) => [...englishCandidates(text), ...chineseCandidates(text)])
+    candidateTexts.flatMap((text) => [...englishCandidates(text), ...chineseCandidates(text)])
   );
 
   if (extracted.length === 0) {

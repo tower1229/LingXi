@@ -5,8 +5,10 @@ import process from "node:process";
 import {
   detectProjectContext,
   ensureLingxiLayout,
+  findTaskFile,
   formatMemoryRef,
   normalizeText,
+  parseTaskDocument,
   retrieveRelevantMemoryHits,
   resolveProjectRoot,
   nextTaskId
@@ -268,6 +270,14 @@ function buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tag
     .map((item) => normalizeText(item))
     .filter(Boolean)
     .join(" ");
+}
+
+function resolveExistingTask(projectRoot, taskId) {
+  const normalizedTaskId = normalizeText(taskId);
+  if (!normalizedTaskId) return null;
+  const file = findTaskFile(projectRoot, normalizedTaskId);
+  if (!file || !fs.existsSync(file)) return null;
+  return parseTaskDocument(fs.readFileSync(file, "utf8"), file);
 }
 
 function guidanceBlock(kind, bullets) {
@@ -860,6 +870,7 @@ function validateTaskReadiness({
 
 function validateInput(input, projectRoot) {
   const projectContext = detectProjectContext(projectRoot);
+  const existingTask = resolveExistingTask(projectRoot, input.task_id);
   if (!normalizeText(input.title)) throw new Error("Missing required field: title");
   assertTitleQuality(input.title);
   if (!normalizeText(input.goal)) throw new Error("Missing required field: goal");
@@ -962,6 +973,8 @@ function validateInput(input, projectRoot) {
     acceptance_criteria: acceptanceCriteria,
     memory_refs: Array.isArray(input.memory_refs)
       ? input.memory_refs.map((item) => normalizeText(item)).filter(Boolean)
+      : existingTask
+        ? (existingTask.memory_refs || []).map((item) => normalizeText(item)).filter(Boolean)
       : retrieveRelevantMemoryHits(
           projectRoot,
           buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),

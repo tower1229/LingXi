@@ -146,4 +146,21 @@ describe("lingxi session distill", () => {
     const files = fs.existsSync(projectMemoryDir) ? fs.readdirSync(projectMemoryDir).filter((item) => item.endsWith(".md")) : [];
     assert.strictEqual(files.length, 0);
   });
+
+  it("captures assistant-summarized engineering preferences when they contain durable signals", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const input = {
+      session_id: "session-assistant-signal",
+      messages: [
+        { role: "user", content: "Can you summarize what we should carry forward?" },
+        { role: "assistant", content: "Prefer explicit rollback notes and smaller reviewable patches for backend integration changes." }
+      ]
+    };
+    const result = await runNode(scriptPath, tempDir, input);
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.operation, "written");
+    assert.ok(summary.note_count > 0, result.stdout);
+  });
 });
