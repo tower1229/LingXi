@@ -60,9 +60,6 @@ They are temporary and should either be:
 - `.cursor/skills/vet/`
 - `.cursor/skills/memory-retrieve/`
 - `.cursor/skills/memory-write/`
-- `.cursor/skills/about-lingxi/`
-- `.cursor/skills/taste-recognition/`
-- `.cursor/agents/lingxi-session-distill.md`
 
 Reason:
 
@@ -123,6 +120,9 @@ Completed removals:
 - `.cursor/agents/lingxi-memory-write.md`
 - `.cursor/agents/lingxi-self-iterate.md`
 - `.cursor/agents/lingxi-self-iterate/`
+- `.cursor/skills/about-lingxi/`
+- `.cursor/skills/taste-recognition/`
+- `.cursor/agents/lingxi-session-distill.md`
 
 ## Test Ownership
 
@@ -156,7 +156,6 @@ These still provide value, but they protect `.cursor/` behavior rather than the 
 - `test/legacy/skills/memory-governance-decision.test.mjs`
 - `test/legacy/skills/memory-index-sync.test.mjs`
 - `test/legacy/skills/governance-context-validator.test.mjs`
-- `test/legacy/skills/memory-fusion-strength-contract.test.mjs`
 
 Recommended direction:
 
@@ -192,6 +191,7 @@ Most recent completed removal slice:
 - third-wave command/agent-doc removals (`commands`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`)
 - fifth-wave self-iterate runtime removal (`.cursor/agents/lingxi-self-iterate/` and related legacy tests)
 - fourth-wave toolchain removal (`skill-creator`)
+- sixth-wave reference-doc removal (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, `memory-fusion-strength-contract.test.mjs`)
 
 ## Removal End State
 

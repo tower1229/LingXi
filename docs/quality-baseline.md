@@ -65,7 +65,6 @@ Legacy quality reference:
 - `.cursor/skills/vet/SKILL.md`
 - `.cursor/skills/memory-retrieve/SKILL.md`
 - `.cursor/skills/memory-write/SKILL.md`
-- `.cursor/agents/lingxi-session-distill.md`
 
 Current 2.0 implementation surface:
 

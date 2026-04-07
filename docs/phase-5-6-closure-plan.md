@@ -104,6 +104,7 @@ Current progress:
 - the third command/agent-doc removal slice (`.cursor/commands/*`, `lingxi-memory-write.md`, `lingxi-self-iterate.md`) has been deleted from `.cursor/`
 - the fourth toolchain removal slice (`.cursor/skills/skill-creator/`) has been deleted from `.cursor/`
 - the fifth self-iterate runtime slice (`.cursor/agents/lingxi-self-iterate/` plus related legacy tests and hook triggers) has been deleted from `.cursor/`
+- the sixth reference-doc slice (`about-lingxi`, `taste-recognition`, `lingxi-session-distill.md`, and their legacy doc contract test) has been deleted from `.cursor/`
 
 5. Final coherence pass for docs
 - README
