@@ -73,6 +73,7 @@ node scripts/lx-bootstrap.mjs
 ```bash
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
+node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
 
 或者：

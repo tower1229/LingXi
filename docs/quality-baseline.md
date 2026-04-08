@@ -206,7 +206,7 @@ Highest current LingXi 2.0 quality bar:
 
 - Must return a small set of relevant hits rather than dumping memory.
 - Must preserve project-memory preference when relevance is similar.
-- Must be useful before `task` and `vet`, not merely technically correct.
+- Must be useful for meaningful repository-scoped work, not merely technically correct.
 - Must remain deterministic enough for tests and downstream use.
 - Semantic relevance judgment should come from the LLM path, not keyword scoring as the main decision engine.
 

@@ -59,6 +59,12 @@ Global memory rule:
 
 - Persist only durable, reusable engineering taste.
 - Do not store one-off implementation details as memory.
+
+Memory consumption rule:
+
+- Before meaningful repository work, load LingXi memory with \`node scripts/lx-memory-brief.mjs --prompt "<current request>"\`.
+- Apply only the smallest relevant memory set.
+- Skip trivial or non-repository conversation turns.
 `;
 }
 

@@ -15,6 +15,8 @@ Core engine:
 - distill durable preferences from historical sessions in the background
 - write those preferences into a reusable project memory store
 
+Visible workflows stay narrow, but memory should act as a global context layer for meaningful repository work rather than a feature used only by explicit workflows.
+
 LingXi 2.0 should feel small at the surface and strong underneath.
 
 ---
@@ -48,7 +50,7 @@ Setup should:
 - initialize `.lingxi/`
 - generate project-local subagent config
 - generate automation config
-- leave Codex automation registration as an explicit follow-up step
+- register the generated automation as part of bootstrap
 - add a minimal `AGENTS.md` only when missing
 
 ### Runtime
@@ -134,7 +136,7 @@ AGENTS.md
 `setup/automation.session-distill.toml`
 
 - stores the generated automation configuration artifact for auditability
-- acts as the source artifact for explicit Codex automation registration
+- acts as the source artifact consumed by bootstrap when registering Codex automation
 
 ---
 
@@ -153,6 +155,17 @@ This now applies to `memory` as well:
 
 - LLM judgment for semantic extraction, governance, and retrieval ranking
 - deterministic scripts for schema validation, state safety, persistence, and index rebuilds
+
+Memory consumption should follow a different rule from memory writing:
+
+- memory writing stays conservative and background-oriented
+- memory retrieval should be foreground and default for meaningful repository-scoped work
+- explicit workflows such as `task` and `vet` may use richer workflow-specific retrieval context, but they should not be the only consumers of LingXi memory
+
+This also means the memory-consumption path should stay host-agnostic:
+
+- LingXi core should expose reusable retrieval/briefing primitives
+- Codex and future Claude Code integration should be treated as adapter layers over the same memory core
 
 ### `task`
 
@@ -709,7 +722,7 @@ This keeps retrieval cheap and notes readable.
 3. initialize `memory/INDEX.md`
 4. generate `.codex/agents/lingxi-session-distill.toml`
 5. generate `.lingxi/setup/automation.session-distill.toml`
-6. leave Codex automation registration to `lx-create-automation`
+6. register Codex automation through bootstrap
 7. generate `AGENTS.md` only when missing
 
 ### Setup Safety Rules

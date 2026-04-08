@@ -27,7 +27,7 @@ Its core value remains unchanged:
 
 - continuously distill a developer's durable engineering preferences, judgment patterns, and review tendencies
 - store those memories in a reusable project memory system
-- apply those memories to future tasks with minimal friction
+- apply those memories to future repository work with minimal friction
 
 This means LingXi 2.0 is **not** a full workflow suite anymore. It is a focused system for:
 
@@ -316,11 +316,12 @@ Suggested fields:
 Retrieval should be:
 
 - minimal
-- explicit
-- task-relevant
+- default for meaningful repository work
+- context-relevant
 
 Primary retrieval moments in V1:
 
+- before meaningful repository-scoped conversation work
 - before `task`
 - before `vet`
 
@@ -361,7 +362,7 @@ AGENTS.md
 
 - `.lingxi/state/processed-sessions.json` tracks what has already been distilled.
 - `.lingxi/setup/automation.session-distill.toml` preserves generated automation config, including the default `FREQ=HOURLY;INTERVAL=6` cadence and linked state/journal files.
-- `node scripts/lx-create-automation.mjs` is the explicit step that turns the generated automation artifact into a real Codex automation entry.
+- `node scripts/lx-bootstrap.mjs` is the default bootstrap step that both generates the automation artifact and registers the real Codex automation entry.
 - `.codex/agents/lingxi-session-distill.toml` is the project-local background agent definition.
 
 ### Session Distillation State

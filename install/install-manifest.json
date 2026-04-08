@@ -34,6 +34,7 @@
         "scripts/_lingxi-memory-semantic.mjs",
         "scripts/lx-bootstrap.mjs",
         "scripts/lx-create-automation.mjs",
+        "scripts/lx-memory-brief.mjs",
         "scripts/lingxi-memory-index.mjs",
         "scripts/lingxi-setup.mjs",
         "scripts/lx-uninstall.mjs",
@@ -47,6 +48,7 @@
     "packageScripts": {
         "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
         "lx:create-automation": "node scripts/lx-create-automation.mjs",
+        "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
         "lx:setup": "node scripts/lingxi-setup.mjs",
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
     },
