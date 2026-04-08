@@ -14,6 +14,7 @@ Use this skill before `task` or `vet` work.
 ## Responsibilities
 
 - use LLM semantic judgment to rank project memory
+- evaluate the query together with the current caller context
 - return only the most relevant notes
 - keep retrieval minimal and practical
 

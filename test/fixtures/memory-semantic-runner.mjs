@@ -26,6 +26,16 @@ function sentenceChunks(text) {
     .filter(Boolean);
 }
 
+function flattenContextText(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => flattenContextText(item)).filter(Boolean).join(" ");
+  }
+  if (value && typeof value === "object") {
+    return Object.values(value).map((item) => flattenContextText(item)).filter(Boolean).join(" ");
+  }
+  return normalizeText(value);
+}
+
 const CONCEPTS = [
   {
     id: "explicit_interfaces",
@@ -285,10 +295,44 @@ function govern(payload) {
   };
 }
 
+function governBatch(payload) {
+  const existingNotes = (payload.existing_notes || []).map((note) => ({ ...note }));
+  const syntheticTargets = [];
+  const decisions = (payload.candidates || []).map((candidate, index) => {
+    const targetableNotes = existingNotes.concat(syntheticTargets);
+    const decision = govern({
+      candidate,
+      existing_notes: targetableNotes
+    });
+    const normalizedDecision = { ...decision };
+    if (decision.action === "merge_into_existing" && typeof decision.target_note_id === "string") {
+      const syntheticMatch = /^candidate:(\d+)$/.exec(decision.target_note_id);
+      if (syntheticMatch) {
+        delete normalizedDecision.target_note_id;
+        normalizedDecision.target_candidate_index = Number(syntheticMatch[1]);
+      }
+    }
+    if (decision.action === "create" || decision.action === "merge_into_existing") {
+      syntheticTargets.push({
+        id: `candidate:${index}`,
+        scope: payload.scope || "project",
+        ...decision.note
+      });
+    }
+    return normalizedDecision;
+  });
+  return {
+    schema_version: "draft-2026-04-08",
+    decisions
+  };
+}
+
 function retrieve(payload) {
   const query = normalizeText(payload.query);
   const limit = Number.isFinite(payload.limit) && payload.limit > 0 ? payload.limit : 3;
-  const queryConcepts = detectConceptIds(query);
+  const contextText = flattenContextText(payload.context || {});
+  const semanticQuery = [query, contextText].filter(Boolean).join(" ");
+  const queryConcepts = detectConceptIds(semanticQuery);
   const hits = (payload.notes || [])
     .map((note) => {
       const noteConcepts = candidateConcepts(note);
@@ -296,7 +340,7 @@ function retrieve(payload) {
       if (queryConcepts.length > 0) {
         score += noteConcepts.filter((concept) => queryConcepts.includes(concept)).length * 40;
       }
-      score += lexicalOverlapScore(query, note);
+      score += lexicalOverlapScore(semanticQuery, note);
       if (score > 0 && note.scope === "project") {
         score += 5;
       }
@@ -341,6 +385,8 @@ export async function runMemorySemanticTask(request) {
       return distill(request.payload || {});
     case "govern":
       return govern(request.payload || {});
+    case "govern_batch":
+      return governBatch(request.payload || {});
     case "retrieve":
       return retrieve(request.payload || {});
     default:

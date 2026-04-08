@@ -283,6 +283,36 @@ function buildVetMemoryQuery(task) {
     .join(" ");
 }
 
+function buildVetMemoryContext(task, projectContext, signals) {
+  return {
+    caller: "vet",
+    task_id: normalizeText(task.id),
+    title: normalizeText(task.title),
+    type: normalizeText(task.type),
+    complexity: normalizeText(task.complexity),
+    background: normalizeText(task.background),
+    problem: normalizeText(task.problem),
+    solution_overview: normalizeText(task.solution_overview),
+    goals: normalizedUnique(task.goals || []),
+    constraints: normalizedUnique(task.constraints || []),
+    acceptance_criteria: normalizedUnique(task.acceptance_criteria || []),
+    memory_refs: normalizedUnique(task.memory_refs || []),
+    tags: normalizedUnique(task.tags || []),
+    project_context: {
+      kind: normalizeText(projectContext?.kind),
+      stack: normalizeText(projectContext?.summary),
+      cues: normalizedUnique(projectContext?.cues || [])
+    },
+    semantic_focus: {
+      docs: Boolean(signals?.docs),
+      sdk: Boolean(signals?.sdk),
+      integration: Boolean(signals?.integration),
+      contract_surface: Boolean(signals?.contract_surface),
+      frontend_surface: Boolean(signals?.frontend_surface)
+    }
+  };
+}
+
 function taskAppliesMemory(task, note) {
   const refs = (task.memory_refs || []).map((item) => normalizeText(item).toLowerCase());
   if (refs.length === 0) return false;
@@ -920,11 +950,13 @@ async function main() {
   }
 
   const task = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
+  const projectContext = detectProjectContext(projectRoot);
+  const signals = taskReviewSignals(task);
   const result = vetTask(
     task,
-    detectProjectContext(projectRoot),
+    projectContext,
     await retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3, {
-      caller: "vet"
+      ...buildVetMemoryContext(task, projectContext, signals)
     })
   );
   const report = {

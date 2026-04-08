@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  governMemoryCandidate,
+  governMemoryCandidates,
   rankRelevantMemories
 } from "./_lingxi-memory-semantic.mjs";
 
@@ -600,18 +600,21 @@ export function mergeStringArrays(...lists) {
   return merged;
 }
 
-export async function upsertMemoryNote(projectRoot, input, scope = "project") {
-  ensureRuntimeState(projectRoot);
-  const notes = loadMemoryNotes(projectRoot);
+function resolveMemoryScope(value, fallback = "project") {
+  const normalized = normalizeText(value || fallback);
+  return normalized === "share" ? "share" : "project";
+}
+
+function normalizeMemoryCandidateInput(input, scope = "project") {
   const updatedAt = new Date().toISOString();
   const kind = normalizeText(input.kind);
   if (!MEMORY_KIND_VALUES.has(kind)) {
     throw new Error(`Unsupported memory kind: ${kind}`);
   }
-  const candidate = {
+  return {
     title: normalizeText(input.title),
     kind,
-    scope,
+    scope: resolveMemoryScope(input.scope || input.reusability_scope || scope, scope),
     source: normalizeText(input.source),
     updated_at: updatedAt,
     when_to_load: mergeStringArrays(input.when_to_load || []),
@@ -620,76 +623,138 @@ export async function upsertMemoryNote(projectRoot, input, scope = "project") {
     evidence: mergeStringArrays(input.evidence || []),
     confidence: typeof input.confidence === "number" ? input.confidence : undefined,
     durability_reason: normalizeText(input.durability_reason),
-    reusability_scope: normalizeText(input.reusability_scope || scope || "project")
+    reusability_scope: resolveMemoryScope(input.reusability_scope || input.scope || scope, scope)
   };
-  const governance = await governMemoryCandidate(projectRoot, candidate, notes, scope);
+}
 
-  if (governance.action === "skip_as_not_durable") {
-    return {
-      operation: "skipped",
-      note_id: "",
-      file: "",
-      scope,
-      updated_at: "",
-      reason: governance.reason
-    };
+function writeMemoryNoteFile(projectRoot, note) {
+  const filename = `${note.id}.${slugify(note.title)}.md`;
+  const file = note.file || path.join(memoryDir(projectRoot, note.scope), filename);
+  const noteWithFile = { ...note, file };
+  fs.writeFileSync(file, renderMemoryNote(noteWithFile), "utf8");
+  return noteWithFile;
+}
+
+function replaceWorkingNote(notes, updatedNote) {
+  const index = notes.findIndex((note) => note.id === updatedNote.id);
+  if (index === -1) {
+    notes.push(updatedNote);
+    return;
+  }
+  notes[index] = updatedNote;
+}
+
+export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "project") {
+  ensureRuntimeState(projectRoot);
+  const normalizedInputs = (inputs || []).map((input) => normalizeMemoryCandidateInput(input, defaultScope));
+  if (normalizedInputs.length === 0) return [];
+  const workingNotes = loadMemoryNotes(projectRoot);
+  const results = new Array(normalizedInputs.length);
+  let mutated = false;
+
+  for (const scope of ["project", "share"]) {
+    const entries = normalizedInputs
+      .map((candidate, index) => ({ candidate, index }))
+      .filter((entry) => entry.candidate.scope === scope);
+    if (entries.length === 0) continue;
+
+    const governance = await governMemoryCandidates(
+      projectRoot,
+      entries.map((entry) => entry.candidate),
+      workingNotes,
+      scope
+    );
+    const resolvedBatchTargets = new Map();
+
+    governance.decisions.forEach((decision, localIndex) => {
+      const { candidate, index } = entries[localIndex];
+      const updatedAt = candidate.updated_at;
+
+      if (decision.action === "skip_as_not_durable") {
+        results[index] = {
+          operation: "skipped",
+          note_id: "",
+          file: "",
+          scope,
+          updated_at: "",
+          reason: decision.reason
+        };
+        return;
+      }
+
+      if (decision.action === "merge_into_existing") {
+        const targetNote = decision.target_note_id
+          ? workingNotes.find((note) => note.id === decision.target_note_id)
+          : resolvedBatchTargets.get(decision.target_candidate_index);
+        if (!targetNote) {
+          throw new Error(
+            decision.target_note_id
+              ? `Memory governance merge target not found: ${decision.target_note_id}`
+              : `Memory governance batch target not found: ${decision.target_candidate_index}`
+          );
+        }
+        const mergedNote = writeMemoryNoteFile(projectRoot, {
+          ...targetNote,
+          title: normalizeText(decision.note.title),
+          kind: normalizeText(decision.note.kind),
+          scope,
+          source: mergeStringArrays(
+            String(targetNote.source || "").split(","),
+            String(candidate.source || "").split(",")
+          ).join(", "),
+          updated_at: updatedAt,
+          when_to_load: mergeStringArrays(decision.note.when_to_load || []),
+          one_liner: normalizeText(decision.note.one_liner),
+          decision: normalizeText(decision.note.decision),
+          evidence: mergeStringArrays(decision.note.evidence || [])
+        });
+        replaceWorkingNote(workingNotes, mergedNote);
+        resolvedBatchTargets.set(localIndex, mergedNote);
+        mutated = true;
+        results[index] = {
+          operation: "merged",
+          note_id: mergedNote.id,
+          file: mergedNote.file,
+          scope,
+          updated_at: updatedAt
+        };
+        return;
+      }
+
+      const note = writeMemoryNoteFile(projectRoot, {
+        id: nextMemoryId(workingNotes.map((item) => item.id)),
+        title: normalizeText(decision.note.title),
+        kind: normalizeText(decision.note.kind),
+        scope,
+        source: candidate.source,
+        updated_at: updatedAt,
+        when_to_load: mergeStringArrays(decision.note.when_to_load || []),
+        one_liner: normalizeText(decision.note.one_liner),
+        decision: normalizeText(decision.note.decision),
+        evidence: mergeStringArrays(decision.note.evidence || [])
+      });
+      workingNotes.push(note);
+      resolvedBatchTargets.set(localIndex, note);
+      mutated = true;
+      results[index] = {
+        operation: "created",
+        note_id: note.id,
+        file: note.file,
+        scope,
+        updated_at: updatedAt
+      };
+    });
   }
 
-  if (governance.action === "merge_into_existing") {
-    const existing = notes.find((note) => note.id === governance.target_note_id);
-    if (!existing) {
-      throw new Error(`Memory governance merge target not found: ${governance.target_note_id}`);
-    }
-    const mergedNote = {
-      ...existing,
-      title: normalizeText(governance.note.title),
-      kind: normalizeText(governance.note.kind),
-      scope,
-      source: mergeStringArrays(
-        String(existing.source || "").split(","),
-        String(candidate.source || "").split(",")
-      ).join(", "),
-      updated_at: updatedAt,
-      when_to_load: mergeStringArrays(governance.note.when_to_load || []),
-      one_liner: normalizeText(governance.note.one_liner),
-      decision: normalizeText(governance.note.decision),
-      evidence: mergeStringArrays(governance.note.evidence || [])
-    };
-    fs.writeFileSync(existing.file, renderMemoryNote(mergedNote), "utf8");
+  if (mutated) {
     rebuildMemoryIndex(projectRoot);
-    return {
-      operation: "merged",
-      note_id: existing.id,
-      file: existing.file,
-      scope,
-      updated_at: updatedAt
-    };
   }
+  return results;
+}
 
-  const noteId = nextMemoryId(notes.map((note) => note.id));
-  const note = {
-    id: noteId,
-    title: normalizeText(governance.note.title),
-    kind: normalizeText(governance.note.kind),
-    scope,
-    source: candidate.source,
-    updated_at: updatedAt,
-    when_to_load: mergeStringArrays(governance.note.when_to_load || []),
-    one_liner: normalizeText(governance.note.one_liner),
-    decision: normalizeText(governance.note.decision),
-    evidence: mergeStringArrays(governance.note.evidence || [])
-  };
-  const filename = `${noteId}.${slugify(note.title)}.md`;
-  const file = path.join(memoryDir(projectRoot, scope), filename);
-  fs.writeFileSync(file, renderMemoryNote({ ...note, file }), "utf8");
-  rebuildMemoryIndex(projectRoot);
-  return {
-    operation: "created",
-    note_id: noteId,
-    file,
-    scope,
-    updated_at: updatedAt
-  };
+export async function upsertMemoryNote(projectRoot, input, scope = "project") {
+  const [result] = await upsertMemoryNotes(projectRoot, [input], scope);
+  return result;
 }
 
 export function fingerprintMessages(messages) {

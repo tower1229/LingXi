@@ -19,8 +19,8 @@ const MEMORY_KIND_VALUES = new Set([
   "heuristic"
 ]);
 const MEMORY_SCOPE_VALUES = new Set(["project", "share"]);
-
 let cachedRunnerPromise = null;
+let cachedRunnerKey = "";
 
 function normalizeText(value) {
   return String(value || "")
@@ -120,6 +120,53 @@ function buildRankingSchema() {
   };
 }
 
+function buildGovernanceBatchSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["schema_version", "decisions"],
+    properties: {
+      schema_version: { const: MEMORY_SEMANTIC_RESPONSE_VERSION },
+      decisions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["action", "reason", "confidence"],
+          properties: {
+            action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
+            reason: { type: "string", minLength: 1 },
+            confidence: { type: "number", minimum: 0, maximum: 1 },
+            target_note_id: { type: "string", minLength: 1 },
+            target_candidate_index: { type: "integer", minimum: 0 },
+            note: {
+              type: "object",
+              additionalProperties: false,
+              required: ["title", "kind", "one_liner", "decision", "when_to_load", "evidence"],
+              properties: {
+                title: { type: "string", minLength: 1 },
+                kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
+                one_liner: { type: "string", minLength: 1 },
+                decision: { type: "string", minLength: 1 },
+                when_to_load: {
+                  type: "array",
+                  minItems: 1,
+                  items: { type: "string", minLength: 1 }
+                },
+                evidence: {
+                  type: "array",
+                  minItems: 1,
+                  items: { type: "string", minLength: 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
 function stripFileFields(notes) {
   return (notes || []).map((note) => ({
     id: normalizeText(note.id),
@@ -159,7 +206,7 @@ function validateSemanticNote(note, pathLabel = "note") {
   }
 }
 
-function assertValidGovernanceDecision(value, existingNotes) {
+function assertValidGovernanceDecision(value, existingNotes, options = {}) {
   if (!isPlainObject(value)) {
     throw new Error("Memory governance result must be an object.");
   }
@@ -180,10 +227,15 @@ function assertValidGovernanceDecision(value, existingNotes) {
   }
   if (value.action === "merge_into_existing") {
     const targetNoteId = normalizeText(value.target_note_id);
-    if (!targetNoteId) {
+    const allowCandidateTarget = Boolean(options.allowCandidateTarget);
+    const hasTargetCandidateIndex = Number.isInteger(value.target_candidate_index);
+    if (!targetNoteId && !allowCandidateTarget) {
       throw new Error("Memory governance merge result must include target_note_id.");
     }
-    if (!(existingNotes || []).some((note) => normalizeText(note.id) === targetNoteId)) {
+    if (!targetNoteId && allowCandidateTarget && !hasTargetCandidateIndex) {
+      throw new Error("Memory governance merge result must include target_note_id or target_candidate_index.");
+    }
+    if (targetNoteId && !(existingNotes || []).some((note) => normalizeText(note.id) === targetNoteId)) {
       throw new Error(`Memory governance merge target does not exist: ${targetNoteId}.`);
     }
   }
@@ -228,6 +280,63 @@ function assertValidRankingResult(value, notes, limit) {
   });
 }
 
+function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
+  if (!isPlainObject(value)) {
+    throw new Error("Memory batch governance result must be an object.");
+  }
+  if (value.schema_version !== MEMORY_SEMANTIC_RESPONSE_VERSION) {
+    throw new Error(`Memory batch governance result schema_version must equal ${MEMORY_SEMANTIC_RESPONSE_VERSION}.`);
+  }
+  if (!Array.isArray(value.decisions)) {
+    throw new Error("Memory batch governance result decisions must be an array.");
+  }
+  if (value.decisions.length !== (candidates || []).length) {
+    throw new Error(
+      `Memory batch governance result returned ${value.decisions.length} decisions for ${(candidates || []).length} candidates.`
+    );
+  }
+  const existingIds = new Set((existingNotes || []).map((note) => normalizeText(note.id)));
+  value.decisions.forEach((decision, index) => {
+    if (!isPlainObject(decision)) {
+      throw new Error(`Memory batch governance decision[${index}] must be an object.`);
+    }
+    if (!GOVERNANCE_ACTION_VALUES.has(decision.action)) {
+      throw new Error(`Memory batch governance decision[${index}] action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}.`);
+    }
+    if (!isNonEmptyString(decision.reason)) {
+      throw new Error(`Memory batch governance decision[${index}] reason must be a non-empty string.`);
+    }
+    if (!isConfidence(decision.confidence)) {
+      throw new Error(`Memory batch governance decision[${index}] confidence must be a number between 0 and 1.`);
+    }
+    if (decision.action === "create" || decision.action === "merge_into_existing") {
+      validateSemanticNote(decision.note, `Memory batch governance decision[${index}].note`);
+    }
+    if (decision.action !== "merge_into_existing") {
+      if (decision.target_candidate_index != null) {
+        throw new Error(`Memory batch governance decision[${index}] cannot set target_candidate_index unless action is merge_into_existing.`);
+      }
+      return;
+    }
+    const hasTargetNoteId = isNonEmptyString(decision.target_note_id);
+    const hasTargetCandidateIndex = Number.isInteger(decision.target_candidate_index);
+    if (hasTargetNoteId && hasTargetCandidateIndex) {
+      throw new Error(`Memory batch governance decision[${index}] must target either target_note_id or target_candidate_index, not both.`);
+    }
+    if (!hasTargetNoteId && !hasTargetCandidateIndex) {
+      throw new Error(`Memory batch governance decision[${index}] must include target_note_id or target_candidate_index.`);
+    }
+    if (hasTargetNoteId && !existingIds.has(normalizeText(decision.target_note_id))) {
+      throw new Error(`Memory batch governance decision[${index}] target_note_id must reference an existing note.`);
+    }
+    if (hasTargetCandidateIndex) {
+      if (decision.target_candidate_index >= index) {
+        throw new Error(`Memory batch governance decision[${index}] target_candidate_index must reference an earlier candidate.`);
+      }
+    }
+  });
+}
+
 function distillPrompt(payload) {
   return [
     "You are LingXi's memory semantic engine for session distillation.",
@@ -260,6 +369,28 @@ function governancePrompt(payload) {
     `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
     `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
     `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+    "",
+    "Input JSON:",
+    JSON.stringify(payload, null, 2)
+  ].join("\n");
+}
+
+function governanceBatchPrompt(payload) {
+  return [
+    "You are LingXi's memory governance engine.",
+    "Process the candidate list sequentially and return one governance decision per candidate in the same order as input.",
+    "Decide whether each candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
+    "Base the decision on semantic meaning, not wording overlap.",
+    "Merge materially identical or stronger rephrasings into the same note.",
+    "If a later candidate should merge into a note created earlier in this same batch, set target_candidate_index to that earlier candidate index and omit target_note_id.",
+    "Skip noisy or one-off candidate content.",
+    "Return JSON only. Do not use shell commands or tools.",
+    "",
+    "Output rules:",
+    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+    "- decisions must be in the same order as input candidates",
+    `- each decision.action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
+    `- each decision.note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
     "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
@@ -366,9 +497,11 @@ async function loadRunnerFromModule(modulePath) {
 }
 
 async function resolveRunner() {
-  if (!cachedRunnerPromise) {
+  const customRunnerModule = normalizeText(process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE);
+  const cacheKey = customRunnerModule || "__codex_exec__";
+  if (!cachedRunnerPromise || cachedRunnerKey !== cacheKey) {
+    cachedRunnerKey = cacheKey;
     cachedRunnerPromise = (async () => {
-      const customRunnerModule = normalizeText(process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE);
       if (customRunnerModule) {
         return loadRunnerFromModule(customRunnerModule);
       }
@@ -438,6 +571,36 @@ export async function governMemoryCandidate(projectRoot, candidate, existingNote
     prompt: governancePrompt(payload)
   });
   assertValidGovernanceDecision(result, existingNotes);
+  return result;
+}
+
+export async function governMemoryCandidates(projectRoot, candidates, existingNotes, scope = "project") {
+  const resolvedScope = MEMORY_SCOPE_VALUES.has(scope) ? scope : "project";
+  const payload = {
+    candidates: (candidates || []).map((candidate) => ({
+      title: normalizeText(candidate.title),
+      kind: normalizeText(candidate.kind),
+      scope: resolvedScope,
+      one_liner: normalizeText(candidate.one_liner),
+      decision: normalizeText(candidate.decision),
+      when_to_load: uniqueStrings(candidate.when_to_load || []),
+      evidence: uniqueStrings(candidate.evidence || []),
+      source: normalizeText(candidate.source),
+      confidence: typeof candidate.confidence === "number" ? candidate.confidence : null,
+      durability_reason: normalizeText(candidate.durability_reason),
+      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope)
+    })),
+    existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
+    scope: resolvedScope
+  };
+  const result = await runSemanticOperation({
+    operation: "govern_batch",
+    projectRoot,
+    payload,
+    schema: buildGovernanceBatchSchema(),
+    prompt: governanceBatchPrompt(payload)
+  });
+  assertValidGovernanceBatchResult(result, candidates, existingNotes);
   return result;
 }
 

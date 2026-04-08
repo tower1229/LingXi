@@ -26,6 +26,7 @@ Provide normalized session data as JSON:
 - analyze historical sessions, not live user turns
 - use LLM judgment to extract only durable engineering taste
 - dedupe by `session_id + content_fingerprint + distill_version`
+- batch-govern distilled candidates before persistence so one session does not pay one semantic roundtrip per note
 - persist distilled memories into LingXi memory
 - update `.lingxi/state/processed-sessions.json`
 

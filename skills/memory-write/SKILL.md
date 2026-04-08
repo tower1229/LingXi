@@ -55,11 +55,12 @@ Provide structured JSON with:
 
 Return JSON with:
 
-- `operation` (`created` or `merged`)
+- `operation` (`created`, `merged`, or `skipped`)
 - `note_id`
 - `file`
 - `scope`
 - `updated_at`
+- optional `reason` when `operation` is `skipped`
 
 ## Implementation
 

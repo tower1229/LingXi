@@ -9,7 +9,7 @@ import {
   readProcessedSessionsState,
   recordProcessedSession,
   resolveProjectRoot,
-  upsertMemoryNote
+  upsertMemoryNotes
 } from "../../../scripts/_lingxi-memory.mjs";
 import { distillSessionToCandidates } from "../../../scripts/_lingxi-memory-semantic.mjs";
 
@@ -146,16 +146,14 @@ async function main() {
     return;
   }
 
-  const noteResults = [];
-  for (const candidate of extracted) {
-    noteResults.push(
-      await upsertMemoryNote(
-        projectRoot,
-        { ...candidate, source: "session-distill" },
-        candidate.reusability_scope === "share" ? "share" : "project"
-      )
-    );
-  }
+  const noteResults = await upsertMemoryNotes(
+    projectRoot,
+    extracted.map((candidate) => ({
+      ...candidate,
+      scope: candidate.reusability_scope === "share" ? "share" : "project",
+      source: "session-distill"
+    }))
+  );
   const noteIds = noteResults.map((result) => result.note_id).filter(Boolean);
   const createdCount = noteResults.filter((result) => result.operation === "created").length;
   const mergedCount = noteResults.filter((result) => result.operation === "merged").length;

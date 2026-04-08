@@ -258,6 +258,7 @@ Responsibilities:
 Implementation bias:
 
 - LLM decides which notes are semantically relevant and how to rank them
+- the retrieval prompt includes both the query and structured caller context from `task` / `vet`
 - deterministic code validates the structured ranking result and maps it back onto stable hit output
 
 Non-responsibilities:
@@ -276,6 +277,7 @@ Responsibilities:
 Implementation bias:
 
 - LLM decides whether a candidate should create, merge, or skip
+- `session-distill` can batch multiple candidates through one governance pass instead of paying one model roundtrip per note
 - deterministic code validates the governance result, assigns ids, writes files, and rebuilds the index
 
 Non-responsibilities:
