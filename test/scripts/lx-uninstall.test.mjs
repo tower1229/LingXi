@@ -1,6 +1,6 @@
 /**
- * lx-uninstall script tests (TC-003 to TC-006).
- * Uses temp dir + fixture manifest; runs node scripts/lx-uninstall.mjs --yes with CURSOR_PROJECT_DIR=tmpDir.
+ * lx-uninstall script tests.
+ * Uses temp dir + fixture manifest; runs node scripts/lx-uninstall.mjs --yes with CODEX_PROJECT_DIR=tmpDir.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -29,15 +29,41 @@ function setupUninstallFixture(tmpDir) {
     "utf8"
   );
 
-  fs.mkdirSync(path.join(tmpDir, ".lingxi", "tasks"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, ".lingxi", "tasks", "dummy"), "", "utf8");
-  fs.mkdirSync(path.join(tmpDir, ".cursor", "commands"), { recursive: true });
-  fs.writeFileSync(path.join(tmpDir, ".cursor", "commands", "init.md"), "# init", "utf8");
-  fs.writeFileSync(path.join(tmpDir, ".cursor", "hooks.json"), "{}", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".codex-plugin"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".codex-plugin", "plugin.json"), "{}", "utf8");
+  fs.mkdirSync(path.join(tmpDir, "skills", "task", "scripts"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, "skills", "task", "SKILL.md"), "---\nname: task\ndescription: test\n---\n", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "skills", "task", "scripts", "write-task.mjs"), "dummy", "utf8");
   fs.mkdirSync(path.join(tmpDir, "scripts"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, "scripts", "_lingxi-memory.mjs"), "dummy", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "scripts", "lx-create-automation.mjs"), "dummy", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-memory-index.mjs"), "dummy", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-setup.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-uninstall.mjs"), "dummy", "utf8");
+  fs.mkdirSync(path.join(tmpDir, "templates", "agents"), { recursive: true });
+  fs.mkdirSync(path.join(tmpDir, "templates", "automations"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, "templates", "agents", "lingxi-session-distill.toml.tmpl"), "dummy", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "templates", "automations", "session-distill.toml.tmpl"), "dummy", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".lingxi", "state"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".lingxi", "state", "processed-sessions.json"), "{}", "utf8");
+  fs.mkdirSync(path.join(tmpDir, ".codex", "agents"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".codex", "agents", "lingxi-session-distill.toml"), "dummy", "utf8");
+  fs.writeFileSync(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      name: "fixture-project",
+      private: true,
+      scripts: {
+        test: "node --test",
+        "lx:create-automation": "node scripts/lx-create-automation.mjs",
+        "lx:setup": "node scripts/lingxi-setup.mjs",
+        "lx:uninstall": "node scripts/lx-uninstall.mjs"
+      }
+    }, null, 2) + "\n",
+    "utf8"
+  );
 
-  fs.writeFileSync(path.join(tmpDir, ".cursor", "user-rule.md"), "# user", "utf8");
+  fs.writeFileSync(path.join(tmpDir, ".codex-plugin", "user-extension.json"), "{}", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "user-script.js"), "dummy", "utf8");
 }
 
@@ -45,7 +71,7 @@ function runUninstall(cwd, env = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn("node", [SCRIPT_PATH, "--yes"], {
       cwd: REPO_ROOT,
-      env: { ...process.env, CURSOR_PROJECT_DIR: cwd, ...env },
+      env: { ...process.env, CODEX_PROJECT_DIR: cwd, ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";
@@ -62,11 +88,11 @@ describe("lx-uninstall", () => {
 
   afterEach(() => {
     if (tmpDir && fs.existsSync(tmpDir)) {
-      try { fs.rmSync(tmpDir, { recursive: true }); } catch (_) {}
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch (_) { }
     }
   });
 
-  it("TC-003: removes .lingxi and manifest paths with --yes", async () => {
+  it("removes runtime paths and manifest-managed files with --yes", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
     const lingxiPath = path.join(tmpDir, ".lingxi");
@@ -77,47 +103,68 @@ describe("lx-uninstall", () => {
     assert.ok(!fs.existsSync(lingxiPath), ".lingxi should be deleted");
   });
 
-  it("TC-004: removes only manifest-listed .cursor and scripts paths", async () => {
+  it("removes only manifest-listed files", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const inListCommands = path.join(tmpDir, ".cursor", "commands", "init.md");
+    const inListPlugin = path.join(tmpDir, ".codex-plugin", "plugin.json");
     const inListScripts = path.join(tmpDir, "scripts", "lx-uninstall.mjs");
-    const userRule = path.join(tmpDir, ".cursor", "user-rule.md");
+    const userExtension = path.join(tmpDir, ".codex-plugin", "user-extension.json");
     const userScript = path.join(tmpDir, "scripts", "user-script.js");
 
     await runUninstall(tmpDir);
 
-    assert.ok(!fs.existsSync(inListCommands), "manifest commands path should be deleted");
+    assert.ok(!fs.existsSync(inListPlugin), "manifest plugin path should be deleted");
     assert.ok(!fs.existsSync(inListScripts), "manifest scripts path should be deleted");
-    assert.ok(fs.existsSync(userRule), "off-manifest .cursor file should remain");
+    assert.ok(fs.existsSync(userExtension), "off-manifest plugin file should remain");
     assert.ok(fs.existsSync(userScript), "off-manifest scripts file should remain");
   });
 
-  it("TC-005: leaves off-manifest content intact", async () => {
+  it("removes generated LingXi 2.0 runtime paths declared by the install manifest", async () => {
     tmpDir = createTempDir();
     setupUninstallFixture(tmpDir);
-    const userRule = path.join(tmpDir, ".cursor", "user-rule.md");
+
+    const runtimeRoot = path.join(tmpDir, ".lingxi");
+    const codexAgent = path.join(tmpDir, ".codex", "agents", "lingxi-session-distill.toml");
+
+    await runUninstall(tmpDir);
+
+    assert.ok(!fs.existsSync(runtimeRoot), ".lingxi runtime root should be deleted");
+    assert.ok(!fs.existsSync(codexAgent), ".codex agent file should be deleted");
+  });
+
+  it("leaves off-manifest content intact", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+    const userExtension = path.join(tmpDir, ".codex-plugin", "user-extension.json");
     const userScript = path.join(tmpDir, "scripts", "user-script.js");
 
     await runUninstall(tmpDir);
 
-    assert.strictEqual(fs.readFileSync(userRule, "utf8"), "# user");
+    assert.strictEqual(fs.readFileSync(userExtension, "utf8"), "{}");
     assert.strictEqual(fs.readFileSync(userScript, "utf8"), "dummy");
   });
 
-  it("TC-003 boundary: exit 0 when no install files present", async () => {
+  it("removes LingXi-managed package scripts but preserves unrelated scripts", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+
+    await runUninstall(tmpDir);
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, "package.json"), "utf8"));
+    assert.deepStrictEqual(pkg.scripts, {
+      test: "node --test"
+    });
+  });
+
+  it("exit 0 when no install files present", async () => {
     tmpDir = createTempDir();
     const installDir = path.join(tmpDir, "install");
     fs.mkdirSync(installDir, { recursive: true });
-    // Manifest with no paths that exist: omit manifestCopyPath so only .lingxi is in list (we don't create it)
     fs.writeFileSync(
       path.join(installDir, "install-manifest.json"),
       JSON.stringify({
-        commands: [],
-        hooks: { files: [] },
-        agents: { files: [] },
-        references: {},
-        scripts: [],
+        files: [],
+        runtimeFiles: [],
       }),
       "utf8"
     );
@@ -126,5 +173,29 @@ describe("lx-uninstall", () => {
     assert.strictEqual(code, 0);
     const out = stdout + stderr;
     assert.ok(out.includes("未发现灵犀安装文件") || out.includes("无需卸载"), "message in stdout or stderr");
+  });
+
+  it("fails fast when the manifest is missing but LingXi-managed assets still remain", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+    fs.rmSync(path.join(tmpDir, "install", "install-manifest.json"));
+
+    const { code, stdout, stderr } = await runUninstall(tmpDir);
+    assert.strictEqual(code, 1);
+    const out = stdout + stderr;
+    assert.ok(out.includes("未找到安装清单"), out);
+    assert.ok(out.includes(".codex-plugin/plugin.json") || out.includes(".lingxi"), out);
+  });
+
+  it("is idempotent when uninstall runs twice", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+
+    const first = await runUninstall(tmpDir);
+    assert.strictEqual(first.code, 0, first.stderr);
+    const second = await runUninstall(tmpDir);
+    assert.strictEqual(second.code, 0, second.stderr);
+    const out = second.stdout + second.stderr;
+    assert.ok(out.includes("未发现灵犀安装文件") || out.includes("无需卸载"), out);
   });
 });

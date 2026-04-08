@@ -1,16 +1,15 @@
 {
   "name": "lingxi-workflow",
-  "description": "Cursor workflow with persistent memory.",
+  "description": "LingXi 2.0 quality-first rebuild with a Codex-native core.",
   "private": true,
   "author": "tower1229@gmail.com",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "scripts": {
+    "lx:create-automation": "node scripts/lx-create-automation.mjs",
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",
-    "test": "node --test \"test/**/*.test.mjs\"",
-    "test:scripts": "node --test \"test/scripts/**/*.test.mjs\"",
-    "test:hooks": "node --test \"test/hooks/**/*.test.mjs\"",
-    "test:skills": "node --test \"test/skills/**/*.test.mjs\""
+    "test": "node --test \"test/scripts/**/*.test.mjs\"",
+    "test:scripts": "node --test \"test/scripts/**/*.test.mjs\""
   }
 }

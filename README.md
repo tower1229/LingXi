@@ -2,106 +2,78 @@
 
 # LíngXī（灵犀）
 
-Cursor workflow with persistent memory.
+LingXi 2.0 is now a released Codex-native task, vet, and engineering memory workflow.
 
----
+## Status
 
-## Why (Vision)
+LingXi 2.0 is complete at the current product scope and ready for release.
 
-Your go-to toolkit for creators in the AI era.
+- The intended 2.0 product surface is now fully **Codex-native**.
+- The visible 2.0 workflows are intentionally narrow: `task` and `vet`.
+- Durable memory remains the real core: `memory-retrieve`, `memory-write`, and `session-distill`.
+- Cursor-era repository content has been removed from the main tree. The retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
 
-## How (Approach)
+Current project policy remains quality first:
 
-### 1) In Sync With You
+- do not push roadmap phases quickly at the expense of output quality
+- align current-scope capabilities before expanding scope
+- prefer strong contracts, clear outputs, and testable behavior over premature abstraction
 
-Persistent memory so the AI works the way you do.
+See:
 
-### 2) AI Native
+- [Architecture](./docs/architecture.md)
+- [Roadmap](./docs/lingxi-2-roadmap.md)
+- [Quality Bar](./docs/quality-baseline.md)
+- [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
 
-Respect AI capability and leave room for evolution.
+## 2.0 Core
 
-### 3) To Your Liking
+Released and supported:
 
-Lower cognitive load and a smooth, user-friendly experience.
+- Codex plugin shell: `.codex-plugin/plugin.json`
+- project-local runtime under `.lingxi/`
+- setup bootstrap: `scripts/lingxi-setup.mjs`
+- visible workflows: `skills/task/`, `skills/vet/`
+- memory core: `skills/memory-retrieve/`, `skills/memory-write/`
+- background distillation: `skills/session-distill/`
+- project-local distill agent template: `templates/agents/lingxi-session-distill.toml.tmpl`
 
----
+## Repository Shape
 
-## What (Implementation)
+- `.codex-plugin/` — Codex plugin shell
+- `skills/` — LingXi 2.0 skills
+- `scripts/` — deterministic setup and runtime helpers
+- `templates/` — generated runtime artifacts
+- `docs/` — architecture, roadmap, and quality bar
 
-- **Flexible workflow**: Compose your own flow—rigorous when needed, light when not
-- **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
-- **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
-- **Self-iterate**: Run low-risk, audit-driven improvements on heartbeat cycles so the system keeps getting more stable and accurate
-- **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to understand project context and bootstrap LingXi workflow
+## Install Notes
 
----
+The remote install scripts in `install/` now provision the supported LingXi 2.0 surface directly:
 
-## Install & Quick Start
+- `.codex-plugin/plugin.json`
+- `skills/`
+- `scripts/`
+- `templates/`
+- generated runtime under `.lingxi/` and `.codex/agents/`
 
-### Install
+They no longer install or manage `.cursor/` assets.
 
-Run one of the following commands from your **project root** to install LingXi into your project:
-
-- **Linux / macOS / Git Bash:**
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
-  ```
-- **Windows PowerShell:**
-  ```powershell
-  irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
-  ```
-
-After install, open the project in Cursor and run `/init` once to build project context and generate optional memory candidates (write is gated by your explicit choice).
-
----
-
-### Quick Start
-
-**We recommend running `/init` first** to understand the existing project and prepare optional memory candidates; then use the workflow skills or helper commands below.
-
-#### Workflow skills
-
-The core workflow is driven by **Skills** (task, vet, plan, build, review). Invoke them by typing `/task`, `/plan`, `/build`, `/review`, or `/vet` (Cursor shows the matching skill) or by natural language (e.g. “create a task document”, “plan task 001”).
-
-Use these in lifecycle order:
-
-| Skill      | Usage                                                                                                                                                         | Description                                                                                                                                                                                                                                                                      |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **task**   | `/task <description>` or “create task…”<br><br>**Examples:**<br>`/task Add user login with email and phone`<br>`/task Improve homepage load, target LCP < 1s` | **Create task doc**<br><br>Auto task id (001, 002...) and title; creates:<br>`.lingxi/tasks/001.task.<title>.md`<br><br>This is the core document for the whole workflow, including refined requirements, technical approach, and acceptance criteria.                   |
-| **vet**    | `/vet [taskId]` or “review task doc”<br><br>**Examples:**<br>`/vet 001`<br>`/vet` (latest task)                                                               | **Review task doc (optional)**<br><br>Multi-dimension review of the task doc to improve quality. Optional, can be run multiple times.<br><br>No file output; results and suggestions in chat only.                                                                               |
-| **plan**   | `/plan [taskId]` or “plan task…”<br><br>**Examples:**<br>`/plan 001`<br>`/plan` (latest task)                                                                 | **Task planning (optional)**<br><br>Generate plan and test-case docs from the task doc. For complex tasks; simple ones can skip.<br><br>**Tip:** Works with Cursor’s plan mode.                                                                                                  |
-| **build**  | `/build [taskId]` or “implement task…”<br><br>**Examples:**<br>`/build 001`<br>`/build` (latest task)                                                         | **Run build (optional)**<br><br>Two modes:<br>- **Plan-driven**: Follow plan when present (recommended)<br>- **Task-driven**: Agent decides from task doc when no plan<br><br>**Tip:** In plan mode you can use its built-in build and skip LingXi’s build skill.                |
-| **review** | `/review [taskId]` or “review delivery”<br><br>**Examples:**<br>`/review 001`<br>`/review` (latest task)                                                      | **Review delivery**<br><br>Multi-dimension review and report:<br><br>**Core:** functionality, test coverage, architecture, maintainability, regression<br><br>**Optional:** doc consistency, security, performance, E2E<br><br>**Tests:** unit, integration, E2E when applicable |
-
-#### Helper commands
-
-| Command     | Usage                                                                                                                            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y` | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/project/` (or `memory/share/` for team-level) for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content<br><br>**Session distillation** is automatic: when you start a new conversation and it has been more than 30 minutes since the last run, LingXi enqueues up to 3 finished sessions for background distillation (source=heartbeat); no command needed. |
-| `/init`     | `/init`                                                                                                                          | **Initialize project context (first use)**<br><br>Guided understanding of an existing project, producing memory candidates with explicit write gating. Internal workspace bootstrap may run as a preflight step. Recommended when first using LingXi in a project.                                                                                                                                                                                                                                                                                                                                                        |
-
-#### Sharing experience across projects (share dir + git submodule)
-
-LingXi uses a designated share directory for team knowledge that can be reused across projects:
-
-- Share directory: `.lingxi/memory/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `memory/project/`.
-
-**1) Add share repo (submodule)**
+For local verification of the 2.0 runtime shape, use the setup script inside a target repository:
 
 ```bash
-git submodule add <shareRepoUrl> .lingxi/memory/share
+node scripts/lingxi-setup.mjs
 ```
 
-**2) Update share repo**
+This creates the current 2.0 runtime skeleton under `.lingxi/` and `.codex/agents/`.
+
+## Development
+
+Run the test suite:
 
 ```bash
-git submodule update --remote --merge
+npm test
 ```
 
-**3) Sync memory index (after adding shared notes)**
+This runs the supported LingXi 2.0 product suite.
 
-In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync INDEX with notes (removes orphan index rows and lets the model complete INDEX lines for unindexed notes).
-
-## Related docs
-
-- [Core Architecture](.cursor/skills/about-lingxi/references/architecture.md)
+The repository treats green current-product tests and product-surface coherence as mandatory release gates for the supported 2.0 surface.
