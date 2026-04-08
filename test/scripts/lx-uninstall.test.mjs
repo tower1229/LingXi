@@ -88,7 +88,7 @@ describe("lx-uninstall", () => {
 
   afterEach(() => {
     if (tmpDir && fs.existsSync(tmpDir)) {
-      try { fs.rmSync(tmpDir, { recursive: true }); } catch (_) {}
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch (_) { }
     }
   });
 

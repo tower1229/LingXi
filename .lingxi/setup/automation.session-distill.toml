@@ -1,0 +1,9 @@
+generated_by = "lingxi-setup"
+name = "LingXi Session Distill"
+prompt = "Analyze recent Codex sessions for this repository, extract durable engineering taste and review preferences, write approved notes into .lingxi/memory/project/, and update .lingxi/state/processed-sessions.json."
+status = "ACTIVE"
+rrule = "FREQ=HOURLY;INTERVAL=6"
+agent = ".codex/agents/lingxi-session-distill.toml"
+state_file = ".lingxi/state/processed-sessions.json"
+journal_file = ".lingxi/state/distill-journal.jsonl"
+cwds = ["/Users/zangtao/Workspace/tower1229/LingXi"]

@@ -18,20 +18,20 @@
 
 ## 文件说明
 
-- **`bash.sh`** — Linux / macOS / Git Bash 远程安装脚本  
-  - 从 GitHub 下载并安装到当前项目  
-  - 支持交互式和非交互式（`AUTO_CONFIRM=true`）  
+- **`bash.sh`** — Linux / macOS / Git Bash 远程安装脚本
+  - 从 GitHub 下载并安装到当前项目
+  - 支持交互式和非交互式（`AUTO_CONFIRM=true`）
   - 支持管道执行：`curl | bash`
 
-- **`powershell.ps1`** — Windows PowerShell 远程安装脚本  
-  - 适用于 Windows 环境  
+- **`powershell.ps1`** — Windows PowerShell 远程安装脚本
+  - 适用于 Windows 环境
   - 从 GitHub 下载并安装
 
-- **`install-manifest.json`** — 安装清单  
+- **`install-manifest.json`** — 安装清单
   - 定义要安装的新版 2.0 静态资产、运行时生成路径和 package script；安装时会复制到用户项目 `install/install-manifest.json` 供卸载脚本读取。
 
-- **`test-install.sh`** — 本地测试脚本（开发用）  
-  - 在仓库根目录启动 HTTP 服务，模拟远程源  
+- **`test-install.sh`** — 本地测试脚本（开发用）
+  - 在仓库根目录启动 HTTP 服务，模拟远程源
   - 使用 `BASE_URL=http://localhost:8000` 运行安装脚本
 
 ## 使用方法
@@ -93,7 +93,7 @@ npm run lx:create-automation
   npm run lx:uninstall
   ```
 
-脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径；未列入清单的仓库内容会保留。  
+脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径；未列入清单的仓库内容会保留。
 非交互式环境（如 CI）下请加 `--yes` 跳过确认：`node scripts/lx-uninstall.mjs --yes`、`yarn lx:uninstall --yes` 或 `npm run lx:uninstall -- --yes`。
 
 ### 本地测试（开发用）
