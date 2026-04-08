@@ -17,6 +17,7 @@ const KNOWN_MANAGED_MARKERS = [
   ".codex-plugin/plugin.json",
   "scripts/_lingxi-memory.mjs",
   "scripts/lx-create-automation.mjs",
+  "scripts/lx-bootstrap.mjs",
   "scripts/lingxi-memory-index.mjs",
   "scripts/lingxi-setup.mjs",
   "scripts/lx-uninstall.mjs",
@@ -32,6 +33,7 @@ const KNOWN_MANAGED_MARKERS = [
 ];
 const DEFAULT_MANAGED_PACKAGE_SCRIPTS = {
   "lx:create-automation": "node scripts/lx-create-automation.mjs",
+  "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
   "lx:setup": "node scripts/lingxi-setup.mjs",
   "lx:uninstall": "node scripts/lx-uninstall.mjs"
 };

@@ -272,6 +272,35 @@ function buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tag
     .join(" ");
 }
 
+function buildTaskMemoryContext(input, projectContext, scope, constraints, acceptanceCriteria, tags, type, complexity, signals) {
+  return {
+    caller: "task",
+    title: normalizeText(input.title),
+    goal: normalizeText(input.goal),
+    type: normalizeText(type),
+    complexity: normalizeText(complexity),
+    background: normalizeText(input.background),
+    problem: normalizeText(input.problem),
+    solution_overview: normalizeText(input.solution_overview),
+    scope: uniqueNormalizedList(scope || []),
+    constraints: uniqueNormalizedList(constraints || []),
+    acceptance_criteria: uniqueNormalizedList(acceptanceCriteria || []),
+    tags: uniqueNormalizedList(tags || []),
+    project_context: {
+      kind: normalizeText(projectContext?.kind),
+      stack: normalizeText(projectContext?.summary),
+      cues: uniqueNormalizedList(projectContext?.cues || [])
+    },
+    semantic_focus: {
+      docs: Boolean(signals?.docs),
+      sdk: Boolean(signals?.sdk),
+      integration: Boolean(signals?.integration),
+      contract_surface: Boolean(signals?.contract_surface),
+      frontend_surface: Boolean(signals?.frontend_surface)
+    }
+  };
+}
+
 function resolveExistingTask(projectRoot, taskId) {
   const normalizedTaskId = normalizeText(taskId);
   if (!normalizedTaskId) return null;
@@ -868,7 +897,7 @@ function validateTaskReadiness({
   }
 }
 
-function validateInput(input, projectRoot) {
+async function validateInput(input, projectRoot) {
   const projectContext = detectProjectContext(projectRoot);
   const existingTask = resolveExistingTask(projectRoot, input.task_id);
   if (!normalizeText(input.title)) throw new Error("Missing required field: title");
@@ -975,11 +1004,12 @@ function validateInput(input, projectRoot) {
       ? input.memory_refs.map((item) => normalizeText(item)).filter(Boolean)
       : existingTask
         ? (existingTask.memory_refs || []).map((item) => normalizeText(item)).filter(Boolean)
-      : retrieveRelevantMemoryHits(
+      : (await retrieveRelevantMemoryHits(
           projectRoot,
           buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),
-          3
-        ).map((note) => formatMemoryRef(note)),
+          3,
+          buildTaskMemoryContext(input, projectContext, scope, constraints, acceptanceCriteria, tags, type, complexity, signals)
+        )).map((note) => formatMemoryRef(note)),
     task_id: input.task_id ? normalizeText(input.task_id) : "",
     type,
     complexity,
@@ -1013,7 +1043,7 @@ function validateInput(input, projectRoot) {
 async function main() {
   const projectRoot = resolveProjectRoot();
   ensureLingxiLayout(projectRoot);
-  const taskSpec = validateInput(await readJsonStdin(), projectRoot);
+  const taskSpec = await validateInput(await readJsonStdin(), projectRoot);
   assertValidTaskSpec(taskSpec);
   const compilation = compileTaskDocument(projectRoot, {
     ...taskSpec,

@@ -11,27 +11,27 @@
 - `scripts/`
 - `templates/`
 
-安装完成后还会执行 `scripts/lingxi-setup.mjs`，生成运行时骨架：
+安装完成后还会执行 `scripts/lx-bootstrap.mjs`，完成本地运行时初始化并注册自动化任务：
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
 
 ## 文件说明
 
-- **`bash.sh`** — Linux / macOS / Git Bash 远程安装脚本  
-  - 从 GitHub 下载并安装到当前项目  
-  - 支持交互式和非交互式（`AUTO_CONFIRM=true`）  
+- **`bash.sh`** — Linux / macOS / Git Bash 远程安装脚本
+  - 从 GitHub 下载并安装到当前项目
+  - 支持交互式和非交互式（`AUTO_CONFIRM=true`）
   - 支持管道执行：`curl | bash`
 
-- **`powershell.ps1`** — Windows PowerShell 远程安装脚本  
-  - 适用于 Windows 环境  
+- **`powershell.ps1`** — Windows PowerShell 远程安装脚本
+  - 适用于 Windows 环境
   - 从 GitHub 下载并安装
 
-- **`install-manifest.json`** — 安装清单  
+- **`install-manifest.json`** — 安装清单
   - 定义要安装的新版 2.0 静态资产、运行时生成路径和 package script；安装时会复制到用户项目 `install/install-manifest.json` 供卸载脚本读取。
 
-- **`test-install.sh`** — 本地测试脚本（开发用）  
-  - 在仓库根目录启动 HTTP 服务，模拟远程源  
+- **`test-install.sh`** — 本地测试脚本（开发用）
+  - 在仓库根目录启动 HTTP 服务，模拟远程源
   - 使用 `BASE_URL=http://localhost:8000` 运行安装脚本
 
 ## 使用方法
@@ -56,24 +56,29 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 说明：安装器要求目标环境可用 `node`，因为 setup 和工作流脚本都基于 Node.js。
 
-`node scripts/lingxi-setup.mjs` 只会生成项目内运行时和自动化配置文件，不会直接替你在 Codex 中注册自动化任务。
+如果你的目标是让 LingXi 在目标仓库里真正形成闭环，应优先执行：
 
-如果你的目标是单独验证 LingXi 2.0 的运行时骨架，应优先在目标仓库直接执行：
+```bash
+node scripts/lx-bootstrap.mjs
+```
+
+这一步会：
+
+- 生成 `.lingxi/` 与 `.codex/agents/` 运行时骨架
+- 生成 `.lingxi/setup/automation.session-distill.toml`
+- 把该自动化配置注册成实际的 Codex 自动化任务
+
+如果你只是要调试或检查中间产物，也可以拆开执行：
 
 ```bash
 node scripts/lingxi-setup.mjs
-```
-
-如需把生成的 `.lingxi/setup/automation.session-distill.toml` 注册成实际的 Codex 自动化，请继续执行：
-
-```bash
 node scripts/lx-create-automation.mjs
 ```
 
 或者：
 
 ```bash
-npm run lx:create-automation
+npm run lx:bootstrap
 ```
 
 ### 卸载
@@ -93,7 +98,7 @@ npm run lx:create-automation
   npm run lx:uninstall
   ```
 
-脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径；未列入清单的仓库内容会保留。  
+脚本会读取安装时保存的 `install/install-manifest.json`，仅删除清单内路径；未列入清单的仓库内容会保留。
 非交互式环境（如 CI）下请加 `--yes` 跳过确认：`node scripts/lx-uninstall.mjs --yes`、`yarn lx:uninstall --yes` 或 `npm run lx:uninstall -- --yes`。
 
 ### 本地测试（开发用）

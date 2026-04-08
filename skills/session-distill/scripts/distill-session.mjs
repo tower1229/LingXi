@@ -9,19 +9,9 @@ import {
   readProcessedSessionsState,
   recordProcessedSession,
   resolveProjectRoot,
-  upsertMemoryNote
+  upsertMemoryNotes
 } from "../../../scripts/_lingxi-memory.mjs";
-
-const ENGINEERING_SIGNAL_PATTERNS = [
-  /\b(api|contract|schema|interfaces?|module|service|backend|frontend|sdk|library|cli|review|rollback|migration|dependency|test|diff|patch(?:es)?|refactor|docs?|readme|guide|state|route|layout|performance|compat(?:ibility)?|consumer|entrypoint|coupling)\b/i,
-  /(接口|契约|模块|服务|后端|前端|库|SDK|命令行|审查|评审|回滚|迁移|依赖|测试|补丁|重构|文档|指南|状态|路由|布局|性能|兼容|调用方|入口|耦合)/,
-  /\b(code|repository|repo|implementation|reviewable|maintainer|maintainers)\b/i
-];
-
-const GENERIC_LOW_SIGNAL_PATTERNS = [
-  /\b(better|good|nice|careful|quickly|faster|cleaner)\b/i,
-  /(更好|不错|小心|快一点|更快|更整洁|高效一点)/
-];
+import { distillSessionToCandidates } from "../../../scripts/_lingxi-memory-semantic.mjs";
 
 function determineRunReason({ existing, fingerprint, stateDistillVersion, force }) {
   if (!existing) return "first_distill";
@@ -29,81 +19,6 @@ function determineRunReason({ existing, fingerprint, stateDistillVersion, force 
   if (existing.content_fingerprint !== fingerprint) return "content_changed";
   if (stateDistillVersion !== DISTILL_VERSION) return "distill_version_changed";
   return "duplicate_unchanged";
-}
-
-function isEngineeringRelevant(detail, fullText) {
-  const normalizedDetail = normalizeText(detail);
-  const normalizedFull = normalizeText(fullText);
-  if (!normalizedDetail || normalizedDetail.length < 6) return false;
-  const hasSignal = ENGINEERING_SIGNAL_PATTERNS.some((pattern) => pattern.test(normalizedDetail) || pattern.test(normalizedFull));
-  if (!hasSignal) return false;
-  if (GENERIC_LOW_SIGNAL_PATTERNS.some((pattern) => pattern.test(normalizedDetail)) && normalizedDetail.split(" ").length < 4) {
-    return false;
-  }
-  return true;
-}
-
-function englishCandidates(text) {
-  const patterns = [
-    { kind: "preference", regex: /\bprefer(?:s|red)?\s+(.+?)(?:\.|$)/i, title: "Prefer" },
-    { kind: "anti_pattern", regex: /\bavoid\s+(.+?)(?:\.|$)/i, title: "Avoid" },
-    { kind: "anti_pattern", regex: /\bdo not\s+(.+?)(?:\.|$)/i, title: "Do not" },
-    { kind: "anti_pattern", regex: /\bdon't\s+(.+?)(?:\.|$)/i, title: "Do not" },
-    { kind: "constraint", regex: /\bmust\s+(.+?)(?:\.|$)/i, title: "Must" }
-  ];
-  return patterns
-    .map((pattern) => {
-      const match = pattern.regex.exec(text);
-      if (!match) return null;
-      const detail = normalizeText(match[1]);
-      if (detail.length < 8) return null;
-      if (!isEngineeringRelevant(detail, text)) return null;
-      return {
-        kind: pattern.kind,
-        title: `${pattern.title} ${detail}`.slice(0, 96),
-        one_liner: text,
-        decision: text,
-        when_to_load: ["When planning or reviewing changes in this repository"],
-        evidence: [text]
-      };
-    })
-    .filter(Boolean);
-}
-
-function chineseCandidates(text) {
-  const patterns = [
-    { kind: "preference", regex: /(优先|倾向于|尽量)(.+?)(。|$)/, title: "优先" },
-    { kind: "anti_pattern", regex: /(避免|不要)(.+?)(。|$)/, title: "避免" },
-    { kind: "constraint", regex: /(必须)(.+?)(。|$)/, title: "必须" }
-  ];
-  return patterns
-    .map((pattern) => {
-      const match = pattern.regex.exec(text);
-      if (!match) return null;
-      const detail = normalizeText(match[2]);
-      if (detail.length < 2) return null;
-      const normalizedSentence = normalizeText(text);
-      if (!isEngineeringRelevant(detail, normalizedSentence)) return null;
-      return {
-        kind: pattern.kind,
-        title: `${pattern.title}${detail}`.slice(0, 96),
-        one_liner: normalizedSentence,
-        decision: normalizedSentence,
-        when_to_load: ["在定义任务或审查任务时"],
-        evidence: [normalizedSentence]
-      };
-    })
-    .filter(Boolean);
-}
-
-function dedupeCandidates(candidates) {
-  const seen = new Set();
-  return candidates.filter((candidate) => {
-    const key = `${candidate.kind}::${candidate.title.toLowerCase()}::${candidate.decision.toLowerCase()}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
 
 async function readJsonStdin() {
@@ -183,14 +98,23 @@ async function main() {
     return;
   }
 
-  const candidateTexts = messages
-    .filter((message) => message.role === "user" || message.role === "assistant")
-    .map((message) => normalizeText(message.content))
-    .filter(Boolean);
-
-  const extracted = dedupeCandidates(
-    candidateTexts.flatMap((text) => [...englishCandidates(text), ...chineseCandidates(text)])
-  );
+  const candidateSet = await distillSessionToCandidates(projectRoot, {
+    session_id: sessionId,
+    content_fingerprint: fingerprint,
+    distill_version: DISTILL_VERSION,
+    messages
+  });
+  const extracted = candidateSet.candidates.map((candidate) => ({
+    title: normalizeText(candidate.title),
+    kind: normalizeText(candidate.kind),
+    one_liner: normalizeText(candidate.one_liner),
+    decision: normalizeText(candidate.decision),
+    when_to_load: candidate.when_to_load,
+    evidence: candidate.evidence,
+    confidence: candidate.confidence,
+    durability_reason: normalizeText(candidate.durability_reason),
+    reusability_scope: normalizeText(candidate.reusability_scope)
+  }));
 
   if (extracted.length === 0) {
     const result = {
@@ -222,13 +146,23 @@ async function main() {
     return;
   }
 
-  const noteResults = extracted.map((candidate) =>
-    upsertMemoryNote(projectRoot, { ...candidate, source: "session-distill" }, "project")
+  const noteResults = await upsertMemoryNotes(
+    projectRoot,
+    extracted.map((candidate) => ({
+      ...candidate,
+      scope: candidate.reusability_scope === "share" ? "share" : "project",
+      source: "session-distill"
+    }))
   );
-  const noteIds = noteResults.map((result) => result.note_id);
+  const noteIds = noteResults.map((result) => result.note_id).filter(Boolean);
   const createdCount = noteResults.filter((result) => result.operation === "created").length;
   const mergedCount = noteResults.filter((result) => result.operation === "merged").length;
-  const overallOperation = noteResults.every((result) => result.operation === "merged") ? "merged" : "written";
+  const overallOperation =
+    noteIds.length === 0
+      ? "skipped_no_signal"
+      : noteResults.every((result) => result.operation === "merged")
+        ? "merged"
+        : "written";
   const output = {
     operation: overallOperation,
     session_id: sessionId,

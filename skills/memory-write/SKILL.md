@@ -15,6 +15,7 @@ This skill should bias toward memory quality over memory volume.
 
 ## Responsibilities
 
+- govern candidate memory semantically before writing
 - write compact memory notes
 - keep `.lingxi/memory/INDEX.md` in sync
 - prefer durable engineering taste over task-specific detail
@@ -38,8 +39,9 @@ Provide structured JSON with:
 2. Do not write one-off implementation chatter.
 3. Default scope is `project`.
 4. Keep notes small and legible.
-5. Rebuild the index after writes.
-6. Merge with an existing note when the durable signal is materially the same.
+5. Let the LLM decide `create`, `merge`, or `skip` based on semantic meaning.
+6. Rebuild the index after writes.
+7. Merge with an existing note when the durable signal is materially the same.
 
 ## Supported Kinds
 
@@ -53,11 +55,12 @@ Provide structured JSON with:
 
 Return JSON with:
 
-- `operation` (`created` or `merged`)
+- `operation` (`created`, `merged`, or `skipped`)
 - `note_id`
 - `file`
 - `scope`
 - `updated_at`
+- optional `reason` when `operation` is `skipped`
 
 ## Implementation
 

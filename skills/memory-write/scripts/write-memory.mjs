@@ -56,7 +56,7 @@ async function main() {
   const input = await readJsonStdin();
   validateInput(input);
   const scope = args.scope === "share" ? "share" : "project";
-  const result = upsertMemoryNote(projectRoot, input, scope);
+  const result = await upsertMemoryNote(projectRoot, input, scope);
   process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 }
 

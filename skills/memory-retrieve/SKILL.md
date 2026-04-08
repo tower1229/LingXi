@@ -13,7 +13,8 @@ Use this skill before `task` or `vet` work.
 
 ## Responsibilities
 
-- search project memory
+- use LLM semantic judgment to rank project memory
+- evaluate the query together with the current caller context
 - return only the most relevant notes
 - keep retrieval minimal and practical
 
@@ -24,6 +25,7 @@ Use this skill before `task` or `vet` work.
 3. Retrieve to improve current work, not to display the archive.
 4. If nothing matches, return an empty result.
 5. Prefer project memory over share memory when relevance is otherwise similar.
+6. Do not fall back to keyword scoring as the main decision path.
 
 ## Output
 

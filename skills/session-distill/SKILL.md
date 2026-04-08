@@ -24,8 +24,9 @@ Provide normalized session data as JSON:
 ## Responsibilities
 
 - analyze historical sessions, not live user turns
-- extract only durable engineering taste
+- use LLM judgment to extract only durable engineering taste
 - dedupe by `session_id + content_fingerprint + distill_version`
+- batch-govern distilled candidates before persistence so one session does not pay one semantic roundtrip per note
 - persist distilled memories into LingXi memory
 - update `.lingxi/state/processed-sessions.json`
 
@@ -70,4 +71,5 @@ Return JSON with:
 Use:
 
 - `scripts/distill-session.mjs`
+- `scripts/memory-distill-candidate-set.mjs`
 - `references/distill-rules.md`

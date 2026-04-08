@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { fileURLToPath } from "node:url";
+import { withMemorySemanticTestEnv } from "../helpers/memory-semantic-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
@@ -21,7 +22,7 @@ function runRetrieve(projectRoot, query) {
       [scriptPath, "--project-root", projectRoot, "--query", query],
       {
         cwd: repoRoot,
-        env: process.env,
+        env: withMemorySemanticTestEnv(process.env),
         stdio: ["ignore", "pipe", "pipe"]
       }
     );
@@ -188,6 +189,45 @@ Prefer reader-first docs structure for guide changes.
     );
 
     const result = await runRetrieve(tempDir, "backend integration rollback");
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.hit_count, 1);
+    assert.strictEqual(summary.hits[0].note_id, "MEM-001");
+  });
+
+  it("finds semantically related memory even when the query wording differs", async () => {
+    tempDir = createTempDir();
+    const memoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-001.small-patches.md"),
+      `---
+id: MEM-001
+title: Prefer small reviewable patches
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When planning a code change
+---
+
+# One-liner
+
+Prefer small reviewable patches.
+
+# Decision / Preference
+
+Split changes into smaller reviewable units.
+
+# Evidence
+
+- The user repeatedly prefers smaller changes.
+`,
+      "utf8"
+    );
+
+    const result = await runRetrieve(tempDir, "keep the blast radius narrow");
     assert.strictEqual(result.code, 0, result.stderr);
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.hit_count, 1);

@@ -43,6 +43,8 @@ function walkFiles(relativeDir) {
 function runtimeScriptFiles() {
   return [
     "scripts/_lingxi-memory.mjs",
+    "scripts/_lingxi-memory-semantic.mjs",
+    "scripts/lx-bootstrap.mjs",
     "scripts/lingxi-memory-index.mjs",
     "scripts/lingxi-setup.mjs",
     "scripts/lx-uninstall.mjs"

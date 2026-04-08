@@ -440,6 +440,11 @@ Instead, LingXi should explicitly adopt:
 - LLM reasoning for refinement and review
 - deterministic rules for validation, compilation, and persistence
 
+This should also extend to `memory`:
+
+- LLM reasoning for taste extraction, semantic governance, and retrieval ranking
+- deterministic rules for candidate validation, note persistence, session dedupe, and index/state safety
+
 ### Why
 
 Pure rules are good at enforcing a floor, but weak at:
@@ -557,6 +562,7 @@ V1 uses exactly one project-local subagent:
 
 - analyze historical sessions for durable engineering taste
 - ignore one-off task chatter
+- use LLM judgment to turn session content into structured durable-memory candidates
 - invoke LingXi memory writing flow
 - update processed session state
 
@@ -1108,3 +1114,15 @@ If the team wants to evaluate a daemon helper later, review it against these que
 - Does it avoid reintroducing hybrid Cursor-era runtime complexity?
 
 If the answer to any of the last two questions is “no,” then the daemon direction should be rejected for LingXi.
+
+---
+
+## Current Working Status
+
+The phase list in this roadmap records how LingXi 2.0 was built.
+
+The current working reference for memory follow-up is:
+
+- `docs/memory-quality-deepening-status.md`
+
+Use that document to guide the next memory-quality iteration instead of reopening earlier architectural choices that have already been settled.
