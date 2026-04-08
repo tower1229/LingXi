@@ -1114,3 +1114,15 @@ If the team wants to evaluate a daemon helper later, review it against these que
 - Does it avoid reintroducing hybrid Cursor-era runtime complexity?
 
 If the answer to any of the last two questions is “no,” then the daemon direction should be rejected for LingXi.
+
+---
+
+## Current Working Status
+
+The phase list in this roadmap records how LingXi 2.0 was built.
+
+The current working reference for memory follow-up is:
+
+- `docs/memory-quality-deepening-status.md`
+
+Use that document to guide the next memory-quality iteration instead of reopening earlier architectural choices that have already been settled.
