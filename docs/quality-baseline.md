@@ -208,6 +208,7 @@ Highest current LingXi 2.0 quality bar:
 - Must preserve project-memory preference when relevance is similar.
 - Must be useful before `task` and `vet`, not merely technically correct.
 - Must remain deterministic enough for tests and downstream use.
+- Semantic relevance judgment should come from the LLM path, not keyword scoring as the main decision engine.
 
 Evidence required before calling `memory-retrieve` aligned:
 
@@ -238,6 +239,7 @@ Highest current LingXi 2.0 quality bar:
 - Must merge materially identical durable signals instead of duplicating them.
 - Must rebuild and keep `INDEX.md` in sync after writes.
 - Must keep note IDs stable and monotonic.
+- Semantic create/merge/skip judgment should come from the LLM path, not string-signature matching as the main governance path.
 
 Evidence required before calling `memory-write` aligned:
 
@@ -270,6 +272,7 @@ Highest current LingXi 2.0 quality bar:
 - Must update processed-session state correctly.
 - Must write resulting memory through the normal memory path.
 - Must prefer precision over aggressive note creation.
+- Distillation should be driven by LLM semantic judgment validated through a structured candidate contract, not regex extraction as the main path.
 
 Evidence required before calling `session-distill` aligned:
 

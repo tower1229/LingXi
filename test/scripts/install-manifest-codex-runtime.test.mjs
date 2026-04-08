@@ -18,6 +18,7 @@ describe("install manifest codex runtime", () => {
 
     assert.ok(files.has(".codex-plugin/plugin.json"));
     assert.ok(files.has("scripts/_lingxi-memory.mjs"));
+    assert.ok(files.has("scripts/_lingxi-memory-semantic.mjs"));
     assert.ok(files.has("scripts/lx-create-automation.mjs"));
     assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
     assert.ok(files.has("scripts/lingxi-setup.mjs"));

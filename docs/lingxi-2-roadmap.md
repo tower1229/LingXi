@@ -440,6 +440,11 @@ Instead, LingXi should explicitly adopt:
 - LLM reasoning for refinement and review
 - deterministic rules for validation, compilation, and persistence
 
+This should also extend to `memory`:
+
+- LLM reasoning for taste extraction, semantic governance, and retrieval ranking
+- deterministic rules for candidate validation, note persistence, session dedupe, and index/state safety
+
 ### Why
 
 Pure rules are good at enforcing a floor, but weak at:
@@ -557,6 +562,7 @@ V1 uses exactly one project-local subagent:
 
 - analyze historical sessions for durable engineering taste
 - ignore one-off task chatter
+- use LLM judgment to turn session content into structured durable-memory candidates
 - invoke LingXi memory writing flow
 - update processed session state
 

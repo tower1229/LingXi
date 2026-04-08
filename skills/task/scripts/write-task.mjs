@@ -868,7 +868,7 @@ function validateTaskReadiness({
   }
 }
 
-function validateInput(input, projectRoot) {
+async function validateInput(input, projectRoot) {
   const projectContext = detectProjectContext(projectRoot);
   const existingTask = resolveExistingTask(projectRoot, input.task_id);
   if (!normalizeText(input.title)) throw new Error("Missing required field: title");
@@ -975,11 +975,12 @@ function validateInput(input, projectRoot) {
       ? input.memory_refs.map((item) => normalizeText(item)).filter(Boolean)
       : existingTask
         ? (existingTask.memory_refs || []).map((item) => normalizeText(item)).filter(Boolean)
-      : retrieveRelevantMemoryHits(
+      : (await retrieveRelevantMemoryHits(
           projectRoot,
           buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),
-          3
-        ).map((note) => formatMemoryRef(note)),
+          3,
+          { caller: "task" }
+        )).map((note) => formatMemoryRef(note)),
     task_id: input.task_id ? normalizeText(input.task_id) : "",
     type,
     complexity,
@@ -1013,7 +1014,7 @@ function validateInput(input, projectRoot) {
 async function main() {
   const projectRoot = resolveProjectRoot();
   ensureLingxiLayout(projectRoot);
-  const taskSpec = validateInput(await readJsonStdin(), projectRoot);
+  const taskSpec = await validateInput(await readJsonStdin(), projectRoot);
   assertValidTaskSpec(taskSpec);
   const compilation = compileTaskDocument(projectRoot, {
     ...taskSpec,

@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  governMemoryCandidate,
+  rankRelevantMemories
+} from "./_lingxi-memory-semantic.mjs";
 
 export const INDEX_COLUMNS = ["Id", "Kind", "Title", "When to load", "Source", "UpdatedAt", "File"];
 export const DISTILL_VERSION = "v1";
@@ -537,72 +541,29 @@ export function rebuildMemoryIndex(projectRoot) {
   return notes;
 }
 
-export function tokenizeQuery(query) {
-  return String(query || "")
-    .toLowerCase()
-    .split(/[^a-z0-9\u4e00-\u9fff]+/u)
-    .filter(Boolean);
-}
-
-function meaningfulTokens(tokens) {
-  const stopwords = new Set([
-    "the", "a", "an", "and", "or", "to", "for", "of", "in", "on", "with", "by",
-    "when", "use", "using", "change", "changes", "task", "tasks", "work", "review",
-    "this", "that", "it", "is", "are", "be", "before", "after", "from",
-    "的", "了", "在", "和", "与", "及", "或", "一个", "当前", "任务", "变更", "工作", "时"
-  ]);
-  return tokens.filter((token) => token.length > 1 && !stopwords.has(token));
-}
-
-function scoreField(fieldValue, tokens, weight) {
-  const normalized = normalizeText(fieldValue).toLowerCase();
-  if (!normalized) return 0;
-  let score = 0;
-  for (const token of tokens) {
-    if (normalized.includes(token)) score += weight;
-  }
-  return score;
-}
-
-export function scoreNote(note, query) {
-  const tokens = meaningfulTokens(tokenizeQuery(query));
-  if (tokens.length === 0) return 0;
-  let score = 0;
-  score += scoreField(note.title, tokens, 4);
-  score += scoreField(note.one_liner, tokens, 3);
-  score += scoreField(note.decision, tokens, 3);
-  score += scoreField((note.when_to_load || []).join(" "), tokens, 2);
-  score += scoreField((note.evidence || []).join(" "), tokens, 1);
-
-  const joinedQuery = tokens.join(" ");
-  const title = normalizeText(note.title).toLowerCase();
-  const oneLiner = normalizeText(note.one_liner).toLowerCase();
-  const decision = normalizeText(note.decision).toLowerCase();
-  if (joinedQuery && (title.includes(joinedQuery) || oneLiner.includes(joinedQuery) || decision.includes(joinedQuery))) {
-    score += 4;
-  }
-  if (score > 0 && note.scope === "project") {
-    score += 3;
-  }
-  return score;
-}
-
-export function retrieveRelevantMemoryHits(projectRoot, query, limit = 3) {
+export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, context = {}) {
   ensureRuntimeState(projectRoot);
   const resolvedLimit = Number.isFinite(limit) && limit > 0 ? limit : 3;
-  const ranked = loadMemoryNotes(projectRoot)
-    .map((note) => ({
-      ...note,
-      score: scoreNote(note, query)
-    }))
-    .filter((note) => note.score > 0)
-    .sort((a, b) => b.score - a.score || (a.scope === "project" ? -1 : 1) || a.id.localeCompare(b.id));
-  if (ranked.length === 0) return [];
-  const topScore = ranked[0].score;
-  const minimumScore = Math.max(4, topScore - 3);
-  return ranked
-    .filter((note) => note.score >= minimumScore)
-    .slice(0, resolvedLimit);
+  const notes = loadMemoryNotes(projectRoot);
+  if (notes.length === 0) return [];
+
+  const ranking = await rankRelevantMemories(projectRoot, query, notes, {
+    limit: resolvedLimit,
+    context
+  });
+  const noteById = new Map(notes.map((note) => [note.id, note]));
+  return ranking.hits
+    .map((hit) => {
+      const note = noteById.get(hit.note_id);
+      return note
+        ? {
+            ...note,
+            score: hit.score,
+            ranking_reason: hit.reason
+          }
+        : null;
+    })
+    .filter(Boolean);
 }
 
 export function formatMemoryRef(note) {
@@ -623,19 +584,6 @@ export function formatMemoryRef(note) {
   return parts.join(" — ");
 }
 
-export function normalizeSignaturePart(value) {
-  return normalizeText(value).toLowerCase();
-}
-
-export function memorySignature(noteLike) {
-  return [
-    normalizeSignaturePart(noteLike.kind),
-    normalizeSignaturePart(noteLike.title),
-    normalizeSignaturePart(noteLike.one_liner),
-    normalizeSignaturePart(noteLike.decision)
-  ].join("::");
-}
-
 export function mergeStringArrays(...lists) {
   const seen = new Set();
   const merged = [];
@@ -652,7 +600,7 @@ export function mergeStringArrays(...lists) {
   return merged;
 }
 
-export function upsertMemoryNote(projectRoot, input, scope = "project") {
+export async function upsertMemoryNote(projectRoot, input, scope = "project") {
   ensureRuntimeState(projectRoot);
   const notes = loadMemoryNotes(projectRoot);
   const updatedAt = new Date().toISOString();
@@ -669,20 +617,45 @@ export function upsertMemoryNote(projectRoot, input, scope = "project") {
     when_to_load: mergeStringArrays(input.when_to_load || []),
     one_liner: normalizeText(input.one_liner),
     decision: normalizeText(input.decision),
-    evidence: mergeStringArrays(input.evidence || [])
+    evidence: mergeStringArrays(input.evidence || []),
+    confidence: typeof input.confidence === "number" ? input.confidence : undefined,
+    durability_reason: normalizeText(input.durability_reason),
+    reusability_scope: normalizeText(input.reusability_scope || scope || "project")
   };
-  const signature = memorySignature(candidate);
-  const existing = notes.find((note) => note.scope === scope && memorySignature(note) === signature);
+  const governance = await governMemoryCandidate(projectRoot, candidate, notes, scope);
 
-  if (existing) {
-    const merged = {
-      ...existing,
-      source: mergeStringArrays(String(existing.source || "").split(","), String(candidate.source || "").split(",")).join(", "),
-      updated_at: updatedAt,
-      when_to_load: mergeStringArrays(existing.when_to_load, candidate.when_to_load),
-      evidence: mergeStringArrays(existing.evidence, candidate.evidence)
+  if (governance.action === "skip_as_not_durable") {
+    return {
+      operation: "skipped",
+      note_id: "",
+      file: "",
+      scope,
+      updated_at: "",
+      reason: governance.reason
     };
-    fs.writeFileSync(existing.file, renderMemoryNote(merged), "utf8");
+  }
+
+  if (governance.action === "merge_into_existing") {
+    const existing = notes.find((note) => note.id === governance.target_note_id);
+    if (!existing) {
+      throw new Error(`Memory governance merge target not found: ${governance.target_note_id}`);
+    }
+    const mergedNote = {
+      ...existing,
+      title: normalizeText(governance.note.title),
+      kind: normalizeText(governance.note.kind),
+      scope,
+      source: mergeStringArrays(
+        String(existing.source || "").split(","),
+        String(candidate.source || "").split(",")
+      ).join(", "),
+      updated_at: updatedAt,
+      when_to_load: mergeStringArrays(governance.note.when_to_load || []),
+      one_liner: normalizeText(governance.note.one_liner),
+      decision: normalizeText(governance.note.decision),
+      evidence: mergeStringArrays(governance.note.evidence || [])
+    };
+    fs.writeFileSync(existing.file, renderMemoryNote(mergedNote), "utf8");
     rebuildMemoryIndex(projectRoot);
     return {
       operation: "merged",
@@ -694,10 +667,21 @@ export function upsertMemoryNote(projectRoot, input, scope = "project") {
   }
 
   const noteId = nextMemoryId(notes.map((note) => note.id));
-  const filename = `${noteId}.${slugify(candidate.title)}.md`;
+  const note = {
+    id: noteId,
+    title: normalizeText(governance.note.title),
+    kind: normalizeText(governance.note.kind),
+    scope,
+    source: candidate.source,
+    updated_at: updatedAt,
+    when_to_load: mergeStringArrays(governance.note.when_to_load || []),
+    one_liner: normalizeText(governance.note.one_liner),
+    decision: normalizeText(governance.note.decision),
+    evidence: mergeStringArrays(governance.note.evidence || [])
+  };
+  const filename = `${noteId}.${slugify(note.title)}.md`;
   const file = path.join(memoryDir(projectRoot, scope), filename);
-  const note = { ...candidate, id: noteId, file };
-  fs.writeFileSync(file, renderMemoryNote(note), "utf8");
+  fs.writeFileSync(file, renderMemoryNote({ ...note, file }), "utf8");
   rebuildMemoryIndex(projectRoot);
   return {
     operation: "created",

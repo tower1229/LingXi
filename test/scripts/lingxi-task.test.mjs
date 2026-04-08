@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { fileURLToPath } from "node:url";
+import { withMemorySemanticTestEnv } from "../helpers/memory-semantic-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
@@ -20,7 +21,7 @@ function runNode(script, projectRoot, stdinJson) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot },
+      env: withMemorySemanticTestEnv({ ...process.env, CODEX_PROJECT_DIR: projectRoot }),
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";

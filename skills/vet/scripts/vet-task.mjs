@@ -904,7 +904,7 @@ function vetTask(task, projectContext, relevantMemory = []) {
   };
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   const projectRoot = resolveProjectRoot();
   let file = normalizeText(args.taskPath);
@@ -923,7 +923,9 @@ function main() {
   const result = vetTask(
     task,
     detectProjectContext(projectRoot),
-    retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3)
+    await retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3, {
+      caller: "vet"
+    })
   );
   const report = {
     task_id: task.id,
@@ -936,4 +938,7 @@ function main() {
   );
 }
 
-main();
+main().catch((error) => {
+  process.stderr.write(`${error.message}\n`);
+  process.exit(1);
+});

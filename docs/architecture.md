@@ -142,12 +142,17 @@ AGENTS.md
 
 V1 keeps the skill surface intentionally small.
 
-The core implementation strategy for `task` and `vet` is a hybrid model:
+The core implementation strategy for LingXi's semantic workflows is a hybrid model:
 
 - LLM reasoning for understanding, refinement, challenge, and judgment
 - deterministic scripts for validation, normalization, parsing, rendering, and stable persistence
 
 LingXi should not choose between "pure prompting" and "pure rules." It should use LLMs for the parts rules are bad at, and use rules for the parts that must stay stable.
+
+This now applies to `memory` as well:
+
+- LLM judgment for semantic extraction, governance, and retrieval ranking
+- deterministic scripts for schema validation, state safety, persistence, and index rebuilds
 
 ### `task`
 
@@ -250,6 +255,11 @@ Responsibilities:
 - find relevant existing memories for the current task or vet context
 - return minimal, high-signal guidance
 
+Implementation bias:
+
+- LLM decides which notes are semantically relevant and how to rank them
+- deterministic code validates the structured ranking result and maps it back onto stable hit output
+
 Non-responsibilities:
 
 - writing memory
@@ -263,6 +273,11 @@ Responsibilities:
 - maintain `INDEX.md`
 - enforce compact memory note structure
 
+Implementation bias:
+
+- LLM decides whether a candidate should create, merge, or skip
+- deterministic code validates the governance result, assigns ids, writes files, and rebuilds the index
+
 Non-responsibilities:
 
 - broad session analysis
@@ -275,6 +290,11 @@ Responsibilities:
 - analyze historical Codex sessions
 - extract only durable engineering taste
 - pass distilled items into the memory writing flow
+
+Implementation bias:
+
+- LLM produces a structured `MemoryDistillCandidateSet`
+- deterministic code validates the candidate set, applies dedupe/state rules, and persists approved notes
 
 Non-responsibilities:
 

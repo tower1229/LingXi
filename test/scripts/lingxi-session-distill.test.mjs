@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { fileURLToPath } from "node:url";
+import { withMemorySemanticTestEnv } from "../helpers/memory-semantic-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
@@ -19,7 +20,7 @@ function runNode(script, projectRoot, stdinJson) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot },
+      env: withMemorySemanticTestEnv({ ...process.env, CODEX_PROJECT_DIR: projectRoot }),
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";
@@ -162,5 +163,29 @@ describe("lingxi session distill", () => {
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.operation, "written");
     assert.ok(summary.note_count > 0, result.stdout);
+  });
+
+  it("extracts durable taste from paraphrased wording instead of fixed trigger phrases", async () => {
+    tempDir = createTempDir();
+    await runNode(setupPath, tempDir);
+    const result = await runNode(scriptPath, tempDir, {
+      session_id: "session-paraphrase",
+      messages: [
+        {
+          role: "user",
+          content: "When module seams get fuzzy, make the interface explicit so hidden coupling does not leak into implementation."
+        }
+      ]
+    });
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.operation, "written");
+    assert.ok(summary.candidate_count > 0, result.stdout);
+
+    const projectMemoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    const files = fs.readdirSync(projectMemoryDir).filter((item) => item.endsWith(".md"));
+    assert.strictEqual(files.length, 1);
+    const note = fs.readFileSync(path.join(projectMemoryDir, files[0]), "utf8");
+    assert.match(note, /Prefer explicit interfaces/);
   });
 });
