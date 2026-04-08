@@ -43,14 +43,14 @@ describe("workspace-bootstrap", () => {
     }
   });
 
-  it("creates .cursor/.lingxi dirs and INDEX.md", async () => {
+  it("creates .lingxi dirs and INDEX.md", async () => {
     tmpDir = createTempDir();
     const { code } = await runBootstrap(tmpDir);
     assert.strictEqual(code, 0);
 
-    const indexPath = path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md");
-    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
-    const shareDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "share");
+    const indexPath = path.join(tmpDir, ".lingxi", "memory", "INDEX.md");
+    const projectDir = path.join(tmpDir, ".lingxi", "memory", "project");
+    const shareDir = path.join(tmpDir, ".lingxi", "memory", "share");
     assert.ok(fs.existsSync(indexPath), "INDEX.md should exist");
     assert.ok(fs.existsSync(projectDir), "memory/project should exist");
     assert.ok(fs.existsSync(shareDir), "memory/share should exist");

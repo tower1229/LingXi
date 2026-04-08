@@ -1,6 +1,6 @@
 /**
  * latest-task-id.mjs and next-task-id.mjs tests.
- * Temp .cursor/.lingxi/tasks with *.task.*.md; assert stdout and exit codes.
+ * Temp .lingxi/tasks with *.task.*.md; assert stdout and exit codes.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -46,7 +46,7 @@ describe("task-id", () => {
 
   it("latest outputs max task id", async () => {
     tmpDir = createTempDir();
-    const tasksDir = path.join(tmpDir, ".cursor", ".lingxi", "tasks");
+    const tasksDir = path.join(tmpDir, ".lingxi", "tasks");
     fs.mkdirSync(tasksDir, { recursive: true });
     fs.writeFileSync(path.join(tasksDir, "001.task.a.md"), "# A", "utf8");
     fs.writeFileSync(path.join(tasksDir, "002.task.b.md"), "# B", "utf8");
@@ -58,7 +58,7 @@ describe("task-id", () => {
 
   it("next outputs max+1", async () => {
     tmpDir = createTempDir();
-    const tasksDir = path.join(tmpDir, ".cursor", ".lingxi", "tasks");
+    const tasksDir = path.join(tmpDir, ".lingxi", "tasks");
     fs.mkdirSync(tasksDir, { recursive: true });
     fs.writeFileSync(path.join(tasksDir, "001.task.a.md"), "# A", "utf8");
     fs.writeFileSync(path.join(tasksDir, "002.task.b.md"), "# B", "utf8");
@@ -70,7 +70,7 @@ describe("task-id", () => {
 
   it("latest exits 1 when no task files", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "tasks"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "tasks"), { recursive: true });
 
     const { code } = await runScript(LATEST_PATH, tmpDir);
     assert.strictEqual(code, 1);

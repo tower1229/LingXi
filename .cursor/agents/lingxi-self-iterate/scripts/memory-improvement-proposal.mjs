@@ -7,14 +7,14 @@ import {
   validateMergeKind,
 } from "../../../skills/memory-write/scripts/governance-context-validator.mjs";
 
-const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
-const DEFAULT_JSON_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
-const DEFAULT_MD_REL = ".cursor/.lingxi/workspace/memory-diagnostics.md";
+const AUDIT_REL = ".lingxi/workspace/audit.log";
+const DEFAULT_JSON_REL = ".lingxi/workspace/improvement-proposal.json";
+const DEFAULT_MD_REL = ".lingxi/workspace/memory-diagnostics.md";
 const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
-const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
-const INDEX_REL = ".cursor/.lingxi/memory/INDEX.md";
-const PROJECT_MEMORY_REL = ".cursor/.lingxi/memory/project";
-const SHARE_MEMORY_REL = ".cursor/.lingxi/memory/share";
+const HEARTBEAT_CONTROL_REL = ".lingxi/workspace/heartbeat-control.json";
+const INDEX_REL = ".lingxi/memory/INDEX.md";
+const PROJECT_MEMORY_REL = ".lingxi/memory/project";
+const SHARE_MEMORY_REL = ".lingxi/memory/share";
 const DEFAULT_WINDOW_HOURS = 24;
 
 function readArg(name, fallback = "") {

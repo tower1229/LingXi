@@ -7,14 +7,14 @@ description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模
 
 ## 意图
 
-同步 `.cursor/.lingxi/memory/INDEX.md` 与 `memory/project/`、`memory/share/` 的一致性，并由模型补全未索引 note 的 INDEX 行以提升检索质量；可选对整库做主动治理（合并/改写/归档建议）。由用户通过输入 **/memory-govern** 或自然语言（如「同步记忆索引」）显式触发本 Skill。
+同步 `.lingxi/memory/INDEX.md` 与 `memory/project/`、`memory/share/` 的一致性，并由模型补全未索引 note 的 INDEX 行以提升检索质量；可选对整库做主动治理（合并/改写/归档建议）。由用户通过输入 **/memory-govern** 或自然语言（如「同步记忆索引」）显式触发本 Skill。
 
 ## 调用形式与输入
 
 - **/memory-govern** [--dry-run] [--skip-govern] [--root \<memoryRoot\>]（或自然语言「同步记忆索引」「执行 memory-govern」等）
 - `--dry-run`：仅执行脚本并输出结果，不写回 INDEX、不调用模型补全、不执行阶段 2。
 - `--skip-govern`：执行阶段 1（同步 + 模型补全未索引），跳过阶段 2（全库治理）。
-- `--root`：指定 memory 根目录，默认 `.cursor/.lingxi/memory`（相对项目根）。
+- `--root`：指定 memory 根目录，默认 `.lingxi/memory`（相对项目根）。
 
 ## 执行流程（SSoT）
 
@@ -54,7 +54,7 @@ description: 记忆库治理：同步 INDEX 与 notes（脚本删孤儿行、模
 ## 依赖
 
 - 脚本：`scripts/memory-index-sync.mjs`（本 Skill 下），仅依赖 Node 内置 `fs`/`path`。
-- 项目根：脚本默认 memory 根为 `process.cwd() + '/.cursor/.lingxi/memory'`，调用时需在项目根执行或传入 `--root`。
+- 项目根：脚本默认 memory 根为 `process.cwd() + '/.lingxi/memory'`，调用时需在项目根执行或传入 `--root`。
 
 ## 输出
 

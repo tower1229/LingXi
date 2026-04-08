@@ -20,7 +20,7 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
 ## 完整执行流程（关键步骤不省略）
 
 1. **读取输入与定位**
-   - 扫描 `.cursor/.lingxi/tasks/`；指定 taskId 用指定编号，省略时执行 `node .cursor/skills/task/scripts/latest-task-id.mjs`。
+   - 扫描 `.lingxi/tasks/`；指定 taskId 用指定编号，省略时执行 `node .cursor/skills/task/scripts/latest-task-id.mjs`。
    - 读取 `<taskId>.task.*.md`；找不到文件时必须终止并给出可执行修复建议。
 
 2. **目标回放与边界锁定**
@@ -42,7 +42,7 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
    - 不发明需求外行为；manual/rubric 必须提供可执行步骤、预期结果和证据形式。
 
 6. **文档写入**
-   - 写入 `.cursor/.lingxi/tasks/<taskId>.plan.<标题>.md` 与 `.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`。
+   - 写入 `.lingxi/tasks/<taskId>.plan.<标题>.md` 与 `.lingxi/tasks/<taskId>.testcase.<标题>.md`。
    - plan 必须包含：任务清单、依赖关系、文件变更清单、测试映射、执行顺序。
 
 7. **质量自检与下一步建议（有产物时必须输出）**
@@ -63,5 +63,5 @@ description: 工作流步骤：产出 plan 与 testcase。仅支持手动或显�
 
 ## 产物与 References
 
-- **产物**：`.cursor/.lingxi/tasks/<taskId>.plan.<标题>.md`、`.cursor/.lingxi/tasks/<taskId>.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
+- **产物**：`.lingxi/tasks/<taskId>.plan.<标题>.md`、`.lingxi/tasks/<taskId>.testcase.<标题>.md`（标题 10 字以内，从 task 提取；与 task 同目录）。
 - **模板**：`references/plan-doc-template.md`；testcase-designer 见 `.cursor/skills/testcase-designer/SKILL.md`；品味嗅探规则：`references/taste-sniff-rules.md`

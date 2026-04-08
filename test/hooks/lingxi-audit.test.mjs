@@ -47,7 +47,7 @@ describe("lingxi-audit", () => {
 
   it("TC-001: returns allow JSON and defaults to minimal hook events", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       hook_event_name: "beforeSubmitPrompt",
       prompt: "hello",
@@ -58,7 +58,7 @@ describe("lingxi-audit", () => {
     const out = JSON.parse(stdout.trim());
     assert.strictEqual(out.continue, true, "return allow");
 
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     if (fs.existsSync(auditPath)) {
       const lines = fs.readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
       assert.strictEqual(lines.length, 0, "before_submit_prompt is skipped in default mode");
@@ -67,7 +67,7 @@ describe("lingxi-audit", () => {
 
   it("TC-003: returns allow for preToolUse", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       hook_event_name: "preToolUse",
       tool_name: "Grep",
@@ -82,7 +82,7 @@ describe("lingxi-audit", () => {
 
   it("TC-009: returns allow on invalid/empty input", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const { code, stdout } = await runLingxiAudit(tmpDir, "{}");
     assert.strictEqual(code, 0);
     const out = JSON.parse(stdout.trim());
@@ -95,7 +95,7 @@ describe("lingxi-audit", () => {
 
   it("writes hook trace when debug mode is enabled", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       hook_event_name: "beforeSubmitPrompt",
       prompt: "hello debug",
@@ -103,7 +103,7 @@ describe("lingxi-audit", () => {
     };
     const { code } = await runLingxiAudit(tmpDir, JSON.stringify(input), { LINGXI_AUDIT_DEBUG: "1" });
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const lines = fs.readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean);
     assert.ok(lines.length >= 1, "debug mode should write audit lines");
     const payload = JSON.parse(lines[lines.length - 1]);

@@ -54,7 +54,7 @@ describe("memory-improvement-apply script", () => {
 
   it("queues only low-risk actions by default", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
+    const workspace = path.join(tmpDir, ".lingxi", "workspace");
     fs.mkdirSync(workspace, { recursive: true });
     const proposal = {
       proposal_id: "proposal-001",
@@ -80,7 +80,7 @@ describe("memory-improvement-apply script", () => {
 
   it("is idempotent for repeated proposal_id + action_id", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
+    const workspace = path.join(tmpDir, ".lingxi", "workspace");
     fs.mkdirSync(workspace, { recursive: true });
     const proposal = {
       proposal_id: "proposal-dup",

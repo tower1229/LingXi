@@ -53,7 +53,7 @@ description: 工作流步骤：产出 task 文档。仅支持手动或显式调�
    - 重要缺失项（目标用户、核心场景、成功标准、关键约束）一次性列出并澄清。
 
 8. **Task 文档写入**
-   - 写入 `.cursor/.lingxi/tasks/<taskId>.task.<标题>.md`。
+   - 写入 `.lingxi/tasks/<taskId>.task.<标题>.md`。
    - 每条 F 必须包含：需求描述、实现方案、验收标准（可二值判定）、验证方式、边界/异常、证据形式、优先级。
 
 9. **下一步建议（有产物时必须输出）**
@@ -75,7 +75,7 @@ description: 工作流步骤：产出 task 文档。仅支持手动或显式调�
 
 ## 产物与模板
 
-- **产物**：`.cursor/.lingxi/tasks/001.task.<标题>.md`；命名格式 `三位数.task.<标题>.md`。
+- **产物**：`.lingxi/tasks/001.task.<标题>.md`；命名格式 `三位数.task.<标题>.md`。
 - **模板**：全栈/复杂用 `references/task-doc-template-full.md`，简单功能/其他用 `references/task-doc-template-simple.md`；特性标签（文档为主、库/SDK）在元数据中可选写入。
 
 ## References

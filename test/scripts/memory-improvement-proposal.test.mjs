@@ -54,7 +54,7 @@ describe("memory-improvement-proposal script", () => {
 
   it("generates proposal json and diagnostics md", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
+    const workspace = path.join(tmpDir, ".lingxi", "workspace");
     fs.mkdirSync(workspace, { recursive: true });
     const now = new Date().toISOString();
     const audit = [
@@ -100,8 +100,8 @@ describe("memory-improvement-proposal script", () => {
 
   it("includes index_drift in output with detected=false when index and files match", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
+    const workspace = path.join(tmpDir, ".lingxi", "workspace");
+    const projectDir = path.join(tmpDir, ".lingxi", "memory", "project");
     fs.mkdirSync(workspace, { recursive: true });
     fs.mkdirSync(projectDir, { recursive: true });
 
@@ -111,8 +111,8 @@ describe("memory-improvement-proposal script", () => {
       "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
       "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
     ].join("\n") + "\n";
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
-    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "memory"), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
 
     fs.writeFileSync(path.join(workspace, "audit.log"), "", "utf8");
@@ -129,8 +129,8 @@ describe("memory-improvement-proposal script", () => {
 
   it("detects index drift when note files count differs from INDEX rows", async () => {
     tmpDir = createTempDir();
-    const workspace = path.join(tmpDir, ".cursor", ".lingxi", "workspace");
-    const projectDir = path.join(tmpDir, ".cursor", ".lingxi", "memory", "project");
+    const workspace = path.join(tmpDir, ".lingxi", "workspace");
+    const projectDir = path.join(tmpDir, ".lingxi", "memory", "project");
     fs.mkdirSync(workspace, { recursive: true });
     fs.mkdirSync(projectDir, { recursive: true });
 
@@ -140,8 +140,8 @@ describe("memory-improvement-proposal script", () => {
       "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
       "| MEM-001 | principle | Test note | 测试时 | active | hypothesis | medium |  | 2026-01-01T00:00:00.000Z | 2026-01-01T00:00:00.000Z | remember |  | memory/project/MEM-001.md |",
     ].join("\n") + "\n";
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "memory"), { recursive: true });
-    fs.writeFileSync(path.join(tmpDir, ".cursor", ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "memory"), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, ".lingxi", "memory", "INDEX.md"), indexContent, "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-001.md"), "## Meta\n- **Id**: MEM-001\n", "utf8");
     fs.writeFileSync(path.join(projectDir, "MEM-002.md"), "## Meta\n- **Id**: MEM-002\n", "utf8");
 

@@ -118,4 +118,4 @@
 
 - 类型定义与 Kind 映射：[content-types.md](content-types.md)
 - 可沉淀情形与信号：[execution-and-triggers.md](execution-and-triggers.md)
-- 回归清单引用本示例集：`.cursor/.lingxi/workspace/regression-checklist-memory.md`
+- 回归清单引用本示例集：`.lingxi/workspace/regression-checklist-memory.md`

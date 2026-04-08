@@ -108,7 +108,7 @@ CreatedAt、UpdatedAt 为 ISO 8601 时间；Source 为来源（remember/extract/
 
 灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
 
-- 共享目录：`.cursor/.lingxi/memory/share/`
+- 共享目录：`.lingxi/memory/share/`
 - 推荐形态：**git submodule**（团队仓库，版本锁定、同步明确）
 - 生效方式：share 目录下的记忆与项目记忆一起参与检索。添加或更新 share 后运行 **memory-govern** Skill（在 Cursor 中输入 `/memory-govern`）同步索引并可选治理。
 

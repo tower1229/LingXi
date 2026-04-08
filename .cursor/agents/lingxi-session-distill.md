@@ -16,12 +16,12 @@ is_background: true
 
 控制文件与审计路径（默认）：
 
-- 控制文件：`.cursor/.lingxi/workspace/heartbeat-control.json`
-- 审计日志：`.cursor/.lingxi/workspace/audit.log`
+- 控制文件：`.lingxi/workspace/heartbeat-control.json`
+- 审计日志：`.lingxi/workspace/audit.log`
 
 ## 执行流程（按顺序）
 
-0. **写心跳触发事件**：向 `.cursor/.lingxi/workspace/audit.log` 追加一条 NDJSON：`heartbeat.triggered`，字段含 `ts`（ISO 8601）、`conversation_id`（取 enqueued_by，未传则空）、`candidate_ids`、`reason: "30min_threshold"`。
+0. **写心跳触发事件**：向 `.lingxi/workspace/audit.log` 追加一条 NDJSON：`heartbeat.triggered`，字段含 `ts`（ISO 8601）、`conversation_id`（取 enqueued_by，未传则空）、`candidate_ids`、`reason: "30min_threshold"`。
 1. **解析输入**：从父代理的提示中解析 candidate_ids（及可选 enqueued_by）。若 candidate_ids 为空或缺失，直接执行步骤 5（仅收尾），不进行提炼。
 2. **逐会话提炼**：对每个 candidate_id：
    - 用自然语言获取该会话的完整内容，例如：「获取 id 为 \<该 conversation_id\> 的会话内容」。
@@ -30,10 +30,10 @@ is_background: true
 3. **写入记忆**：若汇总后 payloads 非空，调用 **lingxi-memory-write** 子代理，传入 payloads 数组及可选 conversation_id（可用 enqueued_by）。
 4. **记录结果**：统计本批 sessions_processed（实际处理的会话数）、payloads_written（新建/合并/跳过条数，来自 lingxi-memory-write 简报）。
 5. **收尾（必须执行，成功或失败都要做）**：
-   - 读取 `.cursor/.lingxi/workspace/heartbeat-control.json`。
+   - 读取 `.lingxi/workspace/heartbeat-control.json`。
    - 将本批 **candidate_ids** 并入 `processed_conversation_ids`，保留数组最后 500 条；设置 `last_distillation_completed_at` 为当前时间（ISO）；清空 `pending_distillation`；将 `heartbeat` 置为 `{ running: false, started_at: null, run_id: null }`。
    - 写回 heartbeat-control.json。
-   - 向 `.cursor/.lingxi/workspace/audit.log` 追加一条 NDJSON：成功时为 `heartbeat.distillation_completed`（ts、candidate_ids、sessions_processed、payloads_written、conversation_id 可选）；失败时为 `heartbeat.distillation_failed`（ts、candidate_ids、error_preview）。
+   - 向 `.lingxi/workspace/audit.log` 追加一条 NDJSON：成功时为 `heartbeat.distillation_completed`（ts、candidate_ids、sessions_processed、payloads_written、conversation_id 可选）；失败时为 `heartbeat.distillation_failed`（ts、candidate_ids、error_preview）。
 
 ## 约束
 

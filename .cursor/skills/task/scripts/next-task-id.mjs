@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
  * 生成下一个任务编号（三位数）。
- * 扫描 .cursor/.lingxi/tasks/ 下 *.task.*.md 文件，取最大编号 +1。
+ * 扫描 .lingxi/tasks/ 下 *.task.*.md 文件，取最大编号 +1。
  * 输出：001～999，超出 999 时输出 999 并退出码 1。
  */
 import fs from "node:fs";
 import path from "node:path";
 
-const TASKS_DIR = path.join(process.cwd(), ".cursor", ".lingxi", "tasks");
+const TASKS_DIR = path.join(process.cwd(), ".lingxi", "tasks");
 const TASK_PATTERN = /^(\d{3})\.task\..*\.md$/;
 const MAX_ID = 999;
 

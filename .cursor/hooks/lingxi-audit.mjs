@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { readStdinJson, writeStdoutJson } from "./_hook-utils.mjs";
 
-const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
+const AUDIT_REL = ".lingxi/workspace/audit.log";
 const MAX_PREVIEW = 200;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const TAIL_BYTES = 200 * 1024; // 200KB，完整性检查优先读取的尾部大小

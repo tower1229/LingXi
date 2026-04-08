@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 灵犀工作区骨架创建脚本：检测并创建缺失的 .cursor/.lingxi/ 目录和文件。
+ * 灵犀工作区骨架创建脚本：检测并创建缺失的 .lingxi/ 目录和文件。
  * 幂等执行，供 workspace-bootstrap Skill 或 init command 调用。
  */
 import fs from "node:fs";
@@ -14,7 +14,7 @@ const SKILL_DIR = path.resolve(__dirname, "..");
 const REFS_DIR = path.join(SKILL_DIR, "references");
 
 const TEMPLATE_SOURCES = {
-  ".cursor/.lingxi/memory/INDEX.md": "INDEX.default.md",
+  ".lingxi/memory/INDEX.md": "INDEX.default.md",
 };
 
 function main() {

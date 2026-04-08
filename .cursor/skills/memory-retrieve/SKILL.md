@@ -1,6 +1,6 @@
 ---
 name: memory-retrieve
-description: 以传入的 query 从 `.cursor/.lingxi/memory/project/` 与 `.cursor/.lingxi/memory/share/` 检索记忆，产出 adopt/reject/ask 决策输入。仅当用户消息包含自由输入时调用；仅 command/skill 调用时不调用，由主流程写入 memory.retrieve.skipped 后直接作答。
+description: 以传入的 query 从 `.lingxi/memory/project/` 与 `.lingxi/memory/share/` 检索记忆，产出 adopt/reject/ask 决策输入。仅当用户消息包含自由输入时调用；仅 command/skill 调用时不调用，由主流程写入 memory.retrieve.skipped 后直接作答。
 ---
 
 # Memory Retrieve

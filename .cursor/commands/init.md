@@ -27,7 +27,7 @@ args: []
 
 ### Step 0) 最小预检与骨架初始化（内部步骤）
 
-- 委托 `workspace-bootstrap` 检测并补齐 `.cursor/.lingxi/` 必需骨架。
+- 委托 `workspace-bootstrap` 检测并补齐 `.lingxi/` 必需骨架。
 - 该步骤仅为兼容安装方式的内部实现；对用户不作为主信息展开。
 
 ### Step 1) 静默理解项目（Must 优先）

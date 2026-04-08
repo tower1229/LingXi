@@ -185,7 +185,7 @@ function main() {
       break;
     }
   }
-  const defaultRoot = path.join(process.cwd(), ".cursor", ".lingxi", "memory");
+  const defaultRoot = path.join(process.cwd(), ".lingxi", "memory");
   const memoryRoot = root ? path.resolve(root) : defaultRoot;
 
   const ctx = createContext(memoryRoot);

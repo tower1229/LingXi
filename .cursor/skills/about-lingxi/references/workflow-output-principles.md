@@ -47,7 +47,7 @@ task/plan/build/review/vet 在产生产物（写入文档或输出审查结果�
 **反例**：
 
 - 「开始收集需求…」「正在根据 task skill 执行…」—— 过程旁白，违反静默。
-- 「已成功写入 task 文档，路径为 `.cursor/.lingxi/tasks/001.task.xxx.md`。」—— 冗余确认，成功时应静默或仅通过下一步建议引导。
+- 「已成功写入 task 文档，路径为 `.lingxi/tasks/001.task.xxx.md`。」—— 冗余确认，成功时应静默或仅通过下一步建议引导。
 
 ### /plan
 

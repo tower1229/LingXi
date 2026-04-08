@@ -102,14 +102,14 @@ Write-Info "从 GitHub 下载文件: ${RepoOwner}/${RepoName}"
 
 # 检查目标目录是否存在
 $CursorExists = Test-Path ".cursor"
-$LingxiExists = Test-Path ".cursor\.lingxi"
+$LingxiExists = Test-Path ".lingxi"
 
 if ($CursorExists) {
   Write-Warning ".cursor 目录已存在"
 }
 
 if ($LingxiExists) {
-  Write-Warning ".cursor\.lingxi 目录已存在"
+  Write-Warning ".lingxi 目录已存在"
 }
 
 # 询问是否继续（合并安装模式）
@@ -255,8 +255,8 @@ if ((Test-Path "package.json") -and $Manifest.packageScripts) {
   Write-Success "已合并 lx: 脚本到 package.json"
 }
 
-# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-Write-Info "初始化工作区骨架（.cursor/.lingxi/）..."
+# 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
+Write-Info "初始化工作区骨架（.lingxi/）..."
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
   $bootstrapScript = ".cursor\skills\workspace-bootstrap\scripts\workspace-bootstrap.mjs"
@@ -274,7 +274,7 @@ if ($nodeCmd) {
   }
   $indexDefault = ".cursor\skills\workspace-bootstrap\references\INDEX.default.md"
   if (Test-Path $indexDefault) {
-    $indexTarget = ".cursor\.lingxi\memory\INDEX.md"
+    $indexTarget = ".lingxi\memory\INDEX.md"
     New-Item -ItemType Directory -Force -Path (Split-Path $indexTarget) | Out-Null
     Copy-Item -Path $indexDefault -Destination $indexTarget -Force
     Write-Success "已创建目录与模板（无 Node.js 模式）"
@@ -285,7 +285,7 @@ if ($nodeCmd) {
 }
 
 # 为 share 目录创建 .gitkeep 文件
-$ShareDir = ".cursor\.lingxi\memory\share"
+$ShareDir = ".lingxi\memory\share"
 if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
   @"
 # Share Directory
@@ -294,7 +294,7 @@ if ((Test-Path $ShareDir) -and -not (Test-Path "$ShareDir\.gitkeep")) {
 #
 # 使用方式：
 # 1. 添加 share 仓库（submodule）：
-# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+# git submodule add <shareRepoUrl> .lingxi/memory/share
 #
 # 2. 更新 share 仓库：
 # git submodule update --remote --merge
@@ -337,7 +337,7 @@ if (Test-Path ".gitignore") {
 } else {
   @(
     "# Local workspace for temp code clones, generated artifacts, etc.",
-    ".cursor/.lingxi/workspace/",
+    ".lingxi/workspace/",
     "",
     "# OS / IDE",
     ".DS_Store",
@@ -358,7 +358,7 @@ Write-Host " - .cursor/commands/ ($commandCount 个命令)"
 Write-Host " - .cursor/rules/ ($ruleCount 个规则)"
 Write-Host " - .cursor/skills/ ($skillCount 个核心 Agent Skills)"
 Write-Host " - .cursor/agents/ ($agentCount 个文件)"
-Write-Host " - .cursor/.lingxi/ 目录结构"
+Write-Host " - .lingxi/ 目录结构"
 if ($CursorExists -or $LingxiExists) {
   Write-Host ""
   Write-Info "✓ 已保留您现有的文件（合并安装模式）"

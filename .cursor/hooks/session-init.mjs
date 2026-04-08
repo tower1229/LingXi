@@ -18,12 +18,14 @@ function buildDynamicBaseContext(trigger_heartbeat, trigger_improvement) {
   return `<execution_protocol>
   <description>This protocol is effective for the entire session. Each turn is independent. Regardless of the user's input, you MUST execute in the following order. NO EXCEPTIONS.</description>
 ${stepA}  <rule id="B">Memory Retrieval Agreement (Must choose one):
+    - 记忆提取约定：本步骤是每轮必选分支（skip 或 perform）。
     - [Skip]: If the user message is ONLY a command (like \`/task\`) or a command with parameters (like \`/remember <content>\`) without independent user intent, DO NOT execute memory-retrieve. Write \`memory.retrieve.skipped\` to audit.
     - [Perform]: Otherwise, FIRST execute \`/memory-retrieve <current user message>\`. Then write \`memory.retrieve.performed\` to audit.
     PROHIBITION: DO NOT start answering or doing requests before writing the audit log for step B!
     Decision: If there are hits (top 0-2), you must make an adopt/reject/ask decision for each. Only give a one-line prompt for adopt, don't show reject. Cite the source (e.g., [MEM-003]) naturally when used.
   </rule>
   <rule id="C">Make responses and implement the user requests.</rule>
+  <rule id="D">步骤 D（post 模式）: If step C writes files, run post-mode memory retrieval check for notes with trigger_timing=post|both.</rule>
 </execution_protocol>` + BASE_CONTEXT_FOOTER;
 }
 

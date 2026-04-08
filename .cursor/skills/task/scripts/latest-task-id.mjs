@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
  * 获取最新任务编号（三位数）。
- * 扫描 .cursor/.lingxi/tasks/ 下 *.task.*.md 文件，输出最大编号。
+ * 扫描 .lingxi/tasks/ 下 *.task.*.md 文件，输出最大编号。
  * 输出：001～999；未找到任务文件时退出码 1。
  */
 import fs from "node:fs";
 import path from "node:path";
 
-const TASKS_DIR = path.join(process.cwd(), ".cursor", ".lingxi", "tasks");
+const TASKS_DIR = path.join(process.cwd(), ".lingxi", "tasks");
 const TASK_PATTERN = /^(\d{3})\.task\..*\.md$/;
 
 let files = [];

@@ -279,9 +279,9 @@ if [ -d ".cursor" ]; then
   warning ".cursor 目录已存在"
 fi
 
-if [ -d ".cursor/.lingxi" ]; then
+if [ -d ".lingxi" ]; then
   LINGXI_EXISTS=true
-  warning ".cursor/.lingxi 目录已存在"
+  warning ".lingxi 目录已存在"
 fi
 
 # 询问是否继续（合并安装模式）
@@ -503,8 +503,8 @@ if ps:
   fi
 fi
 
-# 使用 workspace-bootstrap 初始化 .cursor/.lingxi/（基于模板创建空白 INDEX 与模板文件）
-info "初始化工作区骨架（.cursor/.lingxi/）..."
+# 使用 workspace-bootstrap 初始化 .lingxi/（基于模板创建空白 INDEX 与模板文件）
+info "初始化工作区骨架（.lingxi/）..."
 if command -v node &>/dev/null; then
   if node .cursor/skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs; then
     success "已通过 workspace-bootstrap 创建目录与模板"
@@ -520,7 +520,7 @@ else
     mkdir -p "$dir"
   done < <(get_json_array "workflowDirectories")
   if [ -f ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ]; then
-    cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".cursor/.lingxi/memory/INDEX.md"
+    cp ".cursor/skills/workspace-bootstrap/references/INDEX.default.md" ".lingxi/memory/INDEX.md"
     success "已创建目录与模板（无 Node.js 模式）"
   else
     error "模板文件不存在，请确保 skills 已完整下载"
@@ -529,7 +529,7 @@ else
 fi
 
 # 为 share 目录创建 .gitkeep 文件（确保空目录被 git 跟踪）
-SHARE_DIR=".cursor/.lingxi/memory/share"
+SHARE_DIR=".lingxi/memory/share"
 if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
   cat > "$SHARE_DIR/.gitkeep" << 'EOF'
 # Share Directory
@@ -538,7 +538,7 @@ if [ -d "$SHARE_DIR" ] && [ ! -f "$SHARE_DIR/.gitkeep" ]; then
 #
 # 使用方式：
 # 1. 添加 share 仓库（submodule）：
-# git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+# git submodule add <shareRepoUrl> .lingxi/memory/share
 #
 # 2. 更新 share 仓库：
 # git submodule update --remote --merge
@@ -584,7 +584,7 @@ if [ -f ".gitignore" ]; then
 else
   cat > .gitignore << 'GITIGNOREEOF'
 # Local workspace for temp code clones, generated artifacts, etc.
-.cursor/.lingxi/workspace/
+.lingxi/workspace/
 
 # OS / IDE
 .DS_Store
@@ -605,7 +605,7 @@ echo " - .cursor/commands/ ($command_count 个命令)"
 echo " - .cursor/rules/ ($rule_count 个规则)"
 echo " - .cursor/skills/ ($skill_count 个核心 Agent Skills)"
 echo " - .cursor/agents/ ($agent_count 个文件)"
-echo " - .cursor/.lingxi/ 目录结构"
+echo " - .lingxi/ 目录结构"
 if [ "$CURSOR_EXISTS" = true ] || [ "$LINGXI_EXISTS" = true ]; then
   echo ""
   info "✓ 已保留您现有的文件（合并安装模式）"

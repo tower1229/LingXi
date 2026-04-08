@@ -2,7 +2,7 @@
 
 ## 概述
 
-灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离与 `references/core-values.md` 中的设计原则（含 AI Native：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障）。目前推荐通过**远程安装脚本**将灵犀加入项目（见 README 安装章节）；安装后在任意工作区可用，项目内的 `.cursor/.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建。
+灵犀基于 Cursor 的 Commands、Skills、Rules 等机制构建，遵循职责分离与 `references/core-values.md` 中的设计原则（含 AI Native：尊重 AI 能力，预留进化空间；关键决策以人为主、门控保障）。目前推荐通过**远程安装脚本**将灵犀加入项目（见 README 安装章节）；安装后在任意工作区可用，项目内的 `.lingxi/` 由运行 `/init` 或首次使用相关命令时在项目内创建。
 
 ## 核心组件
 
@@ -54,7 +54,7 @@ Skills 承载详细的工作流指导，按职责分为：
 
 #### 工具类 Skills（提供辅助能力）
 
-- `workspace-bootstrap`：创建缺失的灵犀目录骨架（.cursor/.lingxi/ 等），由 /init 或安装脚本显式调用，勿自动加载。
+- `workspace-bootstrap`：创建缺失的灵犀目录骨架（.lingxi/ 等），由 /init 或安装脚本显式调用，勿自动加载。
 - `testcase-designer`：由 plan（主产出）、build（Task-driven 且无 testcase 时）、review（覆盖审计）显式调用，从 task 文档产出结构化 testcase 文档，保证 F→TC 映射与验证方式一致
 - `about-lingxi`：快速了解灵犀的背景知识、架构设计和核心机制，提供调优指导、价值判定和评价准则
 - `ask-questions`：统一 ask-questions 交互协议与结果校验（`question_id + option id`，返回 option id 列表），供 remember/init/记忆治理等高频交互场景复用
@@ -76,7 +76,7 @@ Skills 承载详细的工作流指导，按职责分为：
    - **门控**：半静默仅限 new 且 confidence=high；merge/replace/删除须用户确认。
 2. **记忆提取**：每轮通过 sessionStart 使用 XML `<execution_protocol>` 约束自动执行核心的前置检索与决策。
 3. **记忆共享机制**（跨项目复用）：
-   - **共享目录**：`.cursor/.lingxi/memory/share/`（推荐作为 git submodule）
+   - **共享目录**：`.lingxi/memory/share/`（推荐作为 git submodule）
    - **识别**：Audience 为 project（项目级）或 team（团队级）；**团队级=写入 memory/share/**，**项目级=写入 memory/project/**；Portability 为 project-only / cross-project。
    - **写入**：lingxi-memory-write 调用的 memory-write skill 根据 **payload.apply** 决定路径：`apply === "team"` 时写入 `memory/share/`，否则写入 `memory/project/`；门控可提示「项目级 / 团队级」选择。
    - **读取**：`memory-retrieve` 检索 `memory/project/` 与 `memory/share/` 目录，语义+关键词混合检索会自动包含共享记忆；仍无匹配则静默

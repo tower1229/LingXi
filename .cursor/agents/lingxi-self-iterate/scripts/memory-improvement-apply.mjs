@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const DEFAULT_PROPOSAL_REL = ".cursor/.lingxi/workspace/improvement-proposal.json";
-const DEFAULT_QUEUE_REL = ".cursor/.lingxi/workspace/improvement-actions.queue.json";
+const DEFAULT_PROPOSAL_REL = ".lingxi/workspace/improvement-proposal.json";
+const DEFAULT_QUEUE_REL = ".lingxi/workspace/improvement-actions.queue.json";
 const APPEND_AUDIT_REL = ".cursor/hooks/append-memory-audit.mjs";
 
 function readArg(name, fallback = "") {

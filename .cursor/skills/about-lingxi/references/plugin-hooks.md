@@ -15,7 +15,7 @@
    - 注入执行顺序约定：步骤 A（心跳子代理，仅符合条件时注入）、步骤 B（检索审计）和主流程（步骤 C）；并注入调用 lingxi-memory-write 时传入 conversation_id 的约定。
 
 2. **心跳检查**  
-   脚本读取 `.cursor/.lingxi/workspace/heartbeat-control.json` 与 transcript 增量索引（`heartbeat-transcript-index.json`），并视情况向当轮上下文追加约定：
+   脚本读取 `.lingxi/workspace/heartbeat-control.json` 与 transcript 增量索引（`heartbeat-transcript-index.json`），并视情况向当轮上下文追加约定：
    - **会话提炼心跳**：若距上次会话提炼完成超过 30 分钟且锁可用，则从 transcript 增量中入队最多 3 个未提炼候选会话，写入 `pending_distillation` 与锁，并注入约定：主 Agent 在步骤 A 必须发起 **lingxi-session-distill** 子代理（传入 candidate_ids、enqueued_by），后台运行，无需等待。
    - **自我迭代心跳**：若距上次 24h 诊断完成超过 24 小时（依据 `last_improvement_cycle_at`），则注入约定：主 Agent 在步骤 A 必须发起 **lingxi-self-iterate** 子代理（run_in_background=true），执行“诊断 + 自动改进（仅 low risk）”，无需等待。
 
@@ -23,7 +23,7 @@
 
 ## 审计与 audit.log：核心事件 vs Debug 事件
 
-写入 `.cursor/.lingxi/workspace/audit.log` 的事件分为两路，且 Hook 事件采用**核心 / Debug** 分离策略。
+写入 `.lingxi/workspace/audit.log` 的事件分为两路，且 Hook 事件采用**核心 / Debug** 分离策略。
 
 ### 写入来源
 

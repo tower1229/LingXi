@@ -1,6 +1,6 @@
 # Memory Write Protocol
 
-本协议由 memory-write skill 执行，供 lingxi-memory-write 调用。根目录指 `.cursor/.lingxi/memory/`，相对路径均相对项目根（如 `memory/project/MEM-001.md`）。
+本协议由 memory-write skill 执行，供 lingxi-memory-write 调用。根目录指 `.lingxi/memory/`，相对路径均相对项目根（如 `memory/project/MEM-001.md`）。
 
 ## 写入路径（由 payload.apply 决定）
 
@@ -78,7 +78,7 @@ dedupe 为低风险可自动执行；merge/replace 时必须通过 ask-questions
 
 ## INDEX 格式
 
-- 路径：`.cursor/.lingxi/memory/INDEX.md`
+- 路径：`.lingxi/memory/INDEX.md`
 - 表头：`| Id | Kind | Title | When to load | Status | Strength | Scope | Supersedes | CreatedAt | UpdatedAt | Source | Session | File |`
 - File 为相对路径：项目级 `memory/project/MEM-xxx.md`，团队级 `memory/share/MEM-xxx.md`。写入/更新时填写 CreatedAt、UpdatedAt、Source、Session（即 conversation_id）。
 

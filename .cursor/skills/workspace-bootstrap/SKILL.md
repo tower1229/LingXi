@@ -1,13 +1,13 @@
 ---
 name: workspace-bootstrap
-description: 创建缺失的灵犀目录骨架（.cursor/.lingxi/ 等）。仅支持手动或显式调用（如 /init Step 0、安装脚本），勿根据语义自动加载。
+description: 创建缺失的灵犀目录骨架（.lingxi/ 等）。仅支持手动或显式调用（如 /init Step 0、安装脚本），勿根据语义自动加载。
 ---
 
 # Workspace Bootstrap
 
 ## 意图
 
-确保当前工作区内 `.cursor/.lingxi/` 骨架存在；幂等、静默执行，不向用户输出步骤细节。
+确保当前工作区内 `.lingxi/` 骨架存在；幂等、静默执行，不向用户输出步骤细节。
 
 ## 执行方式
 

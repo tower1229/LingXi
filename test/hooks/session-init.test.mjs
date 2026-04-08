@@ -35,7 +35,7 @@ function runSessionInit(stdinJson, extraEnv = {}) {
 describe("session-init", () => {
   function createTempProjectRoot() {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-session-init-"));
-    fs.mkdirSync(path.join(root, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(root, ".lingxi", "workspace"), { recursive: true });
     return root;
   }
 

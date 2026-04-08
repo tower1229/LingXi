@@ -52,7 +52,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.retrieve.performed payload to audit.log", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.retrieve.performed",
       conversation_id: "c1",
@@ -67,7 +67,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.retrieve.performed");
@@ -77,7 +77,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.retrieve.skipped payload", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.retrieve.skipped",
       conversation_id: "c1",
@@ -86,7 +86,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.retrieve.skipped");
@@ -95,11 +95,11 @@ describe("append-memory-audit", () => {
 
   it("writes memory.retrieve.invalid for invalid event", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = { event: "memory.retrieve.performed", query: "x" };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.retrieve.invalid");
@@ -107,11 +107,11 @@ describe("append-memory-audit", () => {
 
   it("writes memory.audit.invalid for schema-unsupported event", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = { event: "memory.unknown.event", foo: "bar" };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.audit.invalid");
@@ -120,7 +120,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.merge.diagnosed when payload is valid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.merge.diagnosed",
       conversation_id: "c-merge",
@@ -134,7 +134,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.diagnosed");
@@ -144,7 +144,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.merge.diagnosed with governance_context", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.merge.diagnosed",
       note_id: "MEM-009",
@@ -162,7 +162,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.diagnosed");
@@ -171,7 +171,7 @@ describe("append-memory-audit", () => {
 
   it("downgrades invalid governance_context enum to memory.merge.invalid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.merge.diagnosed",
       note_id: "MEM-009",
@@ -187,7 +187,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.invalid");
@@ -196,7 +196,7 @@ describe("append-memory-audit", () => {
 
   it("downgrades invalid merge diagnosis to memory.merge.invalid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.merge.diagnosed",
       note_id: "MEM-001",
@@ -208,7 +208,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.invalid");
@@ -217,7 +217,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.dedupe.applied when payload is valid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.dedupe.applied",
       note_id: "MEM-010",
@@ -227,7 +227,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.dedupe.applied");
@@ -236,7 +236,7 @@ describe("append-memory-audit", () => {
 
   it("writes memory.new.created_but_related_exists when payload is valid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.new.created_but_related_exists",
       note_id: "MEM-011",
@@ -246,7 +246,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.new.created_but_related_exists");
@@ -255,7 +255,7 @@ describe("append-memory-audit", () => {
 
   it("maps schema-required governance missing fields to memory.merge.invalid", async () => {
     tmpDir = createTempDir();
-    fs.mkdirSync(path.join(tmpDir, ".cursor", ".lingxi", "workspace"), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, ".lingxi", "workspace"), { recursive: true });
     const input = {
       event: "memory.dedupe.applied",
       source: "remember",
@@ -263,7 +263,7 @@ describe("append-memory-audit", () => {
     };
     const { code } = await runAppendMemoryAudit(tmpDir, JSON.stringify(input));
     assert.strictEqual(code, 0);
-    const auditPath = path.join(tmpDir, ".cursor", ".lingxi", "workspace", "audit.log");
+    const auditPath = path.join(tmpDir, ".lingxi", "workspace", "audit.log");
     const payload = getLastAuditLine(auditPath);
     assert.ok(payload);
     assert.strictEqual(payload.event, "memory.merge.invalid");

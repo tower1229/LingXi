@@ -13,7 +13,7 @@ import {
   validateMergeKind,
 } from "../skills/memory-write/scripts/governance-context-validator.mjs";
 
-const AUDIT_REL = ".cursor/.lingxi/workspace/audit.log";
+const AUDIT_REL = ".lingxi/workspace/audit.log";
 const AUDIT_SCHEMA_REL = "schemas/memory-audit-events.schema.json";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ROTATE_LOCK_SUFFIX = ".rotate.lock";

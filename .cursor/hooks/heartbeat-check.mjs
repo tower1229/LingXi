@@ -13,8 +13,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const HEARTBEAT_CONTROL_REL = ".cursor/.lingxi/workspace/heartbeat-control.json";
-const HEARTBEAT_TRANSCRIPT_INDEX_REL = ".cursor/.lingxi/workspace/heartbeat-transcript-index.json";
+const HEARTBEAT_CONTROL_REL = ".lingxi/workspace/heartbeat-control.json";
+const HEARTBEAT_TRANSCRIPT_INDEX_REL = ".lingxi/workspace/heartbeat-transcript-index.json";
 const THRESHOLD_MINUTES = 30;
 const LOCK_STALE_MINUTES = 5;
 const MAX_CANDIDATES = 3;

@@ -21,7 +21,7 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
 ## 完整执行流程（关键步骤不省略）
 
 1. **读取输入**
-   - 扫描 `.cursor/.lingxi/tasks/`。
+   - 扫描 `.lingxi/tasks/`。
    - 指定 taskId 用指定编号；省略时执行 `node .cursor/skills/task/scripts/latest-task-id.mjs` 获取最新编号。
    - 脚本失败必须终止并输出错误。
    - 读取 `<taskId>.task.*.md`、可选 `<taskId>.plan.*.md`、`<taskId>.testcase.*.md` 与变更文件列表。
@@ -58,7 +58,7 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
    - 子审查失败时记录降级原因并回退主流程补审。
 
 9. **写入 Review 文档**
-   - 覆盖写入 `.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（不存档、每次覆盖）。
+   - 覆盖写入 `.lingxi/tasks/<taskId>.review.<标题>.md`（不存档、每次覆盖）。
    - 文档必须包含「按需求编号的验收结果」表。
    - **多维度审查结果**：将 reviewer-doc-consistency / reviewer-security / reviewer-performance / reviewer-e2e 返回的 **Markdown 整块**按 spec 对应关系插入模板对应小节（### 3–4、### 8–9）；E2E 的「场景执行结果」表放入「E2E 测试执行结果」表位置。若存在 `REVIEWER_JSON` 块，可先解析用于汇总统计或审计，写入报告时以 Markdown 内容为准。
 
@@ -81,5 +81,5 @@ description: 工作流步骤：交付审查。仅支持手动或显式调用（�
 
 ## 产物与 References
 
-- **产物**：`.cursor/.lingxi/tasks/<taskId>.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
+- **产物**：`.lingxi/tasks/<taskId>.review.<标题>.md`（不存档，每次覆盖）；必须含「按需求编号的验收结果」表。
 - **报告模板**：`references/review-report-template.md`；**子维度输出规范**：`references/reviewer-output-spec.md`；品味嗅探规则：`references/taste-sniff-rules.md`
