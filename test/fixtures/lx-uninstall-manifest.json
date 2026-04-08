@@ -1,10 +1,24 @@
 {
-  "commands": ["commands/init.md"],
-  "rules": [],
-  "hooks": { "files": ["hooks.json"] },
-  "skills": [],
-  "agents": { "files": [] },
-  "references": {},
-  "scripts": ["lx-uninstall.mjs"],
+  "files": [
+    ".codex-plugin/plugin.json",
+    "skills/task/SKILL.md",
+    "skills/task/scripts/write-task.mjs",
+    "scripts/_lingxi-memory.mjs",
+    "scripts/lx-create-automation.mjs",
+    "scripts/lingxi-memory-index.mjs",
+    "scripts/lingxi-setup.mjs",
+    "scripts/lx-uninstall.mjs",
+    "templates/agents/lingxi-session-distill.toml.tmpl",
+    "templates/automations/session-distill.toml.tmpl"
+  ],
+  "runtimeFiles": [
+    ".lingxi",
+    ".codex/agents/lingxi-session-distill.toml"
+  ],
+  "packageScripts": {
+    "lx:create-automation": "node scripts/lx-create-automation.mjs",
+    "lx:setup": "node scripts/lingxi-setup.mjs",
+    "lx:uninstall": "node scripts/lx-uninstall.mjs"
+  },
   "manifestCopyPath": "install/install-manifest.json"
 }

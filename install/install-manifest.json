@@ -1,142 +1,50 @@
 {
-    "version": "1.1.0",
-    "commands": [
-        "commands/init.md",
-        "commands/remember.md"
-    ],
-    "rules": [],
-    "hooks": {
-        "files": [
-            "hooks.json",
-            "hooks/session-init.mjs",
-            "hooks/heartbeat-check.mjs",
-            "hooks/_hook-utils.mjs",
-            "hooks/append-memory-audit.mjs",
-            "hooks/lingxi-audit.mjs"
-        ]
-    },
-    "skills": [
-        "skills/about-lingxi/SKILL.md",
-        "skills/task/SKILL.md",
-        "skills/vet/SKILL.md",
-        "skills/plan/SKILL.md",
-        "skills/build/SKILL.md",
-        "skills/review/SKILL.md",
-        "skills/testcase-designer/SKILL.md",
-        "skills/reviewer-doc-consistency/SKILL.md",
-        "skills/reviewer-e2e/SKILL.md",
-        "skills/reviewer-performance/SKILL.md",
-        "skills/reviewer-security/SKILL.md",
-        "skills/skill-creator/SKILL.md",
-        "skills/taste-recognition/SKILL.md",
-        "skills/workspace-bootstrap/SKILL.md",
-        "skills/ask-questions/SKILL.md",
-        "skills/memory-govern/SKILL.md",
-        "skills/memory-retrieve/SKILL.md",
-        "skills/memory-write/SKILL.md"
-    ],
-    "agents": {
-        "files": [
-            "agents/lingxi-memory-write.md",
-            "agents/lingxi-session-distill.md",
-            "agents/lingxi-self-iterate.md"
-        ]
-    },
-    "references": {
-        "about-lingxi": [
-            "skills/about-lingxi/references/architecture.md",
-            "skills/about-lingxi/references/component-guides.md",
-            "skills/about-lingxi/references/core-values.md",
-            "skills/about-lingxi/references/cursor-agent-tools.md",
-            "skills/about-lingxi/references/cursor-learn-courses-summary.md",
-            "skills/about-lingxi/references/design-principles.md",
-            "skills/about-lingxi/references/engineering-practices.md",
-            "skills/about-lingxi/references/evaluation-criteria.md",
-            "skills/about-lingxi/references/memory-system.md",
-            "skills/about-lingxi/references/optimization-checklist.md",
-            "skills/about-lingxi/references/plugin-hooks.md",
-            "skills/about-lingxi/references/rules-guide.md",
-            "skills/about-lingxi/references/workflow-output-principles.md"
-        ],
-        "workspace-bootstrap": [
-            "skills/workspace-bootstrap/references/workflow-skeleton.json",
-            "skills/workspace-bootstrap/references/INDEX.default.md",
-            "skills/workspace-bootstrap/references/memory-note-template.default.md",
-            "skills/workspace-bootstrap/scripts/workspace-bootstrap.mjs"
-        ],
-        "taste-recognition": [
-            "skills/taste-recognition/references/payload-to-note.md",
-            "skills/taste-recognition/references/payload-and-downstream.md"
-        ],
-        "memory-retrieve": [],
-        "plan": [
-            "skills/plan/references/taste-sniff-rules.md",
-            "skills/plan/references/plan-doc-template.md"
-        ],
-        "review": [
-            "skills/review/references/taste-sniff-rules.md",
-            "skills/review/references/review-report-template.md"
-        ],
-        "testcase-designer": [
-            "skills/testcase-designer/references/testcase-doc-template.md"
-        ],
-        "build": [
-            "skills/build/references/taste-sniff-rules.md"
-        ],
-        "task": [
-            "skills/task/references/taste-sniff-rules.md",
-            "skills/task/references/task-doc-template-full.md",
-            "skills/task/references/task-doc-template-simple.md",
-            "skills/task/scripts/next-task-id.mjs",
-            "skills/task/scripts/latest-task-id.mjs"
-        ],
-        "memory-govern": [
-            "skills/memory-govern/scripts/memory-index-sync.mjs"
-        ],
-        "self-iterate": [
-            "agents/lingxi-self-iterate.md",
-            "agents/lingxi-self-iterate/scripts/memory-improvement-proposal.mjs",
-            "agents/lingxi-self-iterate/scripts/memory-improvement-apply.mjs"
-        ],
-        "memory-write": [
-            "skills/memory-write/references/write-protocol.md",
-            "skills/memory-write/references/memory-note-template.md"
-        ],
-        "skill-creator": [
-            "skills/skill-creator/references/schemas.md",
-            "skills/skill-creator/scripts/utils.py",
-            "skills/skill-creator/scripts/run_loop.py",
-            "skills/skill-creator/scripts/quick_validate.py",
-            "skills/skill-creator/scripts/package_skill.py",
-            "skills/skill-creator/scripts/run_eval.py",
-            "skills/skill-creator/scripts/improve_description.py",
-            "skills/skill-creator/scripts/generate_report.py",
-            "skills/skill-creator/scripts/aggregate_benchmark.py",
-            "skills/skill-creator/agents/grader.md",
-            "skills/skill-creator/agents/analyzer.md",
-            "skills/skill-creator/agents/comparator.md",
-            "skills/skill-creator/eval-viewer/viewer.html",
-            "skills/skill-creator/eval-viewer/generate_review.py",
-            "skills/skill-creator/assets/eval_review.html",
-            "skills/skill-creator/LICENSE.txt"
-        ]
-    },
-    "workflowDirectories": [
-        ".cursor/.lingxi/tasks",
-        ".cursor/.lingxi/memory",
-        ".cursor/.lingxi/memory/project",
-        ".cursor/.lingxi/memory/share",
-        ".cursor/.lingxi/workspace"
-    ],
-    "gitignoreEntries": [
-        "# Local workspace for temp code clones, generated artifacts, etc.",
-        ".cursor/.lingxi/workspace/"
-    ],
-    "scripts": [
-        "lx-uninstall.mjs"
-    ],
-    "packageScripts": {
-        "lx:uninstall": "node scripts/lx-uninstall.mjs"
-    },
-    "manifestCopyPath": "install/install-manifest.json"
+  "version": "2.0.0",
+  "files": [
+    ".codex-plugin/plugin.json",
+    "skills/memory-retrieve/SKILL.md",
+    "skills/memory-retrieve/scripts/retrieve-memory.mjs",
+    "skills/memory-write/SKILL.md",
+    "skills/memory-write/references/memory-note-template.md",
+    "skills/memory-write/references/write-rules.md",
+    "skills/memory-write/scripts/write-memory.mjs",
+    "skills/session-distill/SKILL.md",
+    "skills/session-distill/references/distill-rules.md",
+    "skills/session-distill/scripts/distill-session.mjs",
+    "skills/task/SKILL.md",
+    "skills/task/references/task-doc-template.md",
+    "skills/task/references/task-spec.schema.json",
+    "skills/task/scripts/latest-task-id.mjs",
+    "skills/task/scripts/next-task-id.mjs",
+    "skills/task/scripts/compile-task-spec.mjs",
+    "skills/task/scripts/task-compiler.mjs",
+    "skills/task/scripts/task-repair-loop.mjs",
+    "skills/task/scripts/task-spec.mjs",
+    "skills/task/scripts/validate-task-spec.mjs",
+    "skills/task/scripts/write-task.mjs",
+    "skills/vet/SKILL.md",
+    "skills/vet/references/vet-checklist.md",
+    "skills/vet/references/vet-report.schema.json",
+    "skills/vet/scripts/vet-repair-loop.mjs",
+    "skills/vet/scripts/vet-report.mjs",
+    "skills/vet/scripts/validate-vet-report.mjs",
+    "skills/vet/scripts/vet-task.mjs",
+    "scripts/_lingxi-memory.mjs",
+    "scripts/lx-create-automation.mjs",
+    "scripts/lingxi-memory-index.mjs",
+    "scripts/lingxi-setup.mjs",
+    "scripts/lx-uninstall.mjs",
+    "templates/agents/lingxi-session-distill.toml.tmpl",
+    "templates/automations/session-distill.toml.tmpl"
+  ],
+  "runtimeFiles": [
+    ".lingxi",
+    ".codex/agents/lingxi-session-distill.toml"
+  ],
+  "packageScripts": {
+    "lx:create-automation": "node scripts/lx-create-automation.mjs",
+    "lx:setup": "node scripts/lingxi-setup.mjs",
+    "lx:uninstall": "node scripts/lx-uninstall.mjs"
+  },
+  "manifestCopyPath": "install/install-manifest.json"
 }
