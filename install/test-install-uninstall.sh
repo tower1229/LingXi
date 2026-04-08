@@ -45,6 +45,14 @@ if [ -f "scripts/lx-uninstall.mjs" ]; then
   echo "FAIL: 清单内路径 scripts/lx-uninstall.mjs 仍存在"
   FAIL=1
 fi
+if [ -f "package.json" ]; then
+  if node -e 'const fs=require("fs"); const pkg=JSON.parse(fs.readFileSync("package.json","utf8")); const scripts=pkg.scripts||{}; process.exit(("lx:setup" in scripts || "lx:uninstall" in scripts) ? 1 : 0);'; then
+    :
+  else
+    echo "FAIL: package.json 中仍残留 LingXi 注入的脚本"
+    FAIL=1
+  fi
+fi
 
 if [ $FAIL -eq 1 ]; then
   echo "集成测试未通过。测试目录: $TEST_DIR"

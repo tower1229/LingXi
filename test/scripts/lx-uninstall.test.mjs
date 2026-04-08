@@ -47,6 +47,19 @@ function setupUninstallFixture(tmpDir) {
   fs.writeFileSync(path.join(tmpDir, ".lingxi", "state", "processed-sessions.json"), "{}", "utf8");
   fs.mkdirSync(path.join(tmpDir, ".codex", "agents"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".codex", "agents", "lingxi-session-distill.toml"), "dummy", "utf8");
+  fs.writeFileSync(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      name: "fixture-project",
+      private: true,
+      scripts: {
+        test: "node --test",
+        "lx:setup": "node scripts/lingxi-setup.mjs",
+        "lx:uninstall": "node scripts/lx-uninstall.mjs"
+      }
+    }, null, 2) + "\n",
+    "utf8"
+  );
 
   fs.writeFileSync(path.join(tmpDir, ".codex-plugin", "user-extension.json"), "{}", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "user-script.js"), "dummy", "utf8");
@@ -129,6 +142,18 @@ describe("lx-uninstall", () => {
     assert.strictEqual(fs.readFileSync(userScript, "utf8"), "dummy");
   });
 
+  it("removes LingXi-managed package scripts but preserves unrelated scripts", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+
+    await runUninstall(tmpDir);
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, "package.json"), "utf8"));
+    assert.deepStrictEqual(pkg.scripts, {
+      test: "node --test"
+    });
+  });
+
   it("exit 0 when no install files present", async () => {
     tmpDir = createTempDir();
     const installDir = path.join(tmpDir, "install");
@@ -146,6 +171,18 @@ describe("lx-uninstall", () => {
     assert.strictEqual(code, 0);
     const out = stdout + stderr;
     assert.ok(out.includes("未发现灵犀安装文件") || out.includes("无需卸载"), "message in stdout or stderr");
+  });
+
+  it("fails fast when the manifest is missing but LingXi-managed assets still remain", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+    fs.rmSync(path.join(tmpDir, "install", "install-manifest.json"));
+
+    const { code, stdout, stderr } = await runUninstall(tmpDir);
+    assert.strictEqual(code, 1);
+    const out = stdout + stderr;
+    assert.ok(out.includes("未找到安装清单"), out);
+    assert.ok(out.includes(".codex-plugin/plugin.json") || out.includes(".lingxi"), out);
   });
 
   it("is idempotent when uninstall runs twice", async () => {
