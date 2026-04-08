@@ -68,6 +68,8 @@ node scripts/lx-bootstrap.mjs
 - 生成 `.lingxi/setup/automation.session-distill.toml`
 - 把该自动化配置注册成实际的 Codex 自动化任务
 
+LingXi 默认把该自动化注册为 `local` 执行环境，而不是 `worktree`。原因是 session distill 会持续写入项目本地的 `.lingxi/memory/` 和 `.lingxi/state/`，如果放在隔离 worktree 中运行，记忆沉淀结果不会自然回流到你当前工作区。
+
 如果你只是要调试或检查中间产物，也可以拆开执行：
 
 ```bash

@@ -199,6 +199,29 @@ export function slugify(value) {
     .slice(0, 60) || "item";
 }
 
+export function ensureDirectoryPath(targetPath) {
+  const resolved = path.resolve(targetPath);
+  const parsed = path.parse(resolved);
+  const relativeSegments = resolved
+    .slice(parsed.root.length)
+    .split(path.sep)
+    .filter(Boolean);
+
+  let current = parsed.root;
+  for (const segment of relativeSegments) {
+    current = path.join(current, segment);
+    if (!fs.existsSync(current)) continue;
+    const stat = fs.statSync(current);
+    if (!stat.isDirectory()) {
+      throw new Error(
+        `LingXi cannot initialize because "${current}" exists as a file, but a directory is required there. Remove or rename that file and rerun bootstrap.`
+      );
+    }
+  }
+
+  fs.mkdirSync(resolved, { recursive: true });
+}
+
 export function ensureLingxiLayout(projectRoot) {
   const dirs = [
     tasksDir(projectRoot),
@@ -209,7 +232,7 @@ export function ensureLingxiLayout(projectRoot) {
     path.join(projectRoot, ".codex", "agents")
   ];
   for (const dir of dirs) {
-    fs.mkdirSync(dir, { recursive: true });
+    ensureDirectoryPath(dir);
   }
 }
 
