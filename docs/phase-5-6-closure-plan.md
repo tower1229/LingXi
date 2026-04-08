@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document translates the current roadmap state into the next concrete development direction.
+This document records the closure result for the final LingXi 2.0 Phase 5/6 release pass.
 
-It assumes the following are already substantially complete:
+The following are now complete at release quality:
 
 - Codex-native product skeleton
 - setup/bootstrap path
@@ -13,42 +13,37 @@ It assumes the following are already substantially complete:
 - `TaskSpec` / `VetReport` hybrid contract
 - repair-loop behavior
 
-That means the next step is no longer "keep expanding `task` / `vet` structure."
+That means LingXi 2.0 no longer sits in a "rebuild in progress" state for the current product scope.
 
-Repository retirement work now targets a closed, single-surface Codex-native repository.
+Repository retirement and background-memory productization now resolve to one closed, single-surface Codex-native release.
 
-The next step is:
-
-1. keep the repository and shipped product surface coherent
-2. make the background memory loop feel product-ready rather than merely implemented
-
-Important end-state clarification:
+Release result:
 
 - `.cursor/` is not meant to remain indefinitely as a permanent reference area
-- Phase 6 should end with `.cursor/` content removed from the main product repository
+- `.cursor/` content has been removed from the main product repository
 
 ---
 
-## Current Read
+## Closure Read
 
 Against [lingxi-2-roadmap.md](/mnt/c/Workspace/tower1229/LingXi/docs/lingxi-2-roadmap.md):
 
 - `Phase 1` to `Phase 4.5` are effectively in place
-- `Phase 5` exists at the capability level, but not yet fully productized
-- `Phase 6` repository-retirement work should now be treated as a release gate, not an open redesign area
+- `Phase 5` is productized at the supported release surface
+- `Phase 6` repository-retirement work is closed at the repository surface
 
 Against [architecture.md](/mnt/c/Workspace/tower1229/LingXi/docs/architecture.md):
 
 - the intended narrow user-facing workflow is present
 - the hybrid `task` / `vet` design is present
 - the durable memory path is present
-- the remaining gap is coherence, operability, and background-product finish
+- repository coherence, operability, and background-product finish are in place for release
 
-So the next development direction should be:
+So the release-state read is:
 
-- close the final Phase 6 coherence gaps and keep them closed
-- complete `Phase 5` productization of the background memory loop
-- only after that return to deeper content-quality upgrades
+- keep the Phase 6 coherence result closed
+- treat the Phase 5 background memory loop as the supported release path
+- only future work should deepen quality beyond the current release bar
 
 ---
 
@@ -61,7 +56,7 @@ Goal:
 - keep the repository, docs, tests, shipped assets, and runtime story describing the same product
 - prevent any reintroduction of a dual-tree Codex-plus-Cursor repository shape
 
-Why still first:
+Why it remained first:
 
 - current `task` / `vet` quality is already strong enough to continue
 - the main repository-level risk is now regression back into ambiguity or mixed product surfaces
@@ -88,7 +83,7 @@ Work packages:
 - keep useful quality baselines absorbed into `docs/`, `skills/`, `scripts/`, or supported tests
 - do not reintroduce `.cursor/` as a sidecar for convenience
 
-Current progress:
+Closure evidence:
 
 - test ownership has been reduced to the current-product suite
 - the first broad-workflow removal slice (`ask-questions`, `plan`, `build`, `review`) has been deleted from `.cursor/`
@@ -129,7 +124,7 @@ Goal:
 
 - turn `session-distill` + automation + memory write/read into a trustworthy background product loop
 
-Why second:
+Why it came second:
 
 - the logic exists already
 - what remains is not first implementation, but product-level confidence
@@ -141,21 +136,21 @@ Work packages:
 - align generated automation artifacts with current docs and templates
 - make cadence/state behavior legible
 - confirm what is generated locally vs what is only documented
-Current progress:
+Release evidence:
 - generated automation artifacts now carry explicit `FREQ=HOURLY;INTERVAL=6` cadence and link the state/journal files they operate on
 
 2. Make distillation state more explainable
 - processed-session behavior should be easy to inspect and reason about
 - rerun / reprocess behavior should be intentional, not incidental
 - versioned reprocessing rules should be documented and tested where needed
-Current progress:
+Release evidence:
 - `processed-sessions.json` now records state schema version, summary counters, last run metadata, and explicit run reasons such as `first_distill`, `content_changed`, and `distill_version_changed`
 
 3. Verify end-user memory loop quality
 - `task` should retrieve useful memory before drafting
 - `vet` should retrieve useful memory before review
 - `session-distill` should improve future task/vet quality instead of just writing notes
-Current progress:
+Release evidence:
 - `task` now auto-applies relevant memory into `Memory Applied` when the caller does not provide `memory_refs[]`
 - `vet` now checks whether relevant repository memory exists but was ignored by the task
 - regression coverage now proves a `session-distill -> task -> vet` path where distilled memory becomes visible to drafting and avoids stale-memory warnings
@@ -180,7 +175,7 @@ Release gate:
 
 ### Priority 3: Quality Deepening After Closure
 
-Only start this after Priority 1 and Priority 2 are complete.
+This work starts only after Priority 1 and Priority 2 are complete.
 
 Goal:
 
@@ -207,12 +202,12 @@ This is where LingXi should improve craftsmanship, not product shape.
 
 ---
 
-## Suggested Execution Sequence
+## Post-Closure Direction
 
 1. keep docs/tests/install/runtime describing one Codex-native product story
-2. tighten automation/session-distill/state contracts
-3. verify background memory usefulness in real task/vet flows
-4. only then resume content-quality deepening
+2. preserve the current automation/session-distill/state contracts
+3. keep proving background memory usefulness in real task/vet flows
+4. deepen quality only without reopening product shape
 
 ---
 
@@ -228,18 +223,14 @@ This is where LingXi should improve craftsmanship, not product shape.
 
 ## Immediate Next Task
 
-If work starts now, the best first concrete task is:
+If work resumes after this release closure, the next task should be:
 
-`Close the remaining repository-surface coherence gaps, then verify the background memory loop as a release-quality path.`
+`Deepen output quality inside the supported 2.0 surface without reopening workflow scope or repository shape.`
 
 Current evidence anchors:
 
 - [cursor-era-asset-classification.md](/mnt/c/Workspace/tower1229/LingXi/docs/cursor-era-asset-classification.md)
 - [quality-baseline.md](/mnt/c/Workspace/tower1229/LingXi/docs/quality-baseline.md)
-
-Immediate follow-up after this closure pass:
-
-- keep `Phase 6` locked, then move directly into `Phase 5` productization and release hardening
 
 ---
 
@@ -249,4 +240,4 @@ This closure plan is complete when LingXi 2.0 can be described in one clean sent
 
 "LingXi is a Codex-native plugin with a strong task/vet workflow and a conservative background memory loop, and the repository only ships what that sentence claims."
 
-That sentence should be true without needing `.cursor/` to remain in the repository.
+That sentence is now true for the current supported 2.0 release surface.

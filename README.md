@@ -2,18 +2,18 @@
 
 # LíngXī（灵犀）
 
-Quality-first rebuild for LingXi 2.0.
+LingXi 2.0 is now a released Codex-native task, vet, and engineering memory workflow.
 
 ## Status
 
-This repository is in the LingXi 2.0 rebuild phase.
+LingXi 2.0 is complete at the current product scope and ready for release.
 
 - The intended 2.0 product surface is now fully **Codex-native**.
 - The visible 2.0 workflows are intentionally narrow: `task` and `vet`.
 - Durable memory remains the real core: `memory-retrieve`, `memory-write`, and `session-distill`.
 - Cursor-era repository content has been removed from the main tree. The retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
 
-Current project policy is quality first:
+Current project policy remains quality first:
 
 - do not push roadmap phases quickly at the expense of output quality
 - align current-scope capabilities before expanding scope
@@ -26,9 +26,9 @@ See:
 - [Quality Bar](./docs/quality-baseline.md)
 - [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
 
-## Current 2.0 Core
+## 2.0 Core
 
-Implemented or in active alignment:
+Released and supported:
 
 - Codex plugin shell: `.codex-plugin/plugin.json`
 - project-local runtime under `.lingxi/`
@@ -76,4 +76,4 @@ npm test
 
 This runs the supported LingXi 2.0 product suite.
 
-The repository currently treats green current-product tests and product-surface coherence as mandatory quality gates before further roadmap expansion.
+The repository treats green current-product tests and product-surface coherence as mandatory release gates for the supported 2.0 surface.

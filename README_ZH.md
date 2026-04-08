@@ -2,18 +2,18 @@
 
 # LíngXī（灵犀）
 
-以质量优先为原则推进的 LingXi 2.0 重建。
+LingXi 2.0 已完成当前产品范围内的 Codex-native 发布形态。
 
 ## 当前状态
 
-这个仓库正处于 LingXi 2.0 的重建阶段。
+LingXi 2.0 已完成当前产品范围内的实现并可发布。
 
 - 2.0 的产品主线已经明确为 **Codex-native**。
 - 2.0 的可见工作流刻意收敛为 `task` 和 `vet`。
 - 持久记忆仍然是核心能力：`memory-retrieve`、`memory-write`、`session-distill`。
 - Cursor 时代的仓库内容已经从主树中移除，相关退役记录保留在 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)。
 
-当前项目遵循“质量优先”原则：
+当前项目仍然遵循“质量优先”原则：
 
 - 不为了推进 roadmap 阶段而牺牲质量
 - 先对齐当前已进入范围的能力，再继续扩张范围
@@ -26,9 +26,9 @@
 - [质量标准](./docs/quality-baseline.md)
 - [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)
 
-## 当前 2.0 核心
+## 2.0 核心
 
-已实现或正在做质量对齐的部分：
+当前已发布并受支持的部分：
 
 - Codex 插件外壳：`.codex-plugin/plugin.json`
 - 项目本地运行时目录：`.lingxi/`
@@ -76,4 +76,4 @@ npm test
 
 这条命令只运行当前受支持的 LingXi 2.0 产品测试套件。
 
-当前仓库把“当前产品测试全绿”和“产品表层一致性”都视为继续推进 roadmap 之前的强制质量门槛。
+当前仓库把“当前产品测试全绿”和“产品表层一致性”都视为受支持 2.0 表层的发布门槛。
