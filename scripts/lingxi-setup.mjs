@@ -39,13 +39,26 @@ function renderTemplate(relativePath, replacements = {}) {
 function defaultAgentsMd() {
   return `# LingXi Runtime
 
-When working in this repository:
+This repository includes a local LingXi 2.0 runtime.
 
-1. Retrieve relevant LingXi memory before task or vet work.
-2. Use LingXi task workflow for task definition.
-3. Use LingXi vet workflow for task review.
-4. Persist only durable, reusable engineering taste into LingXi memory.
-5. Do not store one-off implementation details as memory.
+- Runtime root: \`.lingxi/\`
+- Memory index: \`.lingxi/memory/INDEX.md\`
+- Project memory notes: \`.lingxi/memory/project/\`
+- Shared memory notes: \`.lingxi/memory/share/\`
+- Distill state: \`.lingxi/state/processed-sessions.json\`
+- Distill journal: \`.lingxi/state/distill-journal.jsonl\`
+- Background agent definition: \`.codex/agents/lingxi-session-distill.toml\`
+- Generated automation config: \`.lingxi/setup/automation.session-distill.toml\`
+
+LingXi provides dedicated workflows for:
+
+- task definition (\`task\`)
+- task vetting (\`vet\`)
+
+Global memory rule:
+
+- Persist only durable, reusable engineering taste.
+- Do not store one-off implementation details as memory.
 `;
 }
 

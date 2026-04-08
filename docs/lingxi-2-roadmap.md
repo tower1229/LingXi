@@ -608,10 +608,10 @@ Setup should:
 
 Minimum LingXi runtime policy inside generated `AGENTS.md`:
 
-- retrieve LingXi memory before `task` and `vet`
-- use LingXi task and vet skills for those workflows
-- only persist durable, reusable engineering taste
-- avoid storing one-off implementation details as memory
+- identify the LingXi runtime roots under `.lingxi/` and `.codex/agents/`
+- point to the memory index, project memory notes, and distill state files
+- describe `task` and `vet` as dedicated LingXi workflows, not mandatory default actions
+- keep only the top-level memory rule: persist durable engineering taste and avoid one-off implementation details
 
 ---
 

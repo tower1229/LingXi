@@ -50,6 +50,7 @@ describe("lingxi-setup", () => {
     assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "memory", "INDEX.md")));
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
+    const agents = fs.readFileSync(path.join(tempDir, "AGENTS.md"), "utf8");
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
     const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
     const summary = JSON.parse(result.stdout);
@@ -72,6 +73,13 @@ describe("lingxi-setup", () => {
     assert.match(automation, /agent = "\.codex\/agents\/lingxi-session-distill\.toml"/);
     assert.match(automation, /state_file = "\.lingxi\/state\/processed-sessions\.json"/);
     assert.match(automation, /journal_file = "\.lingxi\/state\/distill-journal\.jsonl"/);
+    assert.match(agents, /Runtime root: `\.lingxi\/`/);
+    assert.match(agents, /Memory index: `\.lingxi\/memory\/INDEX\.md`/);
+    assert.match(agents, /Background agent definition: `\.codex\/agents\/lingxi-session-distill\.toml`/);
+    assert.match(agents, /task definition \(`task`\)/);
+    assert.match(agents, /task vetting \(`vet`\)/);
+    assert.match(agents, /Persist only durable, reusable engineering taste\./);
+    assert.doesNotMatch(agents, /Retrieve relevant LingXi memory before task or vet work\./);
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {
