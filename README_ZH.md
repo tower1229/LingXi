@@ -70,32 +70,36 @@ curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
-### 本地 Setup
+### 本地 Bootstrap
 
-安装完成后，或者你只是想单独验证运行时骨架，都可以执行：
+如果你要让 LingXi 的记忆沉淀与提取循环真正闭环，本地必须执行：
 
 ```bash
-node scripts/lingxi-setup.mjs
+node scripts/lx-bootstrap.mjs
 ```
 
-它会生成当前 LingXi 所需的运行时结构：
+这是必需步骤。它会同时：
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
+- 在 Codex 中注册 session-distill 自动化任务
 
-### 可选：注册自动化任务
+如果不注册自动化，LingXi 的后台记忆沉淀循环实际上并没有闭环。
 
-LingXi 会先生成后台 session distill 的自动化配置文件，但真正注册成 Codex 自动化仍然是一个显式步骤：
+### 底层命令
+
+如果你只是为了调试或检查中间产物，也可以拆开执行：
 
 ```bash
+node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 ```
 
-或者：
+或者直接执行：
 
 ```bash
-npm run lx:create-automation
+npm run lx:bootstrap
 ```
 
 ## 当前产品范围

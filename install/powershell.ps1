@@ -150,13 +150,13 @@ if (Test-Path "package.json") {
   Write-Success "Merged LingXi scripts into package.json"
 }
 
-Write-Info "Bootstrapping LingXi 2.0 runtime..."
-& node "scripts\lingxi-setup.mjs"
+Write-Info "Bootstrapping LingXi 2.0 runtime and automation..."
+& node "scripts\lx-bootstrap.mjs"
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "LingXi 2.0 runtime bootstrap failed"
+  Write-Error "LingXi 2.0 bootstrap failed"
   exit 1
 }
-Write-Success "LingXi 2.0 runtime bootstrap completed"
+Write-Success "LingXi 2.0 runtime and automation bootstrap completed"
 
 Write-Host ""
 Write-Success "Install complete"

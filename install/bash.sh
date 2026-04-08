@@ -202,12 +202,12 @@ if [ -f "package.json" ]; then
   success "Merged LingXi scripts into package.json"
 fi
 
-info "Bootstrapping LingXi 2.0 runtime..."
-if ! node "scripts/lingxi-setup.mjs"; then
-  error "LingXi 2.0 runtime bootstrap failed"
+info "Bootstrapping LingXi 2.0 runtime and automation..."
+if ! node "scripts/lx-bootstrap.mjs"; then
+  error "LingXi 2.0 bootstrap failed"
   exit 1
 fi
-success "LingXi 2.0 runtime bootstrap completed"
+success "LingXi 2.0 runtime and automation bootstrap completed"
 
 echo ""
 success "Install complete"

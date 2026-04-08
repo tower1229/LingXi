@@ -105,6 +105,7 @@ echo ""
 info "运行安装脚本..."
 BASE_URL="http://localhost:${PORT}" \
 AUTO_CONFIRM=true \
+CODEX_HOME="$TEST_DIR/.codex-home" \
 bash "$SCRIPT_DIR/bash.sh"
 
 echo ""

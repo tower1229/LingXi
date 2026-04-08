@@ -11,7 +11,7 @@
 - `scripts/`
 - `templates/`
 
-安装完成后还会执行 `scripts/lingxi-setup.mjs`，生成运行时骨架：
+安装完成后还会执行 `scripts/lx-bootstrap.mjs`，完成本地运行时初始化并注册自动化任务：
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
@@ -56,24 +56,29 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 说明：安装器要求目标环境可用 `node`，因为 setup 和工作流脚本都基于 Node.js。
 
-`node scripts/lingxi-setup.mjs` 只会生成项目内运行时和自动化配置文件，不会直接替你在 Codex 中注册自动化任务。
+如果你的目标是让 LingXi 在目标仓库里真正形成闭环，应优先执行：
 
-如果你的目标是单独验证 LingXi 2.0 的运行时骨架，应优先在目标仓库直接执行：
+```bash
+node scripts/lx-bootstrap.mjs
+```
+
+这一步会：
+
+- 生成 `.lingxi/` 与 `.codex/agents/` 运行时骨架
+- 生成 `.lingxi/setup/automation.session-distill.toml`
+- 把该自动化配置注册成实际的 Codex 自动化任务
+
+如果你只是要调试或检查中间产物，也可以拆开执行：
 
 ```bash
 node scripts/lingxi-setup.mjs
-```
-
-如需把生成的 `.lingxi/setup/automation.session-distill.toml` 注册成实际的 Codex 自动化，请继续执行：
-
-```bash
 node scripts/lx-create-automation.mjs
 ```
 
 或者：
 
 ```bash
-npm run lx:create-automation
+npm run lx:bootstrap
 ```
 
 ### 卸载

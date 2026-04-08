@@ -6,6 +6,7 @@
   "version": "2.0.0",
   "license": "MIT",
   "scripts": {
+    "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
     "lx:create-automation": "node scripts/lx-create-automation.mjs",
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",

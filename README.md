@@ -72,30 +72,34 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 ### Local Setup
 
-After install, or when validating the runtime shape locally, run:
+To complete the LingXi memory loop locally, run:
 
 ```bash
-node scripts/lingxi-setup.mjs
+node scripts/lx-bootstrap.mjs
 ```
 
-This generates the current LingXi runtime skeleton:
+This is the required local bootstrap step. It:
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
+- registers the generated session-distill automation in Codex
 
-### Optional Automation Registration
+Without automation registration, the background memory distillation loop is not actually closed.
 
-LingXi generates the automation artifact for background session distillation, but registering it in Codex is still an explicit step:
+### Low-Level Commands
+
+If you need to run the low-level steps separately for debugging or inspection:
 
 ```bash
+node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 ```
 
 or:
 
 ```bash
-npm run lx:create-automation
+npm run lx:bootstrap
 ```
 
 ## Product Scope

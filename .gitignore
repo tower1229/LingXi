@@ -1,4 +1,5 @@
 # Project-local runtime artifacts generated when this repo is used as a target workspace.
+.codex
 .lingxi/
 .codex/
 AGENTS.md
