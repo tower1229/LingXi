@@ -62,7 +62,7 @@ if ! command -v python3 &> /dev/null; then
   exit 1
 fi
 
-# 在仓库根目录启动 HTTP 服务器（使 install/ 与 .cursor/ 均可访问）
+# 在仓库根目录启动 HTTP 服务器（使安装清单与新版 2.0 资产可访问）
 info "在仓库根目录启动 HTTP 服务器..."
 cd "$REPO_ROOT"
 python3 -m http.server $PORT > /dev/null 2>&1 &
@@ -105,6 +105,7 @@ echo ""
 info "运行安装脚本..."
 BASE_URL="http://localhost:${PORT}" \
 AUTO_CONFIRM=true \
+CODEX_HOME="$TEST_DIR/.codex-home" \
 bash "$SCRIPT_DIR/bash.sh"
 
 echo ""

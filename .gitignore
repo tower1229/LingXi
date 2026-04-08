@@ -1,7 +1,9 @@
-# Local workspace for temp code clones, generated artifacts, etc.
-.cursor/.lingxi/workspace/
+# Project-local runtime artifacts generated when this repo is used as a target workspace.
+.codex
+.lingxi/
+.codex/
+AGENTS.md
 
 # OS / IDE
 .DS_Store
 Thumbs.db
-

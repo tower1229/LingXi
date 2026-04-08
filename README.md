@@ -2,106 +2,147 @@
 
 # LíngXī（灵犀）
 
-Cursor workflow with persistent memory.
+**A Codex-native workflow that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
 
----
+LingXi 2.0 is released and ready for release at the current product scope.
 
-## Why (Vision)
+LingXi keeps the visible surface intentionally small:
 
-Your go-to toolkit for creators in the AI era.
+- `task` turns rough requests into engineer-ready task documents
+- `vet` stress-tests those tasks before execution starts
+- `memory` captures reusable engineering judgment in the background so future work gets better
 
-## How (Approach)
+Cursor-era repository content has been removed from the main tree, and the retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
 
-### 1) In Sync With You
+## Why LingXi
 
-Persistent memory so the AI works the way you do.
+Most AI workflows are good at generating output, but weak at preserving standards.
 
-### 2) AI Native
+LingXi is built to improve the quality of work before code is written:
 
-Respect AI capability and leave room for evolution.
+- turn ambiguous requests into bounded, implementation-ready tasks
+- catch hidden risk, weak acceptance criteria, and shallow framing early
+- carry forward durable engineering preferences instead of relearning them every session
+- keep outputs structured, reviewable, and testable rather than purely conversational
 
-### 3) To Your Liking
+## What You Get
 
-Lower cognitive load and a smooth, user-friendly experience.
+- **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
+- **Durable memory core** in [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
+- **Project-local runtime** under `.lingxi/`
+- **Background distillation agent template** in [`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
+- **Deterministic setup and runtime helpers** in [`scripts/`](./scripts/)
 
----
+## How It Works
 
-## What (Implementation)
+1. Install LingXi into a target repository.
+2. Run setup to generate the local runtime and background-agent config.
+3. Use `task` to create a strong task document.
+4. Use `vet` to challenge it before implementation begins.
+5. Let `session-distill` accumulate durable engineering taste into project memory over time.
 
-- **Flexible workflow**: Compose your own flow—rigorous when needed, light when not
-- **Persistent memory bank**: Learns your judgment, taste, and responsibility in the project and applies them in every new conversation
-- **Human in the loop**: Key decisions follow your lead—optional when you want, never overstepping when you don’t
-- **Self-iterate**: Run low-risk, audit-driven improvements on heartbeat cycles so the system keeps getting more stable and accurate
-- **Ready to use**: Use the install script to add LingXi to your project, then run `/init` to understand project context and bootstrap LingXi workflow
+The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 
----
+## Install
 
-## Install & Quick Start
+Remote install scripts provision the supported LingXi 2.0 surface directly:
 
-### Install
+- `.codex-plugin/plugin.json`
+- `skills/`
+- `scripts/`
+- `templates/`
+- generated runtime under `.lingxi/` and `.codex/agents/`
 
-Run one of the following commands from your **project root** to install LingXi into your project:
+### Remote Install Script
 
-- **Linux / macOS / Git Bash:**
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
-  ```
-- **Windows PowerShell:**
-  ```powershell
-  irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
-  ```
+Run one of the following commands from the **root of your target repository**.
 
-After install, open the project in Cursor and run `/init` once to build project context and generate optional memory candidates (write is gated by your explicit choice).
-
----
-
-### Quick Start
-
-**We recommend running `/init` first** to understand the existing project and prepare optional memory candidates; then use the workflow skills or helper commands below.
-
-#### Workflow skills
-
-The core workflow is driven by **Skills** (task, vet, plan, build, review). Invoke them by typing `/task`, `/plan`, `/build`, `/review`, or `/vet` (Cursor shows the matching skill) or by natural language (e.g. “create a task document”, “plan task 001”).
-
-Use these in lifecycle order:
-
-| Skill      | Usage                                                                                                                                                         | Description                                                                                                                                                                                                                                                                      |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **task**   | `/task <description>` or “create task…”<br><br>**Examples:**<br>`/task Add user login with email and phone`<br>`/task Improve homepage load, target LCP < 1s` | **Create task doc**<br><br>Auto task id (001, 002...) and title; creates:<br>`.cursor/.lingxi/tasks/001.task.<title>.md`<br><br>This is the core document for the whole workflow, including refined requirements, technical approach, and acceptance criteria.                   |
-| **vet**    | `/vet [taskId]` or “review task doc”<br><br>**Examples:**<br>`/vet 001`<br>`/vet` (latest task)                                                               | **Review task doc (optional)**<br><br>Multi-dimension review of the task doc to improve quality. Optional, can be run multiple times.<br><br>No file output; results and suggestions in chat only.                                                                               |
-| **plan**   | `/plan [taskId]` or “plan task…”<br><br>**Examples:**<br>`/plan 001`<br>`/plan` (latest task)                                                                 | **Task planning (optional)**<br><br>Generate plan and test-case docs from the task doc. For complex tasks; simple ones can skip.<br><br>**Tip:** Works with Cursor’s plan mode.                                                                                                  |
-| **build**  | `/build [taskId]` or “implement task…”<br><br>**Examples:**<br>`/build 001`<br>`/build` (latest task)                                                         | **Run build (optional)**<br><br>Two modes:<br>- **Plan-driven**: Follow plan when present (recommended)<br>- **Task-driven**: Agent decides from task doc when no plan<br><br>**Tip:** In plan mode you can use its built-in build and skip LingXi’s build skill.                |
-| **review** | `/review [taskId]` or “review delivery”<br><br>**Examples:**<br>`/review 001`<br>`/review` (latest task)                                                      | **Review delivery**<br><br>Multi-dimension review and report:<br><br>**Core:** functionality, test coverage, architecture, maintainability, regression<br><br>**Optional:** doc consistency, security, performance, E2E<br><br>**Tests:** unit, integration, E2E when applicable |
-
-#### Helper commands
-
-| Command     | Usage                                                                                                                            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/remember` | `/remember <description>`<br><br>**Examples:**<br>`/remember Capture the lesson from that bug`<br>`/remember Always use X for Y` | **Write to memory (any time)**<br><br>No task id needed. Write judgments, tradeoffs, runbooks, or checks to `memory/project/` (or `memory/share/` for team-level) for later retrieval.<br><br>**Use when:**<br>- Stating a principle or decision<br>- Extracting from recent conversation<br>- Giving keywords so the system can find and extract the right content<br><br>**Session distillation** is automatic: when you start a new conversation and it has been more than 30 minutes since the last run, LingXi enqueues up to 3 finished sessions for background distillation (source=heartbeat); no command needed. |
-| `/init`     | `/init`                                                                                                                          | **Initialize project context (first use)**<br><br>Guided understanding of an existing project, producing memory candidates with explicit write gating. Internal workspace bootstrap may run as a preflight step. Recommended when first using LingXi in a project.                                                                                                                                                                                                                                                                                                                                                        |
-
-#### Sharing experience across projects (share dir + git submodule)
-
-LingXi uses a designated share directory for team knowledge that can be reused across projects:
-
-- Share directory: `.cursor/.lingxi/memory/share/` (recommended as a **git submodule**). Team-level memory (`apply=team`) is written here; project-level memory is written to `memory/project/`.
-
-**1) Add share repo (submodule)**
+**Linux / macOS / Git Bash**
 
 ```bash
-git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
 ```
 
-**2) Update share repo**
+**Windows PowerShell**
+
+```powershell
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
+```
+
+### Local Setup
+
+To complete the LingXi memory loop locally, run:
 
 ```bash
-git submodule update --remote --merge
+node scripts/lx-bootstrap.mjs
 ```
 
-**3) Sync memory index (after adding shared notes)**
+This is the required local bootstrap step. It:
 
-In Cursor, run the **memory-govern** skill (e.g. type `/memory-govern`) to sync INDEX with notes (removes orphan index rows and lets the model complete INDEX lines for unindexed notes).
+- `.lingxi/`
+- `.codex/agents/lingxi-session-distill.toml`
+- `.lingxi/setup/automation.session-distill.toml`
+- registers the generated session-distill automation in Codex
 
-## Related docs
+Without automation registration, the background memory distillation loop is not actually closed.
 
-- [Core Architecture](.cursor/skills/about-lingxi/references/architecture.md)
+### Low-Level Commands
+
+If you need to run the low-level steps separately for debugging or inspection:
+
+```bash
+node scripts/lingxi-setup.mjs
+node scripts/lx-create-automation.mjs
+```
+
+or:
+
+```bash
+npm run lx:bootstrap
+```
+
+## Product Scope
+
+LingXi 2.0 is intentionally focused.
+
+Supported today:
+
+- `task`
+- `vet`
+- `memory-retrieve`
+- `memory-write`
+- `session-distill`
+
+Not the goal:
+
+- a broad multi-step workflow suite
+- heavy inline instrumentation on every turn
+- a permanent Cursor-compatibility layer
+
+## Quality Philosophy
+
+LingXi is quality-first by design:
+
+- prefer strong contracts over loose prompting
+- prefer clear outputs over vague summaries
+- prefer deterministic persistence and validation where stability matters
+- prefer a narrow, trustworthy surface over a wider but weaker product
+
+The current 2.0 release state is documented in:
+
+- [Architecture](./docs/architecture.md)
+- [Roadmap](./docs/lingxi-2-roadmap.md)
+- [Quality Bar](./docs/quality-baseline.md)
+- [Phase 5/6 Closure Plan](./docs/phase-5-6-closure-plan.md)
+- [Memory Quality Deepening Status](./docs/memory-quality-deepening-status.md)
+
+## Development
+
+Run the supported product test suite:
+
+```bash
+npm test
+```
+
+LingXi treats green current-product tests and product-surface coherence as release gates.

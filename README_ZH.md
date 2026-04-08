@@ -2,106 +2,147 @@
 
 # LíngXī（灵犀）
 
-基于 Cursor 的 持久记忆工作流
+**一个面向 Codex 的工程工作流产品：把模糊需求整理成可执行任务，在动手前完成高质量审查，并把团队稳定的工程判断沉淀成可复用记忆。**
 
----
+LingXi 2.0 已完成当前产品范围内的实现并可发布。
 
-## Why（远景）
+LingXi 刻意把表层做得很小：
 
-为创造者打造 AI 时代的专属法宝。
+- `task`：把模糊请求整理成工程师可直接执行的任务文档
+- `vet`：在实现前挑战任务质量，提前暴露风险
+- `memory`：在后台沉淀可复用的工程偏好、审查倾向和约束判断
 
-## How（路径）
+Cursor 时代的仓库内容已经从主树中移除，相关退役记录保留在 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)。
 
-### 1) 心有灵犀
+## 为什么是 LingXi
 
-持久化记忆，让 AI 按你的方式做事
+很多 AI 工作流擅长“快速生成”，但不擅长“长期保持标准”。
 
-### 2) AI Native
+LingXi 的重点不是多给一点输出，而是让工作在开始前就更像一份高质量技术交付：
 
-尊重 AI 能力，预留进化空间。
+- 把模糊需求收敛成边界清晰、可以开工的任务
+- 提前发现隐藏风险、薄弱验收标准和空泛表述
+- 把稳定的工程偏好沉淀下来，而不是每次会话都重新解释
+- 让输出保持结构化、可审查、可验证，而不只是自然语言看起来合理
 
-### 3) 称心如意
+## 你会得到什么
 
-降低认知负担，提供友好体验
+- **Codex-native 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **可见工作流**：[`skills/task/`](./skills/task/) 和 [`skills/vet/`](./skills/vet/)
+- **持久记忆核心**：[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
+- **项目本地运行时**：`.lingxi/`
+- **后台 distill agent 模板**：[`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
+- **确定性 setup / runtime 辅助脚本**：[`scripts/`](./scripts/)
 
----
+## 工作方式
 
-## What（实现）
+1. 把 LingXi 安装到目标仓库。
+2. 运行 setup，生成项目本地运行时和后台 agent 配置。
+3. 用 `task` 生成强约束、可执行的任务文档。
+4. 用 `vet` 在实现前挑战任务质量。
+5. 让 `session-distill` 持续把工程判断沉淀进项目记忆。
 
-- **可伸缩工作流**：可任意组合的开发流程，兼顾工程严谨与轻便快捷
-- **持久化记忆库**：在项目中学习你的判断力、品味和责任感，并应用于每轮新对话
-- **人工门控**：关键决策始终遵从你的指引，可以不来，绝不胡来
-- **自我迭代**：按心跳周期基于审计信号执行低风险自动改进，让系统持续变稳、变准
-- **开箱即用**：安装后，使用 `/init` 快速理解现有项目并落地 LingXi Workflow
+表层很克制，但底层会随着项目使用不断积累质量。
 
----
+## 安装
 
-## 安装与快速开始
+远程安装脚本会直接分发当前受支持的 LingXi 2.0 表层：
 
-### 安装
+- `.codex-plugin/plugin.json`
+- `skills/`
+- `scripts/`
+- `templates/`
+- 生成到目标仓库中的 `.lingxi/` 与 `.codex/agents/`
 
-在**项目根目录**执行以下命令之一，将灵犀安装到当前项目：
+### 远程安装脚本
 
-- **Linux / macOS / Git Bash：**
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
-  ```
-- **Windows PowerShell：**
-  ```powershell
-  irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
-  ```
+请在**目标仓库根目录**执行以下任一命令。
 
-安装完成后，在 Cursor 中打开项目并建议运行一次 `/init`，以建立项目上下文并生成可选记忆候选（写入需显式门控）。
-
----
-
-### 快速开始
-
-**首次建议运行 `/init` 初始化项目上下文**（面向现有项目做引导式理解，并生成可选记忆候选）；之后即可使用下方工作流 Skill 或辅助命令。
-
-#### 工作流 Skills
-
-核心工作流由 **Skills**（task、vet、plan、build、review）驱动。可通过输入 `/task`、`/plan`、`/build`、`/review`、`/vet`（Cursor 会列出同名 Skill）或自然语言（如「创建任务文档」「做一下任务规划」）触发。
-
-按生命周期顺序使用以下 Skill 完成开发任务：
-
-| Skill   | 用法                                                                                                                                  | 说明                                                                                                                                                                                                                                                                                       |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **task**   | `/task <需求描述>` 或自然语言「创建任务…」<br><br>**示例**：<br>`/task 添加用户登录功能，支持邮箱和手机号登录`<br>`/task 优化首页加载性能，目标首屏时间 < 1s` | **创建任务文档**<br><br>自动生成任务编号（001, 002...）和标题，创建任务文档：<br>`.cursor/.lingxi/tasks/001.task.<标题>.md`<br><br>这是整个流程的核心文档，包含需求提纯、技术方案、验收标准等。                                                                                            |
-| **vet**    | `/vet [taskId]` 或「审查 task 文档」<br><br>**示例**：<br>`/vet 001`<br>`/vet`（使用最新任务）                                                             | **审查 task 文档（可选）**<br><br>对 task 文档展开多维度审查，用于辅助提升任务文档质量。可省略，也可以多次执行。<br><br>不产出文件，仅输出审查结果和建议到对话中。                                                                                                                         |
-| **plan**   | `/plan [taskId]` 或「规划任务…」<br><br>**示例**：<br>`/plan 001`<br>`/plan`（使用最新任务）                                                          | **任务规划（可选）**<br><br>基于 task 文档生成任务规划文档和测试用例文档。适用于复杂任务，简单任务可跳过。<br><br>**提示**：可以配合 Cursor 的 plan 模式使用。                                                                                                                             |
-| **build**  | `/build [taskId]` 或「实现任务…」<br><br>**示例**：<br>`/build 001`<br>`/build`（使用最新任务）                                                       | **执行构建（可选）**<br><br>支持两种模式：<br>- **Plan-driven**：有 plan 文档时，按计划结构化执行（推荐）<br>- **Task-driven**：无 plan 文档时，Agent 基于 task 文档自行决策执行 <br><br>**提示**：当使用 plan 模式时，也可以使用规划模式内置的 build 功能，从而跳过灵犀的 build skill。 |
-| **review** | `/review [taskId]` 或「审查交付」<br><br>**示例**：<br>`/review 001`<br>`/review`（使用最新任务）                                                    | **审查交付**<br><br>自动进行多维度审查，生成审查报告：<br><br>**核心审查**：功能、测试覆盖、架构、可维护性、回归风险<br><br>**按需审查**：文档一致性、安全性、性能、E2E 测试<br><br>**测试执行**：单元测试、集成测试、端到端测试（如适用）                                                 |
-
-#### 辅助命令
-
-| 命令        | 用法                                                                                                                      | 说明                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/remember` | `/remember <记忆描述>`<br><br>**示例**：<br>`/remember 吸取刚才这个 bug 的经验`<br>`/remember 始终使用 xxx 解决 yyy 问题` | **写入记忆（随时可用）**<br><br>无需依赖任务编号，可随时把“判断/取舍/排障路径/验证方式”写入记忆库（`memory/project/` 或团队级 `memory/share/`），用于后续每轮的检索注入。<br><br>**使用场景**：<br>- **直接记忆表达**：直接陈述原则/判断<br>- **历史提取**：从对话历史中提取刚解决的问题/踩的坑<br>- **提示词定位**：提供关键词帮助定位要提取的内容 |
-| `/init`     | `/init`                                                                                                                   | **初始化项目上下文（首次使用）**<br><br>面向现有项目做引导式理解，生成记忆候选并按用户选择可选写入。内部可能执行工作区骨架预检，但这不是对外主目标。建议首次在现有项目中使用 LingXi 时运行。                                                                                                                             |
-
-#### 经验共享（跨项目复用：share 目录 + git submodule）
-
-灵犀提供一个硬性约定的共享目录，用于承载“可跨项目复用”的团队经验：
-
-- 共享目录：`.cursor/.lingxi/memory/share/`（建议作为 **git submodule**）。团队级记忆（apply=team）写入此处，项目级记忆写入 `memory/project/`。
-
-**1) 添加 share 仓库（submodule）**
+**Linux / macOS / Git Bash**
 
 ```bash
-git submodule add <shareRepoUrl> .cursor/.lingxi/memory/share
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
 ```
 
-**2) 更新 share 仓库**
+**Windows PowerShell**
+
+```powershell
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
+```
+
+### 本地 Bootstrap
+
+如果你要让 LingXi 的记忆沉淀与提取循环真正闭环，本地必须执行：
 
 ```bash
-git submodule update --remote --merge
+node scripts/lx-bootstrap.mjs
 ```
 
-**3) 同步记忆索引（新增共享经验后执行）**
+这是必需步骤。它会同时：
 
-在 Cursor 中运行 **memory-govern** Skill（如输入 `/memory-govern`），可同步 INDEX 与 notes（删除孤儿索引行并由模型补全未索引条目的 INDEX 行）。
+- `.lingxi/`
+- `.codex/agents/lingxi-session-distill.toml`
+- `.lingxi/setup/automation.session-distill.toml`
+- 在 Codex 中注册 session-distill 自动化任务
 
-## 相关文档
+如果不注册自动化，LingXi 的后台记忆沉淀循环实际上并没有闭环。
 
-- [核心组件架构](.cursor/skills/about-lingxi/references/architecture.md)
+### 底层命令
+
+如果你只是为了调试或检查中间产物，也可以拆开执行：
+
+```bash
+node scripts/lingxi-setup.mjs
+node scripts/lx-create-automation.mjs
+```
+
+或者直接执行：
+
+```bash
+npm run lx:bootstrap
+```
+
+## 当前产品范围
+
+LingXi 2.0 是刻意收敛的产品。
+
+当前正式支持：
+
+- `task`
+- `vet`
+- `memory-retrieve`
+- `memory-write`
+- `session-distill`
+
+当前不打算做成：
+
+- 一个范围很宽的多阶段工作流套件
+- 每轮对话都强插入的重型实时分析
+- 永久保留的 Cursor 兼容层
+
+## 质量理念
+
+LingXi 从一开始就不是“先把范围铺开再慢慢补质量”的路线，而是：
+
+- 该稳定的地方，用强约束和确定性合同来兜住
+- 该输出清晰的地方，优先可读、可审、可验证
+- 该长期积累的地方，把工程判断沉淀成记忆而不是临时对话
+- 与其做一个很宽但很松的产品，不如先做一个很窄但可信的产品
+
+当前 2.0 的发布状态和设计基线见：
+
+- [架构文档](./docs/architecture.md)
+- [Roadmap](./docs/lingxi-2-roadmap.md)
+- [质量标准](./docs/quality-baseline.md)
+- [Phase 5/6 收口计划](./docs/phase-5-6-closure-plan.md)
+- [记忆质量深化状态](./docs/memory-quality-deepening-status.md)
+
+## 开发
+
+运行当前受支持产品面的测试套件：
+
+```bash
+npm test
+```
+
+在 LingXi 里，“当前产品测试全绿”与“产品表层一致性”都属于发布门槛。
