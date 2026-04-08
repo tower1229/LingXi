@@ -147,10 +147,12 @@ Release evidence:
 - `processed-sessions.json` now records state schema version, summary counters, last run metadata, and explicit run reasons such as `first_distill`, `content_changed`, and `distill_version_changed`
 
 3. Verify end-user memory loop quality
+- meaningful repository work should retrieve useful memory by default
 - `task` should retrieve useful memory before drafting
 - `vet` should retrieve useful memory before review
-- `session-distill` should improve future task/vet quality instead of just writing notes
+- `session-distill` should improve future work quality instead of just writing notes
 Release evidence:
+- memory retrieval now has a host-agnostic path that can be applied before meaningful repository-scoped conversation work
 - `task` now auto-applies relevant memory into `Memory Applied` when the caller does not provide `memory_refs[]`
 - `vet` now checks whether relevant repository memory exists but was ignored by the task
 - regression coverage now proves a `session-distill -> task -> vet` path where distilled memory becomes visible to drafting and avoids stale-memory warnings

@@ -8,6 +8,7 @@
   "scripts": {
     "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
     "lx:create-automation": "node scripts/lx-create-automation.mjs",
+    "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",
     "test": "node --test \"test/scripts/**/*.test.mjs\"",

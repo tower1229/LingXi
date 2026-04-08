@@ -81,7 +81,8 @@ describe("lingxi-setup", () => {
     assert.match(agents, /task definition \(`task`\)/);
     assert.match(agents, /task vetting \(`vet`\)/);
     assert.match(agents, /Persist only durable, reusable engineering taste\./);
-    assert.doesNotMatch(agents, /Retrieve relevant LingXi memory before task or vet work\./);
+    assert.match(agents, /Before meaningful repository work, load LingXi memory with `node scripts\/lx-memory-brief\.mjs --prompt "<current request>"`\./);
+    assert.match(agents, /Skip trivial or non-repository conversation turns\./);
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {

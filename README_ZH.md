@@ -10,7 +10,7 @@ LingXi 刻意把表层做得很小：
 
 - `task`：把模糊请求整理成工程师可直接执行的任务文档
 - `vet`：在实现前挑战任务质量，提前暴露风险
-- `memory`：在后台沉淀可复用的工程偏好、审查倾向和约束判断
+- `memory`：在后台沉淀可复用的工程偏好，并在有意义的仓库对话里应用这些判断
 
 Cursor 时代的仓库内容已经从主树中移除，相关退役记录保留在 [Cursor 时代资产分层](./docs/cursor-era-asset-classification.md)。
 
@@ -43,6 +43,8 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 5. 让 `session-distill` 持续把工程判断沉淀进项目记忆。
 
 表层很克制，但底层会随着项目使用不断积累质量。
+
+在 LingXi 里，`task` 和 `vet` 是显式工作流，而 memory 是全局上下文层。它不应该只服务于工作流命令，也应该提升普通实现、调试、分析和评审对话的质量。
 
 ## 安装
 
@@ -94,6 +96,7 @@ node scripts/lx-bootstrap.mjs
 ```bash
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
+node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
 
 或者直接执行：

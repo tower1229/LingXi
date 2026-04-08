@@ -10,7 +10,7 @@ LingXi keeps the visible surface intentionally small:
 
 - `task` turns rough requests into engineer-ready task documents
 - `vet` stress-tests those tasks before execution starts
-- `memory` captures reusable engineering judgment in the background so future work gets better
+- `memory` captures reusable engineering judgment in the background and applies it to meaningful repository conversations
 
 Cursor-era repository content has been removed from the main tree, and the retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
 
@@ -43,6 +43,8 @@ LingXi is built to improve the quality of work before code is written:
 5. Let `session-distill` accumulate durable engineering taste into project memory over time.
 
 The result is a workflow that stays narrow at the surface, but compounds quality underneath.
+
+For LingXi, `task` and `vet` are visible workflows, but memory is a global context layer. It should improve any meaningful repository-scoped conversation, not only explicit workflow invocations.
 
 ## Install
 
@@ -94,6 +96,7 @@ If you need to run the low-level steps separately for debugging or inspection:
 ```bash
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
+node scripts/lx-memory-brief.mjs --prompt "your current repository request"
 ```
 
 or:
