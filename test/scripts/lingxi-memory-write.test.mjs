@@ -94,4 +94,21 @@ describe("lingxi memory write", () => {
     assert.ok(noteContent.includes("Evidence A"));
     assert.ok(noteContent.includes("Evidence B"));
   });
+
+  it("rejects unsupported memory kinds instead of silently writing mixed-schema notes", async () => {
+    tempDir = createTempDir();
+    const payload = {
+      title: "Release-grade completeness",
+      kind: "principle",
+      when_to_load: ["When deciding whether to ship"],
+      one_liner: "Prefer release-grade completeness.",
+      decision: "Ship only complete, verifiable work.",
+      evidence: ["Repeated project guidance."],
+      source: "session-distill"
+    };
+
+    const result = await runWrite(tempDir, payload);
+    assert.notStrictEqual(result.code, 0);
+    assert.match(result.stderr, /Unsupported memory kind: principle/);
+  });
 });

@@ -81,4 +81,25 @@ Prefer small patches over broad changes.
     assert.ok(indexContent.includes("MEM-001"));
     assert.ok(indexContent.includes("Prefer small patches"));
   });
+
+  it("rejects legacy note bodies that do not follow the 2.0 frontmatter contract", async () => {
+    tempDir = createTempDir();
+    const memoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(memoryDir, "MEM-001.legacy.md"),
+      `# MEM-001 Legacy note
+
+## Meta
+
+- Id: MEM-001
+- Kind: principle
+`,
+      "utf8"
+    );
+
+    const result = await runIndex(tempDir, ["--write"]);
+    assert.notStrictEqual(result.code, 0);
+    assert.match(result.stderr, /Memory note missing frontmatter/);
+  });
 });
