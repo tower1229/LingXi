@@ -10,8 +10,6 @@ import readline from "node:readline";
 
 const projectRoot =
   process.env.CODEX_PROJECT_DIR ||
-  process.env.CURSOR_PROJECT_DIR ||
-  process.env.CLAUDE_PROJECT_DIR ||
   process.cwd();
 
 const MANIFEST_RELATIVE = "install/install-manifest.json";
@@ -23,9 +21,7 @@ function resolve(p) {
 function loadManifest() {
   const manifestPath = resolve(MANIFEST_RELATIVE);
   if (!fs.existsSync(manifestPath)) {
-    console.error("[lx-uninstall] 未找到安装清单: " + manifestPath);
-    console.error("[lx-uninstall] 请确认当前目录为已安装灵犀的项目根，且存在 install/install-manifest.json");
-    process.exit(1);
+    return null;
   }
   try {
     const raw = fs.readFileSync(manifestPath, { encoding: "utf8" });
@@ -137,6 +133,10 @@ function main() {
   const skipConfirm = args.includes("--yes");
 
   const manifest = loadManifest();
+  if (!manifest) {
+    console.log("[lx-uninstall] 未找到安装清单，无需卸载。");
+    process.exit(0);
+  }
   const paths = collectPathsToDelete(manifest);
   const existing = paths.filter((p) => fs.existsSync(resolve(p)));
 

@@ -103,10 +103,6 @@ Write-Info "Source: ${RepoOwner}/${RepoName}"
 Write-Info "Surface: Codex-native (.codex-plugin, skills, scripts, templates, .lingxi)"
 
 $ManagedExists = (Test-Path ".codex-plugin\plugin.json") -or (Test-Path "skills") -or (Test-Path ".lingxi") -or (Test-Path "install\install-manifest.json")
-if (Test-Path ".cursor\.lingxi") {
-  Write-Warning "Legacy Cursor-era LingXi files detected under .cursor\.lingxi."
-  Write-Warning "This installer does not provision or manage the legacy .cursor surface."
-}
 
 if ($ManagedExists) {
   if ($AutoConfirm) {
@@ -170,5 +166,4 @@ if ($Manifest.version) {
 if ($ManagedExists) {
   Write-Info "Update mode: refreshed LingXi-managed 2.0 files"
 }
-Write-Warning "Legacy .cursor assets, if present, remain unmanaged historical material."
 Write-Info "Next: open this repository in Codex."

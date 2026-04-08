@@ -38,6 +38,7 @@ That includes the original quality signals that informed:
 The retirement work is complete in the main repository:
 
 - `.cursor/` no longer exists as a live directory
+- `.cursor-plugin/` no longer remains as a shipped plugin surface
 - no active test suite requires `.cursor/` paths
 - the historical `test/legacy/` suite has been retired together with the final `.cursor/` remnants
 - repository docs now describe one Codex-native product shape instead of a dual-tree transition state

@@ -15,7 +15,7 @@ It assumes the following are already substantially complete:
 
 That means the next step is no longer "keep expanding `task` / `vet` structure."
 
-Repository retirement work has now completed the `.cursor/` removal objective.
+Repository retirement work now targets a closed, single-surface Codex-native repository.
 
 The next step is:
 
@@ -35,7 +35,7 @@ Against [lingxi-2-roadmap.md](/mnt/c/Workspace/tower1229/LingXi/docs/lingxi-2-ro
 
 - `Phase 1` to `Phase 4.5` are effectively in place
 - `Phase 5` exists at the capability level, but not yet fully productized
-- `Phase 6` repository-retirement work is now substantially complete
+- `Phase 6` repository-retirement work should now be treated as a release gate, not an open redesign area
 
 Against [architecture.md](/mnt/c/Workspace/tower1229/LingXi/docs/architecture.md):
 
@@ -46,7 +46,7 @@ Against [architecture.md](/mnt/c/Workspace/tower1229/LingXi/docs/architecture.md
 
 So the next development direction should be:
 
-- keep Phase 6 coherence intact now that `.cursor/` retirement is done
+- close the final Phase 6 coherence gaps and keep them closed
 - complete `Phase 5` productization of the background memory loop
 - only after that return to deeper content-quality upgrades
 
@@ -230,21 +230,16 @@ This is where LingXi should improve craftsmanship, not product shape.
 
 If work starts now, the best first concrete task is:
 
-`Inventory and classify all remaining .cursor-era assets, tests, and docs into supported / reference-only / delete-later buckets, then make that classification visible in the repository.`
+`Close the remaining repository-surface coherence gaps, then verify the background memory loop as a release-quality path.`
 
-Current inventory artifact:
+Current evidence anchors:
 
 - [cursor-era-asset-classification.md](/mnt/c/Workspace/tower1229/LingXi/docs/cursor-era-asset-classification.md)
+- [quality-baseline.md](/mnt/c/Workspace/tower1229/LingXi/docs/quality-baseline.md)
 
-Reason:
+Immediate follow-up after this closure pass:
 
-- it opens the whole `Phase 6` cleanup work without requiring speculative redesign
-- it reduces hidden ambiguity
-- it gives a clean base for the `Phase 5` productization pass that follows
-
-Immediate follow-up after this inventory:
-
-- convert it into a removal sequence until `.cursor/` no longer exists in the main repository
+- keep `Phase 6` locked, then move directly into `Phase 5` productization and release hardening
 
 ---
 

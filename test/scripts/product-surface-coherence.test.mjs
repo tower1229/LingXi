@@ -49,17 +49,21 @@ describe("product surface coherence", () => {
     const installReadme = readText("install/README.md");
 
     assert.match(installReadme, /Codex-native/i);
-    assert.match(installReadme, /不再提供旧版 `?\.cursor\/`? 兼容安装|no longer install or manage `?\.cursor\/`? assets/i);
+    assert.match(installReadme, /只安装受支持的|directly install the supported|Codex-native LingXi 2\.0 surface/i);
     assert.doesNotMatch(installReadme, /过渡期|transitional|兼容安装面|Cursor compatibility/i);
   });
 
-  it("keeps Cursor-era retirement documented and removes the .cursor tree from the repository", () => {
+  it("keeps Cursor-era retirement documented and removes unsupported source-level runtime surfaces", () => {
     const classification = readText("docs/cursor-era-asset-classification.md");
 
     assert.match(classification, /Cursor-era repository content has now been removed from the main LingXi repository/i);
     assert.match(classification, /no active test suite requires `?\.cursor\/`? paths/i);
     assert.match(classification, /retirement work is complete/i);
     assert.ok(!fs.existsSync(path.join(repoRoot, ".cursor")));
+    assert.ok(!fs.existsSync(path.join(repoRoot, ".cursor-plugin")));
+    assert.ok(!fs.existsSync(path.join(repoRoot, ".lingxi")));
+    assert.ok(!fs.existsSync(path.join(repoRoot, ".codex")));
+    assert.ok(!fs.existsSync(path.join(repoRoot, "AGENTS.md")));
     assert.ok(!fs.existsSync(path.join(repoRoot, "test/legacy")));
   });
 });

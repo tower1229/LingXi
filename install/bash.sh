@@ -141,11 +141,6 @@ if [ -f ".codex-plugin/plugin.json" ] || [ -d "skills" ] || [ -d ".lingxi" ] || 
   MANAGED_EXISTS=true
 fi
 
-if [ -d ".cursor/.lingxi" ]; then
-  warning "Legacy Cursor-era LingXi files detected under .cursor/.lingxi."
-  warning "This installer does not provision or manage the legacy .cursor surface."
-fi
-
 response="n"
 if [ "$MANAGED_EXISTS" = true ]; then
   if [ "$AUTO_CONFIRM" = true ]; then
@@ -220,5 +215,4 @@ info "Version: ${LINGXI_VERSION}"
 if [ "$MANAGED_EXISTS" = true ]; then
   info "Update mode: refreshed LingXi-managed 2.0 files"
 fi
-warning "Legacy .cursor assets, if present, remain unmanaged historical material."
 info "Next: open this repository in Codex."

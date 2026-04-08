@@ -147,4 +147,16 @@ describe("lx-uninstall", () => {
     const out = stdout + stderr;
     assert.ok(out.includes("未发现灵犀安装文件") || out.includes("无需卸载"), "message in stdout or stderr");
   });
+
+  it("is idempotent when uninstall runs twice", async () => {
+    tmpDir = createTempDir();
+    setupUninstallFixture(tmpDir);
+
+    const first = await runUninstall(tmpDir);
+    assert.strictEqual(first.code, 0, first.stderr);
+    const second = await runUninstall(tmpDir);
+    assert.strictEqual(second.code, 0, second.stderr);
+    const out = second.stdout + second.stderr;
+    assert.ok(out.includes("未发现灵犀安装文件") || out.includes("无需卸载"), out);
+  });
 });

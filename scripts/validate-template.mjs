@@ -260,7 +260,7 @@ function resolveMarketplaceSource(source, pluginRoot) {
 }
 
 async function validateSinglePluginManifest() {
-  const manifestPath = path.join(repoRoot, ".cursor-plugin", "plugin.json");
+  const manifestPath = path.join(repoRoot, ".codex-plugin", "plugin.json");
   const pluginManifest = await readJsonFile(manifestPath, "Plugin manifest");
   if (!pluginManifest) {
     return;
@@ -284,12 +284,12 @@ async function validateSinglePluginManifest() {
 }
 
 async function main() {
-  const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
+  const marketplacePath = path.join(repoRoot, ".codex-plugin", "marketplace.json");
   const hasMarketplaceManifest = await pathExists(marketplacePath);
 
   if (!hasMarketplaceManifest) {
     addWarning(
-      'Marketplace manifest not found at ".cursor-plugin/marketplace.json". Falling back to ".cursor-plugin/plugin.json" validation.'
+      'Marketplace manifest not found at ".codex-plugin/marketplace.json". Falling back to ".codex-plugin/plugin.json" validation.'
     );
     await validateSinglePluginManifest();
     summarizeAndExit();
@@ -363,7 +363,7 @@ async function main() {
       continue;
     }
 
-    const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
+    const manifestPath = path.join(pluginDir, ".codex-plugin", "plugin.json");
     const pluginManifest = await readJsonFile(manifestPath, `${entry.name} plugin manifest`);
     if (!pluginManifest) {
       continue;
