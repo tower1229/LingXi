@@ -2,53 +2,51 @@
 
 # LíngXī（灵犀）
 
-LingXi 2.0 is now a released Codex-native task, vet, and engineering memory workflow.
+**A Codex-native workflow that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
 
-## Status
+LingXi 2.0 is released and ready for release at the current product scope.
 
-LingXi 2.0 is complete at the current product scope and ready for release.
+LingXi keeps the visible surface intentionally small:
 
-- The intended 2.0 product surface is now fully **Codex-native**.
-- The visible 2.0 workflows are intentionally narrow: `task` and `vet`.
-- Durable memory remains the real core: `memory-retrieve`, `memory-write`, and `session-distill`.
-- Cursor-era repository content has been removed from the main tree. The retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
+- `task` turns rough requests into engineer-ready task documents
+- `vet` stress-tests those tasks before execution starts
+- `memory` captures reusable engineering judgment in the background so future work gets better
 
-Current project policy remains quality first:
+Cursor-era repository content has been removed from the main tree, and the retirement record remains in [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md).
 
-- do not push roadmap phases quickly at the expense of output quality
-- align current-scope capabilities before expanding scope
-- prefer strong contracts, clear outputs, and testable behavior over premature abstraction
+## Why LingXi
 
-See:
+Most AI workflows are good at generating output, but weak at preserving standards.
 
-- [Architecture](./docs/architecture.md)
-- [Roadmap](./docs/lingxi-2-roadmap.md)
-- [Quality Bar](./docs/quality-baseline.md)
-- [Cursor-Era Asset Classification](./docs/cursor-era-asset-classification.md)
+LingXi is built to improve the quality of work before code is written:
 
-## 2.0 Core
+- turn ambiguous requests into bounded, implementation-ready tasks
+- catch hidden risk, weak acceptance criteria, and shallow framing early
+- carry forward durable engineering preferences instead of relearning them every session
+- keep outputs structured, reviewable, and testable rather than purely conversational
 
-Released and supported:
+## What You Get
 
-- Codex plugin shell: `.codex-plugin/plugin.json`
-- project-local runtime under `.lingxi/`
-- setup bootstrap: `scripts/lingxi-setup.mjs`
-- visible workflows: `skills/task/`, `skills/vet/`
-- memory core: `skills/memory-retrieve/`, `skills/memory-write/`
-- background distillation: `skills/session-distill/`
-- project-local distill agent template: `templates/agents/lingxi-session-distill.toml.tmpl`
+- **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
+- **Durable memory core** in [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
+- **Project-local runtime** under `.lingxi/`
+- **Background distillation agent template** in [`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
+- **Deterministic setup and runtime helpers** in [`scripts/`](./scripts/)
 
-## Repository Shape
+## How It Works
 
-- `.codex-plugin/` — Codex plugin shell
-- `skills/` — LingXi 2.0 skills
-- `scripts/` — deterministic setup and runtime helpers
-- `templates/` — generated runtime artifacts
-- `docs/` — architecture, roadmap, and quality bar
+1. Install LingXi into a target repository.
+2. Run setup to generate the local runtime and background-agent config.
+3. Use `task` to create a strong task document.
+4. Use `vet` to challenge it before implementation begins.
+5. Let `session-distill` accumulate durable engineering taste into project memory over time.
 
-## Install Notes
+The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 
-The remote install scripts in `install/` now provision the supported LingXi 2.0 surface directly:
+## Install
+
+Remote install scripts provision the supported LingXi 2.0 surface directly:
 
 - `.codex-plugin/plugin.json`
 - `skills/`
@@ -56,24 +54,91 @@ The remote install scripts in `install/` now provision the supported LingXi 2.0 
 - `templates/`
 - generated runtime under `.lingxi/` and `.codex/agents/`
 
-They no longer install or manage `.cursor/` assets.
+### Remote Install Script
 
-For local verification of the 2.0 runtime shape, use the setup script inside a target repository:
+Run one of the following commands from the **root of your target repository**.
+
+**Linux / macOS / Git Bash**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.sh | bash
+```
+
+**Windows PowerShell**
+
+```powershell
+irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
+```
+
+### Local Setup
+
+After install, or when validating the runtime shape locally, run:
 
 ```bash
 node scripts/lingxi-setup.mjs
 ```
 
-This creates the current 2.0 runtime skeleton under `.lingxi/` and `.codex/agents/`.
+This generates the current LingXi runtime skeleton:
+
+- `.lingxi/`
+- `.codex/agents/lingxi-session-distill.toml`
+- `.lingxi/setup/automation.session-distill.toml`
+
+### Optional Automation Registration
+
+LingXi generates the automation artifact for background session distillation, but registering it in Codex is still an explicit step:
+
+```bash
+node scripts/lx-create-automation.mjs
+```
+
+or:
+
+```bash
+npm run lx:create-automation
+```
+
+## Product Scope
+
+LingXi 2.0 is intentionally focused.
+
+Supported today:
+
+- `task`
+- `vet`
+- `memory-retrieve`
+- `memory-write`
+- `session-distill`
+
+Not the goal:
+
+- a broad multi-step workflow suite
+- heavy inline instrumentation on every turn
+- a permanent Cursor-compatibility layer
+
+## Quality Philosophy
+
+LingXi is quality-first by design:
+
+- prefer strong contracts over loose prompting
+- prefer clear outputs over vague summaries
+- prefer deterministic persistence and validation where stability matters
+- prefer a narrow, trustworthy surface over a wider but weaker product
+
+The current 2.0 release state is documented in:
+
+- [Architecture](./docs/architecture.md)
+- [Roadmap](./docs/lingxi-2-roadmap.md)
+- [Quality Bar](./docs/quality-baseline.md)
+- [Phase 5/6 Closure Plan](./docs/phase-5-6-closure-plan.md)
+- [Memory Quality Deepening Status](./docs/memory-quality-deepening-status.md)
 
 ## Development
 
-Run the test suite:
+Run the supported product test suite:
 
 ```bash
 npm test
 ```
 
-This runs the supported LingXi 2.0 product suite.
-
-The repository treats green current-product tests and product-surface coherence as mandatory release gates for the supported 2.0 surface.
+LingXi treats green current-product tests and product-surface coherence as release gates.
