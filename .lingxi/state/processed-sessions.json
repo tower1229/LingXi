@@ -1,0 +1,70 @@
+{
+  "state_schema_version": "v2",
+  "distill_version": "v1",
+  "summary": {
+    "tracked_sessions": 6,
+    "total_runs": 1,
+    "written_runs": 1,
+    "merged_runs": 0,
+    "skipped_duplicate_runs": 0,
+    "skipped_no_signal_runs": 0,
+    "failed_runs": 0,
+    "reprocessed_runs": 0
+  },
+  "last_run": {
+    "run_at": "2026-04-08T05:11:14Z",
+    "automation_id": "lingxi-session-distill-lingxi-7097fcb2",
+    "result": "written",
+    "notes_written": 3,
+    "sessions_processed": 6
+  },
+  "sessions": {
+    "019c9778-8015-7220-bf13-f4945ae3f272": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": [
+        "NOTE-001",
+        "NOTE-002"
+      ]
+    },
+    "019c977b-3e76-7d81-a67c-0420f7594dfe": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": [
+        "NOTE-003"
+      ]
+    },
+    "019c9def-ef6e-7e82-b237-e7cc299f94c9": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": []
+    },
+    "019ca207-1a2b-7b41-8190-5ca010cd08df": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": [
+        "NOTE-003"
+      ]
+    },
+    "019cdbc3-2514-7b90-a1e4-2573567b9bc4": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": []
+    },
+    "019d6a9a-ae5b-7d60-b16b-9c42cb6c7daa": {
+      "status": "processed",
+      "processed_at": "2026-04-08T05:11:14Z",
+      "source": "codex-session",
+      "note_ids": [
+        "NOTE-001",
+        "NOTE-002"
+      ]
+    }
+  }
+}
+
