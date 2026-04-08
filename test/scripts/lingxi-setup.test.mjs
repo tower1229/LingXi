@@ -55,6 +55,8 @@ describe("lingxi-setup", () => {
     const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.default_distill_rrule, "FREQ=HOURLY;INTERVAL=6");
+    assert.strictEqual(summary.automation_registration_required, true);
+    assert.strictEqual(summary.automation_create_command, "node scripts/lx-create-automation.mjs");
     assert.strictEqual(state.state_schema_version, "v2");
     assert.strictEqual(state.distill_version, "v1");
     assert.deepStrictEqual(state.summary, {

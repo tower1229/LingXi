@@ -100,6 +100,8 @@ function main() {
     created_runtime_root: fs.existsSync(resolveTarget(".lingxi")),
     wrote_agents_md: wroteAgentsMd,
     default_distill_rrule: "FREQ=HOURLY;INTERVAL=6",
+    automation_registration_required: true,
+    automation_create_command: "node scripts/lx-create-automation.mjs",
     files: [
       ".lingxi/memory/INDEX.md",
       ".lingxi/state/processed-sessions.json",

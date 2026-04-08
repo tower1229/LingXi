@@ -48,6 +48,7 @@ Setup should:
 - initialize `.lingxi/`
 - generate project-local subagent config
 - generate automation config
+- leave Codex automation registration as an explicit follow-up step
 - add a minimal `AGENTS.md` only when missing
 
 ### Runtime
@@ -133,6 +134,7 @@ AGENTS.md
 `setup/automation.session-distill.toml`
 
 - stores the generated automation configuration artifact for auditability
+- acts as the source artifact for explicit Codex automation registration
 
 ---
 
@@ -685,7 +687,8 @@ This keeps retrieval cheap and notes readable.
 3. initialize `memory/INDEX.md`
 4. generate `.codex/agents/lingxi-session-distill.toml`
 5. generate `.lingxi/setup/automation.session-distill.toml`
-6. generate `AGENTS.md` only when missing
+6. leave Codex automation registration to `lx-create-automation`
+7. generate `AGENTS.md` only when missing
 
 ### Setup Safety Rules
 

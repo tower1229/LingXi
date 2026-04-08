@@ -30,6 +30,7 @@
     "skills/vet/scripts/validate-vet-report.mjs",
     "skills/vet/scripts/vet-task.mjs",
     "scripts/_lingxi-memory.mjs",
+    "scripts/lx-create-automation.mjs",
     "scripts/lingxi-memory-index.mjs",
     "scripts/lingxi-setup.mjs",
     "scripts/lx-uninstall.mjs",
@@ -41,6 +42,7 @@
     ".codex/agents/lingxi-session-distill.toml"
   ],
   "packageScripts": {
+    "lx:create-automation": "node scripts/lx-create-automation.mjs",
     "lx:setup": "node scripts/lingxi-setup.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs"
   },

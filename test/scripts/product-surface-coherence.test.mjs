@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import assert from "node:assert";
@@ -9,6 +10,14 @@ const repoRoot = path.resolve(__dirname, "../..");
 
 function readText(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function isTracked(relativePath) {
+  const result = spawnSync("git", ["ls-files", "--error-unmatch", "--", relativePath], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+  return result.status === 0;
 }
 
 describe("product surface coherence", () => {
@@ -63,17 +72,25 @@ describe("product surface coherence", () => {
     assert.doesNotMatch(installReadme, /过渡期|transitional|兼容安装面|Cursor compatibility/i);
   });
 
+  it("keeps source-repo runtime artifacts ignored so local setup output does not pollute commits", () => {
+    const gitignore = readText(".gitignore");
+
+    assert.match(gitignore, /^\.lingxi\/$/m);
+    assert.match(gitignore, /^\.codex\/$/m);
+    assert.match(gitignore, /^AGENTS\.md$/m);
+  });
+
   it("keeps Cursor-era retirement documented and removes unsupported source-level runtime surfaces", () => {
     const classification = readText("docs/cursor-era-asset-classification.md");
 
     assert.match(classification, /Cursor-era repository content has now been removed from the main LingXi repository/i);
     assert.match(classification, /no active test suite requires `?\.cursor\/`? paths/i);
     assert.match(classification, /retirement work is complete/i);
-    assert.ok(!fs.existsSync(path.join(repoRoot, ".cursor")));
-    assert.ok(!fs.existsSync(path.join(repoRoot, ".cursor-plugin")));
-    assert.ok(!fs.existsSync(path.join(repoRoot, ".lingxi")));
-    assert.ok(!fs.existsSync(path.join(repoRoot, ".codex")));
-    assert.ok(!fs.existsSync(path.join(repoRoot, "AGENTS.md")));
-    assert.ok(!fs.existsSync(path.join(repoRoot, "test/legacy")));
+    assert.ok(!isTracked(".cursor"));
+    assert.ok(!isTracked(".cursor-plugin"));
+    assert.ok(!isTracked(".lingxi"));
+    assert.ok(!isTracked(".codex"));
+    assert.ok(!isTracked("AGENTS.md"));
+    assert.ok(!isTracked("test/legacy"));
   });
 });

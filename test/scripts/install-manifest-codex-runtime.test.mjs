@@ -18,6 +18,7 @@ describe("install manifest codex runtime", () => {
 
     assert.ok(files.has(".codex-plugin/plugin.json"));
     assert.ok(files.has("scripts/_lingxi-memory.mjs"));
+    assert.ok(files.has("scripts/lx-create-automation.mjs"));
     assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
     assert.ok(files.has("scripts/lingxi-setup.mjs"));
     assert.ok(files.has("scripts/lx-uninstall.mjs"));
@@ -31,5 +32,14 @@ describe("install manifest codex runtime", () => {
 
     assert.ok(runtimeFiles.has(".lingxi"));
     assert.ok(runtimeFiles.has(".codex/agents/lingxi-session-distill.toml"));
+  });
+
+  it("exposes explicit package scripts for setup, automation registration, and uninstall", () => {
+    const manifest = loadManifest();
+    assert.deepStrictEqual(manifest.packageScripts, {
+      "lx:create-automation": "node scripts/lx-create-automation.mjs",
+      "lx:setup": "node scripts/lingxi-setup.mjs",
+      "lx:uninstall": "node scripts/lx-uninstall.mjs"
+    });
   });
 });

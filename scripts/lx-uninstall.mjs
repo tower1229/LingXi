@@ -16,6 +16,7 @@ const MANIFEST_RELATIVE = "install/install-manifest.json";
 const KNOWN_MANAGED_MARKERS = [
   ".codex-plugin/plugin.json",
   "scripts/_lingxi-memory.mjs",
+  "scripts/lx-create-automation.mjs",
   "scripts/lingxi-memory-index.mjs",
   "scripts/lingxi-setup.mjs",
   "scripts/lx-uninstall.mjs",
@@ -30,6 +31,7 @@ const KNOWN_MANAGED_MARKERS = [
   ".codex/agents/lingxi-session-distill.toml"
 ];
 const DEFAULT_MANAGED_PACKAGE_SCRIPTS = {
+  "lx:create-automation": "node scripts/lx-create-automation.mjs",
   "lx:setup": "node scripts/lingxi-setup.mjs",
   "lx:uninstall": "node scripts/lx-uninstall.mjs"
 };

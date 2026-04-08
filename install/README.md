@@ -56,10 +56,24 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 说明：安装器要求目标环境可用 `node`，因为 setup 和工作流脚本都基于 Node.js。
 
+`node scripts/lingxi-setup.mjs` 只会生成项目内运行时和自动化配置文件，不会直接替你在 Codex 中注册自动化任务。
+
 如果你的目标是单独验证 LingXi 2.0 的运行时骨架，应优先在目标仓库直接执行：
 
 ```bash
 node scripts/lingxi-setup.mjs
+```
+
+如需把生成的 `.lingxi/setup/automation.session-distill.toml` 注册成实际的 Codex 自动化，请继续执行：
+
+```bash
+node scripts/lx-create-automation.mjs
+```
+
+或者：
+
+```bash
+npm run lx:create-automation
 ```
 
 ### 卸载
