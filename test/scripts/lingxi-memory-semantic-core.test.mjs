@@ -219,6 +219,30 @@ if (schema?.properties?.schema_version?.type !== "string") {
   console.error("schema_version.type must be string");
   process.exit(1);
 }
+const decisionItem = schema?.properties?.decisions?.items;
+if (!Array.isArray(decisionItem?.required)) {
+  console.error("govern_batch decision schema must declare required fields");
+  process.exit(1);
+}
+for (const key of ["action", "reason", "confidence", "target_note_id", "target_candidate_index", "note"]) {
+  if (!decisionItem.required.includes(key)) {
+    console.error(\`govern_batch decision schema missing required field: \${key}\`);
+    process.exit(1);
+  }
+}
+if (!Array.isArray(decisionItem?.properties?.target_note_id?.type) || !decisionItem.properties.target_note_id.type.includes("null")) {
+  console.error("target_note_id must allow null");
+  process.exit(1);
+}
+if (!Array.isArray(decisionItem?.properties?.target_candidate_index?.type) || !decisionItem.properties.target_candidate_index.type.includes("null")) {
+  console.error("target_candidate_index must allow null");
+  process.exit(1);
+}
+const noteSchema = decisionItem?.properties?.note;
+if (!Array.isArray(noteSchema?.anyOf) || !noteSchema.anyOf.some((entry) => entry?.type === "null")) {
+  console.error("note must allow null");
+  process.exit(1);
+}
 
 const outputFile = args[outputIndex + 1];
 const payload = {
@@ -228,6 +252,8 @@ const payload = {
       action: "create",
       reason: "durable engineering preference",
       confidence: 0.91,
+      target_note_id: null,
+      target_candidate_index: null,
       note: {
         title: "Prefer explicit interfaces",
         kind: "preference",

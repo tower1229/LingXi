@@ -63,33 +63,40 @@ function buildGovernanceSchema() {
   return {
     type: "object",
     additionalProperties: false,
-    required: ["schema_version", "action", "reason", "confidence"],
+    required: ["schema_version", "action", "reason", "confidence", "target_note_id", "target_candidate_index", "note"],
     properties: {
       schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
       reason: { type: "string", minLength: 1 },
       confidence: { type: "number", minimum: 0, maximum: 1 },
-      target_note_id: { type: "string", minLength: 1 },
+      target_note_id: { type: ["string", "null"], minLength: 1 },
+      target_candidate_index: { type: ["integer", "null"], minimum: 0 },
       note: {
-        type: "object",
-        additionalProperties: false,
-        required: ["title", "kind", "one_liner", "decision", "when_to_load", "evidence"],
-        properties: {
-          title: { type: "string", minLength: 1 },
-          kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
-          one_liner: { type: "string", minLength: 1 },
-          decision: { type: "string", minLength: 1 },
-          when_to_load: {
-            type: "array",
-            minItems: 1,
-            items: { type: "string", minLength: 1 }
-          },
-          evidence: {
-            type: "array",
-            minItems: 1,
-            items: { type: "string", minLength: 1 }
+        anyOf: [
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["title", "kind", "one_liner", "decision", "when_to_load", "evidence"],
+            properties: {
+              title: { type: "string", minLength: 1 },
+              kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
+              one_liner: { type: "string", minLength: 1 },
+              decision: { type: "string", minLength: 1 },
+              when_to_load: {
+                type: "array",
+                minItems: 1,
+                items: { type: "string", minLength: 1 }
+              },
+              evidence: {
+                type: "array",
+                minItems: 1,
+                items: { type: "string", minLength: 1 }
+              }
+            }
           }
-        }
+        ,
+          { type: "null" }
+        ]
       }
     }
   };
@@ -132,33 +139,39 @@ function buildGovernanceBatchSchema() {
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["action", "reason", "confidence"],
+          required: ["action", "reason", "confidence", "target_note_id", "target_candidate_index", "note"],
           properties: {
             action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
             reason: { type: "string", minLength: 1 },
             confidence: { type: "number", minimum: 0, maximum: 1 },
-            target_note_id: { type: "string", minLength: 1 },
-            target_candidate_index: { type: "integer", minimum: 0 },
+            target_note_id: { type: ["string", "null"], minLength: 1 },
+            target_candidate_index: { type: ["integer", "null"], minimum: 0 },
             note: {
-              type: "object",
-              additionalProperties: false,
-              required: ["title", "kind", "one_liner", "decision", "when_to_load", "evidence"],
-              properties: {
-                title: { type: "string", minLength: 1 },
-                kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
-                one_liner: { type: "string", minLength: 1 },
-                decision: { type: "string", minLength: 1 },
-                when_to_load: {
-                  type: "array",
-                  minItems: 1,
-                  items: { type: "string", minLength: 1 }
-                },
-                evidence: {
-                  type: "array",
-                  minItems: 1,
-                  items: { type: "string", minLength: 1 }
+              anyOf: [
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["title", "kind", "one_liner", "decision", "when_to_load", "evidence"],
+                  properties: {
+                    title: { type: "string", minLength: 1 },
+                    kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
+                    one_liner: { type: "string", minLength: 1 },
+                    decision: { type: "string", minLength: 1 },
+                    when_to_load: {
+                      type: "array",
+                      minItems: 1,
+                      items: { type: "string", minLength: 1 }
+                    },
+                    evidence: {
+                      type: "array",
+                      minItems: 1,
+                      items: { type: "string", minLength: 1 }
+                    }
+                  }
                 }
-              }
+              ,
+                { type: "null" }
+              ]
             }
           }
         }
@@ -369,6 +382,8 @@ function governancePrompt(payload) {
     `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
     `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
     `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+    "- always include target_note_id, target_candidate_index, and note",
+    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
@@ -391,6 +406,8 @@ function governanceBatchPrompt(payload) {
     "- decisions must be in the same order as input candidates",
     `- each decision.action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
     `- each decision.note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+    "- each decision must include target_note_id, target_candidate_index, and note",
+    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
