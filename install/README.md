@@ -56,11 +56,13 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 说明：安装器要求目标环境可用 `node`，因为 setup 和工作流脚本都基于 Node.js。
 
-如果你的目标是让 LingXi 在目标仓库里真正形成闭环，应优先执行：
+如果你使用的是远程安装脚本，上一步安装过程中已经自动执行了：
 
 ```bash
 node scripts/lx-bootstrap.mjs
 ```
+
+如果你是手动同步文件到项目，或者想重新生成 runtime / 重新注册自动化，也可以自己执行这条命令。
 
 这一步会：
 

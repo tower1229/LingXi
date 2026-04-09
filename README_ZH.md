@@ -80,13 +80,15 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 ### 本地 Bootstrap
 
-如果你要让 LingXi 的记忆沉淀与提取循环真正闭环，本地必须执行：
+如果你使用的是上面的远程安装脚本，安装过程中已经自动执行了本地 bootstrap，一般不需要再手动跑一遍。
+
+如果你是手动同步文件到项目，或者只想补跑 runtime / automation 注册，则执行：
 
 ```bash
 node scripts/lx-bootstrap.mjs
 ```
 
-这是必需步骤。它会同时：
+这一步会同时：
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
