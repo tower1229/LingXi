@@ -48,6 +48,23 @@ describe("hybrid contract docs", () => {
     assert.match(roadmap, /dynamic `开发指导` section/);
   });
 
+  it("documents session-distill self-exclusion guardrails across architecture, roadmap, and quality baseline", () => {
+    const architecture = fs.readFileSync(architecturePath, "utf8");
+    const roadmap = fs.readFileSync(roadmapPath, "utf8");
+    const qualityBaseline = fs.readFileSync(path.join(repoRoot, "docs", "quality-baseline.md"), "utf8");
+
+    assert.match(architecture, /Session Selection Guardrails/);
+    assert.match(architecture, /exclude the current automation run and prior session-distill-only conversations/);
+    assert.match(architecture, /prevent LingXi from distilling its own distillation chatter/);
+    assert.match(architecture, /self-distillation exclusion answers/);
+
+    assert.match(roadmap, /excluding the current distill run and prior session-distill-only conversations/);
+    assert.match(roadmap, /exclude session-distill automation chatter and self-distillation-only conversations from source selection/);
+
+    assert.match(qualityBaseline, /Must exclude session-distill automation\/self-distillation chatter from source-session selection/);
+    assert.match(qualityBaseline, /regression proof that self-distillation chatter is excluded from candidate source sessions/);
+  });
+
   it("keeps task and vet role definitions aligned with engineer-facing task creation and challenge", () => {
     const taskSkill = fs.readFileSync(taskSkillPath, "utf8");
     const vetSkill = fs.readFileSync(vetSkillPath, "utf8");

@@ -59,6 +59,7 @@ Global memory rule:
 
 - Persist only durable, reusable engineering taste.
 - Do not store one-off implementation details as memory.
+- Exclude session-distill automation/self-distillation sessions from background memory selection.
 
 Memory consumption rule:
 

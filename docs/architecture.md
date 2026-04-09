@@ -334,9 +334,27 @@ The subagent should:
 
 1. inspect recent historical sessions
 2. filter for repository relevance
-3. identify durable engineering taste
-4. invoke LingXi distillation and memory write logic
-5. update processed session state
+3. exclude the current automation run and prior session-distill-only conversations
+4. identify durable engineering taste
+5. invoke LingXi distillation and memory write logic
+6. update processed session state
+
+### Session Selection Guardrails
+
+The session selector must exclude self-distillation material before semantic extraction begins.
+
+At minimum, V1 should not select:
+
+- the currently running session-distill automation conversation
+- prior sessions whose content is primarily about running, debugging, or narrating the session-distill workflow itself
+- sessions that contain only distillation bookkeeping, note-writing chatter, or "memory about memory" discussion without repository engineering signal
+
+The intent is to prevent LingXi from distilling its own distillation chatter and recursively polluting project memory.
+
+This guardrail is separate from dedupe:
+
+- dedupe answers "have we already processed this session content version?"
+- self-distillation exclusion answers "should this session ever be considered valid source material at all?"
 
 ### Rejected Alternative
 

@@ -51,6 +51,7 @@ describe("lingxi-setup", () => {
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
     const agents = fs.readFileSync(path.join(tempDir, "AGENTS.md"), "utf8");
+    const distillAgent = fs.readFileSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml"), "utf8");
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
     const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
     const summary = JSON.parse(result.stdout);
@@ -81,8 +82,11 @@ describe("lingxi-setup", () => {
     assert.match(agents, /task definition \(`task`\)/);
     assert.match(agents, /task vetting \(`vet`\)/);
     assert.match(agents, /Persist only durable, reusable engineering taste\./);
+    assert.match(agents, /Exclude session-distill automation\/self-distillation sessions from background memory selection\./);
     assert.match(agents, /Before meaningful repository work, load LingXi memory with `node scripts\/lx-memory-brief\.mjs --prompt "<current request>"`\./);
     assert.match(agents, /Skip trivial or non-repository conversation turns\./);
+    assert.match(distillAgent, /Exclude session-distill automation\/self-distillation sessions from selection\./);
+    assert.match(distillAgent, /LingXi never distills its own distillation chatter\./);
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {
