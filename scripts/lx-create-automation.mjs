@@ -119,7 +119,7 @@ function main() {
     `prompt = "${escapeTomlString(artifact.prompt)}"`,
     `status = "${escapeTomlString(status)}"`,
     `rrule = "${escapeTomlString(normalizeRRule(artifact.rrule))}"`,
-    'execution_environment = "worktree"',
+    'execution_environment = "local"',
     `cwds = ${formatStringArray(artifact.cwds)}`,
     `created_at = ${createdAt}`,
     `updated_at = ${now}`

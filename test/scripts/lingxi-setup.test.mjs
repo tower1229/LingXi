@@ -96,6 +96,16 @@ describe("lingxi-setup", () => {
     assert.strictEqual(summary.wrote_agents_md, false);
   });
 
+  it("fails with guidance when .codex exists as a file instead of a directory", async () => {
+    tempDir = createTempDir();
+    fs.writeFileSync(path.join(tempDir, ".codex"), "", "utf8");
+
+    const result = await runSetup(tempDir);
+    assert.strictEqual(result.code, 1);
+    assert.match(result.stderr, /exists as a file, but a directory is required there/i);
+    assert.match(result.stderr, /Remove or rename that file and rerun bootstrap/i);
+  });
+
   it("is idempotent and preserves existing runtime state on repeated setup", async () => {
     tempDir = createTempDir();
     const first = await runSetup(tempDir);

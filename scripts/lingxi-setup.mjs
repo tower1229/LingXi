@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { buildIndexMarkdown, defaultProcessedSessionsState, ensureLingxiLayout, processedSessionsPath, distillJournalPath } from "./_lingxi-memory.mjs";
+import { buildIndexMarkdown, defaultProcessedSessionsState, ensureDirectoryPath, ensureLingxiLayout, processedSessionsPath, distillJournalPath } from "./_lingxi-memory.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -15,7 +15,7 @@ function resolveTarget(...parts) {
 }
 
 function ensureDir(targetPath) {
-  fs.mkdirSync(targetPath, { recursive: true });
+  ensureDirectoryPath(targetPath);
 }
 
 function writeIfMissing(targetPath, content) {
