@@ -27,6 +27,12 @@ function writeIfMissing(targetPath, content) {
   return true;
 }
 
+function writeManagedArtifact(targetPath, content) {
+  ensureDir(path.dirname(targetPath));
+  fs.writeFileSync(targetPath, content, "utf8");
+  return true;
+}
+
 function renderTemplate(relativePath, replacements = {}) {
   const templatePath = path.join(repoRoot, "templates", ...relativePath.split("/"));
   let content = fs.readFileSync(templatePath, "utf8");
@@ -89,12 +95,12 @@ function main() {
     ""
   );
 
-  writeIfMissing(
+  writeManagedArtifact(
     resolveTarget(".codex", "agents", "lingxi-session-distill.toml"),
     renderTemplate("agents/lingxi-session-distill.toml.tmpl")
   );
 
-  writeIfMissing(
+  writeManagedArtifact(
     resolveTarget(".lingxi", "setup", "automation.session-distill.toml"),
     renderTemplate("automations/session-distill.toml.tmpl", {
       "__PROJECT_ROOT__": targetRoot

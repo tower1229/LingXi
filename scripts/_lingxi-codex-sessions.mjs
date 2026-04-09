@@ -51,11 +51,13 @@ function extractText(value) {
 function normalizeRole(value) {
   const role = normalizeText(
     value?.role ||
+    value?.payload?.role ||
     value?.author?.role ||
     value?.author?.type ||
     value?.sender ||
     value?.type ||
-    value?.message?.role
+    value?.message?.role ||
+    value?.payload?.message?.role
   ).toLowerCase();
 
   if (["assistant", "user", "system", "tool", "developer"].includes(role)) {
@@ -66,13 +68,26 @@ function normalizeRole(value) {
 
 function normalizeMessage(entry) {
   if (!entry || typeof entry !== "object") return null;
-  const role = normalizeRole(entry);
+  if (entry.type === "event_msg" && entry.payload?.type === "agent_message" && normalizeText(entry.payload.message)) {
+    return {
+      role: "assistant",
+      content: normalizeText(entry.payload.message)
+    };
+  }
+
+  const candidate = entry.type === "response_item" && entry.payload && typeof entry.payload === "object"
+    ? entry.payload
+    : entry;
+
+  const role = normalizeRole(candidate);
   const content = normalizeText(
-    extractText(entry.content) ||
-    extractText(entry.message?.content) ||
-    extractText(entry.text) ||
-    extractText(entry.body) ||
-    extractText(entry.message)
+    extractText(candidate.content) ||
+    extractText(candidate.message?.content) ||
+    extractText(candidate.text) ||
+    extractText(candidate.body) ||
+    extractText(candidate.message) ||
+    extractText(candidate.payload?.content) ||
+    extractText(candidate.payload?.message)
   );
   if (!role || !content) return null;
   return { role, content };
@@ -166,6 +181,15 @@ function collectContextText(value) {
   ].map((item) => normalizeText(item)).filter(Boolean).join("\n"));
 }
 
+function deriveJsonlMetadata(lines) {
+  const sessionMeta = lines.find((item) => item?.type === "session_meta" && item.payload && typeof item.payload === "object");
+  if (sessionMeta) {
+    return sessionMeta.payload;
+  }
+
+  return lines.find((item) => item && typeof item === "object" && !Array.isArray(item) && !normalizeMessage(item)) || {};
+}
+
 function statsForFile(filePath) {
   try {
     return fs.statSync(filePath);
@@ -241,7 +265,7 @@ export function readCodexSessionArtifact(filePath) {
     if (lines.length === 1 && typeof lines[0] === "object" && !Array.isArray(lines[0])) {
       parsed = lines[0];
     } else {
-      const metadata = lines.find((item) => item && typeof item === "object" && !Array.isArray(item) && !normalizeMessage(item)) || {};
+      const metadata = deriveJsonlMetadata(lines);
       parsed = {
         ...metadata,
         messages: uniqueMessages(lines)

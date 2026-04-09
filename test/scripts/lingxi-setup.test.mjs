@@ -160,6 +160,16 @@ describe("lingxi-setup", () => {
     fs.writeFileSync(stateFile, JSON.stringify(customState, null, 2) + "\n", "utf8");
     fs.writeFileSync(journalFile, "{\"ts\":\"2026-04-08T00:00:00.000Z\"}\n", "utf8");
     fs.writeFileSync(agentsMd, "# Existing\n", "utf8");
+    fs.writeFileSync(
+      path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml"),
+      "legacy agent prompt\n",
+      "utf8"
+    );
+    fs.writeFileSync(
+      automationFile,
+      "prompt = \"Analyze recent Codex sessions manually.\"\n",
+      "utf8"
+    );
 
     const second = await runSetup(tempDir);
     assert.strictEqual(second.code, 0, second.stderr);
@@ -169,6 +179,11 @@ describe("lingxi-setup", () => {
     );
     assert.strictEqual(fs.readFileSync(journalFile, "utf8"), "{\"ts\":\"2026-04-08T00:00:00.000Z\"}\n");
     assert.match(fs.readFileSync(automationFile, "utf8"), /rrule = "FREQ=HOURLY;INTERVAL=6"/);
+    assert.match(fs.readFileSync(automationFile, "utf8"), /lx-distill-sessions\.mjs/);
+    assert.match(
+      fs.readFileSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml"), "utf8"),
+      /Run `node scripts\/lx-distill-sessions\.mjs`/
+    );
     assert.strictEqual(fs.readFileSync(agentsMd, "utf8"), "# Existing\n");
     const summary = JSON.parse(second.stdout);
     assert.strictEqual(summary.wrote_agents_md, false);
