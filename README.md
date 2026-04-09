@@ -80,13 +80,15 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 ### Local Setup
 
-To complete the LingXi memory loop locally, run:
+If you used the remote install script above, local bootstrap already ran during installation, so you usually do not need to run it again.
+
+If you installed the files manually, or want to rerun runtime / automation registration explicitly, run:
 
 ```bash
 node scripts/lx-bootstrap.mjs
 ```
 
-This is the required local bootstrap step. It:
+This step:
 
 - `.lingxi/`
 - `.codex/agents/lingxi-session-distill.toml`
