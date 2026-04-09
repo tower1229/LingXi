@@ -174,6 +174,72 @@ describe("lx-select-sessions", () => {
     assert.strictEqual(summary.selected[0].messages.length, 2);
   });
 
+  it("parses current Codex Desktop jsonl wrapper events into normalized messages", async () => {
+    projectDir = createTempDir("lingxi-select-project-");
+    sessionsRoot = createTempDir("lingxi-select-sessions-");
+
+    const setup = await runNode(setupScriptPath, projectDir);
+    assert.strictEqual(setup.code, 0, setup.stderr);
+
+    const lines = [
+      JSON.stringify({
+        timestamp: "2026-04-09T10:07:44.600Z",
+        type: "session_meta",
+        payload: {
+          id: "session-wrapped-jsonl",
+          cwd: projectDir
+        }
+      }),
+      JSON.stringify({
+        timestamp: "2026-04-09T10:07:45.000Z",
+        type: "response_item",
+        payload: {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "Prefer stable contracts over clever shortcuts." }
+          ]
+        }
+      }),
+      JSON.stringify({
+        timestamp: "2026-04-09T10:07:46.000Z",
+        type: "response_item",
+        payload: {
+          type: "message",
+          role: "assistant",
+          content: [
+            { type: "output_text", text: "I will preserve explicit rollback notes." }
+          ]
+        }
+      }),
+      JSON.stringify({
+        timestamp: "2026-04-09T10:07:47.000Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          message: "Looking through repository contracts now."
+        }
+      })
+    ].join("\n") + "\n";
+    fs.writeFileSync(path.join(sessionsRoot, "session-wrapped-jsonl.jsonl"), lines, "utf8");
+
+    const result = await runNode(selectorScriptPath, projectDir, [
+      "--sessions-root", sessionsRoot,
+      "--limit", "10",
+      "--since-hours", "24"
+    ]);
+    assert.strictEqual(result.code, 0, result.stderr);
+
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.selected.length, 1);
+    assert.strictEqual(summary.selected[0].session_id, "session-wrapped-jsonl");
+    assert.strictEqual(summary.selected[0].messages.length, 3);
+    assert.deepStrictEqual(summary.selected[0].messages[0], {
+      role: "user",
+      content: "Prefer stable contracts over clever shortcuts."
+    });
+  });
+
   it("keeps scanning recent artifacts past early noisy sessions until it finds valid candidates", async () => {
     projectDir = createTempDir("lingxi-select-project-");
     sessionsRoot = createTempDir("lingxi-select-sessions-");

@@ -109,6 +109,18 @@ describe("install/bash.sh smoke", () => {
       name: "install-smoke-project",
       private: true
     }, null, 2) + "\n", "utf8");
+    fs.mkdirSync(path.join(projectDir, ".codex", "agents"), { recursive: true });
+    fs.mkdirSync(path.join(projectDir, ".lingxi", "setup"), { recursive: true });
+    fs.writeFileSync(
+      path.join(projectDir, ".codex", "agents", "lingxi-session-distill.toml"),
+      "legacy agent prompt\n",
+      "utf8"
+    );
+    fs.writeFileSync(
+      path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml"),
+      "prompt = \"Analyze recent Codex sessions manually.\"\n",
+      "utf8"
+    );
 
     const localServer = await createStaticServer(repoRoot);
     server = localServer.server;
