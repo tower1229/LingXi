@@ -54,7 +54,8 @@ describe("hybrid contract docs", () => {
     const qualityBaseline = fs.readFileSync(path.join(repoRoot, "docs", "quality-baseline.md"), "utf8");
 
     assert.match(architecture, /Session Selection Guardrails/);
-    assert.match(architecture, /exclude the current automation run and prior session-distill-only conversations/);
+    assert.match(architecture, /let the selector filter for repository relevance and self-distill exclusion/);
+    assert.match(architecture, /Codex-specific adapter code discovers and normalizes candidate session artifacts/);
     assert.match(architecture, /prevent LingXi from distilling its own distillation chatter/);
     assert.match(architecture, /self-distillation exclusion answers/);
 

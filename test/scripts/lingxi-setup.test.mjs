@@ -76,17 +76,20 @@ describe("lingxi-setup", () => {
     assert.match(automation, /agent = "\.codex\/agents\/lingxi-session-distill\.toml"/);
     assert.match(automation, /state_file = "\.lingxi\/state\/processed-sessions\.json"/);
     assert.match(automation, /journal_file = "\.lingxi\/state\/distill-journal\.jsonl"/);
+    assert.match(automation, /lx-distill-sessions\.mjs/);
     assert.match(agents, /Runtime root: `\.lingxi\/`/);
     assert.match(agents, /Memory index: `\.lingxi\/memory\/INDEX\.md`/);
     assert.match(agents, /Background agent definition: `\.codex\/agents\/lingxi-session-distill\.toml`/);
+    assert.match(agents, /Codex distill runner: `node scripts\/lx-distill-sessions\.mjs`/);
     assert.match(agents, /task definition \(`task`\)/);
     assert.match(agents, /task vetting \(`vet`\)/);
     assert.match(agents, /Persist only durable, reusable engineering taste\./);
     assert.match(agents, /Exclude session-distill automation\/self-distillation sessions from background memory selection\./);
+    assert.match(agents, /Codex runtime adapters over LingXi memory core\./);
     assert.match(agents, /Before meaningful repository work, load LingXi memory with `node scripts\/lx-memory-brief\.mjs --prompt "<current request>"`\./);
     assert.match(agents, /Skip trivial or non-repository conversation turns\./);
-    assert.match(distillAgent, /Exclude session-distill automation\/self-distillation sessions from selection\./);
-    assert.match(distillAgent, /LingXi never distills its own distillation chatter\./);
+    assert.match(distillAgent, /Run `node scripts\/lx-distill-sessions\.mjs`/);
+    assert.match(distillAgent, /Do not bypass the runner by manually reading Codex session artifacts\./);
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {

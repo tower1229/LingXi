@@ -166,6 +166,7 @@ This also means the memory-consumption path should stay host-agnostic:
 
 - LingXi core should expose reusable retrieval/briefing primitives
 - Codex and future Claude Code integration should be treated as adapter layers over the same memory core
+- The same adapter rule should also apply to session discovery, scheduling, and host-specific runtime artifacts
 
 ### `task`
 
@@ -306,6 +307,12 @@ Responsibilities:
 - extract only durable engineering taste
 - pass distilled items into the memory writing flow
 
+Implementation split:
+
+- Codex-specific adapter code discovers and normalizes candidate session artifacts
+- a deterministic selector decides which sessions are valid source material
+- `distill-session` remains the single-session worker over normalized `{ session_id, messages }`
+
 Implementation bias:
 
 - LLM produces a structured `MemoryDistillCandidateSet`
@@ -332,12 +339,11 @@ One subagent is enough to establish the background memory loop without creating 
 
 The subagent should:
 
-1. inspect recent historical sessions
-2. filter for repository relevance
-3. exclude the current automation run and prior session-distill-only conversations
-4. identify durable engineering taste
-5. invoke LingXi distillation and memory write logic
-6. update processed session state
+1. run LingXi's deterministic Codex distill runner
+2. let the runner inspect recent historical sessions
+3. let the selector filter for repository relevance and self-distill exclusion
+4. let the single-session worker identify durable engineering taste
+5. report the runner summary without replacing the selector/worker logic
 
 ### Session Selection Guardrails
 

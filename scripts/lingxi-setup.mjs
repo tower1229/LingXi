@@ -49,6 +49,7 @@ This repository includes a local LingXi 2.0 runtime.
 - Distill journal: \`.lingxi/state/distill-journal.jsonl\`
 - Background agent definition: \`.codex/agents/lingxi-session-distill.toml\`
 - Generated automation config: \`.lingxi/setup/automation.session-distill.toml\`
+- Codex distill runner: \`node scripts/lx-distill-sessions.mjs\`
 
 LingXi provides dedicated workflows for:
 
@@ -60,6 +61,7 @@ Global memory rule:
 - Persist only durable, reusable engineering taste.
 - Do not store one-off implementation details as memory.
 - Exclude session-distill automation/self-distillation sessions from background memory selection.
+- Treat \`.codex/agents/\` and generated automation artifacts as Codex runtime adapters over LingXi memory core.
 
 Memory consumption rule:
 

@@ -65,6 +65,7 @@ describe("lx-create-automation", () => {
     assert.match(automationToml, /^name = "LingXi Session Distill"$/m);
     assert.match(automationToml, /^rrule = "RRULE:FREQ=HOURLY;INTERVAL=6"$/m);
     assert.match(automationToml, /^execution_environment = "local"$/m);
+    assert.match(automationToml, /lx-distill-sessions\.mjs/);
     assert.match(automationToml, new RegExp(`^cwds = \\["${projectDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\/g, "\\\\")}"\\]$`, "m"));
   });
 

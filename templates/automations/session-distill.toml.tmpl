@@ -1,6 +1,6 @@
 generated_by = "lingxi-setup"
 name = "LingXi Session Distill"
-prompt = "Analyze recent Codex sessions for this repository, extract durable engineering taste and review preferences, write approved notes into .lingxi/memory/project/, and update .lingxi/state/processed-sessions.json."
+prompt = "Run `node scripts/lx-distill-sessions.mjs` for this repository, use its deterministic selector and single-session distill worker, and report the JSON summary without manually choosing sessions yourself."
 status = "ACTIVE"
 rrule = "FREQ=HOURLY;INTERVAL=6"
 agent = ".codex/agents/lingxi-session-distill.toml"

@@ -42,6 +42,12 @@ LingXi is built to improve the quality of work before code is written:
 4. Use `vet` to challenge it before implementation begins.
 5. Let `session-distill` accumulate durable engineering taste into project memory over time.
 
+For the Codex runtime, session distillation now runs through a deterministic selector + runner path:
+
+- Codex session artifacts are discovered and filtered by a Codex-specific adapter
+- `node scripts/lx-distill-sessions.mjs` orchestrates the scan
+- `skills/session-distill/scripts/distill-session.mjs` remains the single-session durable-memory worker
+
 The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 
 For LingXi, `task` and `vet` are visible workflows, but memory is a global context layer. It should improve any meaningful repository-scoped conversation, not only explicit workflow invocations.
@@ -87,6 +93,8 @@ This is the required local bootstrap step. It:
 - `.lingxi/setup/automation.session-distill.toml`
 - registers the generated session-distill automation in Codex
 
+The generated Codex automation and agent are runtime adapters over LingXi's host-agnostic memory core. They should launch the deterministic distill runner rather than manually picking sessions.
+
 Without automation registration, the background memory distillation loop is not actually closed.
 
 ### Low-Level Commands
@@ -96,6 +104,7 @@ If you need to run the low-level steps separately for debugging or inspection:
 ```bash
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
+node scripts/lx-distill-sessions.mjs
 node scripts/lx-memory-brief.mjs --prompt "your current repository request"
 ```
 
