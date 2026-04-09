@@ -2,7 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import {
   MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION,
-  buildMemoryDistillCandidateSetValidationReport
+  buildMemoryDistillCandidateSetValidationReport,
+  memoryDistillCandidateSetJsonSchema
 } from "../../skills/session-distill/scripts/memory-distill-candidate-set.mjs";
 
 describe("memory distill candidate set", () => {
@@ -66,5 +67,11 @@ describe("memory distill candidate set", () => {
     assert.ok(report.issues.some((item) => item.path === "summary.session_summary"));
     assert.ok(report.issues.some((item) => item.path === "candidates[0].kind"));
     assert.ok(report.issues.some((item) => item.path === "candidates[0].confidence"));
+  });
+
+  it("declares schema_version as a typed string in JSON Schema output", () => {
+    const schema = memoryDistillCandidateSetJsonSchema();
+    assert.strictEqual(schema.properties.schema_version.type, "string");
+    assert.strictEqual(schema.properties.schema_version.const, MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION);
   });
 });

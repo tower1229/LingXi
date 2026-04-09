@@ -184,7 +184,7 @@ export function memoryDistillCandidateSetJsonSchema() {
       "candidates"
     ],
     properties: {
-      schema_version: { const: MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION },
+      schema_version: { type: "string", const: MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION },
       session_id: { type: "string", minLength: 1 },
       content_fingerprint: { type: "string", minLength: 1 },
       distill_version: { type: "string", minLength: 1 },

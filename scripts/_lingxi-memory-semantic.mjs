@@ -65,7 +65,7 @@ function buildGovernanceSchema() {
     additionalProperties: false,
     required: ["schema_version", "action", "reason", "confidence"],
     properties: {
-      schema_version: { const: MEMORY_SEMANTIC_RESPONSE_VERSION },
+      schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
       reason: { type: "string", minLength: 1 },
       confidence: { type: "number", minimum: 0, maximum: 1 },
@@ -101,7 +101,7 @@ function buildRankingSchema() {
     additionalProperties: false,
     required: ["schema_version", "query", "hits"],
     properties: {
-      schema_version: { const: MEMORY_SEMANTIC_RESPONSE_VERSION },
+      schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       query: { type: "string" },
       hits: {
         type: "array",
@@ -126,7 +126,7 @@ function buildGovernanceBatchSchema() {
     additionalProperties: false,
     required: ["schema_version", "decisions"],
     properties: {
-      schema_version: { const: MEMORY_SEMANTIC_RESPONSE_VERSION },
+      schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       decisions: {
         type: "array",
         items: {
@@ -446,8 +446,6 @@ function runCodexStructuredOutput(projectRoot, prompt, schema, operation) {
         "--skip-git-repo-check",
         "-s",
         "read-only",
-        "-a",
-        "never",
         "--color",
         "never",
         "--output-schema",

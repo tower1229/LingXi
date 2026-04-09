@@ -188,8 +188,9 @@ if [ -f "package.json" ]; then
     const fs = require("fs");
     const pkgPath = "package.json";
     const manifestPath = "install/install-manifest.json";
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const stripBom = (value) => value.replace(/^\uFEFF/, "");
+    const pkg = JSON.parse(stripBom(fs.readFileSync(pkgPath, "utf8")));
+    const manifest = JSON.parse(stripBom(fs.readFileSync(manifestPath, "utf8")));
     const next = {
       ...pkg,
       scripts: {

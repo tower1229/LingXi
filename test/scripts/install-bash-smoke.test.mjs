@@ -105,10 +105,14 @@ describe("install/bash.sh smoke", () => {
     projectDir = createTempDir("lingxi-install-project-");
     codexHome = createTempDir("lingxi-install-codex-home-");
 
-    fs.writeFileSync(path.join(projectDir, "package.json"), JSON.stringify({
-      name: "install-smoke-project",
-      private: true
-    }, null, 2) + "\n", "utf8");
+    fs.writeFileSync(
+      path.join(projectDir, "package.json"),
+      "\uFEFF" + JSON.stringify({
+        name: "install-smoke-project",
+        private: true
+      }, null, 2) + "\n",
+      "utf8"
+    );
     fs.mkdirSync(path.join(projectDir, ".codex", "agents"), { recursive: true });
     fs.mkdirSync(path.join(projectDir, ".lingxi", "setup"), { recursive: true });
     fs.writeFileSync(
