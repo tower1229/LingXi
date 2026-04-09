@@ -20,7 +20,7 @@ function runNode(scriptPath, projectRoot, args = [], extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [scriptPath, ...args], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, ...extraEnv },
+      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, LINGXI_PROJECT_ROOT: projectRoot, ...extraEnv },
       stdio: ["ignore", "pipe", "pipe"]
     });
     let stdout = "";
@@ -172,5 +172,38 @@ describe("lx-select-sessions", () => {
     assert.strictEqual(summary.selected.length, 1);
     assert.strictEqual(summary.selected[0].session_id, "session-jsonl");
     assert.strictEqual(summary.selected[0].messages.length, 2);
+  });
+
+  it("keeps scanning recent artifacts past early noisy sessions until it finds valid candidates", async () => {
+    projectDir = createTempDir("lingxi-select-project-");
+    sessionsRoot = createTempDir("lingxi-select-sessions-");
+
+    const setup = await runNode(setupScriptPath, projectDir);
+    assert.strictEqual(setup.code, 0, setup.stderr);
+
+    for (let index = 0; index < 8; index += 1) {
+      writeJson(path.join(sessionsRoot, `noise-${index}.json`), {
+        session_id: `session-noise-${index}`,
+        cwd: path.join(sessionsRoot, `other-project-${index}`),
+        messages: [{ role: "user", content: "Implement stable contracts in another repo." }]
+      });
+    }
+
+    writeJson(path.join(sessionsRoot, "valid-late.json"), {
+      session_id: "session-valid-late",
+      cwd: projectDir,
+      messages: [{ role: "user", content: "Prefer stable contracts over clever shortcuts." }]
+    });
+
+    const result = await runNode(selectorScriptPath, projectDir, [
+      "--sessions-root", sessionsRoot,
+      "--limit", "1",
+      "--since-hours", "24"
+    ]);
+    assert.strictEqual(result.code, 0, result.stderr);
+
+    const summary = JSON.parse(result.stdout);
+    assert.strictEqual(summary.selected.length, 1);
+    assert.strictEqual(summary.selected[0].session_id, "session-valid-late");
   });
 });

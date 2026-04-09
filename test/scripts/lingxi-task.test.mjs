@@ -21,7 +21,7 @@ function runNode(script, projectRoot, stdinJson) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script], {
       cwd: repoRoot,
-      env: withMemorySemanticTestEnv({ ...process.env, CODEX_PROJECT_DIR: projectRoot }),
+      env: withMemorySemanticTestEnv({ ...process.env, CODEX_PROJECT_DIR: projectRoot, LINGXI_PROJECT_ROOT: projectRoot }),
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";

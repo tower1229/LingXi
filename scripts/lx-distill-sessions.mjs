@@ -58,7 +58,7 @@ function runSingleDistill(scriptPath, projectRoot, input) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [scriptPath], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot },
+      env: { ...process.env, LINGXI_PROJECT_ROOT: projectRoot },
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";

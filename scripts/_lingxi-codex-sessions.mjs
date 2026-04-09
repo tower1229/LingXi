@@ -219,7 +219,6 @@ export function resolveCodexSessionsRoot(explicitSessionsRoot = null, explicitCo
 }
 
 export function listCodexSessionArtifactPaths(sessionsRoot, options = {}) {
-  const limit = Number.isFinite(options.limit) && options.limit > 0 ? options.limit : 20;
   const sinceHours = Number.isFinite(options.sinceHours) && options.sinceHours > 0 ? options.sinceHours : 6;
   const cutoff = Date.now() - (sinceHours * 60 * 60 * 1000);
 
@@ -228,7 +227,6 @@ export function listCodexSessionArtifactPaths(sessionsRoot, options = {}) {
     .filter(({ stats }) => stats)
     .filter(({ stats }) => stats.mtimeMs >= cutoff)
     .sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs)
-    .slice(0, Math.max(limit * 5, limit))
     .map(({ filePath }) => filePath);
 }
 
