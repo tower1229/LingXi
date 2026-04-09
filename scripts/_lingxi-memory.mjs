@@ -33,7 +33,7 @@ export const SESSION_RUN_REASON_VALUES = new Set([
 ]);
 
 export function resolveProjectRoot(explicitRoot) {
-  return path.resolve(explicitRoot || process.env.CODEX_PROJECT_DIR || process.cwd());
+  return path.resolve(explicitRoot || process.env.LINGXI_PROJECT_ROOT || process.cwd());
 }
 
 export function lingxiRoot(projectRoot) {
@@ -228,8 +228,7 @@ export function ensureLingxiLayout(projectRoot) {
     memoryDir(projectRoot, "project"),
     memoryDir(projectRoot, "share"),
     path.dirname(processedSessionsPath(projectRoot)),
-    path.join(projectRoot, ".lingxi", "setup"),
-    path.join(projectRoot, ".codex", "agents")
+    path.join(projectRoot, ".lingxi", "setup")
   ];
   for (const dir of dirs) {
     ensureDirectoryPath(dir);

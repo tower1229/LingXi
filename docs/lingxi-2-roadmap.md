@@ -243,7 +243,7 @@ So LingXi 2.0 should treat these as **setup-generated runtime artifacts**, not p
 ### Flow C: Background Session Distillation
 
 1. Automation runs periodically.
-2. It identifies recent unprocessed Codex sessions relevant to the repo.
+2. It identifies recent unprocessed Codex sessions relevant to the repo, excluding the current distill run and prior session-distill-only conversations.
 3. It invokes LingXi session distillation.
 4. Distillation extracts only durable engineering taste, such as:
    - coding preferences
@@ -595,6 +595,7 @@ This is frequent enough to keep memory fresh, but infrequent enough to stay low-
 
 - find recent sessions
 - filter for repo relevance
+- exclude session-distill automation chatter and self-distillation-only conversations from source selection
 - skip sessions already processed under the same content fingerprint and distill version
 - invoke session distillation
 - persist memory

@@ -51,7 +51,7 @@ function runNode(script, projectRoot, stdinJson = null) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot },
+      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, LINGXI_PROJECT_ROOT: projectRoot },
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";

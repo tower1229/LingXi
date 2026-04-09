@@ -268,6 +268,7 @@ Legacy quality signals to preserve:
 Highest current LingXi 2.0 quality bar:
 
 - Must extract only durable, reusable signals.
+- Must exclude session-distill automation/self-distillation chatter from source-session selection.
 - Must skip unchanged sessions by fingerprint and version.
 - Must update processed-session state correctly.
 - Must write resulting memory through the normal memory path.
@@ -277,6 +278,7 @@ Highest current LingXi 2.0 quality bar:
 Evidence required before calling `session-distill` aligned:
 
 - writes-durable-notes test
+- regression proof that self-distillation chatter is excluded from candidate source sessions
 - duplicate-skip test
 - no-signal skip test
 - state update test

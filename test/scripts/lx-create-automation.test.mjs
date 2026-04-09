@@ -19,7 +19,7 @@ function runNode(scriptPath, projectRoot, extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [scriptPath], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, ...extraEnv },
+      env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, LINGXI_PROJECT_ROOT: projectRoot, ...extraEnv },
       stdio: ["ignore", "pipe", "pipe"]
     });
     let stdout = "";
@@ -65,6 +65,7 @@ describe("lx-create-automation", () => {
     assert.match(automationToml, /^name = "LingXi Session Distill"$/m);
     assert.match(automationToml, /^rrule = "RRULE:FREQ=HOURLY;INTERVAL=6"$/m);
     assert.match(automationToml, /^execution_environment = "local"$/m);
+    assert.match(automationToml, /lx-distill-sessions\.mjs/);
     assert.match(automationToml, new RegExp(`^cwds = \\["${projectDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\/g, "\\\\")}"\\]$`, "m"));
   });
 

@@ -17,11 +17,15 @@ const KNOWN_MANAGED_MARKERS = [
   ".codex-plugin/plugin.json",
   "scripts/_lingxi-memory.mjs",
   "scripts/lx-memory-brief.mjs",
+  "scripts/lx-select-sessions.mjs",
+  "scripts/lx-distill-sessions.mjs",
   "scripts/lx-create-automation.mjs",
   "scripts/lx-bootstrap.mjs",
   "scripts/lingxi-memory-index.mjs",
   "scripts/lingxi-setup.mjs",
   "scripts/lx-uninstall.mjs",
+  "scripts/_lingxi-codex-sessions.mjs",
+  "scripts/_lingxi-codex-session-select.mjs",
   "skills/task/SKILL.md",
   "skills/vet/SKILL.md",
   "skills/memory-retrieve/SKILL.md",
@@ -35,6 +39,7 @@ const KNOWN_MANAGED_MARKERS = [
 const DEFAULT_MANAGED_PACKAGE_SCRIPTS = {
   "lx:create-automation": "node scripts/lx-create-automation.mjs",
   "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
+  "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
   "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
   "lx:setup": "node scripts/lingxi-setup.mjs",
   "lx:uninstall": "node scripts/lx-uninstall.mjs"

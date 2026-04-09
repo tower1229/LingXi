@@ -166,6 +166,7 @@ This also means the memory-consumption path should stay host-agnostic:
 
 - LingXi core should expose reusable retrieval/briefing primitives
 - Codex and future Claude Code integration should be treated as adapter layers over the same memory core
+- The same adapter rule should also apply to session discovery, scheduling, and host-specific runtime artifacts
 
 ### `task`
 
@@ -306,6 +307,12 @@ Responsibilities:
 - extract only durable engineering taste
 - pass distilled items into the memory writing flow
 
+Implementation split:
+
+- Codex-specific adapter code discovers and normalizes candidate session artifacts
+- a deterministic selector decides which sessions are valid source material
+- `distill-session` remains the single-session worker over normalized `{ session_id, messages }`
+
 Implementation bias:
 
 - LLM produces a structured `MemoryDistillCandidateSet`
@@ -332,11 +339,28 @@ One subagent is enough to establish the background memory loop without creating 
 
 The subagent should:
 
-1. inspect recent historical sessions
-2. filter for repository relevance
-3. identify durable engineering taste
-4. invoke LingXi distillation and memory write logic
-5. update processed session state
+1. run LingXi's deterministic Codex distill runner
+2. let the runner inspect recent historical sessions
+3. let the selector filter for repository relevance and self-distill exclusion
+4. let the single-session worker identify durable engineering taste
+5. report the runner summary without replacing the selector/worker logic
+
+### Session Selection Guardrails
+
+The session selector must exclude self-distillation material before semantic extraction begins.
+
+At minimum, V1 should not select:
+
+- the currently running session-distill automation conversation
+- prior sessions whose content is primarily about running, debugging, or narrating the session-distill workflow itself
+- sessions that contain only distillation bookkeeping, note-writing chatter, or "memory about memory" discussion without repository engineering signal
+
+The intent is to prevent LingXi from distilling its own distillation chatter and recursively polluting project memory.
+
+This guardrail is separate from dedupe:
+
+- dedupe answers "have we already processed this session content version?"
+- self-distillation exclusion answers "should this session ever be considered valid source material at all?"
 
 ### Rejected Alternative
 

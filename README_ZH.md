@@ -42,6 +42,12 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 4. 用 `vet` 在实现前挑战任务质量。
 5. 让 `session-distill` 持续把工程判断沉淀进项目记忆。
 
+在 Codex 运行时里，会话提炼现在走“确定性 selector + runner”路径：
+
+- 由 Codex 专用 adapter 发现并过滤 session artifact
+- 由 `node scripts/lx-distill-sessions.mjs` 编排整批扫描
+- `skills/session-distill/scripts/distill-session.mjs` 继续只负责单个 session 的 durable memory 提炼
+
 表层很克制，但底层会随着项目使用不断积累质量。
 
 在 LingXi 里，`task` 和 `vet` 是显式工作流，而 memory 是全局上下文层。它不应该只服务于工作流命令，也应该提升普通实现、调试、分析和评审对话的质量。
@@ -87,6 +93,8 @@ node scripts/lx-bootstrap.mjs
 - `.lingxi/setup/automation.session-distill.toml`
 - 在 Codex 中注册 session-distill 自动化任务
 
+生成出来的 Codex automation 与 agent 属于 LingXi memory core 之上的 runtime adapter。它们应当启动确定性 distill runner，而不是手工挑选会话。
+
 如果不注册自动化，LingXi 的后台记忆沉淀循环实际上并没有闭环。
 
 ### 底层命令
@@ -96,6 +104,7 @@ node scripts/lx-bootstrap.mjs
 ```bash
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
+node scripts/lx-distill-sessions.mjs
 node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
 

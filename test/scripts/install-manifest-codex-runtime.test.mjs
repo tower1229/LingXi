@@ -19,9 +19,13 @@ describe("install manifest codex runtime", () => {
     assert.ok(files.has(".codex-plugin/plugin.json"));
     assert.ok(files.has("scripts/_lingxi-memory.mjs"));
     assert.ok(files.has("scripts/_lingxi-memory-semantic.mjs"));
+    assert.ok(files.has("scripts/_lingxi-codex-sessions.mjs"));
+    assert.ok(files.has("scripts/_lingxi-codex-session-select.mjs"));
     assert.ok(files.has("scripts/lx-bootstrap.mjs"));
     assert.ok(files.has("scripts/lx-create-automation.mjs"));
+    assert.ok(files.has("scripts/lx-distill-sessions.mjs"));
     assert.ok(files.has("scripts/lx-memory-brief.mjs"));
+    assert.ok(files.has("scripts/lx-select-sessions.mjs"));
     assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
     assert.ok(files.has("scripts/lingxi-setup.mjs"));
     assert.ok(files.has("scripts/lx-uninstall.mjs"));
@@ -42,6 +46,7 @@ describe("install manifest codex runtime", () => {
     assert.deepStrictEqual(manifest.packageScripts, {
       "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
       "lx:create-automation": "node scripts/lx-create-automation.mjs",
+      "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
       "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
       "lx:setup": "node scripts/lingxi-setup.mjs",
       "lx:uninstall": "node scripts/lx-uninstall.mjs"

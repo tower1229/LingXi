@@ -24,6 +24,7 @@ Provide normalized session data as JSON:
 ## Responsibilities
 
 - analyze historical sessions, not live user turns
+- exclude session-distill automation/self-distillation sessions from selection
 - use LLM judgment to extract only durable engineering taste
 - dedupe by `session_id + content_fingerprint + distill_version`
 - batch-govern distilled candidates before persistence so one session does not pay one semantic roundtrip per note
@@ -44,6 +45,7 @@ Reject:
 - one-off implementation chatter
 - transient debugging details
 - generic conversation summaries
+- session-distill automation chatter or notes about the distillation run itself
 
 ## Output
 
