@@ -60,28 +60,42 @@
         "scripts/_lingxi-memory-semantic.mjs",
         "scripts/_lingxi-codex-sessions.mjs",
         "scripts/_lingxi-codex-session-select.mjs",
+        "scripts/_lingxi-claude-sessions.mjs",
         "scripts/lx-bootstrap.mjs",
         "scripts/lx-create-automation.mjs",
         "scripts/lx-distill-sessions.mjs",
         "scripts/lx-memory-hook.mjs",
+        "scripts/lx-memory-hook-claude.mjs",
         "scripts/lx-select-sessions.mjs",
         "scripts/lingxi-memory-index.mjs",
         "scripts/lingxi-setup.mjs",
         "scripts/lx-uninstall.mjs",
         "templates/agents/lingxi-session-distill.toml.tmpl",
+        "templates/agents/lingxi-session-distill.claude.md.tmpl",
         "templates/automations/session-distill.toml.tmpl"
     ],
-    "runtimeFiles": [
-        ".lingxi",
-        ".codex/config.toml",
-        ".codex/hooks.json",
-        ".codex/agents/lingxi-session-distill.toml"
-    ],
+    "runtimeFiles": {
+        "common": [
+            ".lingxi"
+        ],
+        "codex": [
+            ".codex/config.toml",
+            ".codex/hooks.json",
+            ".codex/agents/lingxi-session-distill.toml"
+        ],
+        "claude": [
+            ".claude/settings.json",
+            ".claude/agents/lingxi-session-distill.md",
+            ".claude/skills",
+            "CLAUDE.md"
+        ]
+    },
     "packageScripts": {
         "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
         "lx:create-automation": "node scripts/lx-create-automation.mjs",
         "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
         "lx:setup": "node scripts/lingxi-setup.mjs",
+        "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
     },
     "manifestCopyPath": "install/install-manifest.json"

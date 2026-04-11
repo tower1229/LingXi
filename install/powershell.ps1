@@ -100,7 +100,7 @@ $ManifestRaw = $ManifestBundle.Raw
 
 Write-Info "Installing LingXi 2.0..."
 Write-Info "Source: ${RepoOwner}/${RepoName}"
-Write-Info "Surface: Codex-native (.agents/plugins, .codex-plugin, assets, skills, scripts, templates, .lingxi)"
+Write-Info "Surface: Codex + Claude Code (.agents/plugins, .codex-plugin, assets, skills, scripts, templates, .lingxi)"
 
 $ManagedExists = (Test-Path ".agents\plugins\marketplace.json") -or (Test-Path ".codex-plugin\plugin.json") -or (Test-Path "skills") -or (Test-Path ".lingxi") -or (Test-Path "install\install-manifest.json")
 
@@ -166,4 +166,4 @@ if ($Manifest.version) {
 if ($ManagedExists) {
   Write-Info "Update mode: refreshed LingXi-managed 2.0 files"
 }
-Write-Info "Next: open this repository in Codex."
+Write-Info "Next: open this repository in Codex or Claude Code."
