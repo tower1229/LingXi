@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import process from "node:process";
 import {
+  appendMemoryOpsLog,
   detectProjectContext,
   ensureLingxiLayout,
   findTaskFile,
@@ -275,6 +276,7 @@ function buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tag
 function buildTaskMemoryContext(input, projectContext, scope, constraints, acceptanceCriteria, tags, type, complexity, signals) {
   return {
     caller: "task",
+    intent: "task",
     title: normalizeText(input.title),
     goal: normalizeText(input.goal),
     type: normalizeText(type),
@@ -993,6 +995,23 @@ async function validateInput(input, projectRoot) {
     userStories,
     functionalRequirements
   });
+  const autoRetrievedMemory = !Array.isArray(input.memory_refs) && !existingTask
+    ? await retrieveRelevantMemoryHits(
+        projectRoot,
+        buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),
+        3,
+        buildTaskMemoryContext(input, projectContext, scope, constraints, acceptanceCriteria, tags, type, complexity, signals)
+      )
+    : [];
+  if (autoRetrievedMemory.length > 0) {
+    appendMemoryOpsLog(projectRoot, {
+      operation: "retrieve_applied",
+      caller: "task",
+      intent: "task",
+      task_title: normalizeText(input.title),
+      applied_note_ids: autoRetrievedMemory.map((note) => note.id)
+    });
+  }
   return {
     schema_version: TASK_SPEC_SCHEMA_VERSION,
     title: normalizeText(input.title),
@@ -1004,12 +1023,7 @@ async function validateInput(input, projectRoot) {
       ? input.memory_refs.map((item) => normalizeText(item)).filter(Boolean)
       : existingTask
         ? (existingTask.memory_refs || []).map((item) => normalizeText(item)).filter(Boolean)
-      : (await retrieveRelevantMemoryHits(
-          projectRoot,
-          buildTaskMemoryQuery(input, scope, constraints, acceptanceCriteria, tags),
-          3,
-          buildTaskMemoryContext(input, projectContext, scope, constraints, acceptanceCriteria, tags, type, complexity, signals)
-        )).map((note) => formatMemoryRef(note)),
+      : autoRetrievedMemory.map((note) => formatMemoryRef(note)),
     task_id: input.task_id ? normalizeText(input.task_id) : "",
     type,
     complexity,

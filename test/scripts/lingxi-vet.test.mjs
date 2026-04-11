@@ -338,6 +338,12 @@ Introduce one explicit backend seam for the service layer.
     const vetResult = JSON.parse(vet.stdout);
     assert.ok(vetResult.findings.some((item) => item.code === "memory_context_missing"), vet.stdout);
     assert.ok(vetResult.revision_targets.some((item) => item.includes("LingXi memory")), vet.stdout);
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_gap_detected" && entry.caller === "vet"));
   });
 
   it("flags missing SDK contract guidance for library tasks", async () => {

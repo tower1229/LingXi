@@ -90,6 +90,88 @@ Document rollback path and rollback order before implementation for backend inte
     assert.strictEqual(hits[0].id, "MEM-001");
   });
 
+  it("ranks the same memory pool differently for task and vet intent", async () => {
+    process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = memorySemanticRunnerModulePath;
+    tempDir = createTempDir();
+    ensureRuntimeState(tempDir);
+    writeNote(
+      tempDir,
+      "project",
+      "MEM-001.task.md",
+      `---
+id: MEM-001
+title: Prefer explicit rollback notes
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When planning backend integration changes
+content_type: preference
+decision_gain: 3
+trigger_clarity: 3
+stability: 1
+---
+
+# One-liner
+
+Prefer explicit rollback path before implementation for backend integration changes.
+
+# Decision / Preference
+
+Document rollback path and rollback order before implementation for backend integration changes.
+
+# Evidence
+
+- Maintainers repeatedly ask for rollback visibility.
+`,
+    );
+    writeNote(
+      tempDir,
+      "project",
+      "MEM-002.vet.md",
+      `---
+id: MEM-002
+title: Avoid vague rollback plans
+kind: anti_pattern
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When reviewing backend integration changes
+content_type: anti_pattern_signal
+decision_gain: 1
+trigger_clarity: 1
+stability: 3
+---
+
+# One-liner
+
+Avoid vague rollback plans for backend integration changes.
+
+# Decision / Preference
+
+Treat missing rollback order as a review risk for backend integration changes.
+
+# Evidence
+
+- Review comments repeatedly flag rollback ambiguity.
+`,
+    );
+
+    const taskHits = await retrieveRelevantMemoryHits(tempDir, "backend integration rollback", 3, {
+      caller: "task",
+      intent: "task"
+    });
+    const vetHits = await retrieveRelevantMemoryHits(tempDir, "backend integration rollback", 3, {
+      caller: "vet",
+      intent: "vet"
+    });
+
+    assert.strictEqual(taskHits[0].id, "MEM-001");
+    assert.strictEqual(vetHits[0].id, "MEM-002");
+  });
+
   it("merges semantically duplicate candidates inside one batch governance pass", async () => {
     process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = memorySemanticRunnerModulePath;
     tempDir = createTempDir();

@@ -76,6 +76,20 @@ describe("lingxi session distill", () => {
     assert.strictEqual(state.summary.tracked_sessions, 1);
     assert.strictEqual(state.last_run.operation, "written");
     assert.strictEqual(state.last_run.run_reason, "first_distill");
+    const projectMemoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    const noteFiles = fs.readdirSync(projectMemoryDir).filter((name) => name.endsWith(".md"));
+    assert.strictEqual(noteFiles.length, 1);
+    const noteContent = fs.readFileSync(path.join(projectMemoryDir, noteFiles[0]), "utf8");
+    assert.match(noteContent, /content_type: preference/);
+    assert.match(noteContent, /decision_gain: 3/);
+    assert.match(noteContent, /source_session_ids:\n  - session-001/);
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(opsLog.some((entry) => entry.operation === "distill_candidates_emitted" && entry.session_id === "session-001"));
+    assert.ok(opsLog.some((entry) => entry.operation === "distill_governance_applied" && entry.session_id === "session-001"));
   });
 
   it("skips duplicate distillation for unchanged session content", async () => {
@@ -124,7 +138,7 @@ describe("lingxi session distill", () => {
     assert.strictEqual(summary.run_reason, "distill_version_changed");
 
     const updatedState = JSON.parse(fs.readFileSync(stateFile, "utf8"));
-    assert.strictEqual(updatedState.distill_version, "v1");
+    assert.strictEqual(updatedState.distill_version, "v2");
     assert.strictEqual(updatedState.summary.total_runs, 2);
     assert.strictEqual(updatedState.summary.reprocessed_runs, 1);
     assert.strictEqual(updatedState.last_run.run_reason, "distill_version_changed");

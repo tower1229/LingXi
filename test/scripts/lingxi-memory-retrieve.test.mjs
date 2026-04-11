@@ -85,6 +85,12 @@ Split changes into smaller reviewable units.
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.hit_count, 1);
     assert.strictEqual(summary.hits[0].note_id, "MEM-001");
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_ranked" && entry.query_mode === "query_only"));
   });
 
   it("prefers project memory over share memory when relevance is similar", async () => {

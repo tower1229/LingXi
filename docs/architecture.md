@@ -769,7 +769,7 @@ Suggested contract:
 ```json
 {
   "state_schema_version": "v2",
-  "distill_version": "v1",
+  "distill_version": "v2",
   "summary": {
     "tracked_sessions": 2,
     "total_runs": 3,

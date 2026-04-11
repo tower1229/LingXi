@@ -313,6 +313,12 @@ Prefer explicit contracts and rollback notes for backend integration changes.
     assert.match(content, /## 8\. Memory Applied|## 7\. Memory Applied/);
     assert.match(content, /MEM-001/);
     assert.match(content, /Prefer explicit contracts and rollback notes/);
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_applied" && entry.caller === "task"));
   });
 
   it("preserves existing memory refs when updating a task without explicit memory input", async () => {

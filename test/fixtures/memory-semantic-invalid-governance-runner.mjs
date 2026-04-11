@@ -2,10 +2,10 @@ export async function runMemorySemanticTask(request) {
   switch (request.operation) {
     case "distill":
       return {
-        schema_version: "draft-2026-04-08",
+        schema_version: "draft-2026-04-11",
         session_id: request.payload?.session_id || "session-invalid",
         content_fingerprint: request.payload?.content_fingerprint || "sha256:test",
-        distill_version: request.payload?.distill_version || "v1",
+        distill_version: request.payload?.distill_version || "v2",
         summary: {
           session_summary: "No durable engineering taste detected.",
           durable_candidate_count: 0,

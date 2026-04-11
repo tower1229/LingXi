@@ -48,6 +48,7 @@ describe("lingxi-setup", () => {
     const result = await runSetup(tempDir);
     assert.strictEqual(result.code, 0, result.stderr);
     assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "memory", "INDEX.md")));
+    assert.ok(!fs.existsSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl")));
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
     const agents = fs.readFileSync(path.join(tempDir, "AGENTS.md"), "utf8");
@@ -59,7 +60,7 @@ describe("lingxi-setup", () => {
     assert.strictEqual(summary.automation_registration_required, true);
     assert.strictEqual(summary.automation_create_command, "node scripts/lx-create-automation.mjs");
     assert.strictEqual(state.state_schema_version, "v2");
-    assert.strictEqual(state.distill_version, "v1");
+    assert.strictEqual(state.distill_version, "v2");
     assert.deepStrictEqual(state.summary, {
       tracked_sessions: 0,
       total_runs: 0,
@@ -125,7 +126,7 @@ describe("lingxi-setup", () => {
 
     const customState = {
       state_schema_version: "v2",
-      distill_version: "v1",
+      distill_version: "v2",
       summary: {
         tracked_sessions: 1,
         total_runs: 2,

@@ -20,7 +20,7 @@ process.stdout.write(JSON.stringify({
   session_id: input.session_id,
   run_reason: "first_distill",
   content_fingerprint: "sha256:fixture",
-  distill_version: "v1",
+  distill_version: "v2",
   candidate_count: 1,
   notes: [`fixture-${input.session_id}`],
   note_count: 1

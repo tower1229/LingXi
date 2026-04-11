@@ -68,6 +68,7 @@ function buildGovernanceSchema() {
       schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
       reason: { type: "string", minLength: 1 },
+      reason_code: { type: "string", minLength: 1 },
       confidence: { type: "number", minimum: 0, maximum: 1 },
       target_note_id: { type: ["string", "null"], minLength: 1 },
       target_candidate_index: { type: ["integer", "null"], minimum: 0 },
@@ -143,6 +144,7 @@ function buildGovernanceBatchSchema() {
           properties: {
             action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
             reason: { type: "string", minLength: 1 },
+            reason_code: { type: "string", minLength: 1 },
             confidence: { type: "number", minimum: 0, maximum: 1 },
             target_note_id: { type: ["string", "null"], minLength: 1 },
             target_candidate_index: { type: ["integer", "null"], minimum: 0 },
@@ -191,7 +193,14 @@ function stripFileFields(notes) {
     when_to_load: uniqueStrings(note.when_to_load || []),
     one_liner: normalizeText(note.one_liner),
     decision: normalizeText(note.decision),
-    evidence: uniqueStrings(note.evidence || [])
+    evidence: uniqueStrings(note.evidence || []),
+    content_type: normalizeText(note.content_type),
+    decision_gain: Number.isInteger(note.decision_gain) ? note.decision_gain : null,
+    reusability: Number.isInteger(note.reusability) ? note.reusability : null,
+    trigger_clarity: Number.isInteger(note.trigger_clarity) ? note.trigger_clarity : null,
+    verifiability: Number.isInteger(note.verifiability) ? note.verifiability : null,
+    stability: Number.isInteger(note.stability) ? note.stability : null,
+    source_session_ids: uniqueStrings(note.source_session_ids || [])
   }));
 }
 
@@ -231,6 +240,9 @@ function assertValidGovernanceDecision(value, existingNotes, options = {}) {
   }
   if (!isNonEmptyString(value.reason)) {
     throw new Error("Memory governance result reason must be a non-empty string.");
+  }
+  if (value.reason_code != null && !isNonEmptyString(value.reason_code)) {
+    throw new Error("Memory governance result reason_code must be a non-empty string when provided.");
   }
   if (!isConfidence(value.confidence)) {
     throw new Error("Memory governance result confidence must be a number between 0 and 1.");
@@ -319,6 +331,9 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
     if (!isNonEmptyString(decision.reason)) {
       throw new Error(`Memory batch governance decision[${index}] reason must be a non-empty string.`);
     }
+    if (decision.reason_code != null && !isNonEmptyString(decision.reason_code)) {
+      throw new Error(`Memory batch governance decision[${index}] reason_code must be a non-empty string when provided.`);
+    }
     if (!isConfidence(decision.confidence)) {
       throw new Error(`Memory batch governance decision[${index}] confidence must be a number between 0 and 1.`);
     }
@@ -354,9 +369,21 @@ function distillPrompt(payload) {
   return [
     "You are LingXi's memory semantic engine for session distillation.",
     "Your job is to extract only durable, reusable engineering taste from the provided historical Codex session.",
+    "Do not jump directly from session transcript to a memory note draft.",
+    "First reconstruct the underlying decision or taste-recognition structure, then express that structure as candidates.",
     "Reject one-off implementation chatter, transient debugging detail, and generic conversation summaries.",
     "Return JSON only. Do not use shell commands or tools.",
     "Prefer precision over recall. If there is no durable engineering taste, return an empty candidates array.",
+    "",
+    "Recognition rules for every candidate:",
+    "- scene must name the concrete engineering context or trigger situation",
+    "- content_type must describe the recognized judgment type, not the storage kind",
+    "- alternatives should list nearby options or competing directions when recoverable from context",
+    "- choice must state the preferred path or judgment",
+    "- rationale must explain why this choice is favored",
+    "- pattern_hint should summarize the reusable trigger or pattern",
+    "- value_scores should rate decision_gain, reusability, trigger_clarity, verifiability, and stability from 0 to 3",
+    "- suggested_storage_kind should be the best durable-memory storage kind for governance",
     "",
     "Output rules:",
     `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
@@ -376,6 +403,7 @@ function governancePrompt(payload) {
     "Base the decision on semantic meaning, not wording overlap.",
     "Merge materially identical or stronger rephrasings into the same note.",
     "Skip noisy or one-off candidate content.",
+    "When possible, include a compact reason_code such as merge_equivalent, merge_strengthen, skip_low_value, or skip_unclear_trigger.",
     "Return JSON only. Do not use shell commands or tools.",
     "",
     "Output rules:",
@@ -399,6 +427,7 @@ function governanceBatchPrompt(payload) {
     "Merge materially identical or stronger rephrasings into the same note.",
     "If a later candidate should merge into a note created earlier in this same batch, set target_candidate_index to that earlier candidate index and omit target_note_id.",
     "Skip noisy or one-off candidate content.",
+    "When possible, include a compact reason_code such as merge_equivalent, merge_strengthen, skip_low_value, or skip_unclear_trigger.",
     "Return JSON only. Do not use shell commands or tools.",
     "",
     "Output rules:",
@@ -415,11 +444,17 @@ function governanceBatchPrompt(payload) {
 }
 
 function retrievalPrompt(payload) {
+  const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
   return [
     "You are LingXi's memory retrieval engine.",
     "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
     "Rank by semantic relevance, not keyword overlap alone.",
     "Prefer project memory over share memory when relevance is otherwise similar.",
+    intent === "task"
+      ? "For task intent, bias toward implementation boundaries, rollback guidance, contract constraints, and practical engineering preferences."
+      : intent === "vet"
+        ? "For vet intent, bias toward anti-patterns, review tendencies, hidden risks, missing constraints, and historical pitfalls."
+        : "Use the provided caller context to infer the right retrieval bias.",
     "Return JSON only. Do not use shell commands or tools.",
     "",
     "Output rules:",
@@ -564,16 +599,25 @@ export async function governMemoryCandidate(projectRoot, candidate, existingNote
   const payload = {
     candidate: {
       title: normalizeText(candidate.title),
+      scene: normalizeText(candidate.scene),
+      content_type: normalizeText(candidate.content_type),
+      alternatives: uniqueStrings(candidate.alternatives || []),
+      choice: normalizeText(candidate.choice),
+      rationale: normalizeText(candidate.rationale),
       kind: normalizeText(candidate.kind),
       scope: resolvedScope,
       one_liner: normalizeText(candidate.one_liner),
       decision: normalizeText(candidate.decision),
+      pattern_hint: normalizeText(candidate.pattern_hint),
       when_to_load: uniqueStrings(candidate.when_to_load || []),
       evidence: uniqueStrings(candidate.evidence || []),
       source: normalizeText(candidate.source),
       confidence: typeof candidate.confidence === "number" ? candidate.confidence : null,
       durability_reason: normalizeText(candidate.durability_reason),
-      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope)
+      value_scores: isPlainObject(candidate.value_scores) ? candidate.value_scores : null,
+      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope),
+      suggested_storage_kind: normalizeText(candidate.suggested_storage_kind),
+      source_session_ids: uniqueStrings(candidate.source_session_ids || [])
     },
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope
@@ -594,16 +638,25 @@ export async function governMemoryCandidates(projectRoot, candidates, existingNo
   const payload = {
     candidates: (candidates || []).map((candidate) => ({
       title: normalizeText(candidate.title),
+      scene: normalizeText(candidate.scene),
+      content_type: normalizeText(candidate.content_type),
+      alternatives: uniqueStrings(candidate.alternatives || []),
+      choice: normalizeText(candidate.choice),
+      rationale: normalizeText(candidate.rationale),
       kind: normalizeText(candidate.kind),
       scope: resolvedScope,
       one_liner: normalizeText(candidate.one_liner),
       decision: normalizeText(candidate.decision),
+      pattern_hint: normalizeText(candidate.pattern_hint),
       when_to_load: uniqueStrings(candidate.when_to_load || []),
       evidence: uniqueStrings(candidate.evidence || []),
       source: normalizeText(candidate.source),
       confidence: typeof candidate.confidence === "number" ? candidate.confidence : null,
       durability_reason: normalizeText(candidate.durability_reason),
-      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope)
+      value_scores: isPlainObject(candidate.value_scores) ? candidate.value_scores : null,
+      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope),
+      suggested_storage_kind: normalizeText(candidate.suggested_storage_kind),
+      source_session_ids: uniqueStrings(candidate.source_session_ids || [])
     })),
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope

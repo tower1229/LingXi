@@ -1,6 +1,6 @@
-export const MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION = "draft-2026-04-08";
+export const MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION = "draft-2026-04-11";
 
-const MEMORY_KIND_VALUES = new Set([
+export const MEMORY_KIND_VALUES = new Set([
   "preference",
   "constraint",
   "anti_pattern",
@@ -8,7 +8,20 @@ const MEMORY_KIND_VALUES = new Set([
   "heuristic"
 ]);
 
-const REUSABILITY_SCOPE_VALUES = new Set(["project", "share"]);
+export const TASTE_CONTENT_TYPE_VALUES = new Set([
+  "preference",
+  "decision_experience",
+  "domain_knowledge",
+  "product_knowledge",
+  "org_experience",
+  "heuristic",
+  "pattern",
+  "anti_pattern_signal",
+  "troubleshooting"
+]);
+
+export const REUSABILITY_SCOPE_VALUES = new Set(["project", "share"]);
+const VALUE_SCORE_KEYS = ["decision_gain", "reusability", "trigger_clarity", "verifiability", "stability"];
 
 function issue(path, code, message) {
   return { path, code, message };
@@ -30,8 +43,26 @@ function isConfidence(value) {
   return typeof value === "number" && !Number.isNaN(value) && value >= 0 && value <= 1;
 }
 
+function isValueScore(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 3;
+}
+
 function isNonNegativeInteger(value) {
   return Number.isInteger(value) && value >= 0;
+}
+
+function validateValueScores(value, base) {
+  const issues = [];
+  if (!isPlainObject(value)) {
+    issues.push(issue(base, "invalid_type", `${base} must be an object.`));
+    return issues;
+  }
+  VALUE_SCORE_KEYS.forEach((key) => {
+    if (!isValueScore(value[key])) {
+      issues.push(issue(`${base}.${key}`, "invalid_type", `${base}.${key} must be an integer between 0 and 3.`));
+    }
+  });
+  return issues;
 }
 
 function validateCandidateShape(candidate, index) {
@@ -43,6 +74,27 @@ function validateCandidateShape(candidate, index) {
   }
   if (!isNonEmptyString(candidate.title)) {
     issues.push(issue(`${base}.title`, "invalid_type", `${base}.title must be a non-empty string.`));
+  }
+  if (!isNonEmptyString(candidate.scene)) {
+    issues.push(issue(`${base}.scene`, "invalid_type", `${base}.scene must be a non-empty string.`));
+  }
+  if (!TASTE_CONTENT_TYPE_VALUES.has(candidate.content_type)) {
+    issues.push(
+      issue(
+        `${base}.content_type`,
+        "invalid_type",
+        `${base}.content_type must be one of: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}.`
+      )
+    );
+  }
+  if (!isStringArray(candidate.alternatives)) {
+    issues.push(issue(`${base}.alternatives`, "invalid_type", `${base}.alternatives must be a string array.`));
+  }
+  if (!isNonEmptyString(candidate.choice)) {
+    issues.push(issue(`${base}.choice`, "invalid_type", `${base}.choice must be a non-empty string.`));
+  }
+  if (!isNonEmptyString(candidate.rationale)) {
+    issues.push(issue(`${base}.rationale`, "invalid_type", `${base}.rationale must be a non-empty string.`));
   }
   if (!MEMORY_KIND_VALUES.has(candidate.kind)) {
     issues.push(
@@ -59,6 +111,9 @@ function validateCandidateShape(candidate, index) {
   if (!isNonEmptyString(candidate.decision)) {
     issues.push(issue(`${base}.decision`, "invalid_type", `${base}.decision must be a non-empty string.`));
   }
+  if (!isNonEmptyString(candidate.pattern_hint)) {
+    issues.push(issue(`${base}.pattern_hint`, "invalid_type", `${base}.pattern_hint must be a non-empty string.`));
+  }
   if (!isStringArray(candidate.when_to_load) || candidate.when_to_load.length === 0) {
     issues.push(issue(`${base}.when_to_load`, "invalid_type", `${base}.when_to_load must be a non-empty string array.`));
   }
@@ -73,12 +128,22 @@ function validateCandidateShape(candidate, index) {
       issue(`${base}.durability_reason`, "invalid_type", `${base}.durability_reason must be a non-empty string.`)
     );
   }
+  issues.push(...validateValueScores(candidate.value_scores, `${base}.value_scores`));
   if (!REUSABILITY_SCOPE_VALUES.has(candidate.reusability_scope)) {
     issues.push(
       issue(
         `${base}.reusability_scope`,
         "invalid_type",
         `${base}.reusability_scope must be one of: ${[...REUSABILITY_SCOPE_VALUES].join(", ")}.`
+      )
+    );
+  }
+  if (!MEMORY_KIND_VALUES.has(candidate.suggested_storage_kind)) {
+    issues.push(
+      issue(
+        `${base}.suggested_storage_kind`,
+        "invalid_type",
+        `${base}.suggested_storage_kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}.`
       )
     );
   }
@@ -205,20 +270,37 @@ export function memoryDistillCandidateSetJsonSchema() {
           additionalProperties: false,
           required: [
             "title",
+            "scene",
+            "content_type",
+            "alternatives",
+            "choice",
+            "rationale",
             "kind",
             "one_liner",
             "decision",
+            "pattern_hint",
             "when_to_load",
             "evidence",
             "confidence",
             "durability_reason",
-            "reusability_scope"
+            "value_scores",
+            "reusability_scope",
+            "suggested_storage_kind"
           ],
           properties: {
             title: { type: "string", minLength: 1 },
+            scene: { type: "string", minLength: 1 },
+            content_type: { type: "string", enum: [...TASTE_CONTENT_TYPE_VALUES] },
+            alternatives: {
+              type: "array",
+              items: { type: "string", minLength: 1 }
+            },
+            choice: { type: "string", minLength: 1 },
+            rationale: { type: "string", minLength: 1 },
             kind: { type: "string", enum: [...MEMORY_KIND_VALUES] },
             one_liner: { type: "string", minLength: 1 },
             decision: { type: "string", minLength: 1 },
+            pattern_hint: { type: "string", minLength: 1 },
             when_to_load: {
               type: "array",
               minItems: 1,
@@ -231,7 +313,16 @@ export function memoryDistillCandidateSetJsonSchema() {
             },
             confidence: { type: "number", minimum: 0, maximum: 1 },
             durability_reason: { type: "string", minLength: 1 },
-            reusability_scope: { type: "string", enum: [...REUSABILITY_SCOPE_VALUES] }
+            value_scores: {
+              type: "object",
+              additionalProperties: false,
+              required: VALUE_SCORE_KEYS,
+              properties: Object.fromEntries(
+                VALUE_SCORE_KEYS.map((key) => [key, { type: "integer", minimum: 0, maximum: 3 }])
+              )
+            },
+            reusability_scope: { type: "string", enum: [...REUSABILITY_SCOPE_VALUES] },
+            suggested_storage_kind: { type: "string", enum: [...MEMORY_KIND_VALUES] }
           }
         }
       }
