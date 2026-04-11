@@ -6,7 +6,9 @@
 
 安装器会分发：
 
+- `.agents/plugins/marketplace.json`
 - `.codex-plugin/plugin.json`
+- `assets/`
 - `skills/`
 - `scripts/`
 - `templates/`

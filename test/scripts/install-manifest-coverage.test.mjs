@@ -57,7 +57,9 @@ describe("install-manifest-coverage", () => {
     const manifest = loadManifest();
     const manifestFiles = new Set(manifest.files || []);
     const repoFiles = [
+      ...walkFiles(".agents"),
       ...walkFiles(".codex-plugin"),
+      ...walkFiles("assets"),
       ...walkFiles("skills"),
       ...walkFiles("templates"),
       ...runtimeScriptFiles()

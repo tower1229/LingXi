@@ -134,10 +134,10 @@ LINGXI_VERSION="$(get_json_string "version")"
 
 info "Installing LingXi 2.0..."
 info "Source: ${REPO_OWNER}/${REPO_NAME}"
-info "Surface: Codex-native (.codex-plugin, skills, scripts, templates, .lingxi)"
+info "Surface: Codex-native (.agents/plugins, .codex-plugin, assets, skills, scripts, templates, .lingxi)"
 
 MANAGED_EXISTS=false
-if [ -f ".codex-plugin/plugin.json" ] || [ -d "skills" ] || [ -d ".lingxi" ] || [ -f "install/install-manifest.json" ]; then
+if [ -f ".agents/plugins/marketplace.json" ] || [ -f ".codex-plugin/plugin.json" ] || [ -d "skills" ] || [ -d ".lingxi" ] || [ -f "install/install-manifest.json" ]; then
   MANAGED_EXISTS=true
 fi
 
@@ -188,8 +188,9 @@ if [ -f "package.json" ]; then
     const fs = require("fs");
     const pkgPath = "package.json";
     const manifestPath = "install/install-manifest.json";
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const stripBom = (value) => value.replace(/^\uFEFF/, "");
+    const pkg = JSON.parse(stripBom(fs.readFileSync(pkgPath, "utf8")));
+    const manifest = JSON.parse(stripBom(fs.readFileSync(manifestPath, "utf8")));
     const next = {
       ...pkg,
       scripts: {

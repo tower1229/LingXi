@@ -100,9 +100,9 @@ $ManifestRaw = $ManifestBundle.Raw
 
 Write-Info "Installing LingXi 2.0..."
 Write-Info "Source: ${RepoOwner}/${RepoName}"
-Write-Info "Surface: Codex-native (.codex-plugin, skills, scripts, templates, .lingxi)"
+Write-Info "Surface: Codex-native (.agents/plugins, .codex-plugin, assets, skills, scripts, templates, .lingxi)"
 
-$ManagedExists = (Test-Path ".codex-plugin\plugin.json") -or (Test-Path "skills") -or (Test-Path ".lingxi") -or (Test-Path "install\install-manifest.json")
+$ManagedExists = (Test-Path ".agents\plugins\marketplace.json") -or (Test-Path ".codex-plugin\plugin.json") -or (Test-Path "skills") -or (Test-Path ".lingxi") -or (Test-Path "install\install-manifest.json")
 
 if ($ManagedExists) {
   if ($AutoConfirm) {

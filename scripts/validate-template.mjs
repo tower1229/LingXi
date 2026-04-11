@@ -259,6 +259,37 @@ function resolveMarketplaceSource(source, pluginRoot) {
   return `${normalizedRoot}/${normalizedSource}`;
 }
 
+function getMarketplaceSourcePath(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  if (typeof entry.source === "string") {
+    return entry.source;
+  }
+
+  if (entry.source && typeof entry.source === "object" && typeof entry.source.path === "string") {
+    return entry.source.path;
+  }
+
+  return null;
+}
+
+function collectManifestPathFields(pluginManifest) {
+  const values = [];
+  const topLevelFields = ["logo", "rules", "skills", "agents", "commands", "hooks", "mcpServers", "apps"];
+  for (const field of topLevelFields) {
+    values.push([field, ...extractPathValues(pluginManifest[field])]);
+  }
+
+  const interfaceFields = pluginManifest?.interface ?? {};
+  values.push(["interface.composerIcon", ...extractPathValues(interfaceFields.composerIcon)]);
+  values.push(["interface.logo", ...extractPathValues(interfaceFields.logo)]);
+  values.push(["interface.screenshots", ...extractPathValues(interfaceFields.screenshots)]);
+
+  return values.filter(([, ...paths]) => paths.length > 0);
+}
+
 async function validateSinglePluginManifest() {
   const manifestPath = path.join(repoRoot, ".codex-plugin", "plugin.json");
   const pluginManifest = await readJsonFile(manifestPath, "Plugin manifest");
@@ -272,9 +303,7 @@ async function validateSinglePluginManifest() {
     addError('"name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.');
   }
 
-  const manifestFields = ["logo", "rules", "skills", "agents", "commands", "hooks", "mcpServers"];
-  for (const field of manifestFields) {
-    const values = extractPathValues(pluginManifest[field]);
+  for (const [field, ...values] of collectManifestPathFields(pluginManifest)) {
     for (const value of values) {
       await validateReferencedPath(repoRoot, field, value, pluginName);
     }
@@ -284,12 +313,12 @@ async function validateSinglePluginManifest() {
 }
 
 async function main() {
-  const marketplacePath = path.join(repoRoot, ".codex-plugin", "marketplace.json");
+  const marketplacePath = path.join(repoRoot, ".agents", "plugins", "marketplace.json");
   const hasMarketplaceManifest = await pathExists(marketplacePath);
 
   if (!hasMarketplaceManifest) {
     addWarning(
-      'Marketplace manifest not found at ".codex-plugin/marketplace.json". Falling back to ".codex-plugin/plugin.json" validation.'
+      'Marketplace manifest not found at ".agents/plugins/marketplace.json". Falling back to ".codex-plugin/plugin.json" validation.'
     );
     await validateSinglePluginManifest();
     summarizeAndExit();
@@ -308,24 +337,24 @@ async function main() {
     );
   }
 
-  if (!marketplace.owner || typeof marketplace.owner.name !== "string" || marketplace.owner.name.length === 0) {
-    addError('Marketplace "owner.name" is required.');
+  if (
+    marketplace.interface !== undefined &&
+    (
+      !marketplace.interface ||
+      typeof marketplace.interface !== "object" ||
+      (
+        marketplace.interface.displayName !== undefined &&
+        typeof marketplace.interface.displayName !== "string"
+      )
+    )
+  ) {
+    addError('Marketplace "interface.displayName" must be a string when provided.');
   }
 
   if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
     addError('Marketplace "plugins" must be a non-empty array.');
     summarizeAndExit();
     return;
-  }
-
-  const pluginRoot = marketplace.metadata?.pluginRoot;
-  if (pluginRoot !== undefined) {
-    if (typeof pluginRoot !== "string" || !isSafeRelativePath(pluginRoot)) {
-      addError('Marketplace "metadata.pluginRoot" must be a safe relative path.');
-    } else {
-      const pluginRootAbs = path.join(repoRoot, pluginRoot);
-      await ensureDirectory(pluginRootAbs, 'Marketplace "metadata.pluginRoot"');
-    }
   }
 
   const seenNames = new Set();
@@ -347,13 +376,23 @@ async function main() {
     }
     seenNames.add(entry.name);
 
-    const sourcePath = resolveMarketplaceSource(entry.source, pluginRoot ?? "");
+    if (!entry.source || typeof entry.source !== "object") {
+      addError(`${label}.source must be an object with "source" and "path".`);
+      continue;
+    }
+
+    if (entry.source.source !== "local") {
+      addError(`${label}.source.source must be "local".`);
+      continue;
+    }
+
+    const sourcePath = resolveMarketplaceSource(getMarketplaceSourcePath(entry), "");
     if (!sourcePath) {
-      addError(`${label}.source must be a string path.`);
+      addError(`${label}.source.path must be a string path.`);
       continue;
     }
     if (!isSafeRelativePath(sourcePath)) {
-      addError(`${label}.source is not a safe relative path: "${sourcePath}"`);
+      addError(`${label}.source.path is not a safe relative path: "${sourcePath}"`);
       continue;
     }
 
@@ -381,29 +420,32 @@ async function main() {
       );
     }
 
-    const manifestFields = ["logo", "rules", "skills", "agents", "commands", "hooks", "mcpServers"];
-    for (const field of manifestFields) {
-      const values = extractPathValues(pluginManifest[field]);
+    if (!entry.policy || typeof entry.policy !== "object") {
+      addError(`${label}.policy must be an object.`);
+    } else {
+      const allowedInstallations = new Set(["NOT_AVAILABLE", "AVAILABLE", "INSTALLED_BY_DEFAULT"]);
+      const allowedAuthentication = new Set(["ON_INSTALL", "ON_USE"]);
+      if (!allowedInstallations.has(entry.policy.installation)) {
+        addError(
+          `${label}.policy.installation must be one of NOT_AVAILABLE, AVAILABLE, or INSTALLED_BY_DEFAULT.`
+        );
+      }
+      if (!allowedAuthentication.has(entry.policy.authentication)) {
+        addError(`${label}.policy.authentication must be either ON_INSTALL or ON_USE.`);
+      }
+    }
+
+    if (typeof entry.category !== "string" || entry.category.length === 0) {
+      addError(`${label}.category must be a non-empty string.`);
+    }
+
+    for (const [field, ...values] of collectManifestPathFields(pluginManifest)) {
       for (const value of values) {
         await validateReferencedPath(pluginDir, field, value, entry.name);
       }
     }
 
     await validateComponentFrontmatter(pluginDir, entry.name, pluginManifest);
-
-    const hooksPath = path.join(pluginDir, "hooks", "hooks.json");
-    const manifestHooksPath =
-      pluginManifest.hooks != null ? getManifestDirPath(pluginManifest, "hooks") : null;
-    const hasManifestHooks =
-      manifestHooksPath && (await pathExists(path.join(pluginDir, manifestHooksPath)));
-    if (!(await pathExists(hooksPath)) && !hasManifestHooks) {
-      addWarning(`${entry.name}: no hooks/hooks.json file found (only needed when using hooks).`);
-    }
-
-    const mcpPath = path.join(pluginDir, "mcp.json");
-    if (!(await pathExists(mcpPath))) {
-      addWarning(`${entry.name}: no mcp.json file found (only needed when using MCP servers).`);
-    }
   }
 
   summarizeAndExit();

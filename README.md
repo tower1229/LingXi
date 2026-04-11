@@ -28,6 +28,7 @@ LingXi is built to improve the quality of work before code is written:
 ## What You Get
 
 - **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Repo marketplace entry** in [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
 - **Durable memory core** in [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
 - **Project-local runtime** under `.lingxi/`
