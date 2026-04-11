@@ -13,9 +13,13 @@ function createTempDir() {
   return fs.mkdtempSync(path.join("/tmp", "lingxi-setup-test-"));
 }
 
-function runSetup(projectRoot) {
+function runSetup(projectRoot, hostArg) {
+  const args = [scriptPath];
+  if (hostArg) {
+    args.push("--host", hostArg);
+  }
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath], {
+    const child = spawn(process.execPath, args, {
       cwd: repoRoot,
       env: { ...process.env, CODEX_PROJECT_DIR: projectRoot, LINGXI_PROJECT_ROOT: projectRoot },
       stdio: ["ignore", "pipe", "pipe"]
@@ -42,7 +46,7 @@ describe("lingxi-setup", () => {
     }
   });
 
-  it("creates the runtime skeleton", async () => {
+  it("creates the runtime skeleton (default --host all)", async () => {
     tempDir = createTempDir();
     const result = await runSetup(tempDir);
     assert.strictEqual(result.code, 0, result.stderr);
@@ -52,6 +56,11 @@ describe("lingxi-setup", () => {
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "hooks.json")));
     assert.ok(fs.existsSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "settings.json")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "agents", "lingxi-session-distill.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "skills", "task", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, "CLAUDE.md")));
+
     const agents = fs.readFileSync(path.join(tempDir, "AGENTS.md"), "utf8");
     const codexConfig = fs.readFileSync(path.join(tempDir, ".codex", "config.toml"), "utf8");
     const codexHooks = JSON.parse(fs.readFileSync(path.join(tempDir, ".codex", "hooks.json"), "utf8"));
@@ -59,6 +68,10 @@ describe("lingxi-setup", () => {
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
     const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
     const summary = JSON.parse(result.stdout);
+
+    assert.strictEqual(summary.host, "all");
+    assert.strictEqual(summary.codex_enabled, true);
+    assert.strictEqual(summary.claude_enabled, true);
     assert.strictEqual(summary.default_distill_rrule, "FREQ=HOURLY;INTERVAL=6");
     assert.strictEqual(summary.automation_registration_required, true);
     assert.strictEqual(summary.automation_create_command, "node scripts/lx-create-automation.mjs");
@@ -91,20 +104,68 @@ describe("lingxi-setup", () => {
     assert.match(codexHooks.hooks.UserPromptSubmit[0].hooks[0].command, /lx-memory-hook\.mjs/);
     assert.match(agents, /Runtime root: `\.lingxi\/`/);
     assert.match(agents, /Memory index: `\.lingxi\/memory\/INDEX\.md`/);
-    assert.match(agents, /Codex hook config: `\.codex\/config\.toml`/);
-    assert.match(agents, /Codex hook definitions: `\.codex\/hooks\.json`/);
-    assert.match(agents, /Background agent definition: `\.codex\/agents\/lingxi-session-distill\.toml`/);
-    assert.match(agents, /Codex distill runner: `node scripts\/lx-distill-sessions\.mjs`/);
+    assert.match(agents, /Distill runner: `node scripts\/lx-distill-sessions\.mjs`/);
     assert.match(agents, /task definition \(`task`\)/);
     assert.match(agents, /task vetting \(`vet`\)/);
     assert.match(agents, /Persist only durable, reusable engineering taste\./);
     assert.match(agents, /Exclude session-distill automation\/self-distillation sessions from background memory selection\./);
-    assert.match(agents, /Codex runtime adapters over LingXi memory core\./);
-    assert.match(agents, /LingXi memory is injected automatically for meaningful repository turns through repo-local Codex hooks when hooks are active\./);
+    assert.match(agents, /LingXi memory is injected automatically for meaningful repository turns through repo-local hooks when hooks are active\./);
     assert.match(agents, /Skip trivial or non-repository conversation turns\./);
-    assert.match(agents, /does not execute hooks natively on Windows yet/);
     assert.match(distillAgent, /Run `node scripts\/lx-distill-sessions\.mjs`/);
     assert.match(distillAgent, /Do not bypass the runner by manually reading Codex session artifacts\./);
+  });
+
+  it("--host claude generates only Claude adapter artifacts", async () => {
+    tempDir = createTempDir();
+    const result = await runSetup(tempDir, "claude");
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+
+    assert.strictEqual(summary.host, "claude");
+    assert.strictEqual(summary.codex_enabled, false);
+    assert.strictEqual(summary.claude_enabled, true);
+    assert.strictEqual(summary.wrote_agents_md, true);
+    assert.strictEqual(summary.wrote_claude_md, true);
+    assert.strictEqual(summary.default_distill_rrule, undefined);
+
+    assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "memory", "INDEX.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "settings.json")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "agents", "lingxi-session-distill.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, ".claude", "skills", "task", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(tempDir, "CLAUDE.md")));
+
+    assert.ok(!fs.existsSync(path.join(tempDir, ".codex")));
+    assert.ok(!fs.existsSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml")));
+
+    const claudeSettings = JSON.parse(fs.readFileSync(path.join(tempDir, ".claude", "settings.json"), "utf8"));
+    assert.ok(Array.isArray(claudeSettings.hooks?.UserPromptSubmit));
+    assert.strictEqual(claudeSettings.hooks.UserPromptSubmit.length, 1);
+    assert.match(claudeSettings.hooks.UserPromptSubmit[0].hooks[0].command, /lx-memory-hook-claude\.mjs/);
+
+    const claudeAgent = fs.readFileSync(path.join(tempDir, ".claude", "agents", "lingxi-session-distill.md"), "utf8");
+    assert.match(claudeAgent, /Run `node scripts\/lx-distill-sessions\.mjs`/);
+
+    const claudeMd = fs.readFileSync(path.join(tempDir, "CLAUDE.md"), "utf8");
+    assert.match(claudeMd, /@AGENTS\.md/);
+    assert.match(claudeMd, /\.claude\/skills\//);
+  });
+
+  it("--host codex generates only Codex adapter artifacts", async () => {
+    tempDir = createTempDir();
+    const result = await runSetup(tempDir, "codex");
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+
+    assert.strictEqual(summary.host, "codex");
+    assert.strictEqual(summary.codex_enabled, true);
+    assert.strictEqual(summary.claude_enabled, false);
+    assert.strictEqual(summary.wrote_claude_md, false);
+
+    assert.ok(fs.existsSync(path.join(tempDir, ".codex", "config.toml")));
+    assert.ok(fs.existsSync(path.join(tempDir, "AGENTS.md")));
+    assert.ok(!fs.existsSync(path.join(tempDir, ".claude")));
+    assert.ok(!fs.existsSync(path.join(tempDir, "CLAUDE.md")));
   });
 
   it("does not overwrite an existing AGENTS.md", async () => {
@@ -116,6 +177,15 @@ describe("lingxi-setup", () => {
     assert.strictEqual(fs.readFileSync(agentsMd, "utf8"), "# Existing\n");
     const summary = JSON.parse(result.stdout);
     assert.strictEqual(summary.wrote_agents_md, false);
+  });
+
+  it("does not overwrite an existing CLAUDE.md", async () => {
+    tempDir = createTempDir();
+    const claudeMd = path.join(tempDir, "CLAUDE.md");
+    fs.writeFileSync(claudeMd, "# Custom\n", "utf8");
+    const result = await runSetup(tempDir, "claude");
+    assert.strictEqual(result.code, 0, result.stderr);
+    assert.strictEqual(fs.readFileSync(claudeMd, "utf8"), "# Custom\n");
   });
 
   it("fails with guidance when .codex exists as a file instead of a directory", async () => {
@@ -253,5 +323,12 @@ describe("lingxi-setup", () => {
     assert.strictEqual(fs.readFileSync(agentsMd, "utf8"), "# Existing\n");
     const summary = JSON.parse(second.stdout);
     assert.strictEqual(summary.wrote_agents_md, false);
+  });
+
+  it("rejects invalid --host value", async () => {
+    tempDir = createTempDir();
+    const result = await runSetup(tempDir, "invalid");
+    assert.strictEqual(result.code, 1);
+    assert.match(result.stderr, /Invalid --host value/);
   });
 });

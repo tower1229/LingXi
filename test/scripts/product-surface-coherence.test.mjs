@@ -37,18 +37,18 @@ describe("product surface coherence", () => {
     assert.ok(!("test:all" in pkg.scripts));
   });
 
-  it("describes the repository as a released Codex-native product with no supported legacy install surface", () => {
+  it("describes the repository as a released product with no supported legacy install surface", () => {
     const readme = readText("README.md");
     const readmeZh = readText("README_ZH.md");
 
-    assert.match(readme, /Codex-native/i);
+    assert.match(readme, /Codex.*Claude Code|Claude Code.*Codex/i);
     assert.match(readme, /Cursor-era repository content has been removed|retirement record/i);
     assert.match(readme, /ready for release|released/i);
     assert.doesNotMatch(readme, /rebuild phase/i);
     assert.doesNotMatch(readme, /transitional compatibility path|Cursor compatibility/i);
     assert.doesNotMatch(readme, /npm run test:legacy|npm run test:all/);
 
-    assert.match(readmeZh, /Codex-native/i);
+    assert.match(readmeZh, /Codex.*Claude Code|Claude Code.*Codex/i);
     assert.match(readmeZh, /已经从主树中移除|退役记录/);
     assert.match(readmeZh, /可发布|已完成当前产品范围内的实现|质量优先/);
     assert.doesNotMatch(readmeZh, /重建阶段/);
@@ -64,11 +64,11 @@ describe("product surface coherence", () => {
     assert.doesNotMatch(closurePlan, /not yet fully productized|remaining gap|Current Read/);
   });
 
-  it("describes install docs as the direct Codex-native 2.0 distribution path", () => {
+  it("describes install docs as the direct LingXi 2.0 distribution path", () => {
     const installReadme = readText("install/README.md");
 
-    assert.match(installReadme, /Codex-native/i);
-    assert.match(installReadme, /只安装受支持的|directly install the supported|Codex-native LingXi 2\.0 surface/i);
+    assert.match(installReadme, /LingXi 2\.0/i);
+    assert.match(installReadme, /Codex|Claude Code/i);
     assert.doesNotMatch(installReadme, /过渡期|transitional|兼容安装面|Cursor compatibility/i);
   });
 
@@ -77,7 +77,9 @@ describe("product surface coherence", () => {
 
     assert.match(gitignore, /^\.lingxi\/$/m);
     assert.match(gitignore, /^\.codex\/$/m);
+    assert.match(gitignore, /^\.claude\/$/m);
     assert.match(gitignore, /^AGENTS\.md$/m);
+    assert.match(gitignore, /^CLAUDE\.md$/m);
   });
 
   it("keeps Cursor-era retirement documented and removes unsupported source-level runtime surfaces", () => {

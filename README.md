@@ -2,7 +2,7 @@
 
 # LíngXī（灵犀）
 
-**A Codex-native workflow that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
+**A workflow plugin for Codex and Claude Code that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
 
 LingXi 2.0 is released and ready for release at the current product scope.
 
@@ -27,7 +27,8 @@ LingXi is built to improve the quality of work before code is written:
 
 ## What You Get
 
-- **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Codex plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Claude Code adapter** via `.claude/settings.json`, `.claude/agents/`, `.claude/skills/`
 - **Repo marketplace entry** in [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
 - **Durable memory core** in [`skills/memory-distill/`](./skills/memory-distill/), [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)

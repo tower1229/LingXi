@@ -59,8 +59,9 @@ Runtime lives inside the target repository and stores durable project state.
 
 Primary runtime roots:
 
-- `.lingxi/`
-- `.codex/agents/`
+- `.lingxi/` (host-agnostic core)
+- `.codex/agents/` (Codex adapter)
+- `.claude/` (Claude Code adapter)
 
 ---
 
@@ -105,7 +106,13 @@ Expected runtime structure in target repositories:
   hooks.json
   agents/
     lingxi-session-distill.toml
+.claude/
+  settings.json
+  agents/
+    lingxi-session-distill.md
+  skills/
 AGENTS.md
+CLAUDE.md
 ```
 
 ### Purpose Of Each Area
@@ -149,6 +156,20 @@ AGENTS.md
 
 - stores the repo-local Codex hook adapter configuration for automatic memory injection
 - keeps generic conversation memory consumption in the Codex adapter layer rather than the host-agnostic core
+
+`.claude/settings.json`
+
+- stores the repo-local Claude Code hook adapter configuration for automatic memory injection
+- mirrors the role of `.codex/hooks.json` for the Claude Code host
+
+`.claude/agents/lingxi-session-distill.md`
+
+- Claude Code subagent definition for session distillation
+- mirrors the role of `.codex/agents/lingxi-session-distill.toml` for the Claude Code host
+
+`.claude/skills/`
+
+- contains LingXi skills copied for Claude Code consumption
 
 ---
 
@@ -761,16 +782,26 @@ This keeps retrieval cheap and notes readable.
 1. create `.lingxi/` directories
 2. initialize empty state files
 3. initialize `memory/INDEX.md`
-4. merge or create `.codex/config.toml`
-5. merge or create `.codex/hooks.json`
-6. generate `.codex/agents/lingxi-session-distill.toml`
-7. generate `.lingxi/setup/automation.session-distill.toml`
-8. register Codex automation through bootstrap
-9. generate `AGENTS.md` only when missing
+4. generate `AGENTS.md` only when missing
+
+When `--host codex` or `--host all` (default):
+
+5. merge or create `.codex/config.toml`
+6. merge or create `.codex/hooks.json`
+7. generate `.codex/agents/lingxi-session-distill.toml`
+8. generate `.lingxi/setup/automation.session-distill.toml`
+9. register Codex automation through bootstrap
+
+When `--host claude` or `--host all` (default):
+
+10. merge or create `.claude/settings.json`
+11. generate `.claude/agents/lingxi-session-distill.md`
+12. copy skills to `.claude/skills/`
+13. generate `CLAUDE.md` only when missing
 
 ### Setup Safety Rules
 
-1. do not overwrite user `AGENTS.md`
+1. do not overwrite user `AGENTS.md` or `CLAUDE.md`
 2. do not silently destroy existing state
 3. prefer idempotent file generation
 4. keep generated artifacts explicit and inspectable

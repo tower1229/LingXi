@@ -2,7 +2,7 @@
 
 # LíngXī（灵犀）
 
-**一个面向 Codex 的工程工作流产品：把模糊需求整理成可执行任务，在动手前完成高质量审查，并把团队稳定的工程判断沉淀成可复用记忆。**
+**一个同时支持 Codex 和 Claude Code 的工程工作流产品：把模糊需求整理成可执行任务，在动手前完成高质量审查，并把团队稳定的工程判断沉淀成可复用记忆。**
 
 LingXi 2.0 已完成当前产品范围内的实现并可发布。
 
@@ -27,7 +27,8 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 
 ## 你会得到什么
 
-- **Codex-native 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Codex 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Claude Code 适配层**：`.claude/settings.json`、`.claude/agents/`、`.claude/skills/`
 - **仓库级 marketplace 入口**：[`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **可见工作流**：[`skills/task/`](./skills/task/) 和 [`skills/vet/`](./skills/vet/)
 - **持久记忆核心**：[`skills/memory-distill/`](./skills/memory-distill/)、[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)

@@ -71,6 +71,38 @@ function normalizeString(value) {
 // Common layer: host-agnostic .lingxi/ initialization
 // ---------------------------------------------------------------------------
 
+function defaultAgentsMd() {
+  return `# LingXi Runtime
+
+This repository includes a local LingXi 2.0 runtime.
+
+- Runtime root: \`.lingxi/\`
+- Memory index: \`.lingxi/memory/INDEX.md\`
+- Project memory notes: \`.lingxi/memory/project/\`
+- Shared memory notes: \`.lingxi/memory/share/\`
+- Distill state: \`.lingxi/state/processed-sessions.json\`
+- Distill journal: \`.lingxi/state/distill-journal.jsonl\`
+- Distill runner: \`node scripts/lx-distill-sessions.mjs\`
+
+LingXi provides dedicated workflows for:
+
+- task definition (\`task\`)
+- task vetting (\`vet\`)
+
+Global memory rule:
+
+- Persist only durable, reusable engineering taste.
+- Do not store one-off implementation details as memory.
+- Exclude session-distill automation/self-distillation sessions from background memory selection.
+
+Memory consumption rule:
+
+- LingXi memory is injected automatically for meaningful repository turns through repo-local hooks when hooks are active.
+- Apply only the smallest relevant memory set.
+- Skip trivial or non-repository conversation turns.
+`;
+}
+
 function setupCommon() {
   ensureLingxiLayout(targetRoot);
 
@@ -88,6 +120,10 @@ function setupCommon() {
     distillJournalPath(targetRoot),
     ""
   );
+
+  const wroteAgentsMd = writeIfMissing(resolveTarget("AGENTS.md"), defaultAgentsMd());
+
+  return { wroteAgentsMd };
 }
 
 // ---------------------------------------------------------------------------
@@ -215,44 +251,6 @@ function mergeCodexTomlConfig(existingContent = "") {
   return `${output.join("\n").replace(/\n*$/, "\n")}`;
 }
 
-function defaultAgentsMd() {
-  return `# LingXi Runtime
-
-This repository includes a local LingXi 2.0 runtime.
-
-- Runtime root: \`.lingxi/\`
-- Memory index: \`.lingxi/memory/INDEX.md\`
-- Project memory notes: \`.lingxi/memory/project/\`
-- Shared memory notes: \`.lingxi/memory/share/\`
-- Distill state: \`.lingxi/state/processed-sessions.json\`
-- Distill journal: \`.lingxi/state/distill-journal.jsonl\`
-- Codex hook config: \`.codex/config.toml\`
-- Codex hook definitions: \`.codex/hooks.json\`
-- Background agent definition: \`.codex/agents/lingxi-session-distill.toml\`
-- Generated automation config: \`.lingxi/setup/automation.session-distill.toml\`
-- Codex distill runner: \`node scripts/lx-distill-sessions.mjs\`
-
-LingXi provides dedicated workflows for:
-
-- task definition (\`task\`)
-- task vetting (\`vet\`)
-
-Global memory rule:
-
-- Persist only durable, reusable engineering taste.
-- Do not store one-off implementation details as memory.
-- Exclude session-distill automation/self-distillation sessions from background memory selection.
-- Treat \`.codex/agents/\` and generated automation artifacts as Codex runtime adapters over LingXi memory core.
-
-Memory consumption rule:
-
-- LingXi memory is injected automatically for meaningful repository turns through repo-local hooks when hooks are active.
-- Apply only the smallest relevant memory set.
-- Skip trivial or non-repository conversation turns.
-- ${windowsHooksNote}
-`;
-}
-
 function setupCodexAdapter() {
   writeManagedArtifact(
     resolveTarget(".codex", "agents", "lingxi-session-distill.toml"),
@@ -273,8 +271,6 @@ function setupCodexAdapter() {
       "__PROJECT_ROOT__": targetRoot
     })
   );
-
-  writeIfMissing(resolveTarget("AGENTS.md"), defaultAgentsMd());
 }
 
 // ---------------------------------------------------------------------------
@@ -406,7 +402,9 @@ function setupClaudeAdapter() {
   copySkillsToClaudeDir();
 
   // CLAUDE.md (only when missing)
-  writeIfMissing(resolveTarget("CLAUDE.md"), defaultClaudeMd());
+  const wroteClaudeMd = writeIfMissing(resolveTarget("CLAUDE.md"), defaultClaudeMd());
+
+  return { wroteClaudeMd };
 }
 
 // ---------------------------------------------------------------------------
@@ -417,7 +415,7 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const host = args.host;
 
-  setupCommon();
+  const commonResult = setupCommon();
 
   const codexEnabled = host === "codex" || host === "all";
   const claudeEnabled = host === "claude" || host === "all";
@@ -426,18 +424,19 @@ function main() {
     setupCodexAdapter();
   }
 
+  let claudeResult = null;
   if (claudeEnabled) {
-    setupClaudeAdapter();
+    claudeResult = setupClaudeAdapter();
   }
 
-  const wroteAgentsMd = fs.existsSync(resolveTarget("AGENTS.md"));
-  const wroteClaudeMd = claudeEnabled && fs.existsSync(resolveTarget("CLAUDE.md"));
+  const wroteAgentsMd = commonResult.wroteAgentsMd;
+  const wroteClaudeMd = claudeResult ? claudeResult.wroteClaudeMd : false;
 
   const summary = {
     target_root: targetRoot,
     host,
     created_runtime_root: fs.existsSync(resolveTarget(".lingxi")),
-    wrote_agents_md: codexEnabled && wroteAgentsMd,
+    wrote_agents_md: wroteAgentsMd,
     wrote_claude_md: wroteClaudeMd,
     codex_enabled: codexEnabled,
     claude_enabled: claudeEnabled,
