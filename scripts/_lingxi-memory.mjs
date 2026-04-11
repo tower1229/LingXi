@@ -11,7 +11,7 @@ import {
 } from "./_lingxi-memory-semantic.mjs";
 
 export const INDEX_COLUMNS = ["Id", "Kind", "Title", "When to load", "Source", "UpdatedAt", "File"];
-export const DISTILL_VERSION = "v2";
+export const DISTILL_VERSION = "v3";
 export const PROCESSED_SESSIONS_SCHEMA_VERSION = "v2";
 export const MEMORY_KIND_VALUES = new Set([
   "preference",
@@ -663,6 +663,7 @@ export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, 
   const notes = loadMemoryNotes(projectRoot);
   if (notes.length === 0) return [];
 
+  const startedAt = Date.now();
   const ranking = await rankRelevantMemories(projectRoot, query, notes, {
     limit: resolvedLimit,
     context
@@ -683,10 +684,12 @@ export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, 
     .filter(Boolean), intent);
   appendMemoryOpsLog(projectRoot, {
     operation: "retrieve_ranked",
+    duration_ms: Date.now() - startedAt,
     caller: normalizeText(context?.caller),
     intent: intent || "",
     query: normalizeText(query),
     query_mode: hasRichRetrievalContext(context) ? "query_plus_context" : "query_only",
+    hit_count: hits.length,
     returned_note_ids: hits.map((note) => note.id),
     hit_reasons: hits.map((note) => ({
       note_id: note.id,

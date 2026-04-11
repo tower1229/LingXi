@@ -60,7 +60,7 @@ describe("lingxi-setup", () => {
     assert.strictEqual(summary.automation_registration_required, true);
     assert.strictEqual(summary.automation_create_command, "node scripts/lx-create-automation.mjs");
     assert.strictEqual(state.state_schema_version, "v2");
-    assert.strictEqual(state.distill_version, "v2");
+    assert.strictEqual(state.distill_version, "v3");
     assert.deepStrictEqual(state.summary, {
       tracked_sessions: 0,
       total_runs: 0,
@@ -126,7 +126,7 @@ describe("lingxi-setup", () => {
 
     const customState = {
       state_schema_version: "v2",
-      distill_version: "v2",
+      distill_version: "v3",
       summary: {
         tracked_sessions: 1,
         total_runs: 2,

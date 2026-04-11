@@ -88,7 +88,8 @@ describe("lingxi session distill", () => {
       .split("\n")
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    assert.ok(opsLog.some((entry) => entry.operation === "distill_candidates_emitted" && entry.session_id === "session-001"));
+    assert.ok(opsLog.some((entry) => entry.operation === "taste_extract_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
+    assert.ok(opsLog.some((entry) => entry.operation === "taste_adjudicate_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
     assert.ok(opsLog.some((entry) => entry.operation === "distill_governance_applied" && entry.session_id === "session-001"));
   });
 
@@ -138,7 +139,7 @@ describe("lingxi session distill", () => {
     assert.strictEqual(summary.run_reason, "distill_version_changed");
 
     const updatedState = JSON.parse(fs.readFileSync(stateFile, "utf8"));
-    assert.strictEqual(updatedState.distill_version, "v2");
+    assert.strictEqual(updatedState.distill_version, "v3");
     assert.strictEqual(updatedState.summary.total_runs, 2);
     assert.strictEqual(updatedState.summary.reprocessed_runs, 1);
     assert.strictEqual(updatedState.last_run.run_reason, "distill_version_changed");

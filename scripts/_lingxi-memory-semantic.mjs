@@ -2,12 +2,18 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION,
   assertValidMemoryDistillCandidateSet,
   memoryDistillCandidateSetJsonSchema
 } from "../skills/session-distill/scripts/memory-distill-candidate-set.mjs";
+import {
+  TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION,
+  TASTE_CONTENT_TYPE_VALUES,
+  assertValidTasteExtractCandidateSet,
+  tasteExtractCandidateSetJsonSchema
+} from "../skills/session-distill/scripts/taste-extract-candidate-set.mjs";
 
 const MEMORY_SEMANTIC_RESPONSE_VERSION = "draft-2026-04-08";
 const GOVERNANCE_ACTION_VALUES = new Set(["create", "merge_into_existing", "skip_as_not_durable"]);
@@ -21,6 +27,7 @@ const MEMORY_KIND_VALUES = new Set([
 const MEMORY_SCOPE_VALUES = new Set(["project", "share"]);
 let cachedRunnerPromise = null;
 let cachedRunnerKey = "";
+const cachedGoldenPackByName = new Map();
 
 function normalizeText(value) {
   return String(value || "")
@@ -57,6 +64,66 @@ function isStringArray(value) {
 
 function isConfidence(value) {
   return typeof value === "number" && !Number.isNaN(value) && value >= 0 && value <= 1;
+}
+
+function goldenPacksDir() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../skills/session-distill/references/semantic-goldens");
+}
+
+function loadSemanticGoldenPack(name) {
+  const normalized = normalizeText(name);
+  if (!normalized) return null;
+  if (cachedGoldenPackByName.has(normalized)) {
+    return cachedGoldenPackByName.get(normalized);
+  }
+  const file = path.join(goldenPacksDir(), `${normalized}.json`);
+  const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+  cachedGoldenPackByName.set(normalized, parsed);
+  return parsed;
+}
+
+function formatFewShotExamples(name) {
+  const pack = loadSemanticGoldenPack(name);
+  const examples = Array.isArray(pack?.examples) ? pack.examples : [];
+  if (examples.length === 0) return "";
+  return examples
+    .map((example, index) => [
+      `Example ${index + 1}: ${normalizeText(example.label) || `sample-${index + 1}`}`,
+      "Input:",
+      JSON.stringify(example.input || {}, null, 2),
+      "Ideal Output:",
+      JSON.stringify(example.output || {}, null, 2)
+    ].join("\n"))
+    .join("\n\n");
+}
+
+function tasteAdjudicationRubric() {
+  return {
+    precision_over_recall: true,
+    durability_priority: "high",
+    selective_output: true,
+    value_dimensions: ["decision_gain", "reusability", "trigger_clarity", "verifiability", "stability"],
+    scoring_scale: "0_to_3",
+    guidance: [
+      "Reject candidates that are too personal, too transient, too generic, or too weakly grounded in reusable engineering judgment.",
+      "Prefer candidates that encode a future-reusable engineering choice, boundary, heuristic, anti-pattern, or review tendency.",
+      "Map recognized content_type to the most stable suggested_storage_kind.",
+      "Generate note-ready fields only after the candidate passes adjudication."
+    ]
+  };
+}
+
+function buildTasteAdjudicationContext(payload, extractedCandidateSet) {
+  return {
+    session: {
+      session_id: payload.session_id,
+      content_fingerprint: payload.content_fingerprint,
+      distill_version: payload.distill_version
+    },
+    durable_memory_kind_taxonomy: [...MEMORY_KIND_VALUES],
+    adjudication_rubric: tasteAdjudicationRubric(),
+    extracted_candidate_set: extractedCandidateSet
+  };
 }
 
 function buildGovernanceSchema() {
@@ -365,31 +432,59 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
   });
 }
 
-function distillPrompt(payload) {
+function tasteExtractPrompt(payload) {
+  const fewShots = formatFewShotExamples("taste-extract");
   return [
-    "You are LingXi's memory semantic engine for session distillation.",
-    "Your job is to extract only durable, reusable engineering taste from the provided historical Codex session.",
+    "You are LingXi's taste extraction engine.",
+    "Your job is high-recall identification of durable engineering judgment candidates from a historical Codex session.",
     "Do not jump directly from session transcript to a memory note draft.",
-    "First reconstruct the underlying decision or taste-recognition structure, then express that structure as candidates.",
+    "Extract immature candidates when they might become durable after adjudication, but reject obvious noise.",
     "Reject one-off implementation chatter, transient debugging detail, and generic conversation summaries.",
     "Return JSON only. Do not use shell commands or tools.",
-    "Prefer precision over recall. If there is no durable engineering taste, return an empty candidates array.",
+    "Favor recall over polish at this stage. If there is no plausible durable engineering taste, return an empty candidates array.",
     "",
-    "Recognition rules for every candidate:",
+    "Output rules for every candidate:",
+    `- schema_version must be ${TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION}`,
     "- scene must name the concrete engineering context or trigger situation",
     "- content_type must describe the recognized judgment type, not the storage kind",
-    "- alternatives should list nearby options or competing directions when recoverable from context",
+    "- alternatives can be incomplete, but include nearby options when recoverable from context",
     "- choice must state the preferred path or judgment",
     "- rationale must explain why this choice is favored",
+    "- evidence must quote or paraphrase the supporting session signal",
     "- pattern_hint should summarize the reusable trigger or pattern",
-    "- value_scores should rate decision_gain, reusability, trigger_clarity, verifiability, and stability from 0 to 3",
-    "- suggested_storage_kind should be the best durable-memory storage kind for governance",
+    "- confidence should reflect extraction confidence, not final durability confidence",
+    "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
+    "",
+    "Input JSON:",
+    JSON.stringify(payload, null, 2)
+  ].join("\n");
+}
+
+function tasteAdjudicatePrompt(payload) {
+  const fewShots = formatFewShotExamples("taste-adjudicate");
+  return [
+    "You are LingXi's taste adjudication engine.",
+    "Your job is precision-first adjudication of extracted engineering judgment candidates.",
+    "Only keep candidates that deserve durable memory treatment.",
+    "Generate note-ready durable-memory candidates only after the extracted candidate has passed adjudication.",
+    "Return JSON only. Do not use shell commands or tools.",
+    "",
+    "Adjudication rules:",
+    "- reject false positives, low-value candidates, unclear triggers, and unstable one-off observations",
+    "- assign value_scores from 0 to 3 for decision_gain, reusability, trigger_clarity, verifiability, and stability",
+    "- map content_type to the best suggested_storage_kind",
+    "- produce title, one_liner, decision, and when_to_load only for accepted candidates",
+    "- prefer precision over recall at this stage",
     "",
     "Output rules:",
     `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
-    `- distill_version must be ${payload.distill_version}`,
+    `- distill_version must be ${payload.session?.distill_version || payload.distill_version}`,
     `- allowed candidate kinds: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+    `- allowed content_type values: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}`,
     `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`,
+    "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
     "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
@@ -397,10 +492,12 @@ function distillPrompt(payload) {
 }
 
 function governancePrompt(payload) {
+  const fewShots = formatFewShotExamples("governance");
   return [
     "You are LingXi's memory governance engine.",
     "Decide whether the candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
     "Base the decision on semantic meaning, not wording overlap.",
+    "Use content_type, value_scores, and suggested_storage_kind as primary governance signals.",
     "Merge materially identical or stronger rephrasings into the same note.",
     "Skip noisy or one-off candidate content.",
     "When possible, include a compact reason_code such as merge_equivalent, merge_strengthen, skip_low_value, or skip_unclear_trigger.",
@@ -413,17 +510,21 @@ function governancePrompt(payload) {
     "- always include target_note_id, target_candidate_index, and note",
     "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
+    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
 function governanceBatchPrompt(payload) {
+  const fewShots = formatFewShotExamples("governance");
   return [
     "You are LingXi's memory governance engine.",
     "Process the candidate list sequentially and return one governance decision per candidate in the same order as input.",
     "Decide whether each candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
     "Base the decision on semantic meaning, not wording overlap.",
+    "Use content_type, value_scores, and suggested_storage_kind as primary governance signals.",
     "Merge materially identical or stronger rephrasings into the same note.",
     "If a later candidate should merge into a note created earlier in this same batch, set target_candidate_index to that earlier candidate index and omit target_note_id.",
     "Skip noisy or one-off candidate content.",
@@ -438,23 +539,22 @@ function governanceBatchPrompt(payload) {
     "- each decision must include target_note_id, target_candidate_index, and note",
     "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
+    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function retrievalPrompt(payload) {
-  const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
+function retrievalPromptTask(payload) {
+  const fewShots = formatFewShotExamples("retrieve-task");
   return [
     "You are LingXi's memory retrieval engine.",
     "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
     "Rank by semantic relevance, not keyword overlap alone.",
     "Prefer project memory over share memory when relevance is otherwise similar.",
-    intent === "task"
-      ? "For task intent, bias toward implementation boundaries, rollback guidance, contract constraints, and practical engineering preferences."
-      : intent === "vet"
-        ? "For vet intent, bias toward anti-patterns, review tendencies, hidden risks, missing constraints, and historical pitfalls."
-        : "Use the provided caller context to infer the right retrieval bias.",
+    "This is task intent: prioritize implementation boundaries, rollback guidance, contract constraints, and practical engineering preferences.",
+    "Prefer notes that can directly shape planning, sequencing, implementation scope, and safe execution.",
     "Return JSON only. Do not use shell commands or tools.",
     "",
     "Output rules:",
@@ -462,9 +562,39 @@ function retrievalPrompt(payload) {
     `- return at most ${payload.limit} hits`,
     "- each hit must reference an existing note_id from the input",
     "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
+    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
+}
+
+function retrievalPromptVet(payload) {
+  const fewShots = formatFewShotExamples("retrieve-vet");
+  return [
+    "You are LingXi's memory retrieval engine.",
+    "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
+    "Rank by semantic relevance, not keyword overlap alone.",
+    "Prefer project memory over share memory when relevance is otherwise similar.",
+    "This is vet intent: prioritize anti-patterns, review tendencies, hidden risks, missing constraints, and historical pitfalls.",
+    "Prefer notes that help challenge weak plans, expose missing memory application, or reveal prior failure modes.",
+    "Return JSON only. Do not use shell commands or tools.",
+    "",
+    "Output rules:",
+    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+    `- return at most ${payload.limit} hits`,
+    "- each hit must reference an existing note_id from the input",
+    "",
+    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
+    "",
+    "Input JSON:",
+    JSON.stringify(payload, null, 2)
+  ].join("\n");
+}
+
+function retrievalPrompt(payload) {
+  const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
+  return intent === "vet" ? retrievalPromptVet(payload) : retrievalPromptTask(payload);
 }
 
 function writeTempJson(prefix, value) {
@@ -573,7 +703,7 @@ async function runSemanticOperation({ operation, projectRoot, payload, schema, p
   });
 }
 
-export async function distillSessionToCandidates(projectRoot, session) {
+export async function extractTasteCandidatesFromSession(projectRoot, session) {
   const payload = {
     session_id: normalizeText(session.session_id),
     content_fingerprint: normalizeText(session.content_fingerprint),
@@ -583,15 +713,67 @@ export async function distillSessionToCandidates(projectRoot, session) {
       content: normalizeText(message.content)
     }))
   };
+  const startedAt = Date.now();
   const result = await runSemanticOperation({
-    operation: "distill",
+    operation: "taste_extract",
+    projectRoot,
+    payload,
+    schema: tasteExtractCandidateSetJsonSchema(),
+    prompt: tasteExtractPrompt(payload)
+  });
+  assertValidTasteExtractCandidateSet(result);
+  return {
+    ...result,
+    semantic_trace: {
+      operation: "taste_extract_completed",
+      duration_ms: Date.now() - startedAt,
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0
+    }
+  };
+}
+
+export async function adjudicateTasteCandidates(projectRoot, session, extractedCandidateSet) {
+  const payload = buildTasteAdjudicationContext({
+    session_id: normalizeText(session.session_id),
+    content_fingerprint: normalizeText(session.content_fingerprint),
+    distill_version: normalizeText(session.distill_version)
+  }, {
+    schema_version: extractedCandidateSet.schema_version,
+    session_id: normalizeText(extractedCandidateSet.session_id),
+    content_fingerprint: normalizeText(extractedCandidateSet.content_fingerprint),
+    distill_version: normalizeText(extractedCandidateSet.distill_version),
+    summary: extractedCandidateSet.summary,
+    candidates: extractedCandidateSet.candidates
+  });
+  const startedAt = Date.now();
+  const result = await runSemanticOperation({
+    operation: "taste_adjudicate",
     projectRoot,
     payload,
     schema: memoryDistillCandidateSetJsonSchema(),
-    prompt: distillPrompt(payload)
+    prompt: tasteAdjudicatePrompt(payload)
   });
   assertValidMemoryDistillCandidateSet(result);
-  return result;
+  return {
+    ...result,
+    semantic_trace: {
+      operation: "taste_adjudicate_completed",
+      duration_ms: Date.now() - startedAt,
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0
+    }
+  };
+}
+
+export async function distillSessionToCandidates(projectRoot, session) {
+  const extracted = await extractTasteCandidatesFromSession(projectRoot, session);
+  const adjudicated = await adjudicateTasteCandidates(projectRoot, session, extracted);
+  return {
+    ...adjudicated,
+    semantic_trace: {
+      taste_extract: extracted.semantic_trace || null,
+      taste_adjudicate: adjudicated.semantic_trace || null
+    }
+  };
 }
 
 export async function governMemoryCandidate(projectRoot, candidate, existingNotes, scope = "project") {

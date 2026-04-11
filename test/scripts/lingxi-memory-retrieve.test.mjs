@@ -90,7 +90,15 @@ Split changes into smaller reviewable units.
       .split("\n")
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_ranked" && entry.query_mode === "query_only"));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "retrieve_ranked" &&
+          entry.query_mode === "query_only" &&
+          Number.isInteger(entry.duration_ms) &&
+          entry.hit_count === 1
+      )
+    );
   });
 
   it("prefers project memory over share memory when relevance is similar", async () => {

@@ -1,0 +1,19 @@
+{
+  "pack": "retrieve_vet",
+  "examples": [
+    {
+      "label": "vet-prefers-risk-memory",
+      "input": {
+        "query": "backend integration rollback",
+        "intent": "vet",
+        "notes": [
+          { "title": "Prefer explicit rollback notes", "kind": "preference" },
+          { "title": "Avoid vague rollback plans", "kind": "anti_pattern" }
+        ]
+      },
+      "output": {
+        "ranked_note_ids": ["MEM-002", "MEM-001"]
+      }
+    }
+  ]
+}

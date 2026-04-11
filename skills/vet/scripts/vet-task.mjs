@@ -960,9 +960,11 @@ async function main() {
   if (relevantMemory.length > 0 && !relevantMemory.some((note) => taskAppliesMemory(task, note))) {
     appendMemoryOpsLog(projectRoot, {
       operation: "retrieve_gap_detected",
+      duration_ms: 0,
       caller: "vet",
       intent: "vet",
       task_id: normalizeText(task.id),
+      hit_count: relevantMemory.length,
       missing_note_ids: relevantMemory.map((note) => note.id)
     });
   }

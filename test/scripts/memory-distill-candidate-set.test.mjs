@@ -12,7 +12,7 @@ describe("memory distill candidate set", () => {
       schema_version: MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION,
       session_id: "session-001",
       content_fingerprint: "sha256:test",
-      distill_version: "v2",
+      distill_version: "v3",
       summary: {
         session_summary: "The session contains durable engineering taste.",
         durable_candidate_count: 1,
@@ -56,7 +56,7 @@ describe("memory distill candidate set", () => {
       schema_version: MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION,
       session_id: "session-001",
       content_fingerprint: "sha256:test",
-      distill_version: "v2",
+      distill_version: "v3",
       summary: {
         session_summary: "",
         durable_candidate_count: 1,

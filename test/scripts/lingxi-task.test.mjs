@@ -318,7 +318,15 @@ Prefer explicit contracts and rollback notes for backend integration changes.
       .split("\n")
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_applied" && entry.caller === "task"));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "retrieve_applied" &&
+          entry.caller === "task" &&
+          entry.hit_count >= 1 &&
+          Number.isInteger(entry.duration_ms)
+      )
+    );
   });
 
   it("preserves existing memory refs when updating a task without explicit memory input", async () => {

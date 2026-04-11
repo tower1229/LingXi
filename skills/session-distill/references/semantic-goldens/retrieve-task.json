@@ -1,0 +1,19 @@
+{
+  "pack": "retrieve_task",
+  "examples": [
+    {
+      "label": "task-prefers-implementation-guidance",
+      "input": {
+        "query": "backend integration rollback",
+        "intent": "task",
+        "notes": [
+          { "title": "Prefer explicit rollback notes", "kind": "preference" },
+          { "title": "Avoid vague rollback plans", "kind": "anti_pattern" }
+        ]
+      },
+      "output": {
+        "ranked_note_ids": ["MEM-001", "MEM-002"]
+      }
+    }
+  ]
+}

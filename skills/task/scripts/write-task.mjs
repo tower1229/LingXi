@@ -1006,9 +1006,11 @@ async function validateInput(input, projectRoot) {
   if (autoRetrievedMemory.length > 0) {
     appendMemoryOpsLog(projectRoot, {
       operation: "retrieve_applied",
+      duration_ms: 0,
       caller: "task",
       intent: "task",
       task_title: normalizeText(input.title),
+      hit_count: autoRetrievedMemory.length,
       applied_note_ids: autoRetrievedMemory.map((note) => note.id)
     });
   }

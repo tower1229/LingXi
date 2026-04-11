@@ -343,7 +343,15 @@ Introduce one explicit backend seam for the service layer.
       .split("\n")
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    assert.ok(opsLog.some((entry) => entry.operation === "retrieve_gap_detected" && entry.caller === "vet"));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "retrieve_gap_detected" &&
+          entry.caller === "vet" &&
+          entry.hit_count >= 1 &&
+          Number.isInteger(entry.duration_ms)
+      )
+    );
   });
 
   it("flags missing SDK contract guidance for library tasks", async () => {

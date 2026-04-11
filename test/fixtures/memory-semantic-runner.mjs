@@ -142,19 +142,33 @@ function conceptById(id) {
 function candidateFromConcept(conceptId, evidenceText) {
   const concept = conceptById(conceptId);
   return {
-    title: concept.title,
     scene: concept.when_to_load[0],
     content_type: concept.kind === "heuristic" ? "heuristic" : "preference",
     alternatives: ["Keep the current implicit or broader approach"],
     choice: concept.decision,
     rationale: "This direction is more reusable and safer for future engineering work.",
+    evidence: [normalizeText(evidenceText) || concept.one_liner],
+    pattern_hint: concept.when_to_load[0],
+    confidence: 0.86
+  };
+}
+
+function adjudicatedCandidateFromConcept(extractedCandidate, conceptId) {
+  const concept = conceptById(conceptId);
+  return {
+    title: concept.title,
+    scene: extractedCandidate.scene,
+    content_type: extractedCandidate.content_type,
+    alternatives: extractedCandidate.alternatives,
+    choice: extractedCandidate.choice,
+    rationale: extractedCandidate.rationale,
     kind: concept.kind,
     one_liner: concept.one_liner,
     decision: concept.decision,
-    pattern_hint: concept.when_to_load[0],
+    pattern_hint: extractedCandidate.pattern_hint,
     when_to_load: concept.when_to_load,
-    evidence: [normalizeText(evidenceText) || concept.one_liner],
-    confidence: 0.86,
+    evidence: uniqueStrings(extractedCandidate.evidence || []),
+    confidence: extractedCandidate.confidence,
     durability_reason: "This is a reusable engineering preference that should shape future task framing and review.",
     value_scores: {
       decision_gain: 3,
@@ -234,7 +248,7 @@ function lexicalOverlapScore(query, note) {
   return score;
 }
 
-function distill(payload) {
+function tasteExtract(payload) {
   const sentences = (payload.messages || []).flatMap((message) => sentenceChunks(message.content));
   const seen = new Set();
   const candidates = [];
@@ -246,14 +260,45 @@ function distill(payload) {
     }
   }
   return {
-    schema_version: "draft-2026-04-11",
+    schema_version: "draft-2026-04-11-extract",
     session_id: payload.session_id,
     content_fingerprint: payload.content_fingerprint,
     distill_version: payload.distill_version,
     summary: {
+      session_summary: candidates.length > 0 ? "The session contains plausible durable engineering taste." : "No durable engineering taste detected.",
+      extracted_candidate_count: candidates.length,
+      discarded_signal_count: Math.max(0, sentences.length - candidates.length)
+    },
+    candidates
+  };
+}
+
+function tasteAdjudicate(payload) {
+  const extracted = payload.extracted_candidate_set || {};
+  const candidates = (extracted.candidates || [])
+    .map((candidate) => {
+      const concepts = detectConceptIds(
+        [
+          candidate.scene,
+          candidate.choice,
+          candidate.rationale,
+          ...(candidate.evidence || []),
+          candidate.pattern_hint
+        ].join(" ")
+      );
+      if (concepts.length === 0) return null;
+      return adjudicatedCandidateFromConcept(candidate, concepts[0]);
+    })
+    .filter(Boolean);
+  return {
+    schema_version: "draft-2026-04-11",
+    session_id: normalizeText(payload?.session?.session_id || extracted.session_id),
+    content_fingerprint: normalizeText(payload?.session?.content_fingerprint || extracted.content_fingerprint),
+    distill_version: normalizeText(payload?.session?.distill_version || extracted.distill_version),
+    summary: {
       session_summary: candidates.length > 0 ? "The session contains durable engineering taste." : "No durable engineering taste detected.",
       durable_candidate_count: candidates.length,
-      discarded_signal_count: Math.max(0, sentences.length - candidates.length)
+      discarded_signal_count: Math.max(0, (extracted.candidates || []).length - candidates.length)
     },
     candidates
   };
@@ -412,8 +457,15 @@ function retrieve(payload) {
 
 export async function runMemorySemanticTask(request) {
   switch (request.operation) {
+    case "taste_extract":
+      return tasteExtract(request.payload || {});
+    case "taste_adjudicate":
+      return tasteAdjudicate(request.payload || {});
     case "distill":
-      return distill(request.payload || {});
+      return tasteAdjudicate({
+        session: request.payload || {},
+        extracted_candidate_set: tasteExtract(request.payload || {})
+      });
     case "govern":
       return govern(request.payload || {});
     case "govern_batch":

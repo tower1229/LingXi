@@ -105,15 +105,22 @@ async function main() {
     distill_version: DISTILL_VERSION,
     messages
   });
-  appendMemoryOpsLog(projectRoot, {
-    operation: "distill_candidates_emitted",
-    session_id: sessionId,
-    content_fingerprint: fingerprint,
-    distill_version: DISTILL_VERSION,
-    candidate_count: candidateSet.candidates.length,
-    content_types: [...new Set(candidateSet.candidates.map((candidate) => normalizeText(candidate.content_type)).filter(Boolean))],
-    suggested_storage_kinds: [...new Set(candidateSet.candidates.map((candidate) => normalizeText(candidate.suggested_storage_kind)).filter(Boolean))]
-  });
+  if (candidateSet.semantic_trace?.taste_extract) {
+    appendMemoryOpsLog(projectRoot, {
+      ...candidateSet.semantic_trace.taste_extract,
+      session_id: sessionId,
+      content_fingerprint: fingerprint,
+      distill_version: DISTILL_VERSION
+    });
+  }
+  if (candidateSet.semantic_trace?.taste_adjudicate) {
+    appendMemoryOpsLog(projectRoot, {
+      ...candidateSet.semantic_trace.taste_adjudicate,
+      session_id: sessionId,
+      content_fingerprint: fingerprint,
+      distill_version: DISTILL_VERSION
+    });
+  }
   const extracted = candidateSet.candidates.map((candidate) => ({
     title: normalizeText(candidate.title),
     scene: normalizeText(candidate.scene),
@@ -165,6 +172,7 @@ async function main() {
     return;
   }
 
+  const governanceStartedAt = Date.now();
   const noteResults = await upsertMemoryNotes(
     projectRoot,
     extracted.map((candidate) => ({
@@ -175,9 +183,11 @@ async function main() {
   );
   appendMemoryOpsLog(projectRoot, {
     operation: "distill_governance_applied",
+    duration_ms: Date.now() - governanceStartedAt,
     session_id: sessionId,
     content_fingerprint: fingerprint,
     distill_version: DISTILL_VERSION,
+    candidate_count: extracted.length,
     created_count: noteResults.filter((result) => result.operation === "created").length,
     merged_count: noteResults.filter((result) => result.operation === "merged").length,
     skipped_count: noteResults.filter((result) => result.operation === "skipped").length,
