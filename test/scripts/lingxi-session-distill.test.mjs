@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
@@ -13,7 +12,7 @@ const setupPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
 const scriptPath = path.join(repoRoot, "skills", "session-distill", "scripts", "distill-session.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-distill-test-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-distill-test-"));
 }
 
 function runNode(script, projectRoot, stdinJson) {
@@ -90,7 +89,18 @@ describe("lingxi session distill", () => {
       .map((line) => JSON.parse(line));
     assert.ok(opsLog.some((entry) => entry.operation === "taste_extract_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
     assert.ok(opsLog.some((entry) => entry.operation === "taste_adjudicate_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
-    assert.ok(opsLog.some((entry) => entry.operation === "distill_governance_applied" && entry.session_id === "session-001"));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "distill_governance_applied" &&
+          entry.session_id === "session-001" &&
+          entry.skill_name === "memory-distill" &&
+          typeof entry.prompt_pack_version === "string" &&
+          typeof entry.example_pack_version === "string" &&
+          typeof entry.operation_spec_hash === "string" &&
+          entry.compiler_mode === "skill_compiler"
+      )
+    );
   });
 
   it("skips duplicate distillation for unchanged session content", async () => {

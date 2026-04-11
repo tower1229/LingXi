@@ -49,6 +49,7 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 - 由 `node scripts/lx-distill-sessions.mjs` 编排整批扫描
 - `skills/session-distill/scripts/distill-session.mjs` 继续只负责单个 session 的 durable memory 提炼
 - `skills/memory-distill/` 成为 taste extract、taste adjudicate 与 retrieval intent prompt 的语义单一事实来源
+- runtime 不再维护 legacy prompt 回退路径；`skill-spec.json` 成为 prompt/example 版本追踪的唯一权威来源
 
 表层很克制，但底层会随着项目使用不断积累质量。
 
@@ -111,6 +112,11 @@ node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
 node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
+
+如需排查 semantic runtime，可临时覆盖：
+
+- `LINGXI_MEMORY_DISTILL_SKILL_DIR`：指定另一份本地 `memory-distill` skill 资产目录
+- `LINGXI_TMPDIR`：指定结构化语义调用使用的可写临时目录
 
 或者直接执行：
 

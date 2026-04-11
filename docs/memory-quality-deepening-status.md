@@ -20,9 +20,10 @@ As of 2026-04-08, the memory mainline is now LLM-first rather than heuristic-fir
 
 Validated status:
 
-- `npm test` passes at `107/107`
+- `npm test` passes at `138/138`
 - `session-distill`, `memory-write`, and `memory-retrieve` all use the shared semantic engine
 - `skills/memory-distill/` is now the canonical semantic source of truth for extract, adjudicate, governance handoff, and retrieval intent prompting
+- the mainline no longer keeps a legacy prompt fallback path
 - `task` and `vet` already consume memory through the new semantic retrieval path
 
 This means the repository is no longer in the earlier mixed state where:
@@ -41,6 +42,7 @@ The memory semantic path is now centralized in:
 
 - `scripts/_lingxi-memory-semantic.mjs`
 - compiled from `skills/memory-distill/`
+- versioned by `skills/memory-distill/references/skill-spec.json` for both prompt and example packs
 
 Current semantic responsibilities:
 

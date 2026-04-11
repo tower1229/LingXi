@@ -961,6 +961,12 @@ async function main() {
     appendMemoryOpsLog(projectRoot, {
       operation: "retrieve_gap_detected",
       duration_ms: 0,
+      skill_name: normalizeText(relevantMemory.semantic_meta?.skill_name),
+      skill_version: normalizeText(relevantMemory.semantic_meta?.skill_version),
+      prompt_pack_version: normalizeText(relevantMemory.semantic_meta?.prompt_pack_version),
+      example_pack_version: normalizeText(relevantMemory.semantic_meta?.example_pack_version),
+      operation_spec_hash: normalizeText(relevantMemory.semantic_meta?.operation_spec_hash),
+      compiler_mode: normalizeText(relevantMemory.semantic_meta?.compiler_mode),
       caller: "vet",
       intent: "vet",
       task_id: normalizeText(task.id),

@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -90,7 +89,14 @@ function readCachedMemoryDistillAsset(relativePath, parser = (raw) => raw) {
 
 function loadMemoryDistillSkillSpec() {
   const value = readCachedMemoryDistillAsset("skill-spec.json", (raw) => JSON.parse(raw));
-  if (!isPlainObject(value) || normalizeText(value.skill_name) !== MEMORY_DISTILL_SKILL_NAME || !isPlainObject(value.operations)) {
+  if (
+    !isPlainObject(value) ||
+    normalizeText(value.skill_name) !== MEMORY_DISTILL_SKILL_NAME ||
+    !isNonEmptyString(value.skill_version) ||
+    !isNonEmptyString(value.prompt_pack_version) ||
+    !isNonEmptyString(value.example_pack_version) ||
+    !isPlainObject(value.operations)
+  ) {
     throw new Error("Invalid memory-distill skill-spec.json.");
   }
   return value;
@@ -193,11 +199,6 @@ function formatFewShotExamples(examples) {
     .join("\n\n");
 }
 
-function memoryDistillCompilerEnabled() {
-  const value = normalizeText(process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER);
-  return !["0", "false", "off", "legacy"].includes(value.toLowerCase());
-}
-
 function resolveMemoryDistillOperationName(operation, payload = {}) {
   if (operation === "retrieve") {
     const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
@@ -223,7 +224,7 @@ function promptMetadataFromCompiledPieces(operationName, instruction, examples, 
     skill_name: normalizeText(spec.skill_name),
     skill_version: normalizeText(spec.skill_version),
     prompt_pack_version: normalizeText(spec.prompt_pack_version),
-    example_pack_version: normalizeText(spec.prompt_pack_version),
+    example_pack_version: normalizeText(spec.example_pack_version),
     operation_spec_hash: hash.digest("hex").slice(0, 16)
   };
 }
@@ -563,153 +564,6 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
   });
 }
 
-function legacyTasteExtractPrompt(payload) {
-  return [
-    "You are LingXi's taste extraction engine.",
-    "Your job is high-recall identification of durable engineering judgment candidates from a historical Codex session.",
-    "Do not jump directly from session transcript to a memory note draft.",
-    "Extract immature candidates when they might become durable after adjudication, but reject obvious noise.",
-    "Reject one-off implementation chatter, transient debugging detail, and generic conversation summaries.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "Favor recall over polish at this stage. If there is no plausible durable engineering taste, return an empty candidates array.",
-    "",
-    "Output rules for every candidate:",
-    `- schema_version must be ${TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION}`,
-    "- scene must name the concrete engineering context or trigger situation",
-    "- content_type must describe the recognized judgment type, not the storage kind",
-    "- alternatives can be incomplete, but include nearby options when recoverable from context",
-    "- choice must state the preferred path or judgment",
-    "- rationale must explain why this choice is favored",
-    "- evidence must quote or paraphrase the supporting session signal",
-    "- pattern_hint should summarize the reusable trigger or pattern",
-    "- confidence should reflect extraction confidence, not final durability confidence",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyTasteAdjudicatePrompt(payload) {
-  return [
-    "You are LingXi's taste adjudication engine.",
-    "Your job is precision-first adjudication of extracted engineering judgment candidates.",
-    "Only keep candidates that deserve durable memory treatment.",
-    "Generate note-ready durable-memory candidates only after the extracted candidate has passed adjudication.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Adjudication rules:",
-    "- reject false positives, low-value candidates, unclear triggers, and unstable one-off observations",
-    "- assign value_scores from 0 to 3 for decision_gain, reusability, trigger_clarity, verifiability, and stability",
-    "- map content_type to the best suggested_storage_kind",
-    "- produce title, one_liner, decision, and when_to_load only for accepted candidates",
-    "- prefer precision over recall at this stage",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
-    `- distill_version must be ${payload.session?.distill_version || payload.distill_version}`,
-    `- allowed candidate kinds: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    `- allowed content_type values: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}`,
-    `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`,
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyGovernancePrompt(payload) {
-  return [
-    "You are LingXi's memory governance engine.",
-    "Decide whether the candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
-    "Base the decision on semantic meaning, not wording overlap.",
-    "Use content_type, value_scores, and suggested_storage_kind as primary governance signals.",
-    "Merge materially identical or stronger rephrasings into the same note.",
-    "Skip noisy or one-off candidate content.",
-    "When possible, include a compact reason_code such as merge_equivalent, merge_strengthen, skip_low_value, or skip_unclear_trigger.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
-    `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    "- always include target_note_id, target_candidate_index, and note",
-    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyGovernanceBatchPrompt(payload) {
-  return [
-    "You are LingXi's memory governance engine.",
-    "Process the candidate list sequentially and return one governance decision per candidate in the same order as input.",
-    "Decide whether each candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
-    "Base the decision on semantic meaning, not wording overlap.",
-    "Use content_type, value_scores, and suggested_storage_kind as primary governance signals.",
-    "Merge materially identical or stronger rephrasings into the same note.",
-    "If a later candidate should merge into a note created earlier in this same batch, set target_candidate_index to that earlier candidate index and omit target_note_id.",
-    "Skip noisy or one-off candidate content.",
-    "When possible, include a compact reason_code such as merge_equivalent, merge_strengthen, skip_low_value, or skip_unclear_trigger.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    "- decisions must be in the same order as input candidates",
-    `- each decision.action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
-    `- each decision.note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    "- each decision must include target_note_id, target_candidate_index, and note",
-    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyRetrievalPromptTask(payload) {
-  return [
-    "You are LingXi's memory retrieval engine.",
-    "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
-    "Rank by semantic relevance, not keyword overlap alone.",
-    "Prefer project memory over share memory when relevance is otherwise similar.",
-    "This is task intent: prioritize implementation boundaries, rollback guidance, contract constraints, and practical engineering preferences.",
-    "Prefer notes that can directly shape planning, sequencing, implementation scope, and safe execution.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    `- return at most ${payload.limit} hits`,
-    "- each hit must reference an existing note_id from the input",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyRetrievalPromptVet(payload) {
-  return [
-    "You are LingXi's memory retrieval engine.",
-    "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
-    "Rank by semantic relevance, not keyword overlap alone.",
-    "Prefer project memory over share memory when relevance is otherwise similar.",
-    "This is vet intent: prioritize anti-patterns, review tendencies, hidden risks, missing constraints, and historical pitfalls.",
-    "Prefer notes that help challenge weak plans, expose missing memory application, or reveal prior failure modes.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    `- return at most ${payload.limit} hits`,
-    "- each hit must reference an existing note_id from the input",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function legacyRetrievalPrompt(payload) {
-  const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
-  return intent === "vet" ? legacyRetrievalPromptVet(payload) : legacyRetrievalPromptTask(payload);
-}
-
 function operationOutputRules(operation, payload) {
   if (operation === "taste_extract") {
     return [
@@ -753,34 +607,13 @@ function operationOutputRules(operation, payload) {
 }
 
 export function compileMemoryDistillPrompt({ operation, payload, context = {} }) {
-  if (!memoryDistillCompilerEnabled()) {
-    const prompt =
-      operation === "taste_extract" ? legacyTasteExtractPrompt(payload)
-        : operation === "taste_adjudicate" ? legacyTasteAdjudicatePrompt(payload)
-          : operation === "governance_handoff" && context?.batch ? legacyGovernanceBatchPrompt(payload)
-            : operation === "governance_handoff" ? legacyGovernancePrompt(payload)
-              : operation === "retrieve_task" ? legacyRetrievalPromptTask(payload)
-                : operation === "retrieve_vet" ? legacyRetrievalPromptVet(payload)
-                  : legacyRetrievalPrompt(payload);
-    return {
-      prompt,
-      metadata: {
-        skill_name: MEMORY_DISTILL_SKILL_NAME,
-        skill_version: "legacy",
-        prompt_pack_version: "legacy",
-        example_pack_version: "legacy",
-        operation_spec_hash: `legacy:${operation}`,
-        compiler_mode: "legacy"
-      }
-    };
-  }
-
-  const { instruction } = loadMemoryDistillOperation(operation);
-  const examples = loadMemoryDistillExamples(operation).slice(
+  const { instruction, config } = loadMemoryDistillOperation(operation);
+  const allExamples = loadMemoryDistillExamples(operation);
+  const examples = allExamples.slice(
     0,
-    Number.isInteger(loadMemoryDistillOperation(operation).config.max_examples)
-      ? loadMemoryDistillOperation(operation).config.max_examples
-      : loadMemoryDistillExamples(operation).length
+    Number.isInteger(config.max_examples)
+      ? config.max_examples
+      : allExamples.length
   );
   const assets = loadMemoryDistillAssets(operation);
   const metadata = {
@@ -817,10 +650,22 @@ export function compileMemoryDistillPrompt({ operation, payload, context = {} })
 }
 
 function writeTempJson(prefix, value) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-`));
+  const dir = fs.mkdtempSync(path.join(resolveMemorySemanticTempRoot(), `${prefix}-`));
   const file = path.join(dir, "payload.json");
   fs.writeFileSync(file, JSON.stringify(value, null, 2), "utf8");
   return { dir, file };
+}
+
+function resolveMemorySemanticTempRoot() {
+  const candidate = normalizeText(process.env.TEST_TMPDIR) || normalizeText(process.env.LINGXI_TMPDIR) || "/tmp";
+  const resolved = path.resolve(candidate);
+  try {
+    fs.mkdirSync(resolved, { recursive: true });
+    fs.accessSync(resolved, fs.constants.W_OK);
+  } catch (error) {
+    throw new Error(`Memory semantic temp dir is not writable: ${resolved} (${error.message})`);
+  }
+  return resolved;
 }
 
 function removeTempDir(dir) {
@@ -835,7 +680,7 @@ function resolveCodexBin() {
 
 function runCodexStructuredOutput(projectRoot, prompt, schema, operation) {
   const schemaTmp = writeTempJson("lingxi-memory-schema", schema);
-  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-memory-output-"));
+  const outputDir = fs.mkdtempSync(path.join(resolveMemorySemanticTempRoot(), "lingxi-memory-output-"));
   const outputFile = path.join(outputDir, "response.json");
   try {
     const result = spawnSync(

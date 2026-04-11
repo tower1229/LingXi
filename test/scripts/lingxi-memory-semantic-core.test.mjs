@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
@@ -17,7 +16,7 @@ const invalidGovernanceRunnerPath = path.resolve(__dirname, "../fixtures/memory-
 const invalidRankingRunnerPath = path.resolve(__dirname, "../fixtures/memory-semantic-invalid-ranking-runner.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-memory-semantic-core-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-memory-semantic-core-"));
 }
 
 function writeNote(projectRoot, scope, filename, content) {
@@ -30,6 +29,7 @@ describe("lingxi memory semantic core", () => {
   let tempDir;
   const originalRunnerModule = process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
   const originalCodexBin = process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN;
+  const originalTestTmpDir = process.env.TEST_TMPDIR;
 
   afterEach(() => {
     if (originalRunnerModule) {
@@ -41,6 +41,11 @@ describe("lingxi memory semantic core", () => {
       process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN = originalCodexBin;
     } else {
       delete process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN;
+    }
+    if (originalTestTmpDir) {
+      process.env.TEST_TMPDIR = originalTestTmpDir;
+    } else {
+      delete process.env.TEST_TMPDIR;
     }
     if (tempDir && fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -200,6 +205,8 @@ Treat missing rollback order as a review risk for backend integration changes.
 
     assert.strictEqual(results[0].operation, "created");
     assert.strictEqual(results[1].operation, "merged");
+    assert.strictEqual(results.semantic_meta?.skill_name, "memory-distill");
+    assert.strictEqual(results.semantic_meta?.compiler_mode, "skill_compiler");
     const notes = loadMemoryNotes(tempDir);
     assert.strictEqual(notes.length, 1);
     assert.match(notes[0].decision, /explicit interfaces/i);
@@ -271,6 +278,7 @@ Document rollback path and rollback order before implementation for backend inte
     delete process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
     tempDir = createTempDir();
     ensureRuntimeState(tempDir);
+    process.env.TEST_TMPDIR = tempDir;
 
     const argsFile = path.join(tempDir, "codex-args.json");
     const stubPath = path.join(tempDir, "codex-stub.mjs");
@@ -372,5 +380,6 @@ fs.writeFileSync(outputFile, JSON.stringify(payload, null, 2) + "\\n", "utf8");
     assert.ok(args.includes("exec"));
     assert.ok(!args.includes("-a"));
     assert.ok(!args.includes("--approval-mode"));
+    delete process.env.TEST_TMPDIR;
   });
 });

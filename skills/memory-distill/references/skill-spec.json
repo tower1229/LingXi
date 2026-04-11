@@ -2,6 +2,7 @@
   "skill_name": "memory-distill",
   "skill_version": "1",
   "prompt_pack_version": "2026-04-11",
+  "example_pack_version": "2026-04-11",
   "operations": {
     "taste_extract": {
       "instruction_file": "operations/taste-extract.md",

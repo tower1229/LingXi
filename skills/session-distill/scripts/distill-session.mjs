@@ -184,6 +184,12 @@ async function main() {
   appendMemoryOpsLog(projectRoot, {
     operation: "distill_governance_applied",
     duration_ms: Date.now() - governanceStartedAt,
+    skill_name: normalizeText(noteResults.semantic_meta?.skill_name),
+    skill_version: normalizeText(noteResults.semantic_meta?.skill_version),
+    prompt_pack_version: normalizeText(noteResults.semantic_meta?.prompt_pack_version),
+    example_pack_version: normalizeText(noteResults.semantic_meta?.example_pack_version),
+    operation_spec_hash: normalizeText(noteResults.semantic_meta?.operation_spec_hash),
+    compiler_mode: normalizeText(noteResults.semantic_meta?.compiler_mode),
     session_id: sessionId,
     content_fingerprint: fingerprint,
     distill_version: DISTILL_VERSION,

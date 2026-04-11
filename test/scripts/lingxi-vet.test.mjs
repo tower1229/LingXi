@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
@@ -14,7 +13,7 @@ const taskPath = path.join(repoRoot, "skills", "task", "scripts", "write-task.mj
 const vetPath = path.join(repoRoot, "skills", "vet", "scripts", "vet-task.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-vet-test-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-vet-test-"));
 }
 
 function runNode(script, projectRoot, args = [], stdinJson = null) {
@@ -347,6 +346,11 @@ Introduce one explicit backend seam for the service layer.
       opsLog.some(
         (entry) =>
           entry.operation === "retrieve_gap_detected" &&
+          entry.skill_name === "memory-distill" &&
+          typeof entry.prompt_pack_version === "string" &&
+          typeof entry.example_pack_version === "string" &&
+          typeof entry.operation_spec_hash === "string" &&
+          entry.compiler_mode === "skill_compiler" &&
           entry.caller === "vet" &&
           entry.hit_count >= 1 &&
           Number.isInteger(entry.duration_ms)

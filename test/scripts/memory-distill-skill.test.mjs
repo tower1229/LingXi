@@ -3,7 +3,11 @@ import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { fileURLToPath } from "node:url";
-import { compileMemoryDistillPrompt } from "../../scripts/_lingxi-memory-semantic.mjs";
+import {
+  compileMemoryDistillPrompt,
+  rankRelevantMemories
+} from "../../scripts/_lingxi-memory-semantic.mjs";
+import { memorySemanticRunnerModulePath } from "../helpers/memory-semantic-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
@@ -12,7 +16,7 @@ const TEST_TMP_ROOT = process.env.TEST_TMPDIR || "/tmp";
 
 describe("memory-distill skill", () => {
   const originalSkillDir = process.env.LINGXI_MEMORY_DISTILL_SKILL_DIR;
-  const originalCompilerFlag = process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER;
+  const originalRunnerModule = process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
   let tempDir = "";
 
   afterEach(() => {
@@ -21,10 +25,10 @@ describe("memory-distill skill", () => {
     } else {
       delete process.env.LINGXI_MEMORY_DISTILL_SKILL_DIR;
     }
-    if (originalCompilerFlag) {
-      process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER = originalCompilerFlag;
+    if (originalRunnerModule) {
+      process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = originalRunnerModule;
     } else {
-      delete process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER;
+      delete process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
     }
     if (tempDir && fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -34,6 +38,7 @@ describe("memory-distill skill", () => {
   it("ships a complete skill spec with canonical operation files and examples", () => {
     const spec = JSON.parse(fs.readFileSync(path.join(SKILL_ROOT, "references", "skill-spec.json"), "utf8"));
     assert.strictEqual(spec.skill_name, "memory-distill");
+    assert.ok(typeof spec.example_pack_version === "string" && spec.example_pack_version.length > 0);
     for (const [name, operation] of Object.entries(spec.operations)) {
       const instructionPath = path.join(SKILL_ROOT, "references", operation.instruction_file);
       const exampleDir = path.join(SKILL_ROOT, "references", operation.example_dir);
@@ -50,7 +55,6 @@ describe("memory-distill skill", () => {
   });
 
   it("compiles extract prompt from memory-distill skill assets instead of hardcoded packs", () => {
-    delete process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER;
     const compiled = compileMemoryDistillPrompt({
       operation: "taste_extract",
       payload: {
@@ -70,29 +74,63 @@ describe("memory-distill skill", () => {
     assert.strictEqual(compiled.metadata.compiler_mode, "skill_compiler");
   });
 
-  it("dispatches retrieve prompts by intent through the skill compiler", () => {
-    delete process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER;
-    const taskPrompt = compileMemoryDistillPrompt({
-      operation: "retrieve_task",
+  it("compiles governance handoff from the memory-distill skill assets", () => {
+    const compiled = compileMemoryDistillPrompt({
+      operation: "governance_handoff",
       payload: {
-        query: "backend integration rollback",
-        limit: 3,
-        context: { caller: "task", intent: "task" },
-        notes: []
+        candidates: [],
+        existing_notes: [],
+        scope: "project"
       }
     });
-    const vetPrompt = compileMemoryDistillPrompt({
-      operation: "retrieve_vet",
-      payload: {
-        query: "backend integration rollback",
-        limit: 3,
-        context: { caller: "vet", intent: "vet" },
-        notes: []
+    assert.match(compiled.prompt, /# Governance Handoff/);
+    assert.match(compiled.prompt, /Storage kind map JSON:/);
+    assert.match(compiled.prompt, /Rubrics JSON:/);
+    assert.strictEqual(compiled.metadata.compiler_mode, "skill_compiler");
+  });
+
+  it("dispatches generic retrieve by intent through the skill compiler", async () => {
+    process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = memorySemanticRunnerModulePath;
+    tempDir = fs.mkdtempSync(path.join(TEST_TMP_ROOT, "lingxi-memory-distill-skill-"));
+    const notes = [
+      {
+        id: "MEM-001",
+        title: "Prefer explicit rollback notes",
+        kind: "preference",
+        scope: "project",
+        one_liner: "Prefer explicit rollback notes.",
+        decision: "Document rollback order before implementation.",
+        when_to_load: ["When planning backend integration changes"],
+        evidence: ["Rollback notes matter."],
+        stability: 1,
+        decision_gain: 3,
+        trigger_clarity: 3
+      },
+      {
+        id: "MEM-002",
+        title: "Avoid vague rollback plans",
+        kind: "anti_pattern",
+        scope: "project",
+        one_liner: "Avoid vague rollback plans.",
+        decision: "Treat missing rollback order as review risk.",
+        when_to_load: ["When reviewing backend integration changes"],
+        evidence: ["Vague rollback plans caused review churn."],
+        stability: 3,
+        decision_gain: 1,
+        trigger_clarity: 1
       }
+    ];
+    const taskRanking = await rankRelevantMemories(tempDir, "backend integration rollback", notes, {
+      limit: 3,
+      context: { caller: "task", intent: "task" }
     });
-    assert.match(taskPrompt.prompt, /# Retrieve Task/);
-    assert.match(vetPrompt.prompt, /# Retrieve Vet/);
-    assert.notStrictEqual(taskPrompt.metadata.operation_spec_hash, vetPrompt.metadata.operation_spec_hash);
+    const vetRanking = await rankRelevantMemories(tempDir, "backend integration rollback", notes, {
+      limit: 3,
+      context: { caller: "vet", intent: "vet" }
+    });
+    assert.strictEqual(taskRanking.semantic_meta.compiler_mode, "skill_compiler");
+    assert.strictEqual(vetRanking.semantic_meta.compiler_mode, "skill_compiler");
+    assert.notStrictEqual(taskRanking.semantic_meta.operation_spec_hash, vetRanking.semantic_meta.operation_spec_hash);
   });
 
   it("fails fast when the memory-distill skill assets are incomplete", () => {
@@ -103,6 +141,7 @@ describe("memory-distill skill", () => {
       skill_name: "memory-distill",
       skill_version: "1",
       prompt_pack_version: "test",
+      example_pack_version: "test-examples",
       operations: {
         taste_extract: {
           instruction_file: "operations/missing.md",
@@ -132,8 +171,55 @@ describe("memory-distill skill", () => {
     );
   });
 
-  it("supports temporary legacy fallback via feature flag", () => {
-    process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER = "0";
+  it("fails fast when the skill spec omits example_pack_version", () => {
+    tempDir = fs.mkdtempSync(path.join(TEST_TMP_ROOT, "lingxi-memory-distill-skill-"));
+    const referencesDir = path.join(tempDir, "references");
+    fs.mkdirSync(path.join(referencesDir, "operations"), { recursive: true });
+    fs.mkdirSync(path.join(referencesDir, "examples", "taste-extract"), { recursive: true });
+    fs.writeFileSync(path.join(referencesDir, "skill-spec.json"), JSON.stringify({
+      skill_name: "memory-distill",
+      skill_version: "1",
+      prompt_pack_version: "test",
+      operations: {
+        taste_extract: {
+          instruction_file: "operations/taste-extract.md",
+          example_dir: "examples/taste-extract",
+          asset_keys: ["taxonomy", "rubrics"],
+          max_examples: 1
+        }
+      }
+    }, null, 2));
+    fs.writeFileSync(path.join(referencesDir, "operations", "taste-extract.md"), "# Taste Extract\n", "utf8");
+    fs.writeFileSync(path.join(referencesDir, "examples", "taste-extract", "001.json"), JSON.stringify({
+      label: "example",
+      input: { session_id: "session-001" },
+      output: { schema_version: "draft-2026-04-11-extract", candidates: [] }
+    }, null, 2));
+    fs.writeFileSync(path.join(referencesDir, "taxonomy.json"), JSON.stringify({
+      version: 1,
+      content_types: [{ id: "preference", description: "x" }]
+    }, null, 2));
+    fs.writeFileSync(path.join(referencesDir, "rubrics.json"), JSON.stringify({
+      value_dimensions: { decision_gain: "x" },
+      score_scale: { min: 0, max: 3 }
+    }, null, 2));
+    process.env.LINGXI_MEMORY_DISTILL_SKILL_DIR = tempDir;
+
+    assert.throws(
+      () => compileMemoryDistillPrompt({
+        operation: "taste_extract",
+        payload: {
+          session_id: "session-001",
+          content_fingerprint: "sha256:test",
+          distill_version: "v3",
+          messages: []
+        }
+      }),
+      /Invalid memory-distill skill-spec\.json/
+    );
+  });
+
+  it("tracks prompt and example versions independently in metadata", () => {
     const compiled = compileMemoryDistillPrompt({
       operation: "taste_extract",
       payload: {
@@ -143,7 +229,8 @@ describe("memory-distill skill", () => {
         messages: []
       }
     });
-    assert.strictEqual(compiled.metadata.compiler_mode, "legacy");
-    assert.doesNotMatch(compiled.prompt, /You are executing the memory-distill semantic skill\./);
+    assert.strictEqual(compiled.metadata.prompt_pack_version, "2026-04-11");
+    assert.strictEqual(compiled.metadata.example_pack_version, "2026-04-11");
+    assert.strictEqual(compiled.metadata.compiler_mode, "skill_compiler");
   });
 });

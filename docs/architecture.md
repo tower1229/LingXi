@@ -317,6 +317,8 @@ Implementation split:
 Implementation bias:
 
 - the runtime compiles `memory-distill` skill assets into structured LLM prompts
+- no legacy prompt fallback path remains in the mainline
+- `skills/memory-distill/references/skill-spec.json` is the single source for prompt/example version tracking
 - LLM produces a structured `MemoryDistillCandidateSet`
 - deterministic code validates the candidate set, applies dedupe/state rules, and persists approved notes
 

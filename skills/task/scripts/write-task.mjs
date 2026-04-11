@@ -1007,6 +1007,12 @@ async function validateInput(input, projectRoot) {
     appendMemoryOpsLog(projectRoot, {
       operation: "retrieve_applied",
       duration_ms: 0,
+      skill_name: normalizeText(autoRetrievedMemory.semantic_meta?.skill_name),
+      skill_version: normalizeText(autoRetrievedMemory.semantic_meta?.skill_version),
+      prompt_pack_version: normalizeText(autoRetrievedMemory.semantic_meta?.prompt_pack_version),
+      example_pack_version: normalizeText(autoRetrievedMemory.semantic_meta?.example_pack_version),
+      operation_spec_hash: normalizeText(autoRetrievedMemory.semantic_meta?.operation_spec_hash),
+      compiler_mode: normalizeText(autoRetrievedMemory.semantic_meta?.compiler_mode),
       caller: "task",
       intent: "task",
       task_title: normalizeText(input.title),

@@ -49,6 +49,7 @@ For the Codex runtime, session distillation now runs through a deterministic sel
 - `node scripts/lx-distill-sessions.mjs` orchestrates the scan
 - `skills/session-distill/scripts/distill-session.mjs` remains the single-session durable-memory worker
 - `skills/memory-distill/` is the canonical semantic source of truth for taste extraction, adjudication, and retrieval intent prompting
+- the runtime no longer maintains a legacy prompt fallback path; `skill-spec.json` is the authoritative source for prompt/example versioning
 
 The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 
@@ -111,6 +112,11 @@ node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
 node scripts/lx-memory-brief.mjs --prompt "your current repository request"
 ```
+
+For semantic-runtime debugging only, you may override:
+
+- `LINGXI_MEMORY_DISTILL_SKILL_DIR` to point at an alternate local `memory-distill` skill asset root
+- `LINGXI_TMPDIR` to choose a writable temp root for structured semantic calls
 
 or:
 

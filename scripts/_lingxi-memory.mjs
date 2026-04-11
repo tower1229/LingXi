@@ -648,6 +648,19 @@ function sortRetrievedHits(notes, intent) {
   );
 }
 
+function attachSemanticMeta(target, semanticMeta) {
+  if (!target || !semanticMeta || typeof semanticMeta !== "object") {
+    return target;
+  }
+  Object.defineProperty(target, "semantic_meta", {
+    value: semanticMeta,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  });
+  return target;
+}
+
 export function appendMemoryOpsLog(projectRoot, event) {
   ensureLingxiLayout(projectRoot);
   fs.appendFileSync(
@@ -702,7 +715,7 @@ export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, 
       reason: normalizeText(note.ranking_reason)
     }))
   });
-  return hits;
+  return attachSemanticMeta(hits, ranking.semantic_meta || null);
 }
 
 export function formatMemoryRef(note) {
@@ -804,6 +817,7 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
   const workingNotes = loadMemoryNotes(projectRoot);
   const results = new Array(normalizedInputs.length);
   let mutated = false;
+  let governanceSemanticMeta = null;
 
   for (const scope of ["project", "share"]) {
     const entries = normalizedInputs
@@ -817,6 +831,7 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
       workingNotes,
       scope
     );
+    governanceSemanticMeta ||= governance.semantic_meta || null;
     const resolvedBatchTargets = new Map();
 
     governance.decisions.forEach((decision, localIndex) => {
@@ -921,7 +936,7 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
   if (mutated) {
     rebuildMemoryIndex(projectRoot);
   }
-  return results;
+  return attachSemanticMeta(results, governanceSemanticMeta);
 }
 
 export async function upsertMemoryNote(projectRoot, input, scope = "project") {
