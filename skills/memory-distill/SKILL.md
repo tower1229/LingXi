@@ -146,11 +146,24 @@ Canonical operation instructions live in:
 
 - `references/operations/taste-extract.md`
 - `references/operations/taste-adjudicate.md`
+- `references/operations/governance-handoff.md`
+- `references/operations/retrieve-task.md`
+- `references/operations/retrieve-vet.md`
 
 Canonical type and mapping assets live in:
 
+- `references/skill-spec.json`
 - `references/taxonomy.json`
 - `references/storage-kind-map.json`
+- `references/rubrics.json`
+
+Canonical few-shot and regression examples live in:
+
+- `references/examples/taste-extract/`
+- `references/examples/taste-adjudicate/`
+- `references/examples/governance-handoff/`
+- `references/examples/retrieve-task/`
+- `references/examples/retrieve-vet/`
 
 Runtime code should load these assets and compile operation-specific prompts from them rather than redefining memory philosophy inside scripts.
 
@@ -165,7 +178,12 @@ Runtime scripts using this skill must:
 
 ## References
 
+- `references/skill-spec.json`
 - `references/operations/taste-extract.md`
 - `references/operations/taste-adjudicate.md`
+- `references/operations/governance-handoff.md`
+- `references/operations/retrieve-task.md`
+- `references/operations/retrieve-vet.md`
 - `references/taxonomy.json`
 - `references/storage-kind-map.json`
+- `references/rubrics.json`

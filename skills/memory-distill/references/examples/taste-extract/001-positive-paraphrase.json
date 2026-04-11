@@ -1,0 +1,27 @@
+{
+  "label": "positive-paraphrase",
+  "input": {
+    "session_excerpt": [
+      {
+        "role": "user",
+        "content": "When module seams get fuzzy, make the interface explicit so hidden coupling does not leak into implementation."
+      }
+    ]
+  },
+  "output": {
+    "candidates": [
+      {
+        "scene": "When module or integration boundaries become fuzzy",
+        "content_type": "preference",
+        "alternatives": ["Keep the seam implicit", "Rely on hidden coupling"],
+        "choice": "Make the interface explicit.",
+        "rationale": "Explicit seams reduce hidden coupling and make future work safer to review.",
+        "evidence": ["make the interface explicit so hidden coupling does not leak into implementation"],
+        "pattern_hint": "Boundary-heavy work with fuzzy seams",
+        "confidence": 0.9
+      }
+    ]
+  },
+  "tags": ["positive", "paraphrase"],
+  "language": "en"
+}

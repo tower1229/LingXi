@@ -1,0 +1,37 @@
+{
+  "skill_name": "memory-distill",
+  "skill_version": "1",
+  "prompt_pack_version": "2026-04-11",
+  "operations": {
+    "taste_extract": {
+      "instruction_file": "operations/taste-extract.md",
+      "example_dir": "examples/taste-extract",
+      "asset_keys": ["taxonomy", "rubrics"],
+      "max_examples": 3
+    },
+    "taste_adjudicate": {
+      "instruction_file": "operations/taste-adjudicate.md",
+      "example_dir": "examples/taste-adjudicate",
+      "asset_keys": ["taxonomy", "storage_kind_map", "rubrics"],
+      "max_examples": 3
+    },
+    "governance_handoff": {
+      "instruction_file": "operations/governance-handoff.md",
+      "example_dir": "examples/governance-handoff",
+      "asset_keys": ["taxonomy", "storage_kind_map", "rubrics"],
+      "max_examples": 3
+    },
+    "retrieve_task": {
+      "instruction_file": "operations/retrieve-task.md",
+      "example_dir": "examples/retrieve-task",
+      "asset_keys": ["storage_kind_map", "rubrics"],
+      "max_examples": 2
+    },
+    "retrieve_vet": {
+      "instruction_file": "operations/retrieve-vet.md",
+      "example_dir": "examples/retrieve-vet",
+      "asset_keys": ["storage_kind_map", "rubrics"],
+      "max_examples": 2
+    }
+  }
+}

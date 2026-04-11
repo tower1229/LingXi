@@ -22,6 +22,7 @@ Validated status:
 
 - `npm test` passes at `107/107`
 - `session-distill`, `memory-write`, and `memory-retrieve` all use the shared semantic engine
+- `skills/memory-distill/` is now the canonical semantic source of truth for extract, adjudicate, governance handoff, and retrieval intent prompting
 - `task` and `vet` already consume memory through the new semantic retrieval path
 
 This means the repository is no longer in the earlier mixed state where:
@@ -39,6 +40,7 @@ This means the repository is no longer in the earlier mixed state where:
 The memory semantic path is now centralized in:
 
 - `scripts/_lingxi-memory-semantic.mjs`
+- compiled from `skills/memory-distill/`
 
 Current semantic responsibilities:
 
@@ -66,6 +68,8 @@ Implemented in:
 - `skills/session-distill/scripts/memory-distill-candidate-set.mjs`
 
 This is now the only accepted semantic distill artifact.
+
+The semantic prompting that produces it should no longer be treated as ad hoc script text. It should be treated as skill-defined behavior compiled by the runtime.
 
 There is no legacy note/state compatibility layer in the memory mainline.
 

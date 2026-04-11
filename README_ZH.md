@@ -30,7 +30,7 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 - **Codex-native 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
 - **仓库级 marketplace 入口**：[`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **可见工作流**：[`skills/task/`](./skills/task/) 和 [`skills/vet/`](./skills/vet/)
-- **持久记忆核心**：[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
+- **持久记忆核心**：[`skills/memory-distill/`](./skills/memory-distill/)、[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
 - **项目本地运行时**：`.lingxi/`
 - **后台 distill agent 模板**：[`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
 - **确定性 setup / runtime 辅助脚本**：[`scripts/`](./scripts/)
@@ -48,6 +48,7 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 - 由 Codex 专用 adapter 发现并过滤 session artifact
 - 由 `node scripts/lx-distill-sessions.mjs` 编排整批扫描
 - `skills/session-distill/scripts/distill-session.mjs` 继续只负责单个 session 的 durable memory 提炼
+- `skills/memory-distill/` 成为 taste extract、taste adjudicate 与 retrieval intent prompt 的语义单一事实来源
 
 表层很克制，但底层会随着项目使用不断积累质量。
 

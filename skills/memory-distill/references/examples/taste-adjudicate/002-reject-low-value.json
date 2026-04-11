@@ -1,0 +1,22 @@
+{
+  "label": "reject-low-value",
+  "input": {
+    "extract_candidates": [
+      {
+        "scene": "Casual chat",
+        "content_type": "preference",
+        "alternatives": [],
+        "choice": "Prefer tea in the morning.",
+        "rationale": "Personal preference only.",
+        "evidence": ["prefer tea in the morning"],
+        "pattern_hint": "Casual preference",
+        "confidence": 0.7
+      }
+    ]
+  },
+  "output": {
+    "candidates": []
+  },
+  "tags": ["negative", "low_value"],
+  "language": "en"
+}

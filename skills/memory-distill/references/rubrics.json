@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "value_dimensions": {
+    "decision_gain": "How much this candidate improves future engineering decisions.",
+    "reusability": "How often the judgment can transfer to future tasks or reviews.",
+    "trigger_clarity": "How clearly a future retrieval scene can be recognized.",
+    "verifiability": "How well the candidate is supported by evidence or checkable reasoning.",
+    "stability": "How likely the judgment is to remain valid across future work."
+  },
+  "score_scale": {
+    "0": "Weak, missing, or not credible.",
+    "1": "Present but shallow, narrow, or uncertain.",
+    "2": "Solid, reusable, and reasonably grounded.",
+    "3": "Strong durable signal with clear future leverage."
+  },
+  "adjudication_thresholds": {
+    "default": {
+      "min_total_score": 8,
+      "min_trigger_clarity": 1,
+      "min_stability": 1
+    }
+  },
+  "content_type_bias": {
+    "decision_experience": ["decision_gain", "reusability"],
+    "domain_knowledge": ["verifiability", "stability"],
+    "product_knowledge": ["trigger_clarity", "stability"],
+    "org_experience": ["stability", "trigger_clarity"],
+    "heuristic": ["reusability", "trigger_clarity"],
+    "pattern": ["reusability", "trigger_clarity"],
+    "anti_pattern_signal": ["decision_gain", "stability"],
+    "troubleshooting": ["verifiability", "reusability"]
+  },
+  "retrieval_bias": {
+    "task": {
+      "preferred_kinds": ["constraint", "heuristic", "preference"],
+      "focus": [
+        "implementation boundaries",
+        "contract constraints",
+        "rollback guidance",
+        "stable engineering preference"
+      ]
+    },
+    "vet": {
+      "preferred_kinds": ["anti_pattern", "review_tendency", "constraint"],
+      "focus": [
+        "anti-patterns",
+        "review tendencies",
+        "hidden risks",
+        "missing memory application"
+      ]
+    }
+  }
+}

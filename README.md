@@ -30,7 +30,7 @@ LingXi is built to improve the quality of work before code is written:
 - **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
 - **Repo marketplace entry** in [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
-- **Durable memory core** in [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
+- **Durable memory core** in [`skills/memory-distill/`](./skills/memory-distill/), [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
 - **Project-local runtime** under `.lingxi/`
 - **Background distillation agent template** in [`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
 - **Deterministic setup and runtime helpers** in [`scripts/`](./scripts/)
@@ -48,6 +48,7 @@ For the Codex runtime, session distillation now runs through a deterministic sel
 - Codex session artifacts are discovered and filtered by a Codex-specific adapter
 - `node scripts/lx-distill-sessions.mjs` orchestrates the scan
 - `skills/session-distill/scripts/distill-session.mjs` remains the single-session durable-memory worker
+- `skills/memory-distill/` is the canonical semantic source of truth for taste extraction, adjudication, and retrieval intent prompting
 
 The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 

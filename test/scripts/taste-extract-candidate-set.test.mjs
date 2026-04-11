@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
@@ -16,7 +15,7 @@ import {
 import { memorySemanticRunnerModulePath } from "../helpers/memory-semantic-env.mjs";
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-taste-extract-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-taste-extract-"));
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -129,17 +128,22 @@ describe("taste extract candidate set", () => {
   });
 
   it("keeps semantic goldens in one repository source for prompt packs and tests", () => {
-    const baseDir = path.resolve(__dirname, "../../skills/session-distill/references/semantic-goldens");
-    const expectedFiles = [
-      "taste-extract.json",
-      "taste-adjudicate.json",
-      "governance.json",
-      "retrieve-task.json",
-      "retrieve-vet.json"
+    const baseDir = path.resolve(__dirname, "../../skills/memory-distill/references/examples");
+    const expectedDirs = [
+      "taste-extract",
+      "taste-adjudicate",
+      "governance-handoff",
+      "retrieve-task",
+      "retrieve-vet"
     ];
-    expectedFiles.forEach((file) => {
-      const parsed = JSON.parse(fs.readFileSync(path.resolve(baseDir, file), "utf8"));
-      assert.ok(Array.isArray(parsed.examples) && parsed.examples.length > 0, file);
+    expectedDirs.forEach((dir) => {
+      const files = fs.readdirSync(path.resolve(baseDir, dir)).filter((file) => file.endsWith(".json"));
+      assert.ok(files.length > 0, dir);
+      files.forEach((file) => {
+        const parsed = JSON.parse(fs.readFileSync(path.resolve(baseDir, dir, file), "utf8"));
+        assert.ok(typeof parsed.label === "string" && parsed.label.length > 0, `${dir}/${file}`);
+        assert.ok(parsed.output && typeof parsed.output === "object", `${dir}/${file}`);
+      });
     });
   });
 });

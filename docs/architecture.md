@@ -312,9 +312,11 @@ Implementation split:
 - Codex-specific adapter code discovers and normalizes candidate session artifacts
 - a deterministic selector decides which sessions are valid source material
 - `distill-session` remains the single-session worker over normalized `{ session_id, messages }`
+- `skills/memory-distill/` defines the canonical semantic spec for taste extraction, adjudication, governance handoff, and retrieval intent
 
 Implementation bias:
 
+- the runtime compiles `memory-distill` skill assets into structured LLM prompts
 - LLM produces a structured `MemoryDistillCandidateSet`
 - deterministic code validates the candidate set, applies dedupe/state rules, and persists approved notes
 

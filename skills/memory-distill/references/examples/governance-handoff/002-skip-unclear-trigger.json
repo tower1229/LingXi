@@ -1,0 +1,23 @@
+{
+  "label": "skip-unclear-trigger",
+  "input": {
+    "candidate": {
+      "title": "Be more careful",
+      "content_type": "pattern",
+      "suggested_storage_kind": "heuristic",
+      "value_scores": {
+        "decision_gain": 1,
+        "reusability": 1,
+        "trigger_clarity": 0,
+        "verifiability": 0,
+        "stability": 1
+      }
+    }
+  },
+  "output": {
+    "action": "skip_as_not_durable",
+    "reason_code": "skip_unclear_trigger"
+  },
+  "tags": ["skip"],
+  "language": "en"
+}

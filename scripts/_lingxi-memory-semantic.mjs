@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
@@ -27,7 +28,8 @@ const MEMORY_KIND_VALUES = new Set([
 const MEMORY_SCOPE_VALUES = new Set(["project", "share"]);
 let cachedRunnerPromise = null;
 let cachedRunnerKey = "";
-const cachedGoldenPackByName = new Map();
+const cachedMemoryDistillAssetByPath = new Map();
+const MEMORY_DISTILL_SKILL_NAME = "memory-distill";
 
 function normalizeText(value) {
   return String(value || "")
@@ -66,25 +68,119 @@ function isConfidence(value) {
   return typeof value === "number" && !Number.isNaN(value) && value >= 0 && value <= 1;
 }
 
-function goldenPacksDir() {
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../skills/session-distill/references/semantic-goldens");
+function resolveMemoryDistillSkillDir() {
+  return path.resolve(
+    normalizeText(process.env.LINGXI_MEMORY_DISTILL_SKILL_DIR) ||
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../skills/memory-distill")
+  );
 }
 
-function loadSemanticGoldenPack(name) {
-  const normalized = normalizeText(name);
-  if (!normalized) return null;
-  if (cachedGoldenPackByName.has(normalized)) {
-    return cachedGoldenPackByName.get(normalized);
+function readCachedMemoryDistillAsset(relativePath, parser = (raw) => raw) {
+  const fullPath = path.join(resolveMemoryDistillSkillDir(), "references", relativePath);
+  if (cachedMemoryDistillAssetByPath.has(fullPath)) {
+    return cachedMemoryDistillAssetByPath.get(fullPath);
   }
-  const file = path.join(goldenPacksDir(), `${normalized}.json`);
-  const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
-  cachedGoldenPackByName.set(normalized, parsed);
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`memory-distill asset does not exist: ${relativePath}`);
+  }
+  const parsed = parser(fs.readFileSync(fullPath, "utf8"));
+  cachedMemoryDistillAssetByPath.set(fullPath, parsed);
   return parsed;
 }
 
-function formatFewShotExamples(name) {
-  const pack = loadSemanticGoldenPack(name);
-  const examples = Array.isArray(pack?.examples) ? pack.examples : [];
+function loadMemoryDistillSkillSpec() {
+  const value = readCachedMemoryDistillAsset("skill-spec.json", (raw) => JSON.parse(raw));
+  if (!isPlainObject(value) || normalizeText(value.skill_name) !== MEMORY_DISTILL_SKILL_NAME || !isPlainObject(value.operations)) {
+    throw new Error("Invalid memory-distill skill-spec.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillTaxonomy() {
+  const value = readCachedMemoryDistillAsset("taxonomy.json", (raw) => JSON.parse(raw));
+  if (!Array.isArray(value?.content_types) || value.content_types.length === 0) {
+    throw new Error("Invalid memory-distill taxonomy.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillStorageKindMap() {
+  const value = readCachedMemoryDistillAsset("storage-kind-map.json", (raw) => JSON.parse(raw));
+  if (!Array.isArray(value?.stable_storage_kinds) || !isPlainObject(value?.default_mapping)) {
+    throw new Error("Invalid memory-distill storage-kind-map.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillRubrics() {
+  const value = readCachedMemoryDistillAsset("rubrics.json", (raw) => JSON.parse(raw));
+  if (!isPlainObject(value?.value_dimensions) || !isPlainObject(value?.score_scale)) {
+    throw new Error("Invalid memory-distill rubrics.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillOperation(operationName) {
+  const spec = loadMemoryDistillSkillSpec();
+  const operation = spec.operations?.[operationName];
+  if (!isPlainObject(operation) || !isNonEmptyString(operation.instruction_file)) {
+    throw new Error(`memory-distill operation is not declared: ${operationName}`);
+  }
+  const relative = normalizeText(operation.instruction_file);
+  const instruction = readCachedMemoryDistillAsset(relative, (raw) => raw.trim());
+  if (!isNonEmptyString(instruction)) {
+    throw new Error(`memory-distill operation instruction is empty: ${operationName}`);
+  }
+  return {
+    name: operationName,
+    spec,
+    config: operation,
+    instruction
+  };
+}
+
+function loadMemoryDistillExamples(operationName) {
+  const { config } = loadMemoryDistillOperation(operationName);
+  const relativeDir = normalizeText(config.example_dir);
+  if (!relativeDir) {
+    return [];
+  }
+  const fullDir = path.join(resolveMemoryDistillSkillDir(), "references", relativeDir);
+  if (!fs.existsSync(fullDir)) {
+    throw new Error(`memory-distill example directory does not exist: ${operationName}`);
+  }
+  const files = fs.readdirSync(fullDir)
+    .filter((file) => file.endsWith(".json"))
+    .sort((left, right) => left.localeCompare(right));
+  if (files.length === 0) {
+    throw new Error(`memory-distill example directory is empty: ${operationName}`);
+  }
+  return files.map((file) => {
+    const parsed = JSON.parse(fs.readFileSync(path.join(fullDir, file), "utf8"));
+    if (!isNonEmptyString(parsed?.label) || !isPlainObject(parsed?.output)) {
+      throw new Error(`Invalid memory-distill example file: ${path.join(relativeDir, file)}`);
+    }
+    return parsed;
+  });
+}
+
+function loadMemoryDistillAssets(operationName) {
+  const { config } = loadMemoryDistillOperation(operationName);
+  const assetKeys = Array.isArray(config.asset_keys) ? config.asset_keys.map((item) => normalizeText(item)).filter(Boolean) : [];
+  const assets = {};
+  if (assetKeys.includes("taxonomy")) {
+    assets.taxonomy = loadMemoryDistillTaxonomy();
+  }
+  if (assetKeys.includes("storage_kind_map")) {
+    assets.storage_kind_map = loadMemoryDistillStorageKindMap();
+  }
+  if (assetKeys.includes("rubrics")) {
+    assets.rubrics = loadMemoryDistillRubrics();
+  }
+  return assets;
+}
+
+function formatFewShotExamples(examples) {
   if (examples.length === 0) return "";
   return examples
     .map((example, index) => [
@@ -95,6 +191,41 @@ function formatFewShotExamples(name) {
       JSON.stringify(example.output || {}, null, 2)
     ].join("\n"))
     .join("\n\n");
+}
+
+function memoryDistillCompilerEnabled() {
+  const value = normalizeText(process.env.LINGXI_MEMORY_DISTILL_SKILL_COMPILER);
+  return !["0", "false", "off", "legacy"].includes(value.toLowerCase());
+}
+
+function resolveMemoryDistillOperationName(operation, payload = {}) {
+  if (operation === "retrieve") {
+    const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
+    return intent === "vet" ? "retrieve_vet" : "retrieve_task";
+  }
+  if (operation === "govern" || operation === "govern_batch") {
+    return "governance_handoff";
+  }
+  if (operation === "taste_extract" || operation === "taste_adjudicate") {
+    return operation;
+  }
+  throw new Error(`Unsupported memory-distill operation: ${operation}`);
+}
+
+function promptMetadataFromCompiledPieces(operationName, instruction, examples, assets) {
+  const spec = loadMemoryDistillSkillSpec();
+  const hash = crypto.createHash("sha256");
+  hash.update(operationName);
+  hash.update(instruction);
+  hash.update(JSON.stringify(examples));
+  hash.update(JSON.stringify(assets));
+  return {
+    skill_name: normalizeText(spec.skill_name),
+    skill_version: normalizeText(spec.skill_version),
+    prompt_pack_version: normalizeText(spec.prompt_pack_version),
+    example_pack_version: normalizeText(spec.prompt_pack_version),
+    operation_spec_hash: hash.digest("hex").slice(0, 16)
+  };
 }
 
 function tasteAdjudicationRubric() {
@@ -432,8 +563,7 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
   });
 }
 
-function tasteExtractPrompt(payload) {
-  const fewShots = formatFewShotExamples("taste-extract");
+function legacyTasteExtractPrompt(payload) {
   return [
     "You are LingXi's taste extraction engine.",
     "Your job is high-recall identification of durable engineering judgment candidates from a historical Codex session.",
@@ -454,15 +584,12 @@ function tasteExtractPrompt(payload) {
     "- pattern_hint should summarize the reusable trigger or pattern",
     "- confidence should reflect extraction confidence, not final durability confidence",
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function tasteAdjudicatePrompt(payload) {
-  const fewShots = formatFewShotExamples("taste-adjudicate");
+function legacyTasteAdjudicatePrompt(payload) {
   return [
     "You are LingXi's taste adjudication engine.",
     "Your job is precision-first adjudication of extracted engineering judgment candidates.",
@@ -484,15 +611,12 @@ function tasteAdjudicatePrompt(payload) {
     `- allowed content_type values: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}`,
     `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`,
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function governancePrompt(payload) {
-  const fewShots = formatFewShotExamples("governance");
+function legacyGovernancePrompt(payload) {
   return [
     "You are LingXi's memory governance engine.",
     "Decide whether the candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
@@ -510,15 +634,12 @@ function governancePrompt(payload) {
     "- always include target_note_id, target_candidate_index, and note",
     "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function governanceBatchPrompt(payload) {
-  const fewShots = formatFewShotExamples("governance");
+function legacyGovernanceBatchPrompt(payload) {
   return [
     "You are LingXi's memory governance engine.",
     "Process the candidate list sequentially and return one governance decision per candidate in the same order as input.",
@@ -539,15 +660,12 @@ function governanceBatchPrompt(payload) {
     "- each decision must include target_note_id, target_candidate_index, and note",
     "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function retrievalPromptTask(payload) {
-  const fewShots = formatFewShotExamples("retrieve-task");
+function legacyRetrievalPromptTask(payload) {
   return [
     "You are LingXi's memory retrieval engine.",
     "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
@@ -562,15 +680,12 @@ function retrievalPromptTask(payload) {
     `- return at most ${payload.limit} hits`,
     "- each hit must reference an existing note_id from the input",
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function retrievalPromptVet(payload) {
-  const fewShots = formatFewShotExamples("retrieve-vet");
+function legacyRetrievalPromptVet(payload) {
   return [
     "You are LingXi's memory retrieval engine.",
     "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
@@ -585,16 +700,120 @@ function retrievalPromptVet(payload) {
     `- return at most ${payload.limit} hits`,
     "- each hit must reference an existing note_id from the input",
     "",
-    fewShots ? `Few-shot examples:\n${fewShots}\n` : "",
-    "",
     "Input JSON:",
     JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 
-function retrievalPrompt(payload) {
+function legacyRetrievalPrompt(payload) {
   const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
-  return intent === "vet" ? retrievalPromptVet(payload) : retrievalPromptTask(payload);
+  return intent === "vet" ? legacyRetrievalPromptVet(payload) : legacyRetrievalPromptTask(payload);
+}
+
+function operationOutputRules(operation, payload) {
+  if (operation === "taste_extract") {
+    return [
+      `- schema_version must be ${TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION}`,
+      "- scene must name the concrete engineering context or trigger situation",
+      "- content_type must describe the recognized judgment type, not the storage kind",
+      "- alternatives can be incomplete, but include nearby options when recoverable from context",
+      "- choice must state the preferred path or judgment",
+      "- rationale must explain why this choice is favored",
+      "- evidence must quote or paraphrase the supporting session signal",
+      "- pattern_hint should summarize the reusable trigger or pattern",
+      "- confidence should reflect extraction confidence, not final durability confidence"
+    ];
+  }
+  if (operation === "taste_adjudicate") {
+    return [
+      `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
+      `- distill_version must be ${payload.session?.distill_version || payload.distill_version}`,
+      `- allowed candidate kinds: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+      `- allowed content_type values: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}`,
+      `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`
+    ];
+  }
+  if (operation === "governance_handoff") {
+    return [
+      `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+      `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
+      `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+      "- always include target_note_id, target_candidate_index, and note",
+      "- use null for target_note_id, target_candidate_index, or note when that field does not apply"
+    ];
+  }
+  if (operation === "retrieve_task" || operation === "retrieve_vet") {
+    return [
+      `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+      `- return at most ${payload.limit} hits`,
+      "- each hit must reference an existing note_id from the input"
+    ];
+  }
+  throw new Error(`Unsupported operation for output rules: ${operation}`);
+}
+
+export function compileMemoryDistillPrompt({ operation, payload, context = {} }) {
+  if (!memoryDistillCompilerEnabled()) {
+    const prompt =
+      operation === "taste_extract" ? legacyTasteExtractPrompt(payload)
+        : operation === "taste_adjudicate" ? legacyTasteAdjudicatePrompt(payload)
+          : operation === "governance_handoff" && context?.batch ? legacyGovernanceBatchPrompt(payload)
+            : operation === "governance_handoff" ? legacyGovernancePrompt(payload)
+              : operation === "retrieve_task" ? legacyRetrievalPromptTask(payload)
+                : operation === "retrieve_vet" ? legacyRetrievalPromptVet(payload)
+                  : legacyRetrievalPrompt(payload);
+    return {
+      prompt,
+      metadata: {
+        skill_name: MEMORY_DISTILL_SKILL_NAME,
+        skill_version: "legacy",
+        prompt_pack_version: "legacy",
+        example_pack_version: "legacy",
+        operation_spec_hash: `legacy:${operation}`,
+        compiler_mode: "legacy"
+      }
+    };
+  }
+
+  const { instruction } = loadMemoryDistillOperation(operation);
+  const examples = loadMemoryDistillExamples(operation).slice(
+    0,
+    Number.isInteger(loadMemoryDistillOperation(operation).config.max_examples)
+      ? loadMemoryDistillOperation(operation).config.max_examples
+      : loadMemoryDistillExamples(operation).length
+  );
+  const assets = loadMemoryDistillAssets(operation);
+  const metadata = {
+    ...promptMetadataFromCompiledPieces(operation, instruction, examples, assets),
+    compiler_mode: "skill_compiler"
+  };
+  const sections = [
+    `You are executing the ${MEMORY_DISTILL_SKILL_NAME} semantic skill.`,
+    `Skill operation: ${operation}`,
+    "",
+    instruction
+  ];
+  if (Object.keys(assets).length > 0) {
+    sections.push("", "Canonical semantic assets:");
+    if (assets.taxonomy) {
+      sections.push("Taxonomy JSON:", JSON.stringify(assets.taxonomy, null, 2));
+    }
+    if (assets.storage_kind_map) {
+      sections.push("Storage kind map JSON:", JSON.stringify(assets.storage_kind_map, null, 2));
+    }
+    if (assets.rubrics) {
+      sections.push("Rubrics JSON:", JSON.stringify(assets.rubrics, null, 2));
+    }
+  }
+  const fewShots = formatFewShotExamples(examples);
+  if (fewShots) {
+    sections.push("", "Few-shot examples:", fewShots);
+  }
+  sections.push("", "Output rules:", ...operationOutputRules(operation, payload), "", "Input JSON:", JSON.stringify(payload, null, 2));
+  return {
+    prompt: sections.join("\n"),
+    metadata
+  };
 }
 
 function writeTempJson(prefix, value) {
@@ -714,12 +933,16 @@ export async function extractTasteCandidatesFromSession(projectRoot, session) {
     }))
   };
   const startedAt = Date.now();
+  const compiled = compileMemoryDistillPrompt({
+    operation: "taste_extract",
+    payload
+  });
   const result = await runSemanticOperation({
     operation: "taste_extract",
     projectRoot,
     payload,
     schema: tasteExtractCandidateSetJsonSchema(),
-    prompt: tasteExtractPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidTasteExtractCandidateSet(result);
   return {
@@ -727,7 +950,8 @@ export async function extractTasteCandidatesFromSession(projectRoot, session) {
     semantic_trace: {
       operation: "taste_extract_completed",
       duration_ms: Date.now() - startedAt,
-      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0,
+      ...compiled.metadata
     }
   };
 }
@@ -746,12 +970,16 @@ export async function adjudicateTasteCandidates(projectRoot, session, extractedC
     candidates: extractedCandidateSet.candidates
   });
   const startedAt = Date.now();
+  const compiled = compileMemoryDistillPrompt({
+    operation: "taste_adjudicate",
+    payload
+  });
   const result = await runSemanticOperation({
     operation: "taste_adjudicate",
     projectRoot,
     payload,
     schema: memoryDistillCandidateSetJsonSchema(),
-    prompt: tasteAdjudicatePrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidMemoryDistillCandidateSet(result);
   return {
@@ -759,7 +987,8 @@ export async function adjudicateTasteCandidates(projectRoot, session, extractedC
     semantic_trace: {
       operation: "taste_adjudicate_completed",
       duration_ms: Date.now() - startedAt,
-      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0,
+      ...compiled.metadata
     }
   };
 }
@@ -804,15 +1033,23 @@ export async function governMemoryCandidate(projectRoot, candidate, existingNote
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: "governance_handoff",
+    payload,
+    context: { batch: false }
+  });
   const result = await runSemanticOperation({
     operation: "govern",
     projectRoot,
     payload,
     schema: buildGovernanceSchema(),
-    prompt: governancePrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidGovernanceDecision(result, existingNotes);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }
 
 export async function governMemoryCandidates(projectRoot, candidates, existingNotes, scope = "project") {
@@ -843,15 +1080,23 @@ export async function governMemoryCandidates(projectRoot, candidates, existingNo
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: "governance_handoff",
+    payload,
+    context: { batch: true }
+  });
   const result = await runSemanticOperation({
     operation: "govern_batch",
     projectRoot,
     payload,
     schema: buildGovernanceBatchSchema(),
-    prompt: governanceBatchPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidGovernanceBatchResult(result, candidates, existingNotes);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }
 
 export async function rankRelevantMemories(projectRoot, query, notes, options = {}) {
@@ -862,13 +1107,20 @@ export async function rankRelevantMemories(projectRoot, query, notes, options = 
     context: isPlainObject(options.context) ? options.context : {},
     notes: stripFileFields(notes)
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: resolveMemoryDistillOperationName("retrieve", payload),
+    payload
+  });
   const result = await runSemanticOperation({
     operation: "retrieve",
     projectRoot,
     payload,
     schema: buildRankingSchema(),
-    prompt: retrievalPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidRankingResult(result, notes, limit);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }
