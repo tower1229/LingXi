@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "stable_storage_kinds": [
+    "preference",
+    "constraint",
+    "anti_pattern",
+    "review_tendency",
+    "heuristic"
+  ],
+  "default_mapping": {
+    "preference": "preference",
+    "decision_experience": "heuristic",
+    "domain_knowledge": "constraint",
+    "product_knowledge": "constraint",
+    "org_experience": "constraint",
+    "heuristic": "heuristic",
+    "pattern": "heuristic",
+    "anti_pattern_signal": "anti_pattern",
+    "troubleshooting": "heuristic"
+  }
+}
