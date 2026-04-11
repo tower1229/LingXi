@@ -16,7 +16,10 @@ describe("install manifest codex runtime", () => {
     const manifest = loadManifest();
     const files = new Set(manifest.files || []);
 
+    assert.ok(files.has(".agents/plugins/marketplace.json"));
     assert.ok(files.has(".codex-plugin/plugin.json"));
+    assert.ok(files.has("assets/logo-mark.svg"));
+    assert.ok(files.has("assets/logo-primary.svg"));
     assert.ok(files.has("scripts/_lingxi-memory.mjs"));
     assert.ok(files.has("scripts/_lingxi-memory-semantic.mjs"));
     assert.ok(files.has("scripts/_lingxi-codex-sessions.mjs"));

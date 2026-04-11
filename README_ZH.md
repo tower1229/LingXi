@@ -28,6 +28,7 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 ## 你会得到什么
 
 - **Codex-native 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **仓库级 marketplace 入口**：[`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **可见工作流**：[`skills/task/`](./skills/task/) 和 [`skills/vet/`](./skills/vet/)
 - **持久记忆核心**：[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
 - **项目本地运行时**：`.lingxi/`

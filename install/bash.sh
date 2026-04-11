@@ -134,10 +134,10 @@ LINGXI_VERSION="$(get_json_string "version")"
 
 info "Installing LingXi 2.0..."
 info "Source: ${REPO_OWNER}/${REPO_NAME}"
-info "Surface: Codex-native (.codex-plugin, skills, scripts, templates, .lingxi)"
+info "Surface: Codex-native (.agents/plugins, .codex-plugin, assets, skills, scripts, templates, .lingxi)"
 
 MANAGED_EXISTS=false
-if [ -f ".codex-plugin/plugin.json" ] || [ -d "skills" ] || [ -d ".lingxi" ] || [ -f "install/install-manifest.json" ]; then
+if [ -f ".agents/plugins/marketplace.json" ] || [ -f ".codex-plugin/plugin.json" ] || [ -d "skills" ] || [ -d ".lingxi" ] || [ -f "install/install-manifest.json" ]; then
   MANAGED_EXISTS=true
 fi
 

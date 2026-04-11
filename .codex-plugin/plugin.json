@@ -2,5 +2,42 @@
   "name": "lingxi",
   "version": "2.0.0",
   "description": "Codex-native task, vet, and engineering taste memory workflow.",
-  "skills": "skills"
+  "author": {
+    "name": "tower1229",
+    "email": "tower1229@gmail.com",
+    "url": "https://github.com/tower1229"
+  },
+  "homepage": "https://github.com/tower1229/LingXi",
+  "repository": "https://github.com/tower1229/LingXi",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "workflow",
+    "task-planning",
+    "engineering-memory",
+    "quality"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "LingXi",
+    "shortDescription": "Sharper tasks, stronger vetting, and durable engineering taste.",
+    "longDescription": "LingXi helps teams turn rough requests into engineer-ready tasks, challenge weak plans before implementation, and accumulate durable engineering judgment over time.",
+    "developerName": "tower1229",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/tower1229/LingXi",
+    "privacyPolicyURL": "https://github.com/tower1229/LingXi/blob/main/docs/privacy-policy.md",
+    "termsOfServiceURL": "https://github.com/tower1229/LingXi/blob/main/docs/terms-of-service.md",
+    "defaultPrompt": [
+      "Use LingXi task to turn this rough request into an engineer-ready task doc.",
+      "Use LingXi vet to challenge this task before implementation starts.",
+      "Use LingXi memory to apply durable engineering preferences to this repository request."
+    ],
+    "brandColor": "#D90429",
+    "composerIcon": "./assets/logo-mark.svg",
+    "logo": "./assets/logo-primary.svg"
+  }
 }

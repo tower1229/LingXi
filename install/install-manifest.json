@@ -1,7 +1,13 @@
 {
     "version": "2.0.0",
     "files": [
+        ".agents/plugins/marketplace.json",
         ".codex-plugin/plugin.json",
+        "assets/logo-guidelines.md",
+        "assets/logo-mark.svg",
+        "assets/logo-mono.svg",
+        "assets/logo-primary.svg",
+        "assets/logo.svg",
         "skills/memory-retrieve/SKILL.md",
         "skills/memory-retrieve/scripts/retrieve-memory.mjs",
         "skills/memory-write/SKILL.md",
