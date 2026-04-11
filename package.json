@@ -9,7 +9,6 @@
     "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
     "lx:create-automation": "node scripts/lx-create-automation.mjs",
     "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
-    "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
     "lx:setup": "node scripts/lingxi-setup.mjs",
     "lx:validate-plugin": "node scripts/validate-template.mjs",
     "lx:uninstall": "node scripts/lx-uninstall.mjs",

@@ -94,6 +94,8 @@ node scripts/lx-bootstrap.mjs
 This step:
 
 - `.lingxi/`
+- `.codex/config.toml`
+- `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
 - registers the generated session-distill automation in Codex
@@ -110,8 +112,9 @@ If you need to run the low-level steps separately for debugging or inspection:
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "your current repository request"
 ```
+
+After setup, LingXi injects relevant memory automatically for meaningful repository turns through repo-local Codex `UserPromptSubmit` hooks when Codex hooks are active.
 
 For semantic-runtime debugging only, you may override:
 

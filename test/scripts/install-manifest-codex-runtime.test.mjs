@@ -27,7 +27,7 @@ describe("install manifest codex runtime", () => {
     assert.ok(files.has("scripts/lx-bootstrap.mjs"));
     assert.ok(files.has("scripts/lx-create-automation.mjs"));
     assert.ok(files.has("scripts/lx-distill-sessions.mjs"));
-    assert.ok(files.has("scripts/lx-memory-brief.mjs"));
+    assert.ok(files.has("scripts/lx-memory-hook.mjs"));
     assert.ok(files.has("scripts/lx-select-sessions.mjs"));
     assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
     assert.ok(files.has("scripts/lingxi-setup.mjs"));
@@ -41,6 +41,8 @@ describe("install manifest codex runtime", () => {
     const runtimeFiles = new Set(manifest.runtimeFiles || []);
 
     assert.ok(runtimeFiles.has(".lingxi"));
+    assert.ok(runtimeFiles.has(".codex/config.toml"));
+    assert.ok(runtimeFiles.has(".codex/hooks.json"));
     assert.ok(runtimeFiles.has(".codex/agents/lingxi-session-distill.toml"));
   });
 
@@ -50,7 +52,6 @@ describe("install manifest codex runtime", () => {
       "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
       "lx:create-automation": "node scripts/lx-create-automation.mjs",
       "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
-      "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
       "lx:setup": "node scripts/lingxi-setup.mjs",
       "lx:uninstall": "node scripts/lx-uninstall.mjs"
     });

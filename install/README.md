@@ -69,6 +69,7 @@ node scripts/lx-bootstrap.mjs
 这一步会：
 
 - 生成 `.lingxi/` 与 `.codex/agents/` 运行时骨架
+- 生成 `.codex/config.toml` 与 `.codex/hooks.json`
 - 生成 `.lingxi/setup/automation.session-distill.toml`
 - 把该自动化配置注册成实际的 Codex 自动化任务
 
@@ -82,8 +83,9 @@ LingXi 默认把该自动化注册为 `local` 执行环境，而不是 `worktree
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
+
+setup 完成后，只要 Codex hooks 已启用，LingXi 就会通过仓库级 `UserPromptSubmit` hook 自动为有意义的仓库请求注入相关 memory。
 
 或者：
 

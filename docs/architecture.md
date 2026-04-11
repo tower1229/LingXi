@@ -79,7 +79,7 @@ Primary runtime roots:
 
 1. Rebuild the full Cursor-era workflow.
 2. Analyze every user message inline by default.
-3. Depend on experimental hooks as the main memory mechanism.
+3. Depend on hooks for background distillation or the host-agnostic memory core.
 4. Build a large multi-agent orchestration system in V1.
 
 ---
@@ -101,6 +101,8 @@ Expected runtime structure in target repositories:
   setup/
     automation.session-distill.toml
 .codex/
+  config.toml
+  hooks.json
   agents/
     lingxi-session-distill.toml
 AGENTS.md
@@ -138,6 +140,16 @@ AGENTS.md
 - stores the generated automation configuration artifact for auditability
 - acts as the source artifact consumed by bootstrap when registering Codex automation
 
+`.codex/config.toml`
+
+- enables Codex hooks for the repository runtime
+- preserves repo-local Codex configuration overrides managed by setup
+
+`.codex/hooks.json`
+
+- stores the repo-local Codex hook adapter configuration for automatic memory injection
+- keeps generic conversation memory consumption in the Codex adapter layer rather than the host-agnostic core
+
 ---
 
 ## Skills Architecture
@@ -161,6 +173,7 @@ Memory consumption should follow a different rule from memory writing:
 - memory writing stays conservative and background-oriented
 - memory retrieval should be foreground and default for meaningful repository-scoped work
 - explicit workflows such as `task` and `vet` may use richer workflow-specific retrieval context, but they should not be the only consumers of LingXi memory
+- for Codex, meaningful generic repository turns should consume memory through a repo-local `UserPromptSubmit` hook adapter rather than a manual command
 
 This also means the memory-consumption path should stay host-agnostic:
 
@@ -748,10 +761,12 @@ This keeps retrieval cheap and notes readable.
 1. create `.lingxi/` directories
 2. initialize empty state files
 3. initialize `memory/INDEX.md`
-4. generate `.codex/agents/lingxi-session-distill.toml`
-5. generate `.lingxi/setup/automation.session-distill.toml`
-6. register Codex automation through bootstrap
-7. generate `AGENTS.md` only when missing
+4. merge or create `.codex/config.toml`
+5. merge or create `.codex/hooks.json`
+6. generate `.codex/agents/lingxi-session-distill.toml`
+7. generate `.lingxi/setup/automation.session-distill.toml`
+8. register Codex automation through bootstrap
+9. generate `AGENTS.md` only when missing
 
 ### Setup Safety Rules
 

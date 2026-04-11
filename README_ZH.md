@@ -94,6 +94,8 @@ node scripts/lx-bootstrap.mjs
 这一步会同时：
 
 - `.lingxi/`
+- `.codex/config.toml`
+- `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
 - 在 Codex 中注册 session-distill 自动化任务
@@ -110,8 +112,9 @@ node scripts/lx-bootstrap.mjs
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
+
+setup 完成后，只要 Codex hooks 已启用，LingXi 就会通过仓库级 `UserPromptSubmit` hook 在有意义的仓库对话里自动注入相关 memory。
 
 如需排查 semantic runtime，可临时覆盖：
 
