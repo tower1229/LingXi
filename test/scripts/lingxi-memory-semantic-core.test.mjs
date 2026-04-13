@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
@@ -17,7 +16,7 @@ const invalidGovernanceRunnerPath = path.resolve(__dirname, "../fixtures/memory-
 const invalidRankingRunnerPath = path.resolve(__dirname, "../fixtures/memory-semantic-invalid-ranking-runner.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-memory-semantic-core-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-memory-semantic-core-"));
 }
 
 function writeNote(projectRoot, scope, filename, content) {
@@ -30,6 +29,7 @@ describe("lingxi memory semantic core", () => {
   let tempDir;
   const originalRunnerModule = process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
   const originalCodexBin = process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN;
+  const originalTestTmpDir = process.env.TEST_TMPDIR;
 
   afterEach(() => {
     if (originalRunnerModule) {
@@ -41,6 +41,11 @@ describe("lingxi memory semantic core", () => {
       process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN = originalCodexBin;
     } else {
       delete process.env.LINGXI_MEMORY_SEMANTIC_CODEX_BIN;
+    }
+    if (originalTestTmpDir) {
+      process.env.TEST_TMPDIR = originalTestTmpDir;
+    } else {
+      delete process.env.TEST_TMPDIR;
     }
     if (tempDir && fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -90,6 +95,88 @@ Document rollback path and rollback order before implementation for backend inte
     assert.strictEqual(hits[0].id, "MEM-001");
   });
 
+  it("ranks the same memory pool differently for task and vet intent", async () => {
+    process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = memorySemanticRunnerModulePath;
+    tempDir = createTempDir();
+    ensureRuntimeState(tempDir);
+    writeNote(
+      tempDir,
+      "project",
+      "MEM-001.task.md",
+      `---
+id: MEM-001
+title: Prefer explicit rollback notes
+kind: preference
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When planning backend integration changes
+content_type: preference
+decision_gain: 3
+trigger_clarity: 3
+stability: 1
+---
+
+# One-liner
+
+Prefer explicit rollback path before implementation for backend integration changes.
+
+# Decision / Preference
+
+Document rollback path and rollback order before implementation for backend integration changes.
+
+# Evidence
+
+- Maintainers repeatedly ask for rollback visibility.
+`,
+    );
+    writeNote(
+      tempDir,
+      "project",
+      "MEM-002.vet.md",
+      `---
+id: MEM-002
+title: Avoid vague rollback plans
+kind: anti_pattern
+scope: project
+source: session-distill
+updated_at: 2026-04-07T12:00:00Z
+when_to_load:
+  - When reviewing backend integration changes
+content_type: anti_pattern_signal
+decision_gain: 1
+trigger_clarity: 1
+stability: 3
+---
+
+# One-liner
+
+Avoid vague rollback plans for backend integration changes.
+
+# Decision / Preference
+
+Treat missing rollback order as a review risk for backend integration changes.
+
+# Evidence
+
+- Review comments repeatedly flag rollback ambiguity.
+`,
+    );
+
+    const taskHits = await retrieveRelevantMemoryHits(tempDir, "backend integration rollback", 3, {
+      caller: "task",
+      intent: "task"
+    });
+    const vetHits = await retrieveRelevantMemoryHits(tempDir, "backend integration rollback", 3, {
+      caller: "vet",
+      intent: "vet"
+    });
+
+    assert.strictEqual(taskHits[0].id, "MEM-001");
+    assert.strictEqual(vetHits[0].id, "MEM-002");
+  });
+
   it("merges semantically duplicate candidates inside one batch governance pass", async () => {
     process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE = memorySemanticRunnerModulePath;
     tempDir = createTempDir();
@@ -118,6 +205,8 @@ Document rollback path and rollback order before implementation for backend inte
 
     assert.strictEqual(results[0].operation, "created");
     assert.strictEqual(results[1].operation, "merged");
+    assert.strictEqual(results.semantic_meta?.skill_name, "memory-distill");
+    assert.strictEqual(results.semantic_meta?.compiler_mode, "skill_compiler");
     const notes = loadMemoryNotes(tempDir);
     assert.strictEqual(notes.length, 1);
     assert.match(notes[0].decision, /explicit interfaces/i);
@@ -189,6 +278,7 @@ Document rollback path and rollback order before implementation for backend inte
     delete process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE;
     tempDir = createTempDir();
     ensureRuntimeState(tempDir);
+    process.env.TEST_TMPDIR = tempDir;
 
     const argsFile = path.join(tempDir, "codex-args.json");
     const stubPath = path.join(tempDir, "codex-stub.mjs");
@@ -290,5 +380,6 @@ fs.writeFileSync(outputFile, JSON.stringify(payload, null, 2) + "\\n", "utf8");
     assert.ok(args.includes("exec"));
     assert.ok(!args.includes("-a"));
     assert.ok(!args.includes("--approval-mode"));
+    delete process.env.TEST_TMPDIR;
   });
 });

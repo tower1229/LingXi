@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import process from "node:process";
 import {
+  appendMemoryOpsLog,
   detectProjectContext,
   findTaskFile,
   formatMemoryRef,
@@ -286,6 +287,7 @@ function buildVetMemoryQuery(task) {
 function buildVetMemoryContext(task, projectContext, signals) {
   return {
     caller: "vet",
+    intent: "vet",
     task_id: normalizeText(task.id),
     title: normalizeText(task.title),
     type: normalizeText(task.type),
@@ -952,12 +954,30 @@ async function main() {
   const task = parseTaskDocument(fs.readFileSync(file, "utf8"), file);
   const projectContext = detectProjectContext(projectRoot);
   const signals = taskReviewSignals(task);
+  const relevantMemory = await retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3, {
+    ...buildVetMemoryContext(task, projectContext, signals)
+  });
+  if (relevantMemory.length > 0 && !relevantMemory.some((note) => taskAppliesMemory(task, note))) {
+    appendMemoryOpsLog(projectRoot, {
+      operation: "retrieve_gap_detected",
+      duration_ms: 0,
+      skill_name: normalizeText(relevantMemory.semantic_meta?.skill_name),
+      skill_version: normalizeText(relevantMemory.semantic_meta?.skill_version),
+      prompt_pack_version: normalizeText(relevantMemory.semantic_meta?.prompt_pack_version),
+      example_pack_version: normalizeText(relevantMemory.semantic_meta?.example_pack_version),
+      operation_spec_hash: normalizeText(relevantMemory.semantic_meta?.operation_spec_hash),
+      compiler_mode: normalizeText(relevantMemory.semantic_meta?.compiler_mode),
+      caller: "vet",
+      intent: "vet",
+      task_id: normalizeText(task.id),
+      hit_count: relevantMemory.length,
+      missing_note_ids: relevantMemory.map((note) => note.id)
+    });
+  }
   const result = vetTask(
     task,
     projectContext,
-    await retrieveRelevantMemoryHits(projectRoot, buildVetMemoryQuery(task), 3, {
-      ...buildVetMemoryContext(task, projectContext, signals)
-    })
+    relevantMemory
   );
   const report = {
     task_id: task.id,

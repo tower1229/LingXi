@@ -16,7 +16,8 @@ const MANIFEST_RELATIVE = "install/install-manifest.json";
 const KNOWN_MANAGED_MARKERS = [
   ".codex-plugin/plugin.json",
   "scripts/_lingxi-memory.mjs",
-  "scripts/lx-memory-brief.mjs",
+  "scripts/lx-memory-hook.mjs",
+  "scripts/lx-memory-hook-claude.mjs",
   "scripts/lx-select-sessions.mjs",
   "scripts/lx-distill-sessions.mjs",
   "scripts/lx-create-automation.mjs",
@@ -26,22 +27,30 @@ const KNOWN_MANAGED_MARKERS = [
   "scripts/lx-uninstall.mjs",
   "scripts/_lingxi-codex-sessions.mjs",
   "scripts/_lingxi-codex-session-select.mjs",
+  "scripts/_lingxi-claude-sessions.mjs",
   "skills/task/SKILL.md",
   "skills/vet/SKILL.md",
   "skills/memory-retrieve/SKILL.md",
   "skills/memory-write/SKILL.md",
   "skills/session-distill/SKILL.md",
   "templates/agents/lingxi-session-distill.toml.tmpl",
+  "templates/agents/lingxi-session-distill.claude.md.tmpl",
   "templates/automations/session-distill.toml.tmpl",
   ".lingxi",
-  ".codex/agents/lingxi-session-distill.toml"
+  ".codex/config.toml",
+  ".codex/hooks.json",
+  ".codex/agents/lingxi-session-distill.toml",
+  ".claude/settings.json",
+  ".claude/agents/lingxi-session-distill.md",
+  ".claude/skills",
+  "CLAUDE.md"
 ];
 const DEFAULT_MANAGED_PACKAGE_SCRIPTS = {
   "lx:create-automation": "node scripts/lx-create-automation.mjs",
   "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
   "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
-  "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
   "lx:setup": "node scripts/lingxi-setup.mjs",
+  "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",
   "lx:uninstall": "node scripts/lx-uninstall.mjs"
 };
 
@@ -64,10 +73,29 @@ function loadManifest() {
   }
 }
 
+function collectRuntimePaths(runtimeFiles) {
+  if (!runtimeFiles) return [];
+  // New grouped format: { common: [...], codex: [...], claude: [...] }
+  if (!Array.isArray(runtimeFiles) && typeof runtimeFiles === "object") {
+    const paths = [];
+    for (const group of Object.values(runtimeFiles)) {
+      if (Array.isArray(group)) {
+        paths.push(...group);
+      }
+    }
+    return paths;
+  }
+  // Legacy flat array format
+  if (Array.isArray(runtimeFiles)) {
+    return runtimeFiles;
+  }
+  return [];
+}
+
 function collectPathsToDelete(manifest) {
   const out = [];
   (manifest.files || []).forEach((p) => out.push(p));
-  (manifest.runtimeFiles || []).forEach((p) => out.push(p));
+  collectRuntimePaths(manifest.runtimeFiles).forEach((p) => out.push(p));
 
   if (manifest.manifestCopyPath) {
     out.push(manifest.manifestCopyPath);

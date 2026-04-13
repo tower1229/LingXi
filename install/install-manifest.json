@@ -10,6 +10,25 @@
         "assets/logo.svg",
         "skills/memory-retrieve/SKILL.md",
         "skills/memory-retrieve/scripts/retrieve-memory.mjs",
+        "skills/memory-distill/SKILL.md",
+        "skills/memory-distill/references/examples/governance-handoff/001-merge-strengthen.json",
+        "skills/memory-distill/references/examples/governance-handoff/002-skip-unclear-trigger.json",
+        "skills/memory-distill/references/examples/retrieve-task/001-task-prefers-implementation-guidance.json",
+        "skills/memory-distill/references/examples/retrieve-vet/001-vet-prefers-risk-memory.json",
+        "skills/memory-distill/references/examples/taste-adjudicate/001-promote-strong-preference.json",
+        "skills/memory-distill/references/examples/taste-adjudicate/002-reject-low-value.json",
+        "skills/memory-distill/references/examples/taste-extract/001-positive-paraphrase.json",
+        "skills/memory-distill/references/examples/taste-extract/002-negative-non-durable.json",
+        "skills/memory-distill/references/examples/taste-extract/003-borderline-implicit-high-value.json",
+        "skills/memory-distill/references/operations/governance-handoff.md",
+        "skills/memory-distill/references/operations/retrieve-task.md",
+        "skills/memory-distill/references/operations/retrieve-vet.md",
+        "skills/memory-distill/references/rubrics.json",
+        "skills/memory-distill/references/skill-spec.json",
+        "skills/memory-distill/references/operations/taste-adjudicate.md",
+        "skills/memory-distill/references/operations/taste-extract.md",
+        "skills/memory-distill/references/storage-kind-map.json",
+        "skills/memory-distill/references/taxonomy.json",
         "skills/memory-write/SKILL.md",
         "skills/memory-write/references/memory-note-template.md",
         "skills/memory-write/references/write-rules.md",
@@ -18,6 +37,7 @@
         "skills/session-distill/references/distill-rules.md",
         "skills/session-distill/scripts/memory-distill-candidate-set.mjs",
         "skills/session-distill/scripts/distill-session.mjs",
+        "skills/session-distill/scripts/taste-extract-candidate-set.mjs",
         "skills/task/SKILL.md",
         "skills/task/references/task-doc-template.md",
         "skills/task/references/task-spec.schema.json",
@@ -40,27 +60,42 @@
         "scripts/_lingxi-memory-semantic.mjs",
         "scripts/_lingxi-codex-sessions.mjs",
         "scripts/_lingxi-codex-session-select.mjs",
+        "scripts/_lingxi-claude-sessions.mjs",
         "scripts/lx-bootstrap.mjs",
         "scripts/lx-create-automation.mjs",
         "scripts/lx-distill-sessions.mjs",
-        "scripts/lx-memory-brief.mjs",
+        "scripts/lx-memory-hook.mjs",
+        "scripts/lx-memory-hook-claude.mjs",
         "scripts/lx-select-sessions.mjs",
         "scripts/lingxi-memory-index.mjs",
         "scripts/lingxi-setup.mjs",
         "scripts/lx-uninstall.mjs",
         "templates/agents/lingxi-session-distill.toml.tmpl",
+        "templates/agents/lingxi-session-distill.claude.md.tmpl",
         "templates/automations/session-distill.toml.tmpl"
     ],
-    "runtimeFiles": [
-        ".lingxi",
-        ".codex/agents/lingxi-session-distill.toml"
-    ],
+    "runtimeFiles": {
+        "common": [
+            ".lingxi"
+        ],
+        "codex": [
+            ".codex/config.toml",
+            ".codex/hooks.json",
+            ".codex/agents/lingxi-session-distill.toml"
+        ],
+        "claude": [
+            ".claude/settings.json",
+            ".claude/agents/lingxi-session-distill.md",
+            ".claude/skills",
+            "CLAUDE.md"
+        ]
+    },
     "packageScripts": {
         "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
         "lx:create-automation": "node scripts/lx-create-automation.mjs",
         "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
-        "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
         "lx:setup": "node scripts/lingxi-setup.mjs",
+        "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
     },
     "manifestCopyPath": "install/install-manifest.json"

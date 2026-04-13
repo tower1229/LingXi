@@ -2,7 +2,7 @@
 
 # LíngXī（灵犀）
 
-**A Codex-native workflow that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
+**A workflow plugin for Codex and Claude Code that helps teams write sharper tasks, challenge weak plans before implementation, and accumulate durable engineering taste over time.**
 
 LingXi 2.0 is released and ready for release at the current product scope.
 
@@ -27,10 +27,11 @@ LingXi is built to improve the quality of work before code is written:
 
 ## What You Get
 
-- **Codex-native plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Codex plugin surface** via [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Claude Code adapter** via `.claude/settings.json`, `.claude/agents/`, `.claude/skills/`
 - **Repo marketplace entry** in [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **Visible workflows** in [`skills/task/`](./skills/task/) and [`skills/vet/`](./skills/vet/)
-- **Durable memory core** in [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
+- **Durable memory core** in [`skills/memory-distill/`](./skills/memory-distill/), [`skills/memory-retrieve/`](./skills/memory-retrieve/), [`skills/memory-write/`](./skills/memory-write/), and [`skills/session-distill/`](./skills/session-distill/)
 - **Project-local runtime** under `.lingxi/`
 - **Background distillation agent template** in [`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
 - **Deterministic setup and runtime helpers** in [`scripts/`](./scripts/)
@@ -48,6 +49,8 @@ For the Codex runtime, session distillation now runs through a deterministic sel
 - Codex session artifacts are discovered and filtered by a Codex-specific adapter
 - `node scripts/lx-distill-sessions.mjs` orchestrates the scan
 - `skills/session-distill/scripts/distill-session.mjs` remains the single-session durable-memory worker
+- `skills/memory-distill/` is the canonical semantic source of truth for taste extraction, adjudication, and retrieval intent prompting
+- the runtime no longer maintains a legacy prompt fallback path; `skill-spec.json` is the authoritative source for prompt/example versioning
 
 The result is a workflow that stays narrow at the surface, but compounds quality underneath.
 
@@ -92,6 +95,8 @@ node scripts/lx-bootstrap.mjs
 This step:
 
 - `.lingxi/`
+- `.codex/config.toml`
+- `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
 - registers the generated session-distill automation in Codex
@@ -108,8 +113,14 @@ If you need to run the low-level steps separately for debugging or inspection:
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "your current repository request"
 ```
+
+After setup, LingXi injects relevant memory automatically for meaningful repository turns through repo-local Codex `UserPromptSubmit` hooks when Codex hooks are active.
+
+For semantic-runtime debugging only, you may override:
+
+- `LINGXI_MEMORY_DISTILL_SKILL_DIR` to point at an alternate local `memory-distill` skill asset root
+- `LINGXI_TMPDIR` to choose a writable temp root for structured semantic calls
 
 or:
 

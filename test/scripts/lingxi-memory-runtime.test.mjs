@@ -35,6 +35,7 @@ describe("lingxi memory runtime core", () => {
 
     assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "memory", "INDEX.md")));
     assert.ok(fs.existsSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json")));
+    assert.ok(!fs.existsSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl")));
     assert.ok(!fs.existsSync(path.join(tempDir, ".codex", "agents")));
   });
 });

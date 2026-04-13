@@ -69,6 +69,36 @@ describe("lingxi memory write", () => {
     assert.ok(indexContent.includes("Prefer explicit interfaces"));
   });
 
+  it("persists optional recognition metadata without changing the note body shape", async () => {
+    tempDir = createTempDir();
+    const payload = {
+      title: "Prefer explicit interfaces",
+      kind: "preference",
+      when_to_load: ["When adding integration boundaries"],
+      one_liner: "Prefer explicit interfaces over hidden coupling.",
+      decision: "Use explicit interfaces when module boundaries matter.",
+      evidence: ["Repeated user preference across architecture discussions."],
+      source: "session-distill",
+      content_type: "preference",
+      decision_gain: 3,
+      reusability: 3,
+      trigger_clarity: 2,
+      verifiability: 2,
+      stability: 3,
+      source_session_ids: ["session-001"]
+    };
+
+    const result = await runWrite(tempDir, payload);
+    assert.strictEqual(result.code, 0, result.stderr);
+    const summary = JSON.parse(result.stdout);
+    const noteContent = fs.readFileSync(summary.file, "utf8");
+    assert.match(noteContent, /content_type: preference/);
+    assert.match(noteContent, /decision_gain: 3/);
+    assert.match(noteContent, /source_session_ids:\n  - session-001/);
+    assert.match(noteContent, /# One-liner/);
+    assert.match(noteContent, /# Decision \/ Preference/);
+  });
+
   it("merges an identical durable note instead of creating a duplicate", async () => {
     tempDir = createTempDir();
     const payload = {

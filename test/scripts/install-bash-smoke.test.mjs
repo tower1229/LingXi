@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import http from "node:http";
-import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
@@ -12,7 +11,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 const installerPath = path.join(repoRoot, "install", "bash.sh");
 
 function createTempDir(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  return fs.mkdtempSync(path.join("/tmp", prefix));
 }
 
 function createStaticServer(rootDir) {
@@ -144,12 +143,13 @@ describe("install/bash.sh smoke", () => {
     assert.strictEqual(pkg.scripts["lx:bootstrap"], "node scripts/lx-bootstrap.mjs");
     assert.strictEqual(pkg.scripts["lx:create-automation"], "node scripts/lx-create-automation.mjs");
     assert.strictEqual(pkg.scripts["lx:distill-sessions"], "node scripts/lx-distill-sessions.mjs");
-    assert.strictEqual(pkg.scripts["lx:memory-brief"], "node scripts/lx-memory-brief.mjs");
     assert.strictEqual(pkg.scripts["lx:setup"], "node scripts/lingxi-setup.mjs");
     assert.strictEqual(pkg.scripts["lx:uninstall"], "node scripts/lx-uninstall.mjs");
 
     assert.ok(fs.existsSync(path.join(projectDir, ".lingxi", "memory", "INDEX.md")));
     assert.ok(fs.existsSync(path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml")));
+    assert.ok(fs.existsSync(path.join(projectDir, ".codex", "config.toml")));
+    assert.ok(fs.existsSync(path.join(projectDir, ".codex", "hooks.json")));
     assert.ok(fs.existsSync(path.join(projectDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(projectDir, "AGENTS.md")));
 

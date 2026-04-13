@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
@@ -13,7 +12,7 @@ const setupPath = path.join(repoRoot, "scripts", "lingxi-setup.mjs");
 const scriptPath = path.join(repoRoot, "skills", "session-distill", "scripts", "distill-session.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-distill-test-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-distill-test-"));
 }
 
 function runNode(script, projectRoot, stdinJson) {
@@ -76,6 +75,32 @@ describe("lingxi session distill", () => {
     assert.strictEqual(state.summary.tracked_sessions, 1);
     assert.strictEqual(state.last_run.operation, "written");
     assert.strictEqual(state.last_run.run_reason, "first_distill");
+    const projectMemoryDir = path.join(tempDir, ".lingxi", "memory", "project");
+    const noteFiles = fs.readdirSync(projectMemoryDir).filter((name) => name.endsWith(".md"));
+    assert.strictEqual(noteFiles.length, 1);
+    const noteContent = fs.readFileSync(path.join(projectMemoryDir, noteFiles[0]), "utf8");
+    assert.match(noteContent, /content_type: preference/);
+    assert.match(noteContent, /decision_gain: 3/);
+    assert.match(noteContent, /source_session_ids:\n  - session-001/);
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(opsLog.some((entry) => entry.operation === "taste_extract_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
+    assert.ok(opsLog.some((entry) => entry.operation === "taste_adjudicate_completed" && entry.session_id === "session-001" && Number.isInteger(entry.duration_ms)));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "distill_governance_applied" &&
+          entry.session_id === "session-001" &&
+          entry.skill_name === "memory-distill" &&
+          typeof entry.prompt_pack_version === "string" &&
+          typeof entry.example_pack_version === "string" &&
+          typeof entry.operation_spec_hash === "string" &&
+          entry.compiler_mode === "skill_compiler"
+      )
+    );
   });
 
   it("skips duplicate distillation for unchanged session content", async () => {
@@ -124,7 +149,7 @@ describe("lingxi session distill", () => {
     assert.strictEqual(summary.run_reason, "distill_version_changed");
 
     const updatedState = JSON.parse(fs.readFileSync(stateFile, "utf8"));
-    assert.strictEqual(updatedState.distill_version, "v1");
+    assert.strictEqual(updatedState.distill_version, "v3");
     assert.strictEqual(updatedState.summary.total_runs, 2);
     assert.strictEqual(updatedState.summary.reprocessed_runs, 1);
     assert.strictEqual(updatedState.last_run.run_reason, "distill_version_changed");

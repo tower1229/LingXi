@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "content_types": [
+    {
+      "id": "preference",
+      "description": "Stable implementation or collaboration preference that shapes future choices."
+    },
+    {
+      "id": "decision_experience",
+      "description": "A reusable tradeoff learned from choosing among competing paths."
+    },
+    {
+      "id": "domain_knowledge",
+      "description": "Reusable technical or domain rule, pitfall, or best practice."
+    },
+    {
+      "id": "product_knowledge",
+      "description": "Product semantics, business rule, acceptance boundary, or feature constraint."
+    },
+    {
+      "id": "org_experience",
+      "description": "Team, organization, process, or collaboration convention with future reuse."
+    },
+    {
+      "id": "heuristic",
+      "description": "Reusable rule of thumb that guides implementation or review."
+    },
+    {
+      "id": "pattern",
+      "description": "Named or nameable engineering pattern with a repeatable scene."
+    },
+    {
+      "id": "anti_pattern_signal",
+      "description": "Repeatable warning sign, failure mode, or architectural smell."
+    },
+    {
+      "id": "troubleshooting",
+      "description": "Reusable debugging path, root-cause clue, or diagnosis sequence."
+    }
+  ]
+}

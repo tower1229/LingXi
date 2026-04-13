@@ -46,7 +46,7 @@ if [ -f "scripts/lx-uninstall.mjs" ]; then
   FAIL=1
 fi
 if [ -f "package.json" ]; then
-  if node -e 'const fs=require("fs"); const pkg=JSON.parse(fs.readFileSync("package.json","utf8")); const scripts=pkg.scripts||{}; process.exit(("lx:bootstrap" in scripts || "lx:create-automation" in scripts || "lx:memory-brief" in scripts || "lx:setup" in scripts || "lx:uninstall" in scripts) ? 1 : 0);'; then
+  if node -e 'const fs=require("fs"); const pkg=JSON.parse(fs.readFileSync("package.json","utf8")); const scripts=pkg.scripts||{}; process.exit(("lx:bootstrap" in scripts || "lx:create-automation" in scripts || "lx:setup" in scripts || "lx:uninstall" in scripts) ? 1 : 0);'; then
     :
   else
     echo "FAIL: package.json 中仍残留 LingXi 注入的脚本"

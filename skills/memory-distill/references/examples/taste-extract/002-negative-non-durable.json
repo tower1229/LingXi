@@ -1,0 +1,16 @@
+{
+  "label": "negative-non-durable",
+  "input": {
+    "session_excerpt": [
+      {
+        "role": "user",
+        "content": "I prefer tea in the morning and nicer conversations."
+      }
+    ]
+  },
+  "output": {
+    "candidates": []
+  },
+  "tags": ["negative", "non_durable"],
+  "language": "en"
+}

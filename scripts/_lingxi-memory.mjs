@@ -2,12 +2,16 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  REUSABILITY_SCOPE_VALUES,
+  TASTE_CONTENT_TYPE_VALUES
+} from "../skills/session-distill/scripts/memory-distill-candidate-set.mjs";
+import {
   governMemoryCandidates,
   rankRelevantMemories
 } from "./_lingxi-memory-semantic.mjs";
 
 export const INDEX_COLUMNS = ["Id", "Kind", "Title", "When to load", "Source", "UpdatedAt", "File"];
-export const DISTILL_VERSION = "v1";
+export const DISTILL_VERSION = "v3";
 export const PROCESSED_SESSIONS_SCHEMA_VERSION = "v2";
 export const MEMORY_KIND_VALUES = new Set([
   "preference",
@@ -16,6 +20,8 @@ export const MEMORY_KIND_VALUES = new Set([
   "review_tendency",
   "heuristic"
 ]);
+const MEMORY_CONTENT_TYPE_VALUES = new Set(TASTE_CONTENT_TYPE_VALUES);
+const MEMORY_SCORE_FIELD_KEYS = ["decision_gain", "reusability", "trigger_clarity", "verifiability", "stability"];
 export const SESSION_RESULT_VALUES = new Set([
   "written",
   "merged",
@@ -54,6 +60,10 @@ export function processedSessionsPath(projectRoot) {
 
 export function distillJournalPath(projectRoot) {
   return path.join(projectRoot, ".lingxi", "state", "distill-journal.jsonl");
+}
+
+export function memoryOpsLogPath(projectRoot) {
+  return path.join(projectRoot, ".lingxi", "state", "memory-ops.jsonl");
 }
 
 export function tasksDir(projectRoot) {
@@ -189,6 +199,46 @@ export function detectProjectContext(projectRoot) {
     backend_strength: backendStrength,
     docs_strength: docsStrength
   };
+}
+
+function lexicalTokenCount(text) {
+  return normalizeText(text)
+    .split(/[^a-z0-9\u4e00-\u9fff]+/iu)
+    .filter(Boolean)
+    .length;
+}
+
+export function inferConversationMemoryRequestKind(prompt) {
+  const normalized = normalizeText(prompt).toLowerCase();
+  if (/(review|vet|审查|评审)/i.test(normalized)) return "review";
+  if (/(debug|trace|报错|错误|异常|故障|排查)/i.test(normalized)) return "debug";
+  if (/(docs|documentation|文档|readme|guide|onboarding)/i.test(normalized)) return "docs";
+  if (/(design|architecture|方案|架构|tradeoff|取舍)/i.test(normalized)) return "design";
+  if (/(implement|build|fix|refactor|change|实现|修复|改造|重构|开发)/i.test(normalized)) return "implementation";
+  return "general_repo_work";
+}
+
+export function assessConversationMemoryApplicability(prompt) {
+  const normalized = normalizeText(prompt);
+  if (!normalized) {
+    return { meaningful: false, reason: "empty_prompt" };
+  }
+
+  if (/^(hi|hello|hey|thanks|thank you|ok|okay|好的|谢谢|收到|继续|继续吧|在吗|辛苦了)[.!?。！？]*$/i.test(normalized)) {
+    return { meaningful: false, reason: "trivial_conversation" };
+  }
+
+  if (
+    /(`[^`]+`|\/[A-Za-z0-9._/-]+|[A-Za-z0-9._-]+\.(js|ts|tsx|jsx|mjs|json|md|py|go|rs|java|toml|yaml|yml)|task|vet|memory|bug|fix|feature|test|refactor|api|docs|build|debug|review|implement|repository|repo|project|module|function|class|frontend|backend|sdk|contract|rollback|schema|文档|任务|实现|接口|测试|重构|调试|代码|仓库|模块|前端|后端|契约|回滚)/i.test(normalized)
+  ) {
+    return { meaningful: true, reason: "repo_or_engineering_signal" };
+  }
+
+  if (lexicalTokenCount(normalized) >= 8 || /[?？]$/.test(normalized)) {
+    return { meaningful: true, reason: "non_trivial_request" };
+  }
+
+  return { meaningful: false, reason: "likely_non_repo_turn" };
 }
 
 export function slugify(value) {
@@ -397,6 +447,11 @@ export function renderFrontmatterArray(key, values) {
   return `${key}:\n${values.map((value) => `  - ${escapeYamlScalar(value)}`).join("\n")}`;
 }
 
+function renderOptionalFrontmatterScalar(key, value) {
+  if (value == null || value === "") return "";
+  return `${key}: ${escapeYamlScalar(value)}`;
+}
+
 function escapeYamlScalar(value) {
   const normalized = String(value || "").replace(/\r\n/g, "\n").trim();
   if (normalized === "") return '""';
@@ -407,6 +462,13 @@ function escapeYamlScalar(value) {
 }
 
 export function renderMemoryNote(note) {
+  const metadataLines = [
+    renderOptionalFrontmatterScalar("content_type", note.content_type),
+    ...MEMORY_SCORE_FIELD_KEYS.map((key) => renderOptionalFrontmatterScalar(key, note[key])),
+    Array.isArray(note.source_session_ids) && note.source_session_ids.length > 0
+      ? renderFrontmatterArray("source_session_ids", note.source_session_ids)
+      : ""
+  ].filter(Boolean);
   const evidence = (note.evidence || []).map((item) => `- ${item}`).join("\n");
   return `---
 id: ${note.id}
@@ -416,7 +478,7 @@ scope: ${escapeYamlScalar(note.scope)}
 source: ${escapeYamlScalar(note.source)}
 updated_at: ${escapeYamlScalar(note.updated_at)}
 ${renderFrontmatterArray("when_to_load", note.when_to_load || [])}
----
+${metadataLines.length > 0 ? `${metadataLines.join("\n")}\n` : ""}---
 
 # One-liner
 
@@ -478,6 +540,26 @@ function extractTopLevelSection(body, heading) {
   return match ? match[1].trim() : "";
 }
 
+function normalizeOptionalMemoryContentType(value) {
+  const normalized = normalizeText(value);
+  return MEMORY_CONTENT_TYPE_VALUES.has(normalized) ? normalized : "";
+}
+
+function normalizeOptionalScoreValue(value) {
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 3) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const numeric = Number(value);
+    if (Number.isInteger(numeric) && numeric >= 0 && numeric <= 3) return numeric;
+  }
+  return null;
+}
+
+function normalizeSourceSessionIds(value) {
+  return Array.isArray(value)
+    ? value.map((item) => normalizeText(item)).filter(Boolean)
+    : [];
+}
+
 export function parseMemoryNote(content, file) {
   const normalized = content.replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
@@ -498,6 +580,13 @@ export function parseMemoryNote(content, file) {
     source: frontmatter.source || "",
     updated_at: frontmatter.updated_at || "",
     when_to_load: Array.isArray(frontmatter.when_to_load) ? frontmatter.when_to_load : [],
+    content_type: normalizeOptionalMemoryContentType(frontmatter.content_type),
+    decision_gain: normalizeOptionalScoreValue(frontmatter.decision_gain),
+    reusability: normalizeOptionalScoreValue(frontmatter.reusability),
+    trigger_clarity: normalizeOptionalScoreValue(frontmatter.trigger_clarity),
+    verifiability: normalizeOptionalScoreValue(frontmatter.verifiability),
+    stability: normalizeOptionalScoreValue(frontmatter.stability),
+    source_session_ids: normalizeSourceSessionIds(frontmatter.source_session_ids),
     one_liner: extractSection(body, "One-liner"),
     decision: extractSection(body, "Decision / Preference"),
     evidence: evidenceSection
@@ -563,18 +652,86 @@ export function rebuildMemoryIndex(projectRoot) {
   return notes;
 }
 
+function hasMeaningfulValue(value) {
+  if (Array.isArray(value)) return value.some((item) => hasMeaningfulValue(item));
+  if (value && typeof value === "object") return Object.values(value).some((item) => hasMeaningfulValue(item));
+  return normalizeText(value).length > 0;
+}
+
+function hasRichRetrievalContext(context) {
+  if (!context || typeof context !== "object") return false;
+  return Object.entries(context).some(([key, value]) => key !== "caller" && hasMeaningfulValue(value));
+}
+
+function metadataTieBreakScore(note, intent) {
+  if (!note || !normalizeText(intent)) return 0;
+  if (intent === "task") {
+    return ((note.decision_gain ?? -1) + 1) * 10 + ((note.trigger_clarity ?? -1) + 1) * 3;
+  }
+  if (intent === "vet") {
+    const kindBias = note.kind === "anti_pattern" ? 6 : note.kind === "review_tendency" ? 5 : note.kind === "constraint" ? 3 : 0;
+    return ((note.stability ?? -1) + 1) * 10 + kindBias;
+  }
+  return 0;
+}
+
+function scopeTieBreak(scope) {
+  return scope === "project" ? 1 : 0;
+}
+
+function sortRetrievedHits(notes, intent) {
+  return notes.slice().sort((a, b) =>
+    (b.score || 0) - (a.score || 0) ||
+    metadataTieBreakScore(b, intent) - metadataTieBreakScore(a, intent) ||
+    scopeTieBreak(b.scope) - scopeTieBreak(a.scope) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
+function attachSemanticMeta(target, semanticMeta) {
+  if (!target || !semanticMeta || typeof semanticMeta !== "object") {
+    return target;
+  }
+  Object.defineProperty(target, "semantic_meta", {
+    value: semanticMeta,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  });
+  return target;
+}
+
+export function appendMemoryOpsLog(projectRoot, event) {
+  ensureLingxiLayout(projectRoot);
+  fs.appendFileSync(
+    memoryOpsLogPath(projectRoot),
+    JSON.stringify({ ts: new Date().toISOString(), ...event }) + "\n",
+    "utf8"
+  );
+}
+
+function appendMemoryOpsLogSafe(projectRoot, event) {
+  try {
+    appendMemoryOpsLog(projectRoot, event);
+  } catch {
+    // Fail-open for hook-driven memory injection.
+  }
+}
+
 export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, context = {}) {
   ensureRuntimeState(projectRoot);
   const resolvedLimit = Number.isFinite(limit) && limit > 0 ? limit : 3;
   const notes = loadMemoryNotes(projectRoot);
   if (notes.length === 0) return [];
 
+  const startedAt = Date.now();
   const ranking = await rankRelevantMemories(projectRoot, query, notes, {
     limit: resolvedLimit,
     context
   });
   const noteById = new Map(notes.map((note) => [note.id, note]));
-  return ranking.hits
+  const intent = normalizeText(context?.intent || context?.caller);
+  const hits = sortRetrievedHits(ranking.hits
     .map((hit) => {
       const note = noteById.get(hit.note_id);
       return note
@@ -585,7 +742,28 @@ export async function retrieveRelevantMemoryHits(projectRoot, query, limit = 3, 
           }
         : null;
     })
-    .filter(Boolean);
+    .filter(Boolean), intent);
+  appendMemoryOpsLog(projectRoot, {
+    operation: "retrieve_ranked",
+    duration_ms: Date.now() - startedAt,
+    skill_name: normalizeText(ranking.semantic_meta?.skill_name),
+    skill_version: normalizeText(ranking.semantic_meta?.skill_version),
+    prompt_pack_version: normalizeText(ranking.semantic_meta?.prompt_pack_version),
+    example_pack_version: normalizeText(ranking.semantic_meta?.example_pack_version),
+    operation_spec_hash: normalizeText(ranking.semantic_meta?.operation_spec_hash),
+    compiler_mode: normalizeText(ranking.semantic_meta?.compiler_mode),
+    caller: normalizeText(context?.caller),
+    intent: intent || "",
+    query: normalizeText(query),
+    query_mode: hasRichRetrievalContext(context) ? "query_plus_context" : "query_only",
+    hit_count: hits.length,
+    returned_note_ids: hits.map((note) => note.id),
+    hit_reasons: hits.map((note) => ({
+      note_id: note.id,
+      reason: normalizeText(note.ranking_reason)
+    }))
+  });
+  return attachSemanticMeta(hits, ranking.semantic_meta || null);
 }
 
 export function formatMemoryRef(note) {
@@ -606,6 +784,90 @@ export function formatMemoryRef(note) {
   return parts.join(" — ");
 }
 
+function buildActiveMemoryBrief(hits) {
+  if (!Array.isArray(hits) || hits.length === 0) return "";
+  return [
+    "Active LingXi Memory:",
+    ...hits.map((note) => `- ${formatMemoryRef(note)}`)
+  ].join("\n");
+}
+
+export async function buildConversationMemoryBrief(projectRoot, prompt, options = {}) {
+  const normalizedPrompt = normalizeText(prompt);
+  const limit = Number.isFinite(options.limit) && options.limit > 0 ? options.limit : 3;
+  const caller = normalizeText(options.caller) || "memory-hook";
+  const interactionMode = normalizeText(options.interaction_mode || options.interactionMode) || "conversation";
+  const failOpen = options.fail_open !== false;
+  const projectContext = detectProjectContext(projectRoot);
+  const requestKind = inferConversationMemoryRequestKind(normalizedPrompt);
+  const applicability = assessConversationMemoryApplicability(normalizedPrompt);
+
+  if (!applicability.meaningful) {
+    return {
+      operation: "skipped_not_meaningful",
+      prompt: normalizedPrompt,
+      skip_reason: applicability.reason,
+      request_kind: requestKind,
+      project_context: projectContext,
+      hit_count: 0,
+      hits: [],
+      active_memory_brief: ""
+    };
+  }
+
+  try {
+    const hits = await retrieveRelevantMemoryHits(projectRoot, normalizedPrompt, limit, {
+      caller,
+      interaction_mode: interactionMode,
+      request_kind: requestKind,
+      project_context: projectContext,
+      raw_prompt: normalizedPrompt
+    });
+
+    const resultHits = hits.map((note) => ({
+      note_id: note.id,
+      title: note.title,
+      kind: note.kind,
+      scope: note.scope,
+      score: note.score,
+      when_to_load: note.when_to_load,
+      one_liner: note.one_liner,
+      file: note.file,
+      memory_ref: formatMemoryRef(note)
+    }));
+
+    return {
+      operation: resultHits.length > 0 ? "applied_memory" : "no_relevant_memory",
+      prompt: normalizedPrompt,
+      request_kind: requestKind,
+      project_context: projectContext,
+      hit_count: resultHits.length,
+      hits: resultHits,
+      active_memory_brief: buildActiveMemoryBrief(hits)
+    };
+  } catch (error) {
+    if (!failOpen) throw error;
+    appendMemoryOpsLogSafe(projectRoot, {
+      operation: "conversation_memory_failed_open",
+      caller,
+      interaction_mode: interactionMode,
+      prompt: normalizedPrompt,
+      request_kind: requestKind,
+      error_message: normalizeText(error?.message)
+    });
+    return {
+      operation: "failed_open",
+      prompt: normalizedPrompt,
+      request_kind: requestKind,
+      project_context: projectContext,
+      hit_count: 0,
+      hits: [],
+      active_memory_brief: "",
+      failure_reason: normalizeText(error?.message)
+    };
+  }
+}
+
 export function mergeStringArrays(...lists) {
   const seen = new Set();
   const merged = [];
@@ -624,7 +886,14 @@ export function mergeStringArrays(...lists) {
 
 function resolveMemoryScope(value, fallback = "project") {
   const normalized = normalizeText(value || fallback);
-  return normalized === "share" ? "share" : "project";
+  return REUSABILITY_SCOPE_VALUES.has(normalized) ? normalized : "project";
+}
+
+function mergeOptionalScoreValue(left, right) {
+  const leftScore = normalizeOptionalScoreValue(left);
+  const rightScore = normalizeOptionalScoreValue(right);
+  if (leftScore == null && rightScore == null) return null;
+  return Math.max(leftScore ?? 0, rightScore ?? 0);
 }
 
 function normalizeMemoryCandidateInput(input, scope = "project") {
@@ -645,7 +914,14 @@ function normalizeMemoryCandidateInput(input, scope = "project") {
     evidence: mergeStringArrays(input.evidence || []),
     confidence: typeof input.confidence === "number" ? input.confidence : undefined,
     durability_reason: normalizeText(input.durability_reason),
-    reusability_scope: resolveMemoryScope(input.reusability_scope || input.scope || scope, scope)
+    reusability_scope: resolveMemoryScope(input.reusability_scope || input.scope || scope, scope),
+    content_type: normalizeOptionalMemoryContentType(input.content_type),
+    decision_gain: normalizeOptionalScoreValue(input.decision_gain ?? input.value_scores?.decision_gain),
+    reusability: normalizeOptionalScoreValue(input.reusability ?? input.value_scores?.reusability),
+    trigger_clarity: normalizeOptionalScoreValue(input.trigger_clarity ?? input.value_scores?.trigger_clarity),
+    verifiability: normalizeOptionalScoreValue(input.verifiability ?? input.value_scores?.verifiability),
+    stability: normalizeOptionalScoreValue(input.stability ?? input.value_scores?.stability),
+    source_session_ids: normalizeSourceSessionIds(input.source_session_ids)
   };
 }
 
@@ -673,6 +949,7 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
   const workingNotes = loadMemoryNotes(projectRoot);
   const results = new Array(normalizedInputs.length);
   let mutated = false;
+  let governanceSemanticMeta = null;
 
   for (const scope of ["project", "share"]) {
     const entries = normalizedInputs
@@ -686,6 +963,7 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
       workingNotes,
       scope
     );
+    governanceSemanticMeta ||= governance.semantic_meta || null;
     const resolvedBatchTargets = new Map();
 
     governance.decisions.forEach((decision, localIndex) => {
@@ -699,7 +977,8 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
           file: "",
           scope,
           updated_at: "",
-          reason: decision.reason
+          reason: decision.reason,
+          reason_code: normalizeText(decision.reason_code)
         };
         return;
       }
@@ -728,7 +1007,14 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
           when_to_load: mergeStringArrays(decision.note.when_to_load || []),
           one_liner: normalizeText(decision.note.one_liner),
           decision: normalizeText(decision.note.decision),
-          evidence: mergeStringArrays(decision.note.evidence || [])
+          evidence: mergeStringArrays(decision.note.evidence || []),
+          content_type: normalizeOptionalMemoryContentType(candidate.content_type || targetNote.content_type),
+          decision_gain: mergeOptionalScoreValue(targetNote.decision_gain, candidate.decision_gain),
+          reusability: mergeOptionalScoreValue(targetNote.reusability, candidate.reusability),
+          trigger_clarity: mergeOptionalScoreValue(targetNote.trigger_clarity, candidate.trigger_clarity),
+          verifiability: mergeOptionalScoreValue(targetNote.verifiability, candidate.verifiability),
+          stability: mergeOptionalScoreValue(targetNote.stability, candidate.stability),
+          source_session_ids: mergeStringArrays(targetNote.source_session_ids || [], candidate.source_session_ids || [])
         });
         replaceWorkingNote(workingNotes, mergedNote);
         resolvedBatchTargets.set(localIndex, mergedNote);
@@ -738,7 +1024,9 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
           note_id: mergedNote.id,
           file: mergedNote.file,
           scope,
-          updated_at: updatedAt
+          updated_at: updatedAt,
+          reason: decision.reason,
+          reason_code: normalizeText(decision.reason_code)
         };
         return;
       }
@@ -753,25 +1041,34 @@ export async function upsertMemoryNotes(projectRoot, inputs, defaultScope = "pro
         when_to_load: mergeStringArrays(decision.note.when_to_load || []),
         one_liner: normalizeText(decision.note.one_liner),
         decision: normalizeText(decision.note.decision),
-        evidence: mergeStringArrays(decision.note.evidence || [])
+        evidence: mergeStringArrays(decision.note.evidence || []),
+        content_type: candidate.content_type,
+        decision_gain: candidate.decision_gain,
+        reusability: candidate.reusability,
+        trigger_clarity: candidate.trigger_clarity,
+        verifiability: candidate.verifiability,
+        stability: candidate.stability,
+        source_session_ids: candidate.source_session_ids
       });
       workingNotes.push(note);
       resolvedBatchTargets.set(localIndex, note);
       mutated = true;
       results[index] = {
         operation: "created",
-        note_id: note.id,
-        file: note.file,
-        scope,
-        updated_at: updatedAt
-      };
-    });
+          note_id: note.id,
+          file: note.file,
+          scope,
+          updated_at: updatedAt,
+          reason: decision.reason,
+          reason_code: normalizeText(decision.reason_code)
+        };
+      });
   }
 
   if (mutated) {
     rebuildMemoryIndex(projectRoot);
   }
-  return results;
+  return attachSemanticMeta(results, governanceSemanticMeta);
 }
 
 export async function upsertMemoryNote(projectRoot, input, scope = "project") {

@@ -142,15 +142,43 @@ function conceptById(id) {
 function candidateFromConcept(conceptId, evidenceText) {
   const concept = conceptById(conceptId);
   return {
+    scene: concept.when_to_load[0],
+    content_type: concept.kind === "heuristic" ? "heuristic" : "preference",
+    alternatives: ["Keep the current implicit or broader approach"],
+    choice: concept.decision,
+    rationale: "This direction is more reusable and safer for future engineering work.",
+    evidence: [normalizeText(evidenceText) || concept.one_liner],
+    pattern_hint: concept.when_to_load[0],
+    confidence: 0.86
+  };
+}
+
+function adjudicatedCandidateFromConcept(extractedCandidate, conceptId) {
+  const concept = conceptById(conceptId);
+  return {
     title: concept.title,
+    scene: extractedCandidate.scene,
+    content_type: extractedCandidate.content_type,
+    alternatives: extractedCandidate.alternatives,
+    choice: extractedCandidate.choice,
+    rationale: extractedCandidate.rationale,
     kind: concept.kind,
     one_liner: concept.one_liner,
     decision: concept.decision,
+    pattern_hint: extractedCandidate.pattern_hint,
     when_to_load: concept.when_to_load,
-    evidence: [normalizeText(evidenceText) || concept.one_liner],
-    confidence: 0.86,
+    evidence: uniqueStrings(extractedCandidate.evidence || []),
+    confidence: extractedCandidate.confidence,
     durability_reason: "This is a reusable engineering preference that should shape future task framing and review.",
-    reusability_scope: "project"
+    value_scores: {
+      decision_gain: 3,
+      reusability: 3,
+      trigger_clarity: 2,
+      verifiability: 2,
+      stability: 3
+    },
+    reusability_scope: "project",
+    suggested_storage_kind: concept.kind
   };
 }
 
@@ -220,7 +248,7 @@ function lexicalOverlapScore(query, note) {
   return score;
 }
 
-function distill(payload) {
+function tasteExtract(payload) {
   const sentences = (payload.messages || []).flatMap((message) => sentenceChunks(message.content));
   const seen = new Set();
   const candidates = [];
@@ -232,14 +260,45 @@ function distill(payload) {
     }
   }
   return {
-    schema_version: "draft-2026-04-08",
+    schema_version: "draft-2026-04-11-extract",
     session_id: payload.session_id,
     content_fingerprint: payload.content_fingerprint,
     distill_version: payload.distill_version,
     summary: {
+      session_summary: candidates.length > 0 ? "The session contains plausible durable engineering taste." : "No durable engineering taste detected.",
+      extracted_candidate_count: candidates.length,
+      discarded_signal_count: Math.max(0, sentences.length - candidates.length)
+    },
+    candidates
+  };
+}
+
+function tasteAdjudicate(payload) {
+  const extracted = payload.extracted_candidate_set || {};
+  const candidates = (extracted.candidates || [])
+    .map((candidate) => {
+      const concepts = detectConceptIds(
+        [
+          candidate.scene,
+          candidate.choice,
+          candidate.rationale,
+          ...(candidate.evidence || []),
+          candidate.pattern_hint
+        ].join(" ")
+      );
+      if (concepts.length === 0) return null;
+      return adjudicatedCandidateFromConcept(candidate, concepts[0]);
+    })
+    .filter(Boolean);
+  return {
+    schema_version: "draft-2026-04-11",
+    session_id: normalizeText(payload?.session?.session_id || extracted.session_id),
+    content_fingerprint: normalizeText(payload?.session?.content_fingerprint || extracted.content_fingerprint),
+    distill_version: normalizeText(payload?.session?.distill_version || extracted.distill_version),
+    summary: {
       session_summary: candidates.length > 0 ? "The session contains durable engineering taste." : "No durable engineering taste detected.",
       durable_candidate_count: candidates.length,
-      discarded_signal_count: Math.max(0, sentences.length - candidates.length)
+      discarded_signal_count: Math.max(0, (extracted.candidates || []).length - candidates.length)
     },
     candidates
   };
@@ -250,10 +309,11 @@ function govern(payload) {
   const concepts = candidateConcepts(candidate);
   if (concepts.length === 0) {
     return {
-      schema_version: "draft-2026-04-08",
-      action: "skip_as_not_durable",
-      reason: "The candidate does not express durable engineering taste.",
-      confidence: 0.9
+    schema_version: "draft-2026-04-08",
+    reason_code: "skip_low_value",
+    action: "skip_as_not_durable",
+    reason: "The candidate does not express durable engineering taste.",
+    confidence: 0.9
     };
   }
 
@@ -272,6 +332,7 @@ function govern(payload) {
       schema_version: "draft-2026-04-08",
       action: "merge_into_existing",
       target_note_id: target.id,
+      reason_code: candidate.evidence.some((item) => /paraphrase|stronger|repeated|summarized/i.test(item)) ? "merge_strengthen" : "merge_equivalent",
       reason: "The candidate is a semantic rephrasing of an existing durable memory.",
       confidence: 0.88,
       note: mergeNote(target, candidate, concepts)
@@ -282,6 +343,7 @@ function govern(payload) {
   return {
     schema_version: "draft-2026-04-08",
     action: "create",
+    reason_code: "create_distinct",
     reason: "The candidate expresses a distinct durable engineering preference.",
     confidence: 0.84,
     note: {
@@ -331,6 +393,7 @@ function retrieve(payload) {
   const query = normalizeText(payload.query);
   const limit = Number.isFinite(payload.limit) && payload.limit > 0 ? payload.limit : 3;
   const contextText = flattenContextText(payload.context || {});
+  const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
   const semanticQuery = [query, contextText].filter(Boolean).join(" ");
   const queryConcepts = detectConceptIds(semanticQuery);
   const hits = (payload.notes || [])
@@ -343,6 +406,19 @@ function retrieve(payload) {
       score += lexicalOverlapScore(semanticQuery, note);
       if (score > 0 && note.scope === "project") {
         score += 5;
+      }
+      if (score > 0 && intent === "task" && ["constraint", "heuristic", "preference"].includes(note.kind)) {
+        score += 6;
+      }
+      if (score > 0 && intent === "vet" && ["anti_pattern", "review_tendency", "constraint"].includes(note.kind)) {
+        score += 6;
+      }
+      if (score > 0 && intent === "task") {
+        score += (Number.isInteger(note.decision_gain) ? note.decision_gain : 0) * 3;
+        score += (Number.isInteger(note.trigger_clarity) ? note.trigger_clarity : 0) * 2;
+      }
+      if (score > 0 && intent === "vet") {
+        score += (Number.isInteger(note.stability) ? note.stability : 0) * 3;
       }
       return {
         note_id: note.id,
@@ -381,8 +457,15 @@ function retrieve(payload) {
 
 export async function runMemorySemanticTask(request) {
   switch (request.operation) {
+    case "taste_extract":
+      return tasteExtract(request.payload || {});
+    case "taste_adjudicate":
+      return tasteAdjudicate(request.payload || {});
     case "distill":
-      return distill(request.payload || {});
+      return tasteAdjudicate({
+        session: request.payload || {},
+        extracted_candidate_set: tasteExtract(request.payload || {})
+      });
     case "govern":
       return govern(request.payload || {});
     case "govern_batch":

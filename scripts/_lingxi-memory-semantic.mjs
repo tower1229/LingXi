@@ -1,13 +1,19 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION,
   assertValidMemoryDistillCandidateSet,
   memoryDistillCandidateSetJsonSchema
 } from "../skills/session-distill/scripts/memory-distill-candidate-set.mjs";
+import {
+  TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION,
+  TASTE_CONTENT_TYPE_VALUES,
+  assertValidTasteExtractCandidateSet,
+  tasteExtractCandidateSetJsonSchema
+} from "../skills/session-distill/scripts/taste-extract-candidate-set.mjs";
 
 const MEMORY_SEMANTIC_RESPONSE_VERSION = "draft-2026-04-08";
 const GOVERNANCE_ACTION_VALUES = new Set(["create", "merge_into_existing", "skip_as_not_durable"]);
@@ -21,6 +27,8 @@ const MEMORY_KIND_VALUES = new Set([
 const MEMORY_SCOPE_VALUES = new Set(["project", "share"]);
 let cachedRunnerPromise = null;
 let cachedRunnerKey = "";
+const cachedMemoryDistillAssetByPath = new Map();
+const MEMORY_DISTILL_SKILL_NAME = "memory-distill";
 
 function normalizeText(value) {
   return String(value || "")
@@ -59,6 +67,197 @@ function isConfidence(value) {
   return typeof value === "number" && !Number.isNaN(value) && value >= 0 && value <= 1;
 }
 
+function resolveMemoryDistillSkillDir() {
+  return path.resolve(
+    normalizeText(process.env.LINGXI_MEMORY_DISTILL_SKILL_DIR) ||
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../skills/memory-distill")
+  );
+}
+
+function readCachedMemoryDistillAsset(relativePath, parser = (raw) => raw) {
+  const fullPath = path.join(resolveMemoryDistillSkillDir(), "references", relativePath);
+  if (cachedMemoryDistillAssetByPath.has(fullPath)) {
+    return cachedMemoryDistillAssetByPath.get(fullPath);
+  }
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`memory-distill asset does not exist: ${relativePath}`);
+  }
+  const parsed = parser(fs.readFileSync(fullPath, "utf8"));
+  cachedMemoryDistillAssetByPath.set(fullPath, parsed);
+  return parsed;
+}
+
+function loadMemoryDistillSkillSpec() {
+  const value = readCachedMemoryDistillAsset("skill-spec.json", (raw) => JSON.parse(raw));
+  if (
+    !isPlainObject(value) ||
+    normalizeText(value.skill_name) !== MEMORY_DISTILL_SKILL_NAME ||
+    !isNonEmptyString(value.skill_version) ||
+    !isNonEmptyString(value.prompt_pack_version) ||
+    !isNonEmptyString(value.example_pack_version) ||
+    !isPlainObject(value.operations)
+  ) {
+    throw new Error("Invalid memory-distill skill-spec.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillTaxonomy() {
+  const value = readCachedMemoryDistillAsset("taxonomy.json", (raw) => JSON.parse(raw));
+  if (!Array.isArray(value?.content_types) || value.content_types.length === 0) {
+    throw new Error("Invalid memory-distill taxonomy.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillStorageKindMap() {
+  const value = readCachedMemoryDistillAsset("storage-kind-map.json", (raw) => JSON.parse(raw));
+  if (!Array.isArray(value?.stable_storage_kinds) || !isPlainObject(value?.default_mapping)) {
+    throw new Error("Invalid memory-distill storage-kind-map.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillRubrics() {
+  const value = readCachedMemoryDistillAsset("rubrics.json", (raw) => JSON.parse(raw));
+  if (!isPlainObject(value?.value_dimensions) || !isPlainObject(value?.score_scale)) {
+    throw new Error("Invalid memory-distill rubrics.json.");
+  }
+  return value;
+}
+
+function loadMemoryDistillOperation(operationName) {
+  const spec = loadMemoryDistillSkillSpec();
+  const operation = spec.operations?.[operationName];
+  if (!isPlainObject(operation) || !isNonEmptyString(operation.instruction_file)) {
+    throw new Error(`memory-distill operation is not declared: ${operationName}`);
+  }
+  const relative = normalizeText(operation.instruction_file);
+  const instruction = readCachedMemoryDistillAsset(relative, (raw) => raw.trim());
+  if (!isNonEmptyString(instruction)) {
+    throw new Error(`memory-distill operation instruction is empty: ${operationName}`);
+  }
+  return {
+    name: operationName,
+    spec,
+    config: operation,
+    instruction
+  };
+}
+
+function loadMemoryDistillExamples(operationName) {
+  const { config } = loadMemoryDistillOperation(operationName);
+  const relativeDir = normalizeText(config.example_dir);
+  if (!relativeDir) {
+    return [];
+  }
+  const fullDir = path.join(resolveMemoryDistillSkillDir(), "references", relativeDir);
+  if (!fs.existsSync(fullDir)) {
+    throw new Error(`memory-distill example directory does not exist: ${operationName}`);
+  }
+  const files = fs.readdirSync(fullDir)
+    .filter((file) => file.endsWith(".json"))
+    .sort((left, right) => left.localeCompare(right));
+  if (files.length === 0) {
+    throw new Error(`memory-distill example directory is empty: ${operationName}`);
+  }
+  return files.map((file) => {
+    const parsed = JSON.parse(fs.readFileSync(path.join(fullDir, file), "utf8"));
+    if (!isNonEmptyString(parsed?.label) || !isPlainObject(parsed?.output)) {
+      throw new Error(`Invalid memory-distill example file: ${path.join(relativeDir, file)}`);
+    }
+    return parsed;
+  });
+}
+
+function loadMemoryDistillAssets(operationName) {
+  const { config } = loadMemoryDistillOperation(operationName);
+  const assetKeys = Array.isArray(config.asset_keys) ? config.asset_keys.map((item) => normalizeText(item)).filter(Boolean) : [];
+  const assets = {};
+  if (assetKeys.includes("taxonomy")) {
+    assets.taxonomy = loadMemoryDistillTaxonomy();
+  }
+  if (assetKeys.includes("storage_kind_map")) {
+    assets.storage_kind_map = loadMemoryDistillStorageKindMap();
+  }
+  if (assetKeys.includes("rubrics")) {
+    assets.rubrics = loadMemoryDistillRubrics();
+  }
+  return assets;
+}
+
+function formatFewShotExamples(examples) {
+  if (examples.length === 0) return "";
+  return examples
+    .map((example, index) => [
+      `Example ${index + 1}: ${normalizeText(example.label) || `sample-${index + 1}`}`,
+      "Input:",
+      JSON.stringify(example.input || {}, null, 2),
+      "Ideal Output:",
+      JSON.stringify(example.output || {}, null, 2)
+    ].join("\n"))
+    .join("\n\n");
+}
+
+function resolveMemoryDistillOperationName(operation, payload = {}) {
+  if (operation === "retrieve") {
+    const intent = normalizeText(payload?.context?.intent || payload?.context?.caller);
+    return intent === "vet" ? "retrieve_vet" : "retrieve_task";
+  }
+  if (operation === "govern" || operation === "govern_batch") {
+    return "governance_handoff";
+  }
+  if (operation === "taste_extract" || operation === "taste_adjudicate") {
+    return operation;
+  }
+  throw new Error(`Unsupported memory-distill operation: ${operation}`);
+}
+
+function promptMetadataFromCompiledPieces(operationName, instruction, examples, assets) {
+  const spec = loadMemoryDistillSkillSpec();
+  const hash = crypto.createHash("sha256");
+  hash.update(operationName);
+  hash.update(instruction);
+  hash.update(JSON.stringify(examples));
+  hash.update(JSON.stringify(assets));
+  return {
+    skill_name: normalizeText(spec.skill_name),
+    skill_version: normalizeText(spec.skill_version),
+    prompt_pack_version: normalizeText(spec.prompt_pack_version),
+    example_pack_version: normalizeText(spec.example_pack_version),
+    operation_spec_hash: hash.digest("hex").slice(0, 16)
+  };
+}
+
+function tasteAdjudicationRubric() {
+  return {
+    precision_over_recall: true,
+    durability_priority: "high",
+    selective_output: true,
+    value_dimensions: ["decision_gain", "reusability", "trigger_clarity", "verifiability", "stability"],
+    scoring_scale: "0_to_3",
+    guidance: [
+      "Reject candidates that are too personal, too transient, too generic, or too weakly grounded in reusable engineering judgment.",
+      "Prefer candidates that encode a future-reusable engineering choice, boundary, heuristic, anti-pattern, or review tendency.",
+      "Map recognized content_type to the most stable suggested_storage_kind.",
+      "Generate note-ready fields only after the candidate passes adjudication."
+    ]
+  };
+}
+
+function buildTasteAdjudicationContext(payload, extractedCandidateSet) {
+  return {
+    session: {
+      session_id: payload.session_id,
+      content_fingerprint: payload.content_fingerprint,
+      distill_version: payload.distill_version
+    },
+    durable_memory_kind_taxonomy: [...MEMORY_KIND_VALUES],
+    adjudication_rubric: tasteAdjudicationRubric(),
+    extracted_candidate_set: extractedCandidateSet
+  };
+}
+
 function buildGovernanceSchema() {
   return {
     type: "object",
@@ -68,6 +267,7 @@ function buildGovernanceSchema() {
       schema_version: { type: "string", const: MEMORY_SEMANTIC_RESPONSE_VERSION },
       action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
       reason: { type: "string", minLength: 1 },
+      reason_code: { type: "string", minLength: 1 },
       confidence: { type: "number", minimum: 0, maximum: 1 },
       target_note_id: { type: ["string", "null"], minLength: 1 },
       target_candidate_index: { type: ["integer", "null"], minimum: 0 },
@@ -143,6 +343,7 @@ function buildGovernanceBatchSchema() {
           properties: {
             action: { type: "string", enum: [...GOVERNANCE_ACTION_VALUES] },
             reason: { type: "string", minLength: 1 },
+            reason_code: { type: "string", minLength: 1 },
             confidence: { type: "number", minimum: 0, maximum: 1 },
             target_note_id: { type: ["string", "null"], minLength: 1 },
             target_candidate_index: { type: ["integer", "null"], minimum: 0 },
@@ -191,7 +392,14 @@ function stripFileFields(notes) {
     when_to_load: uniqueStrings(note.when_to_load || []),
     one_liner: normalizeText(note.one_liner),
     decision: normalizeText(note.decision),
-    evidence: uniqueStrings(note.evidence || [])
+    evidence: uniqueStrings(note.evidence || []),
+    content_type: normalizeText(note.content_type),
+    decision_gain: Number.isInteger(note.decision_gain) ? note.decision_gain : null,
+    reusability: Number.isInteger(note.reusability) ? note.reusability : null,
+    trigger_clarity: Number.isInteger(note.trigger_clarity) ? note.trigger_clarity : null,
+    verifiability: Number.isInteger(note.verifiability) ? note.verifiability : null,
+    stability: Number.isInteger(note.stability) ? note.stability : null,
+    source_session_ids: uniqueStrings(note.source_session_ids || [])
   }));
 }
 
@@ -231,6 +439,9 @@ function assertValidGovernanceDecision(value, existingNotes, options = {}) {
   }
   if (!isNonEmptyString(value.reason)) {
     throw new Error("Memory governance result reason must be a non-empty string.");
+  }
+  if (value.reason_code != null && !isNonEmptyString(value.reason_code)) {
+    throw new Error("Memory governance result reason_code must be a non-empty string when provided.");
   }
   if (!isConfidence(value.confidence)) {
     throw new Error("Memory governance result confidence must be a number between 0 and 1.");
@@ -319,6 +530,9 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
     if (!isNonEmptyString(decision.reason)) {
       throw new Error(`Memory batch governance decision[${index}] reason must be a non-empty string.`);
     }
+    if (decision.reason_code != null && !isNonEmptyString(decision.reason_code)) {
+      throw new Error(`Memory batch governance decision[${index}] reason_code must be a non-empty string when provided.`);
+    }
     if (!isConfidence(decision.confidence)) {
       throw new Error(`Memory batch governance decision[${index}] confidence must be a number between 0 and 1.`);
     }
@@ -350,93 +564,108 @@ function assertValidGovernanceBatchResult(value, candidates, existingNotes) {
   });
 }
 
-function distillPrompt(payload) {
-  return [
-    "You are LingXi's memory semantic engine for session distillation.",
-    "Your job is to extract only durable, reusable engineering taste from the provided historical Codex session.",
-    "Reject one-off implementation chatter, transient debugging detail, and generic conversation summaries.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "Prefer precision over recall. If there is no durable engineering taste, return an empty candidates array.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
-    `- distill_version must be ${payload.distill_version}`,
-    `- allowed candidate kinds: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`,
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
+function operationOutputRules(operation, payload) {
+  if (operation === "taste_extract") {
+    return [
+      `- schema_version must be ${TASTE_EXTRACT_CANDIDATE_SET_SCHEMA_VERSION}`,
+      "- scene must name the concrete engineering context or trigger situation",
+      "- content_type must describe the recognized judgment type, not the storage kind",
+      "- alternatives can be incomplete, but include nearby options when recoverable from context",
+      "- choice must state the preferred path or judgment",
+      "- rationale must explain why this choice is favored",
+      "- evidence must quote or paraphrase the supporting session signal",
+      "- pattern_hint should summarize the reusable trigger or pattern",
+      "- confidence should reflect extraction confidence, not final durability confidence"
+    ];
+  }
+  if (operation === "taste_adjudicate") {
+    return [
+      `- schema_version must be ${MEMORY_DISTILL_CANDIDATE_SET_SCHEMA_VERSION}`,
+      `- distill_version must be ${payload.session?.distill_version || payload.distill_version}`,
+      `- allowed candidate kinds: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+      `- allowed content_type values: ${[...TASTE_CONTENT_TYPE_VALUES].join(", ")}`,
+      `- allowed reusability_scope values: ${[...MEMORY_SCOPE_VALUES].join(", ")}`
+    ];
+  }
+  if (operation === "governance_handoff") {
+    return [
+      `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+      `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
+      `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
+      "- always include target_note_id, target_candidate_index, and note",
+      "- use null for target_note_id, target_candidate_index, or note when that field does not apply"
+    ];
+  }
+  if (operation === "retrieve_task" || operation === "retrieve_vet") {
+    return [
+      `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
+      `- return at most ${payload.limit} hits`,
+      "- each hit must reference an existing note_id from the input"
+    ];
+  }
+  throw new Error(`Unsupported operation for output rules: ${operation}`);
 }
 
-function governancePrompt(payload) {
-  return [
-    "You are LingXi's memory governance engine.",
-    "Decide whether the candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
-    "Base the decision on semantic meaning, not wording overlap.",
-    "Merge materially identical or stronger rephrasings into the same note.",
-    "Skip noisy or one-off candidate content.",
-    "Return JSON only. Do not use shell commands or tools.",
+export function compileMemoryDistillPrompt({ operation, payload, context = {} }) {
+  const { instruction, config } = loadMemoryDistillOperation(operation);
+  const allExamples = loadMemoryDistillExamples(operation);
+  const examples = allExamples.slice(
+    0,
+    Number.isInteger(config.max_examples)
+      ? config.max_examples
+      : allExamples.length
+  );
+  const assets = loadMemoryDistillAssets(operation);
+  const metadata = {
+    ...promptMetadataFromCompiledPieces(operation, instruction, examples, assets),
+    compiler_mode: "skill_compiler"
+  };
+  const sections = [
+    `You are executing the ${MEMORY_DISTILL_SKILL_NAME} semantic skill.`,
+    `Skill operation: ${operation}`,
     "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    `- action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
-    `- note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    "- always include target_note_id, target_candidate_index, and note",
-    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function governanceBatchPrompt(payload) {
-  return [
-    "You are LingXi's memory governance engine.",
-    "Process the candidate list sequentially and return one governance decision per candidate in the same order as input.",
-    "Decide whether each candidate should create a new memory note, merge into an existing note, or be skipped as not durable enough.",
-    "Base the decision on semantic meaning, not wording overlap.",
-    "Merge materially identical or stronger rephrasings into the same note.",
-    "If a later candidate should merge into a note created earlier in this same batch, set target_candidate_index to that earlier candidate index and omit target_note_id.",
-    "Skip noisy or one-off candidate content.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    "- decisions must be in the same order as input candidates",
-    `- each decision.action must be one of: ${[...GOVERNANCE_ACTION_VALUES].join(", ")}`,
-    `- each decision.note.kind must be one of: ${[...MEMORY_KIND_VALUES].join(", ")}`,
-    "- each decision must include target_note_id, target_candidate_index, and note",
-    "- use null for target_note_id, target_candidate_index, or note when that field does not apply",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
-}
-
-function retrievalPrompt(payload) {
-  return [
-    "You are LingXi's memory retrieval engine.",
-    "Select only the smallest useful set of notes that should materially shape the current task or vet work.",
-    "Rank by semantic relevance, not keyword overlap alone.",
-    "Prefer project memory over share memory when relevance is otherwise similar.",
-    "Return JSON only. Do not use shell commands or tools.",
-    "",
-    "Output rules:",
-    `- schema_version must be ${MEMORY_SEMANTIC_RESPONSE_VERSION}`,
-    `- return at most ${payload.limit} hits`,
-    "- each hit must reference an existing note_id from the input",
-    "",
-    "Input JSON:",
-    JSON.stringify(payload, null, 2)
-  ].join("\n");
+    instruction
+  ];
+  if (Object.keys(assets).length > 0) {
+    sections.push("", "Canonical semantic assets:");
+    if (assets.taxonomy) {
+      sections.push("Taxonomy JSON:", JSON.stringify(assets.taxonomy, null, 2));
+    }
+    if (assets.storage_kind_map) {
+      sections.push("Storage kind map JSON:", JSON.stringify(assets.storage_kind_map, null, 2));
+    }
+    if (assets.rubrics) {
+      sections.push("Rubrics JSON:", JSON.stringify(assets.rubrics, null, 2));
+    }
+  }
+  const fewShots = formatFewShotExamples(examples);
+  if (fewShots) {
+    sections.push("", "Few-shot examples:", fewShots);
+  }
+  sections.push("", "Output rules:", ...operationOutputRules(operation, payload), "", "Input JSON:", JSON.stringify(payload, null, 2));
+  return {
+    prompt: sections.join("\n"),
+    metadata
+  };
 }
 
 function writeTempJson(prefix, value) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-`));
+  const dir = fs.mkdtempSync(path.join(resolveMemorySemanticTempRoot(), `${prefix}-`));
   const file = path.join(dir, "payload.json");
   fs.writeFileSync(file, JSON.stringify(value, null, 2), "utf8");
   return { dir, file };
+}
+
+function resolveMemorySemanticTempRoot() {
+  const candidate = normalizeText(process.env.TEST_TMPDIR) || normalizeText(process.env.LINGXI_TMPDIR) || "/tmp";
+  const resolved = path.resolve(candidate);
+  try {
+    fs.mkdirSync(resolved, { recursive: true });
+    fs.accessSync(resolved, fs.constants.W_OK);
+  } catch (error) {
+    throw new Error(`Memory semantic temp dir is not writable: ${resolved} (${error.message})`);
+  }
+  return resolved;
 }
 
 function removeTempDir(dir) {
@@ -451,7 +680,7 @@ function resolveCodexBin() {
 
 function runCodexStructuredOutput(projectRoot, prompt, schema, operation) {
   const schemaTmp = writeTempJson("lingxi-memory-schema", schema);
-  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-memory-output-"));
+  const outputDir = fs.mkdtempSync(path.join(resolveMemorySemanticTempRoot(), "lingxi-memory-output-"));
   const outputFile = path.join(outputDir, "response.json");
   try {
     const result = spawnSync(
@@ -538,7 +767,7 @@ async function runSemanticOperation({ operation, projectRoot, payload, schema, p
   });
 }
 
-export async function distillSessionToCandidates(projectRoot, session) {
+export async function extractTasteCandidatesFromSession(projectRoot, session) {
   const payload = {
     session_id: normalizeText(session.session_id),
     content_fingerprint: normalizeText(session.content_fingerprint),
@@ -548,15 +777,77 @@ export async function distillSessionToCandidates(projectRoot, session) {
       content: normalizeText(message.content)
     }))
   };
+  const startedAt = Date.now();
+  const compiled = compileMemoryDistillPrompt({
+    operation: "taste_extract",
+    payload
+  });
   const result = await runSemanticOperation({
-    operation: "distill",
+    operation: "taste_extract",
+    projectRoot,
+    payload,
+    schema: tasteExtractCandidateSetJsonSchema(),
+    prompt: compiled.prompt
+  });
+  assertValidTasteExtractCandidateSet(result);
+  return {
+    ...result,
+    semantic_trace: {
+      operation: "taste_extract_completed",
+      duration_ms: Date.now() - startedAt,
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0,
+      ...compiled.metadata
+    }
+  };
+}
+
+export async function adjudicateTasteCandidates(projectRoot, session, extractedCandidateSet) {
+  const payload = buildTasteAdjudicationContext({
+    session_id: normalizeText(session.session_id),
+    content_fingerprint: normalizeText(session.content_fingerprint),
+    distill_version: normalizeText(session.distill_version)
+  }, {
+    schema_version: extractedCandidateSet.schema_version,
+    session_id: normalizeText(extractedCandidateSet.session_id),
+    content_fingerprint: normalizeText(extractedCandidateSet.content_fingerprint),
+    distill_version: normalizeText(extractedCandidateSet.distill_version),
+    summary: extractedCandidateSet.summary,
+    candidates: extractedCandidateSet.candidates
+  });
+  const startedAt = Date.now();
+  const compiled = compileMemoryDistillPrompt({
+    operation: "taste_adjudicate",
+    payload
+  });
+  const result = await runSemanticOperation({
+    operation: "taste_adjudicate",
     projectRoot,
     payload,
     schema: memoryDistillCandidateSetJsonSchema(),
-    prompt: distillPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidMemoryDistillCandidateSet(result);
-  return result;
+  return {
+    ...result,
+    semantic_trace: {
+      operation: "taste_adjudicate_completed",
+      duration_ms: Date.now() - startedAt,
+      candidate_count: Array.isArray(result.candidates) ? result.candidates.length : 0,
+      ...compiled.metadata
+    }
+  };
+}
+
+export async function distillSessionToCandidates(projectRoot, session) {
+  const extracted = await extractTasteCandidatesFromSession(projectRoot, session);
+  const adjudicated = await adjudicateTasteCandidates(projectRoot, session, extracted);
+  return {
+    ...adjudicated,
+    semantic_trace: {
+      taste_extract: extracted.semantic_trace || null,
+      taste_adjudicate: adjudicated.semantic_trace || null
+    }
+  };
 }
 
 export async function governMemoryCandidate(projectRoot, candidate, existingNotes, scope = "project") {
@@ -564,29 +855,46 @@ export async function governMemoryCandidate(projectRoot, candidate, existingNote
   const payload = {
     candidate: {
       title: normalizeText(candidate.title),
+      scene: normalizeText(candidate.scene),
+      content_type: normalizeText(candidate.content_type),
+      alternatives: uniqueStrings(candidate.alternatives || []),
+      choice: normalizeText(candidate.choice),
+      rationale: normalizeText(candidate.rationale),
       kind: normalizeText(candidate.kind),
       scope: resolvedScope,
       one_liner: normalizeText(candidate.one_liner),
       decision: normalizeText(candidate.decision),
+      pattern_hint: normalizeText(candidate.pattern_hint),
       when_to_load: uniqueStrings(candidate.when_to_load || []),
       evidence: uniqueStrings(candidate.evidence || []),
       source: normalizeText(candidate.source),
       confidence: typeof candidate.confidence === "number" ? candidate.confidence : null,
       durability_reason: normalizeText(candidate.durability_reason),
-      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope)
+      value_scores: isPlainObject(candidate.value_scores) ? candidate.value_scores : null,
+      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope),
+      suggested_storage_kind: normalizeText(candidate.suggested_storage_kind),
+      source_session_ids: uniqueStrings(candidate.source_session_ids || [])
     },
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: "governance_handoff",
+    payload,
+    context: { batch: false }
+  });
   const result = await runSemanticOperation({
     operation: "govern",
     projectRoot,
     payload,
     schema: buildGovernanceSchema(),
-    prompt: governancePrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidGovernanceDecision(result, existingNotes);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }
 
 export async function governMemoryCandidates(projectRoot, candidates, existingNotes, scope = "project") {
@@ -594,29 +902,46 @@ export async function governMemoryCandidates(projectRoot, candidates, existingNo
   const payload = {
     candidates: (candidates || []).map((candidate) => ({
       title: normalizeText(candidate.title),
+      scene: normalizeText(candidate.scene),
+      content_type: normalizeText(candidate.content_type),
+      alternatives: uniqueStrings(candidate.alternatives || []),
+      choice: normalizeText(candidate.choice),
+      rationale: normalizeText(candidate.rationale),
       kind: normalizeText(candidate.kind),
       scope: resolvedScope,
       one_liner: normalizeText(candidate.one_liner),
       decision: normalizeText(candidate.decision),
+      pattern_hint: normalizeText(candidate.pattern_hint),
       when_to_load: uniqueStrings(candidate.when_to_load || []),
       evidence: uniqueStrings(candidate.evidence || []),
       source: normalizeText(candidate.source),
       confidence: typeof candidate.confidence === "number" ? candidate.confidence : null,
       durability_reason: normalizeText(candidate.durability_reason),
-      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope)
+      value_scores: isPlainObject(candidate.value_scores) ? candidate.value_scores : null,
+      reusability_scope: normalizeText(candidate.reusability_scope || resolvedScope),
+      suggested_storage_kind: normalizeText(candidate.suggested_storage_kind),
+      source_session_ids: uniqueStrings(candidate.source_session_ids || [])
     })),
     existing_notes: stripFileFields(existingNotes).filter((note) => note.scope === resolvedScope),
     scope: resolvedScope
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: "governance_handoff",
+    payload,
+    context: { batch: true }
+  });
   const result = await runSemanticOperation({
     operation: "govern_batch",
     projectRoot,
     payload,
     schema: buildGovernanceBatchSchema(),
-    prompt: governanceBatchPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidGovernanceBatchResult(result, candidates, existingNotes);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }
 
 export async function rankRelevantMemories(projectRoot, query, notes, options = {}) {
@@ -627,13 +952,20 @@ export async function rankRelevantMemories(projectRoot, query, notes, options = 
     context: isPlainObject(options.context) ? options.context : {},
     notes: stripFileFields(notes)
   };
+  const compiled = compileMemoryDistillPrompt({
+    operation: resolveMemoryDistillOperationName("retrieve", payload),
+    payload
+  });
   const result = await runSemanticOperation({
     operation: "retrieve",
     projectRoot,
     payload,
     schema: buildRankingSchema(),
-    prompt: retrievalPrompt(payload)
+    prompt: compiled.prompt
   });
   assertValidRankingResult(result, notes, limit);
-  return result;
+  return {
+    ...result,
+    semantic_meta: compiled.metadata
+  };
 }

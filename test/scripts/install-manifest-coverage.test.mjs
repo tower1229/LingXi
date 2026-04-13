@@ -44,8 +44,10 @@ function runtimeScriptFiles() {
   return [
     "scripts/_lingxi-memory.mjs",
     "scripts/_lingxi-memory-semantic.mjs",
+    "scripts/_lingxi-claude-sessions.mjs",
     "scripts/lx-bootstrap.mjs",
-    "scripts/lx-memory-brief.mjs",
+    "scripts/lx-memory-hook.mjs",
+    "scripts/lx-memory-hook-claude.mjs",
     "scripts/lingxi-memory-index.mjs",
     "scripts/lingxi-setup.mjs",
     "scripts/lx-uninstall.mjs"

@@ -2,7 +2,7 @@
 
 # LíngXī（灵犀）
 
-**一个面向 Codex 的工程工作流产品：把模糊需求整理成可执行任务，在动手前完成高质量审查，并把团队稳定的工程判断沉淀成可复用记忆。**
+**一个同时支持 Codex 和 Claude Code 的工程工作流产品：把模糊需求整理成可执行任务，在动手前完成高质量审查，并把团队稳定的工程判断沉淀成可复用记忆。**
 
 LingXi 2.0 已完成当前产品范围内的实现并可发布。
 
@@ -27,10 +27,11 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 
 ## 你会得到什么
 
-- **Codex-native 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Codex 插件表层**：[`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- **Claude Code 适配层**：`.claude/settings.json`、`.claude/agents/`、`.claude/skills/`
 - **仓库级 marketplace 入口**：[`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
 - **可见工作流**：[`skills/task/`](./skills/task/) 和 [`skills/vet/`](./skills/vet/)
-- **持久记忆核心**：[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
+- **持久记忆核心**：[`skills/memory-distill/`](./skills/memory-distill/)、[`skills/memory-retrieve/`](./skills/memory-retrieve/)、[`skills/memory-write/`](./skills/memory-write/)、[`skills/session-distill/`](./skills/session-distill/)
 - **项目本地运行时**：`.lingxi/`
 - **后台 distill agent 模板**：[`templates/agents/lingxi-session-distill.toml.tmpl`](./templates/agents/lingxi-session-distill.toml.tmpl)
 - **确定性 setup / runtime 辅助脚本**：[`scripts/`](./scripts/)
@@ -48,6 +49,8 @@ LingXi 的重点不是多给一点输出，而是让工作在开始前就更像�
 - 由 Codex 专用 adapter 发现并过滤 session artifact
 - 由 `node scripts/lx-distill-sessions.mjs` 编排整批扫描
 - `skills/session-distill/scripts/distill-session.mjs` 继续只负责单个 session 的 durable memory 提炼
+- `skills/memory-distill/` 成为 taste extract、taste adjudicate 与 retrieval intent prompt 的语义单一事实来源
+- runtime 不再维护 legacy prompt 回退路径；`skill-spec.json` 成为 prompt/example 版本追踪的唯一权威来源
 
 表层很克制，但底层会随着项目使用不断积累质量。
 
@@ -92,6 +95,8 @@ node scripts/lx-bootstrap.mjs
 这一步会同时：
 
 - `.lingxi/`
+- `.codex/config.toml`
+- `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 - `.lingxi/setup/automation.session-distill.toml`
 - 在 Codex 中注册 session-distill 自动化任务
@@ -108,8 +113,14 @@ node scripts/lx-bootstrap.mjs
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
+
+setup 完成后，只要 Codex hooks 已启用，LingXi 就会通过仓库级 `UserPromptSubmit` hook 在有意义的仓库对话里自动注入相关 memory。
+
+如需排查 semantic runtime，可临时覆盖：
+
+- `LINGXI_MEMORY_DISTILL_SKILL_DIR`：指定另一份本地 `memory-distill` skill 资产目录
+- `LINGXI_TMPDIR`：指定结构化语义调用使用的可写临时目录
 
 或者直接执行：
 

@@ -1,0 +1,27 @@
+{
+  "label": "merge-strengthen",
+  "input": {
+    "candidate": {
+      "title": "Make the interface explicit",
+      "content_type": "preference",
+      "suggested_storage_kind": "preference",
+      "value_scores": {
+        "decision_gain": 3,
+        "reusability": 3,
+        "trigger_clarity": 2,
+        "verifiability": 2,
+        "stability": 3
+      }
+    },
+    "existing_note_summary": {
+      "title": "Prefer explicit interfaces",
+      "kind": "preference"
+    }
+  },
+  "output": {
+    "action": "merge_into_existing",
+    "reason_code": "merge_strengthen"
+  },
+  "tags": ["merge"],
+  "language": "en"
+}

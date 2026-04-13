@@ -11,8 +11,8 @@ function loadManifest() {
   return JSON.parse(fs.readFileSync(path.join(repoRoot, "install", "install-manifest.json"), "utf8"));
 }
 
-describe("install manifest codex runtime", () => {
-  it("ships the current 2.0 setup assets needed to bootstrap the Codex-native runtime", () => {
+describe("install manifest runtime", () => {
+  it("ships the current 2.0 setup assets needed to bootstrap the runtime", () => {
     const manifest = loadManifest();
     const files = new Set(manifest.files || []);
 
@@ -27,21 +27,35 @@ describe("install manifest codex runtime", () => {
     assert.ok(files.has("scripts/lx-bootstrap.mjs"));
     assert.ok(files.has("scripts/lx-create-automation.mjs"));
     assert.ok(files.has("scripts/lx-distill-sessions.mjs"));
-    assert.ok(files.has("scripts/lx-memory-brief.mjs"));
+    assert.ok(files.has("scripts/lx-memory-hook.mjs"));
     assert.ok(files.has("scripts/lx-select-sessions.mjs"));
     assert.ok(files.has("scripts/lingxi-memory-index.mjs"));
     assert.ok(files.has("scripts/lingxi-setup.mjs"));
     assert.ok(files.has("scripts/lx-uninstall.mjs"));
     assert.ok(files.has("templates/agents/lingxi-session-distill.toml.tmpl"));
+    assert.ok(files.has("templates/agents/lingxi-session-distill.claude.md.tmpl"));
     assert.ok(files.has("templates/automations/session-distill.toml.tmpl"));
+    assert.ok(files.has("scripts/lx-memory-hook-claude.mjs"));
+    assert.ok(files.has("scripts/_lingxi-claude-sessions.mjs"));
   });
 
   it("declares generated runtime paths that the installer is expected to materialize", () => {
     const manifest = loadManifest();
-    const runtimeFiles = new Set(manifest.runtimeFiles || []);
+    const rf = manifest.runtimeFiles;
 
-    assert.ok(runtimeFiles.has(".lingxi"));
-    assert.ok(runtimeFiles.has(".codex/agents/lingxi-session-distill.toml"));
+    assert.ok(rf && typeof rf === "object" && !Array.isArray(rf), "runtimeFiles should be a grouped object");
+    const common = new Set(rf.common || []);
+    const codex = new Set(rf.codex || []);
+    const claude = new Set(rf.claude || []);
+
+    assert.ok(common.has(".lingxi"));
+    assert.ok(codex.has(".codex/config.toml"));
+    assert.ok(codex.has(".codex/hooks.json"));
+    assert.ok(codex.has(".codex/agents/lingxi-session-distill.toml"));
+    assert.ok(claude.has(".claude/settings.json"));
+    assert.ok(claude.has(".claude/agents/lingxi-session-distill.md"));
+    assert.ok(claude.has(".claude/skills"));
+    assert.ok(claude.has("CLAUDE.md"));
   });
 
   it("exposes explicit package scripts for setup, automation registration, and uninstall", () => {
@@ -50,8 +64,8 @@ describe("install manifest codex runtime", () => {
       "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
       "lx:create-automation": "node scripts/lx-create-automation.mjs",
       "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
-      "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
       "lx:setup": "node scripts/lingxi-setup.mjs",
+      "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",
       "lx:uninstall": "node scripts/lx-uninstall.mjs"
     });
   });

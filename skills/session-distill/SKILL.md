@@ -13,6 +13,10 @@ The goal is not to summarize the conversation. The goal is to extract reusable j
 
 Use this skill from background automation or the `lingxi-session-distill` subagent.
 
+This skill is the orchestration layer for background distillation.
+
+The canonical semantic specification for taste recognition and adjudication belongs to `skills/memory-distill/`.
+
 ## Input Contract
 
 Provide normalized session data as JSON:
@@ -25,7 +29,7 @@ Provide normalized session data as JSON:
 
 - analyze historical sessions, not live user turns
 - exclude session-distill automation/self-distillation sessions from selection
-- use LLM judgment to extract only durable engineering taste
+- call the memory-distill semantic runtime to perform `taste_extract` and `taste_adjudicate`
 - dedupe by `session_id + content_fingerprint + distill_version`
 - batch-govern distilled candidates before persistence so one session does not pay one semantic roundtrip per note
 - persist distilled memories into LingXi memory
@@ -74,4 +78,5 @@ Use:
 
 - `scripts/distill-session.mjs`
 - `scripts/memory-distill-candidate-set.mjs`
+- `../memory-distill/SKILL.md`
 - `references/distill-rules.md`

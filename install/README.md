@@ -2,7 +2,7 @@
 
 本目录包含 LíngXī（灵犀）的远程安装相关文件。
 
-这些脚本现在只安装受支持的 **Codex-native LingXi 2.0** 表层。
+这些脚本安装 **LingXi 2.0**，同时支持 **Codex** 和 **Claude Code** 运行环境。
 
 安装器会分发：
 
@@ -15,8 +15,9 @@
 
 安装完成后还会执行 `scripts/lx-bootstrap.mjs`，完成本地运行时初始化并注册自动化任务：
 
-- `.lingxi/`
-- `.codex/agents/lingxi-session-distill.toml`
+- `.lingxi/`（公共运行时根）
+- `.codex/agents/lingxi-session-distill.toml`（Codex adapter）
+- `.claude/settings.json`、`.claude/agents/`、`.claude/skills/`（Claude Code adapter）
 
 ## 文件说明
 
@@ -54,7 +55,7 @@ curl -fsSL https://raw.githubusercontent.com/tower1229/LingXi/main/install/bash.
 irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.ps1 | iex
 ```
 
-安装完成后，建议直接在 Codex 中打开项目。
+安装完成后，在 Codex 或 Claude Code 中打开项目即可使用。
 
 说明：安装器要求目标环境可用 `node`，因为 setup 和工作流脚本都基于 Node.js。
 
@@ -68,9 +69,19 @@ node scripts/lx-bootstrap.mjs
 
 这一步会：
 
-- 生成 `.lingxi/` 与 `.codex/agents/` 运行时骨架
+- 生成 `.lingxi/` 公共运行时骨架
+- 生成 `.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/lingxi-session-distill.toml`（Codex adapter）
+- 生成 `.claude/settings.json`、`.claude/agents/lingxi-session-distill.md`、`.claude/skills/`（Claude Code adapter）
 - 生成 `.lingxi/setup/automation.session-distill.toml`
 - 把该自动化配置注册成实际的 Codex 自动化任务
+
+可以通过 `--host` 参数只生成特定 host 的 artifacts：
+
+```bash
+node scripts/lingxi-setup.mjs --host codex   # 仅 Codex
+node scripts/lingxi-setup.mjs --host claude  # 仅 Claude Code
+node scripts/lingxi-setup.mjs --host all     # 两者都生成（默认）
+```
 
 当前 Codex 版 session-distill 通过 `node scripts/lx-distill-sessions.mjs` 运行。该 runner 会调用确定性 session selector，再把选中的单个 session 交给 `skills/session-distill/scripts/distill-session.mjs` 处理。
 
@@ -82,8 +93,9 @@ LingXi 默认把该自动化注册为 `local` 执行环境，而不是 `worktree
 node scripts/lingxi-setup.mjs
 node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
-node scripts/lx-memory-brief.mjs --prompt "当前请求"
 ```
+
+setup 完成后，只要 Codex hooks 已启用，LingXi 就会通过仓库级 `UserPromptSubmit` hook 自动为有意义的仓库请求注入相关 memory。
 
 或者：
 
@@ -121,7 +133,7 @@ npm run lx:bootstrap
 
 不指定测试目录时将使用临时目录。脚本会在仓库根启动 HTTP 服务，并在测试目录中执行安装。
 
-**安装 → 卸载集成验证**：本地或 CI 可运行 `./install/test-install-uninstall.sh [测试目录]`，先安装再执行 `lx:uninstall --yes` 并断言 `.lingxi`、`.codex-plugin/plugin.json` 与清单内路径已删除。
+**安装 → 卸载集成验证**：本地或 CI 可运行 `./install/test-install-uninstall.sh [测试目录]`，先安装再执行 `lx:uninstall --yes` 并断言 `.lingxi`、`.codex-plugin/plugin.json`、`.claude/` 与清单内路径已删除。
 
 ## 版本
 

@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { afterEach, describe, it } from "node:test";
@@ -14,7 +13,7 @@ const scriptPath = path.join(repoRoot, "skills", "task", "scripts", "write-task.
 const vetPath = path.join(repoRoot, "skills", "vet", "scripts", "vet-task.mjs");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-task-test-"));
+  return fs.mkdtempSync(path.join(process.env.TEST_TMPDIR || "/tmp", "lingxi-task-test-"));
 }
 
 function runNode(script, projectRoot, stdinJson) {
@@ -313,6 +312,25 @@ Prefer explicit contracts and rollback notes for backend integration changes.
     assert.match(content, /## 8\. Memory Applied|## 7\. Memory Applied/);
     assert.match(content, /MEM-001/);
     assert.match(content, /Prefer explicit contracts and rollback notes/);
+    const opsLog = fs.readFileSync(path.join(tempDir, ".lingxi", "state", "memory-ops.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert.ok(
+      opsLog.some(
+        (entry) =>
+          entry.operation === "retrieve_applied" &&
+          entry.skill_name === "memory-distill" &&
+          typeof entry.prompt_pack_version === "string" &&
+          typeof entry.example_pack_version === "string" &&
+          typeof entry.operation_spec_hash === "string" &&
+          entry.compiler_mode === "skill_compiler" &&
+          entry.caller === "task" &&
+          entry.hit_count >= 1 &&
+          Number.isInteger(entry.duration_ms)
+      )
+    );
   });
 
   it("preserves existing memory refs when updating a task without explicit memory input", async () => {

@@ -3,6 +3,7 @@
 import process from "node:process";
 import {
   DISTILL_VERSION,
+  appendMemoryOpsLog,
   appendDistillJournal,
   fingerprintMessages,
   normalizeText,
@@ -104,16 +105,41 @@ async function main() {
     distill_version: DISTILL_VERSION,
     messages
   });
+  if (candidateSet.semantic_trace?.taste_extract) {
+    appendMemoryOpsLog(projectRoot, {
+      ...candidateSet.semantic_trace.taste_extract,
+      session_id: sessionId,
+      content_fingerprint: fingerprint,
+      distill_version: DISTILL_VERSION
+    });
+  }
+  if (candidateSet.semantic_trace?.taste_adjudicate) {
+    appendMemoryOpsLog(projectRoot, {
+      ...candidateSet.semantic_trace.taste_adjudicate,
+      session_id: sessionId,
+      content_fingerprint: fingerprint,
+      distill_version: DISTILL_VERSION
+    });
+  }
   const extracted = candidateSet.candidates.map((candidate) => ({
     title: normalizeText(candidate.title),
+    scene: normalizeText(candidate.scene),
+    content_type: normalizeText(candidate.content_type),
+    alternatives: candidate.alternatives,
+    choice: normalizeText(candidate.choice),
+    rationale: normalizeText(candidate.rationale),
     kind: normalizeText(candidate.kind),
     one_liner: normalizeText(candidate.one_liner),
     decision: normalizeText(candidate.decision),
+    pattern_hint: normalizeText(candidate.pattern_hint),
     when_to_load: candidate.when_to_load,
     evidence: candidate.evidence,
     confidence: candidate.confidence,
     durability_reason: normalizeText(candidate.durability_reason),
-    reusability_scope: normalizeText(candidate.reusability_scope)
+    value_scores: candidate.value_scores,
+    reusability_scope: normalizeText(candidate.reusability_scope),
+    suggested_storage_kind: normalizeText(candidate.suggested_storage_kind),
+    source_session_ids: [sessionId]
   }));
 
   if (extracted.length === 0) {
@@ -146,6 +172,7 @@ async function main() {
     return;
   }
 
+  const governanceStartedAt = Date.now();
   const noteResults = await upsertMemoryNotes(
     projectRoot,
     extracted.map((candidate) => ({
@@ -154,6 +181,24 @@ async function main() {
       source: "session-distill"
     }))
   );
+  appendMemoryOpsLog(projectRoot, {
+    operation: "distill_governance_applied",
+    duration_ms: Date.now() - governanceStartedAt,
+    skill_name: normalizeText(noteResults.semantic_meta?.skill_name),
+    skill_version: normalizeText(noteResults.semantic_meta?.skill_version),
+    prompt_pack_version: normalizeText(noteResults.semantic_meta?.prompt_pack_version),
+    example_pack_version: normalizeText(noteResults.semantic_meta?.example_pack_version),
+    operation_spec_hash: normalizeText(noteResults.semantic_meta?.operation_spec_hash),
+    compiler_mode: normalizeText(noteResults.semantic_meta?.compiler_mode),
+    session_id: sessionId,
+    content_fingerprint: fingerprint,
+    distill_version: DISTILL_VERSION,
+    candidate_count: extracted.length,
+    created_count: noteResults.filter((result) => result.operation === "created").length,
+    merged_count: noteResults.filter((result) => result.operation === "merged").length,
+    skipped_count: noteResults.filter((result) => result.operation === "skipped").length,
+    reason_codes: [...new Set(noteResults.map((result) => normalizeText(result.reason_code)).filter(Boolean))]
+  });
   const noteIds = noteResults.map((result) => result.note_id).filter(Boolean);
   const createdCount = noteResults.filter((result) => result.operation === "created").length;
   const mergedCount = noteResults.filter((result) => result.operation === "merged").length;

@@ -4,7 +4,6 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, it, afterEach } from "node:test";
@@ -16,7 +15,7 @@ const SCRIPT_PATH = path.join(REPO_ROOT, "scripts", "lx-uninstall.mjs");
 const FIXTURE_MANIFEST = path.join(__dirname, "../fixtures/lx-uninstall-manifest.json");
 
 function createTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "lingxi-test-"));
+  return fs.mkdtempSync(path.join("/tmp", "lingxi-test-"));
 }
 
 function setupUninstallFixture(tmpDir) {
@@ -38,7 +37,7 @@ function setupUninstallFixture(tmpDir) {
   fs.writeFileSync(path.join(tmpDir, "scripts", "_lingxi-memory.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-bootstrap.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-create-automation.mjs"), "dummy", "utf8");
-  fs.writeFileSync(path.join(tmpDir, "scripts", "lx-memory-brief.mjs"), "dummy", "utf8");
+  fs.writeFileSync(path.join(tmpDir, "scripts", "lx-memory-hook.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-memory-index.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-setup.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-uninstall.mjs"), "dummy", "utf8");
@@ -49,6 +48,8 @@ function setupUninstallFixture(tmpDir) {
   fs.mkdirSync(path.join(tmpDir, ".lingxi", "state"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, ".lingxi", "state", "processed-sessions.json"), "{}", "utf8");
   fs.mkdirSync(path.join(tmpDir, ".codex", "agents"), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, ".codex", "config.toml"), "[features]\ncodex_hooks = true\n", "utf8");
+  fs.writeFileSync(path.join(tmpDir, ".codex", "hooks.json"), "{\n  \"hooks\": {}\n}\n", "utf8");
   fs.writeFileSync(path.join(tmpDir, ".codex", "agents", "lingxi-session-distill.toml"), "dummy", "utf8");
   fs.writeFileSync(
     path.join(tmpDir, "package.json"),
@@ -59,7 +60,6 @@ function setupUninstallFixture(tmpDir) {
         test: "node --test",
         "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
         "lx:create-automation": "node scripts/lx-create-automation.mjs",
-        "lx:memory-brief": "node scripts/lx-memory-brief.mjs",
         "lx:setup": "node scripts/lingxi-setup.mjs",
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
       }
@@ -128,11 +128,15 @@ describe("lx-uninstall", () => {
     setupUninstallFixture(tmpDir);
 
     const runtimeRoot = path.join(tmpDir, ".lingxi");
+    const codexConfig = path.join(tmpDir, ".codex", "config.toml");
+    const codexHooks = path.join(tmpDir, ".codex", "hooks.json");
     const codexAgent = path.join(tmpDir, ".codex", "agents", "lingxi-session-distill.toml");
 
     await runUninstall(tmpDir);
 
     assert.ok(!fs.existsSync(runtimeRoot), ".lingxi runtime root should be deleted");
+    assert.ok(!fs.existsSync(codexConfig), ".codex config should be deleted");
+    assert.ok(!fs.existsSync(codexHooks), ".codex hooks should be deleted");
     assert.ok(!fs.existsSync(codexAgent), ".codex agent file should be deleted");
   });
 

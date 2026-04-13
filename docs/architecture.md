@@ -59,8 +59,9 @@ Runtime lives inside the target repository and stores durable project state.
 
 Primary runtime roots:
 
-- `.lingxi/`
-- `.codex/agents/`
+- `.lingxi/` (host-agnostic core)
+- `.codex/agents/` (Codex adapter)
+- `.claude/` (Claude Code adapter)
 
 ---
 
@@ -79,7 +80,7 @@ Primary runtime roots:
 
 1. Rebuild the full Cursor-era workflow.
 2. Analyze every user message inline by default.
-3. Depend on experimental hooks as the main memory mechanism.
+3. Depend on hooks for background distillation or the host-agnostic memory core.
 4. Build a large multi-agent orchestration system in V1.
 
 ---
@@ -101,9 +102,17 @@ Expected runtime structure in target repositories:
   setup/
     automation.session-distill.toml
 .codex/
+  config.toml
+  hooks.json
   agents/
     lingxi-session-distill.toml
+.claude/
+  settings.json
+  agents/
+    lingxi-session-distill.md
+  skills/
 AGENTS.md
+CLAUDE.md
 ```
 
 ### Purpose Of Each Area
@@ -138,6 +147,30 @@ AGENTS.md
 - stores the generated automation configuration artifact for auditability
 - acts as the source artifact consumed by bootstrap when registering Codex automation
 
+`.codex/config.toml`
+
+- enables Codex hooks for the repository runtime
+- preserves repo-local Codex configuration overrides managed by setup
+
+`.codex/hooks.json`
+
+- stores the repo-local Codex hook adapter configuration for automatic memory injection
+- keeps generic conversation memory consumption in the Codex adapter layer rather than the host-agnostic core
+
+`.claude/settings.json`
+
+- stores the repo-local Claude Code hook adapter configuration for automatic memory injection
+- mirrors the role of `.codex/hooks.json` for the Claude Code host
+
+`.claude/agents/lingxi-session-distill.md`
+
+- Claude Code subagent definition for session distillation
+- mirrors the role of `.codex/agents/lingxi-session-distill.toml` for the Claude Code host
+
+`.claude/skills/`
+
+- contains LingXi skills copied for Claude Code consumption
+
 ---
 
 ## Skills Architecture
@@ -161,6 +194,7 @@ Memory consumption should follow a different rule from memory writing:
 - memory writing stays conservative and background-oriented
 - memory retrieval should be foreground and default for meaningful repository-scoped work
 - explicit workflows such as `task` and `vet` may use richer workflow-specific retrieval context, but they should not be the only consumers of LingXi memory
+- for Codex, meaningful generic repository turns should consume memory through a repo-local `UserPromptSubmit` hook adapter rather than a manual command
 
 This also means the memory-consumption path should stay host-agnostic:
 
@@ -312,9 +346,13 @@ Implementation split:
 - Codex-specific adapter code discovers and normalizes candidate session artifacts
 - a deterministic selector decides which sessions are valid source material
 - `distill-session` remains the single-session worker over normalized `{ session_id, messages }`
+- `skills/memory-distill/` defines the canonical semantic spec for taste extraction, adjudication, governance handoff, and retrieval intent
 
 Implementation bias:
 
+- the runtime compiles `memory-distill` skill assets into structured LLM prompts
+- no legacy prompt fallback path remains in the mainline
+- `skills/memory-distill/references/skill-spec.json` is the single source for prompt/example version tracking
 - LLM produces a structured `MemoryDistillCandidateSet`
 - deterministic code validates the candidate set, applies dedupe/state rules, and persists approved notes
 
@@ -744,14 +782,26 @@ This keeps retrieval cheap and notes readable.
 1. create `.lingxi/` directories
 2. initialize empty state files
 3. initialize `memory/INDEX.md`
-4. generate `.codex/agents/lingxi-session-distill.toml`
-5. generate `.lingxi/setup/automation.session-distill.toml`
-6. register Codex automation through bootstrap
-7. generate `AGENTS.md` only when missing
+4. generate `AGENTS.md` only when missing
+
+When `--host codex` or `--host all` (default):
+
+5. merge or create `.codex/config.toml`
+6. merge or create `.codex/hooks.json`
+7. generate `.codex/agents/lingxi-session-distill.toml`
+8. generate `.lingxi/setup/automation.session-distill.toml`
+9. register Codex automation through bootstrap
+
+When `--host claude` or `--host all` (default):
+
+10. merge or create `.claude/settings.json`
+11. generate `.claude/agents/lingxi-session-distill.md`
+12. copy skills to `.claude/skills/`
+13. generate `CLAUDE.md` only when missing
 
 ### Setup Safety Rules
 
-1. do not overwrite user `AGENTS.md`
+1. do not overwrite user `AGENTS.md` or `CLAUDE.md`
 2. do not silently destroy existing state
 3. prefer idempotent file generation
 4. keep generated artifacts explicit and inspectable
@@ -769,7 +819,7 @@ Suggested contract:
 ```json
 {
   "state_schema_version": "v2",
-  "distill_version": "v1",
+  "distill_version": "v3",
   "summary": {
     "tracked_sessions": 2,
     "total_runs": 3,
