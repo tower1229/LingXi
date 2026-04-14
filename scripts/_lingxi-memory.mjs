@@ -201,44 +201,11 @@ export function detectProjectContext(projectRoot) {
   };
 }
 
-function lexicalTokenCount(text) {
-  return normalizeText(text)
-    .split(/[^a-z0-9\u4e00-\u9fff]+/iu)
-    .filter(Boolean)
-    .length;
-}
-
-export function inferConversationMemoryRequestKind(prompt) {
-  const normalized = normalizeText(prompt).toLowerCase();
-  if (/(review|vet|审查|评审)/i.test(normalized)) return "review";
-  if (/(debug|trace|报错|错误|异常|故障|排查)/i.test(normalized)) return "debug";
-  if (/(docs|documentation|文档|readme|guide|onboarding)/i.test(normalized)) return "docs";
-  if (/(design|architecture|方案|架构|tradeoff|取舍)/i.test(normalized)) return "design";
-  if (/(implement|build|fix|refactor|change|实现|修复|改造|重构|开发)/i.test(normalized)) return "implementation";
-  return "general_repo_work";
-}
-
-export function assessConversationMemoryApplicability(prompt) {
+export function isTrivialPrompt(prompt) {
   const normalized = normalizeText(prompt);
-  if (!normalized) {
-    return { meaningful: false, reason: "empty_prompt" };
-  }
-
-  if (/^(hi|hello|hey|thanks|thank you|ok|okay|好的|谢谢|收到|继续|继续吧|在吗|辛苦了)[.!?。！？]*$/i.test(normalized)) {
-    return { meaningful: false, reason: "trivial_conversation" };
-  }
-
-  if (
-    /(`[^`]+`|\/[A-Za-z0-9._/-]+|[A-Za-z0-9._-]+\.(js|ts|tsx|jsx|mjs|json|md|py|go|rs|java|toml|yaml|yml)|task|vet|memory|bug|fix|feature|test|refactor|api|docs|build|debug|review|implement|repository|repo|project|module|function|class|frontend|backend|sdk|contract|rollback|schema|文档|任务|实现|接口|测试|重构|调试|代码|仓库|模块|前端|后端|契约|回滚)/i.test(normalized)
-  ) {
-    return { meaningful: true, reason: "repo_or_engineering_signal" };
-  }
-
-  if (lexicalTokenCount(normalized) >= 8 || /[?？]$/.test(normalized)) {
-    return { meaningful: true, reason: "non_trivial_request" };
-  }
-
-  return { meaningful: false, reason: "likely_non_repo_turn" };
+  if (!normalized || normalized.length < 2) return true;
+  const TRIVIAL = /^(hi|hello|hey|ok|okay|yes|no|thanks|thank you|好的|谢谢|收到|继续|在吗|嗯|是的|不是|对|好|辛苦了)[.!?。！？\s]*$/i;
+  return TRIVIAL.test(normalized);
 }
 
 export function slugify(value) {
@@ -390,6 +357,19 @@ export function readProcessedSessionsState(projectRoot) {
     return normalizeProcessedSessionsState(parsed);
   } catch {
     return defaultProcessedSessionsState();
+  }
+}
+
+export function shouldTriggerBackgroundDistill(projectRoot, intervalHours = 6) {
+  try {
+    const state = readProcessedSessionsState(projectRoot);
+    const lastOccurred = normalizeText(state.last_run?.occurred_at);
+    if (!lastOccurred) return true;
+    const lastMs = new Date(lastOccurred).getTime();
+    if (Number.isNaN(lastMs)) return true;
+    return Date.now() - lastMs > intervalHours * 60 * 60 * 1000;
+  } catch {
+    return false;
   }
 }
 
@@ -799,15 +779,12 @@ export async function buildConversationMemoryBrief(projectRoot, prompt, options 
   const interactionMode = normalizeText(options.interaction_mode || options.interactionMode) || "conversation";
   const failOpen = options.fail_open !== false;
   const projectContext = detectProjectContext(projectRoot);
-  const requestKind = inferConversationMemoryRequestKind(normalizedPrompt);
-  const applicability = assessConversationMemoryApplicability(normalizedPrompt);
 
-  if (!applicability.meaningful) {
+  if (isTrivialPrompt(normalizedPrompt)) {
     return {
       operation: "skipped_not_meaningful",
       prompt: normalizedPrompt,
-      skip_reason: applicability.reason,
-      request_kind: requestKind,
+      skip_reason: "trivial_prompt",
       project_context: projectContext,
       hit_count: 0,
       hits: [],
@@ -819,7 +796,6 @@ export async function buildConversationMemoryBrief(projectRoot, prompt, options 
     const hits = await retrieveRelevantMemoryHits(projectRoot, normalizedPrompt, limit, {
       caller,
       interaction_mode: interactionMode,
-      request_kind: requestKind,
       project_context: projectContext,
       raw_prompt: normalizedPrompt
     });
@@ -839,7 +815,6 @@ export async function buildConversationMemoryBrief(projectRoot, prompt, options 
     return {
       operation: resultHits.length > 0 ? "applied_memory" : "no_relevant_memory",
       prompt: normalizedPrompt,
-      request_kind: requestKind,
       project_context: projectContext,
       hit_count: resultHits.length,
       hits: resultHits,
@@ -852,13 +827,11 @@ export async function buildConversationMemoryBrief(projectRoot, prompt, options 
       caller,
       interaction_mode: interactionMode,
       prompt: normalizedPrompt,
-      request_kind: requestKind,
       error_message: normalizeText(error?.message)
     });
     return {
       operation: "failed_open",
       prompt: normalizedPrompt,
-      request_kind: requestKind,
       project_context: projectContext,
       hit_count: 0,
       hits: [],

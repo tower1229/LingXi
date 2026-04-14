@@ -118,7 +118,6 @@ describe("lx-memory-hook", () => {
     ));
 
     assert.strictEqual(summary.operation, "applied_memory");
-    assert.strictEqual(summary.request_kind, "implementation");
     assert.strictEqual(summary.project_context.kind, "backend");
     assert.strictEqual(summary.hit_count, 1);
     assert.strictEqual(summary.hits[0].note_id, "MEM-001");
@@ -131,7 +130,7 @@ describe("lx-memory-hook", () => {
     const summary = await withSemanticEnv(() => buildConversationMemoryBrief(tempDir, "谢谢", { caller: "memory-hook" }));
 
     assert.strictEqual(summary.operation, "skipped_not_meaningful");
-    assert.strictEqual(summary.skip_reason, "trivial_conversation");
+    assert.strictEqual(summary.skip_reason, "trivial_prompt");
     assert.strictEqual(summary.hit_count, 0);
   });
 

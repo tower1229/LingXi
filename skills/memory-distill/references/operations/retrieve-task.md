@@ -40,6 +40,10 @@ Prefer `project` memory over `share` memory when semantic relevance is otherwise
 - do not return the whole theme cluster
 - do not prefer risk-only review memories unless they materially affect task drafting
 
+## Non-Engineering Queries
+
+If the query is not related to engineering work on this repository (e.g. greetings, casual chat, off-topic questions), return an empty hits array.
+
 ## Output Standard
 
 Return compact ranking results that help task quality, not explanatory summaries.

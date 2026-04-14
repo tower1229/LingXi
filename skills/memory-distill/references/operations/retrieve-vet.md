@@ -41,6 +41,10 @@ Prefer `project` memory over `share` memory when semantic relevance is otherwise
 - do not prefer implementation-preference memories unless they reveal a missing boundary or risk
 - do not return memories that merely agree with the task without increasing review pressure
 
+## Non-Engineering Queries
+
+If the query is not related to engineering work on this repository (e.g. greetings, casual chat, off-topic questions), return an empty hits array.
+
 ## Output Standard
 
 Return compact ranking results that improve challenge quality, not archive summaries.

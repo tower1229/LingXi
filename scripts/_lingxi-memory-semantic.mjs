@@ -740,14 +740,26 @@ async function loadRunnerFromModule(modulePath) {
   return runner;
 }
 
+function detectHost() {
+  if (normalizeText(process.env.CLAUDE_PROJECT_DIR)) return "claude";
+  return "codex";
+}
+
 async function resolveRunner() {
   const customRunnerModule = normalizeText(process.env.LINGXI_MEMORY_SEMANTIC_RUNNER_MODULE);
-  const cacheKey = customRunnerModule || "__codex_exec__";
+  const host = detectHost();
+  const cacheKey = customRunnerModule || `__${host}_exec__`;
   if (!cachedRunnerPromise || cachedRunnerKey !== cacheKey) {
     cachedRunnerKey = cacheKey;
     cachedRunnerPromise = (async () => {
       if (customRunnerModule) {
         return loadRunnerFromModule(customRunnerModule);
+      }
+      if (host === "claude") {
+        const { runMemorySemanticTask } = await import(
+          pathToFileURL(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "_lingxi-claude-semantic-runner.mjs")).href
+        );
+        return runMemorySemanticTask;
       }
       return async ({ operation, projectRoot, payload, schema, prompt }) =>
         runCodexStructuredOutput(projectRoot, prompt, schema, operation, payload);

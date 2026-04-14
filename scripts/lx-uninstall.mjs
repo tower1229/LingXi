@@ -10,14 +10,17 @@ import readline from "node:readline";
 
 const projectRoot =
   process.env.CODEX_PROJECT_DIR ||
+  process.env.CLAUDE_PROJECT_DIR ||
   process.cwd();
 
 const MANIFEST_RELATIVE = "install/install-manifest.json";
 const KNOWN_MANAGED_MARKERS = [
   ".codex-plugin/plugin.json",
   "scripts/_lingxi-memory.mjs",
+  "scripts/_lingxi-memory-semantic.mjs",
+  "scripts/_lingxi-session-utils.mjs",
+  "scripts/_lingxi-claude-semantic-runner.mjs",
   "scripts/lx-memory-hook.mjs",
-  "scripts/lx-memory-hook-claude.mjs",
   "scripts/lx-select-sessions.mjs",
   "scripts/lx-distill-sessions.mjs",
   "scripts/lx-create-automation.mjs",
@@ -28,6 +31,7 @@ const KNOWN_MANAGED_MARKERS = [
   "scripts/_lingxi-codex-sessions.mjs",
   "scripts/_lingxi-codex-session-select.mjs",
   "scripts/_lingxi-claude-sessions.mjs",
+  "scripts/_lingxi-claude-session-select.mjs",
   "skills/task/SKILL.md",
   "skills/vet/SKILL.md",
   "skills/memory-retrieve/SKILL.md",
