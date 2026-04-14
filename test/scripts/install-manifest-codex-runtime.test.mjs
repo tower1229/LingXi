@@ -35,7 +35,9 @@ describe("install manifest runtime", () => {
     assert.ok(files.has("templates/agents/lingxi-session-distill.toml.tmpl"));
     assert.ok(files.has("templates/agents/lingxi-session-distill.claude.md.tmpl"));
     assert.ok(files.has("templates/automations/session-distill.toml.tmpl"));
-    assert.ok(files.has("scripts/lx-memory-hook-claude.mjs"));
+    assert.ok(files.has("scripts/_lingxi-claude-session-select.mjs"));
+    assert.ok(files.has("scripts/_lingxi-claude-semantic-runner.mjs"));
+    assert.ok(files.has("scripts/_lingxi-session-utils.mjs"));
     assert.ok(files.has("scripts/_lingxi-claude-sessions.mjs"));
   });
 

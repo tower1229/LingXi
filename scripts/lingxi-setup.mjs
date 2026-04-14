@@ -277,13 +277,12 @@ function setupCodexAdapter() {
 // Claude adapter
 // ---------------------------------------------------------------------------
 
-const managedClaudeHookCommand = "node \"$CLAUDE_PROJECT_DIR/scripts/lx-memory-hook-claude.mjs\"";
+const managedClaudeHookCommand = "node \"$CLAUDE_PROJECT_DIR/scripts/lx-memory-hook.mjs\"";
 
 function isLingxiManagedClaudeHook(handler) {
-  return handler &&
-    typeof handler === "object" &&
-    normalizeString(handler.type) === "command" &&
-    normalizeString(handler.command).includes("lx-memory-hook-claude.mjs");
+  if (!handler || typeof handler !== "object" || normalizeString(handler.type) !== "command") return false;
+  const cmd = normalizeString(handler.command);
+  return cmd.includes("lx-memory-hook.mjs") || cmd.includes("lx-memory-hook-claude.mjs");
 }
 
 function mergeClaudeHookGroups(existingGroups, managedGroup) {

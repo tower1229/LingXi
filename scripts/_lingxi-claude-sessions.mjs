@@ -1,81 +1,183 @@
 /**
  * Claude Code session source adapter.
  *
- * This module mirrors the interface of `_lingxi-codex-sessions.mjs` for Claude Code sessions.
- * Claude Code exposes session transcripts via hook payloads (`transcript_path`) rather than
- * a central session directory, so the session discovery strategy differs from Codex.
+ * Claude Code stores session transcripts as `.jsonl` files under
+ * `~/.claude/projects/<encoded-path>/`. Each line is a JSON event.
  *
- * Phase 2 implementation notes:
- * - Claude session transcripts are stored under `~/.claude/projects/<encoded-path>/`
- * - Each session is a `.jsonl` file; hook payloads carry `transcript_path` for the active session
- * - A Claude-specific runner should enumerate recent transcripts and feed them to `distill-session`
- * - Session relevance can be determined by matching the encoded project path in the transcript directory
- *
- * Current status: interface stub only. All functions return empty/no-op results.
- * Replace with real implementations when Claude session distillation is prioritized.
+ * The encoded path replaces `/` with `-` in the absolute project path,
+ * e.g. `/Users/me/myproject` becomes `Users-me-myproject`.
  */
 
+import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { normalizeText } from "./_lingxi-memory.mjs";
+import {
+  normalizeMessage,
+  uniqueMessages,
+  statsForFile,
+  hasEngineeringSignal,
+  detectSelfDistillSkipReason
+} from "./_lingxi-session-utils.mjs";
 
-/**
- * Returns the default Claude projects directory where session transcripts are stored.
- * Claude Code stores projects under `~/.claude/projects/`.
- */
 export function defaultClaudeProjectsDir() {
   return path.join(os.homedir(), ".claude", "projects");
 }
 
-/**
- * Returns a list of candidate Claude session objects for the given project root.
- *
- * Phase 2: enumerate `.jsonl` files under the project's encoded path directory,
- * normalize them into `{ session_id, file, cwd, messages, context_text, updated_at, updated_at_ms }`,
- * and return them sorted by `updated_at_ms` descending.
- *
- * @param {string} _projectRoot - absolute path to the target repository
- * @param {string} [_claudeProjectsDir] - override for the claude projects directory
- * @returns {Array<object>} empty array until Phase 2 is implemented
- */
-export function loadClaudeCandidateSessions(_projectRoot, _claudeProjectsDir) {
-  // Phase 2: implement transcript enumeration and normalization
-  return [];
+function encodeProjectPath(projectRoot) {
+  const resolved = path.resolve(projectRoot);
+  return resolved.replace(/^\//, "").replaceAll("/", "-");
 }
 
-/**
- * Returns whether a Claude session is relevant to the given project root.
- * Mirrors the interface of `isCodexSessionRelevantToProject`.
- *
- * @param {string} _projectRoot
- * @param {object} _session
- * @returns {boolean}
- */
-export function isClaudeSessionRelevantToProject(_projectRoot, _session) {
-  // Phase 2: implement cwd-based and basename-based relevance check
-  return false;
-}
+function findClaudeProjectDir(projectRoot, claudeProjectsDir) {
+  const dir = claudeProjectsDir || defaultClaudeProjectsDir();
+  if (!fs.existsSync(dir)) return null;
 
-/**
- * Returns whether a Claude session contains engineering signal worth distilling.
- * Mirrors the interface of `hasCodexEngineeringSignal`.
- *
- * @param {object} _session
- * @returns {boolean}
- */
-export function hasClaudeEngineeringSignal(_session) {
-  // Phase 2: implement signal detection against session message content
-  return false;
-}
+  const encoded = encodeProjectPath(projectRoot);
 
-/**
- * Returns a skip reason if this session should be excluded from distillation,
- * or null if it is a valid candidate.
- * Mirrors the interface of `detectCodexSelfDistillSkipReason`.
- *
- * @param {object} _session
- * @returns {string|null}
- */
-export function detectClaudeSelfDistillSkipReason(_session) {
-  // Phase 2: implement self-distillation detection for Claude sessions
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === encoded) {
+      return path.join(dir, entry.name);
+    }
+  }
+
+  // Fallback: match by basename for shorter encoded paths
+  const basename = path.basename(path.resolve(projectRoot));
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name.endsWith(`-${basename}`)) {
+      return path.join(dir, entry.name);
+    }
+  }
+
   return null;
+}
+
+function parseClaudeJsonlTranscript(content) {
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const parsed = [];
+  for (const line of lines) {
+    try {
+      parsed.push(JSON.parse(line));
+    } catch {
+      continue;
+    }
+  }
+  return parsed;
+}
+
+function extractMessagesFromClaudeTranscript(events) {
+  const raw = [];
+  for (const event of events) {
+    if (!event || typeof event !== "object") continue;
+
+    // Claude Code JSONL events have various shapes.
+    // Common: { type: "human"|"assistant", message: { ... } }
+    // Also: direct { role: "user"|"assistant", content: "..." }
+    const msg = normalizeMessage(event);
+    if (msg) {
+      raw.push(msg);
+      continue;
+    }
+
+    // Try nested message field
+    if (event.message && typeof event.message === "object") {
+      const nested = normalizeMessage(event.message);
+      if (nested) {
+        raw.push(nested);
+        continue;
+      }
+    }
+
+    // Claude transcript event with type field
+    if (event.type === "human" || event.type === "user") {
+      const content = normalizeText(
+        typeof event.message === "string" ? event.message :
+        event.message?.content || event.content || event.text || ""
+      );
+      if (content) raw.push({ role: "user", content });
+    } else if (event.type === "assistant") {
+      const content = normalizeText(
+        typeof event.message === "string" ? event.message :
+        event.message?.content || event.content || event.text || ""
+      );
+      if (content) raw.push({ role: "assistant", content });
+    }
+  }
+  return uniqueMessages(raw);
+}
+
+export function loadClaudeCandidateSessions(projectRoot, claudeProjectsDir) {
+  const projectDir = findClaudeProjectDir(projectRoot, claudeProjectsDir);
+  if (!projectDir) return [];
+
+  let entries;
+  try {
+    entries = fs.readdirSync(projectDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const sessions = [];
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.endsWith(".jsonl")) continue;
+
+    const filePath = path.join(projectDir, entry.name);
+    const stats = statsForFile(filePath);
+    if (!stats) continue;
+
+    let content;
+    try {
+      content = fs.readFileSync(filePath, "utf8");
+    } catch {
+      continue;
+    }
+
+    const events = parseClaudeJsonlTranscript(content);
+    if (events.length === 0) continue;
+
+    const messages = extractMessagesFromClaudeTranscript(events);
+    if (messages.length === 0) continue;
+
+    const sessionId = path.basename(filePath, ".jsonl");
+
+    sessions.push({
+      session_id: sessionId,
+      source_path: filePath,
+      cwd: projectRoot,
+      messages,
+      context_text: "",
+      updated_at: new Date(stats.mtimeMs).toISOString(),
+      updated_at_ms: stats.mtimeMs
+    });
+  }
+
+  return sessions.sort((a, b) => b.updated_at_ms - a.updated_at_ms);
+}
+
+export function isClaudeSessionRelevantToProject(_projectRoot, _session) {
+  // Claude sessions are already scoped by the encoded project path directory,
+  // so all sessions loaded via loadClaudeCandidateSessions are relevant.
+  return true;
+}
+
+export function hasClaudeEngineeringSignal(session) {
+  return hasEngineeringSignal(session);
+}
+
+export function detectClaudeSelfDistillSkipReason(session) {
+  return detectSelfDistillSkipReason(session);
 }

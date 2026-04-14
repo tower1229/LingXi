@@ -4,17 +4,24 @@ import path from "node:path";
 import process from "node:process";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { resolveProjectRoot } from "./_lingxi-memory.mjs";
+import { normalizeText, resolveProjectRoot } from "./_lingxi-memory.mjs";
 import { selectCodexSessions } from "./_lingxi-codex-session-select.mjs";
+import { selectClaudeSessions } from "./_lingxi-claude-session-select.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const defaultWorkerScriptPath = path.join(repoRoot, "skills", "session-distill", "scripts", "distill-session.mjs");
 
+function detectHost() {
+  if (normalizeText(process.env.CLAUDE_PROJECT_DIR)) return "claude";
+  return "codex";
+}
+
 function parseArgs(argv) {
   const args = {
     projectRoot: null,
     sessionsRoot: null,
+    host: null,
     limit: 20,
     sinceHours: 6,
     force: false
@@ -29,6 +36,11 @@ function parseArgs(argv) {
     }
     if (arg === "--sessions-root") {
       args.sessionsRoot = argv[index + 1] || null;
+      index += 1;
+      continue;
+    }
+    if (arg === "--host") {
+      args.host = argv[index + 1] || null;
       index += 1;
       continue;
     }
@@ -95,10 +107,18 @@ function summarizeProcessed(results) {
   return summary;
 }
 
+function selectSessions(host, projectRoot, args) {
+  if (host === "claude") {
+    return selectClaudeSessions(projectRoot, args);
+  }
+  return selectCodexSessions(projectRoot, args);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const host = args.host || detectHost();
   const projectRoot = resolveProjectRoot(args.projectRoot);
-  const selection = selectCodexSessions(projectRoot, args);
+  const selection = selectSessions(host, projectRoot, args);
   const workerScriptPath = distillWorkerScriptPath();
   const results = [];
 
@@ -141,7 +161,7 @@ async function main() {
   const processedSummary = summarizeProcessed(results);
   process.stdout.write(JSON.stringify({
     operation: "distill_scan_completed",
-    host: "codex",
+    host,
     selected_count: selection.selected.length,
     processed_count: processedSummary.processed_count,
     written_count: processedSummary.written_count,

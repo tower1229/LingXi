@@ -141,10 +141,10 @@ describe("lingxi-setup", () => {
     const claudeSettings = JSON.parse(fs.readFileSync(path.join(tempDir, ".claude", "settings.json"), "utf8"));
     assert.ok(Array.isArray(claudeSettings.hooks?.UserPromptSubmit));
     assert.strictEqual(claudeSettings.hooks.UserPromptSubmit.length, 1);
-    assert.match(claudeSettings.hooks.UserPromptSubmit[0].hooks[0].command, /lx-memory-hook-claude\.mjs/);
+    assert.match(claudeSettings.hooks.UserPromptSubmit[0].hooks[0].command, /lx-memory-hook\.mjs/);
 
     const claudeAgent = fs.readFileSync(path.join(tempDir, ".claude", "agents", "lingxi-session-distill.md"), "utf8");
-    assert.match(claudeAgent, /Run `node scripts\/lx-distill-sessions\.mjs`/);
+    assert.match(claudeAgent, /Run `node scripts\/lx-distill-sessions\.mjs --host claude`/);
 
     const claudeMd = fs.readFileSync(path.join(tempDir, "CLAUDE.md"), "utf8");
     assert.match(claudeMd, /@AGENTS\.md/);

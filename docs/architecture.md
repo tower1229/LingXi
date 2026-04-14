@@ -194,13 +194,20 @@ Memory consumption should follow a different rule from memory writing:
 - memory writing stays conservative and background-oriented
 - memory retrieval should be foreground and default for meaningful repository-scoped work
 - explicit workflows such as `task` and `vet` may use richer workflow-specific retrieval context, but they should not be the only consumers of LingXi memory
-- for Codex, meaningful generic repository turns should consume memory through a repo-local `UserPromptSubmit` hook adapter rather than a manual command
+- meaningful generic repository turns should consume memory through a repo-local `UserPromptSubmit` hook adapter rather than a manual command
+- a single unified hook script (`lx-memory-hook.mjs`) auto-detects the host environment and works for both Codex and Claude Code
 
 This also means the memory-consumption path should stay host-agnostic:
 
 - LingXi core should expose reusable retrieval/briefing primitives
-- Codex and future Claude Code integration should be treated as adapter layers over the same memory core
-- The same adapter rule should also apply to session discovery, scheduling, and host-specific runtime artifacts
+- Codex and Claude Code are treated as adapter layers over the same memory core
+- The same adapter rule applies to session discovery, scheduling, semantic runner selection, and host-specific runtime artifacts
+
+Semantic operations (ranking, governance, taste extraction, adjudication) use host-native LLM runners:
+
+- Codex host: `codex exec` with `--output-schema` for structured output
+- Claude Code host: `claude -p` with `--output-format json`
+- auto-detected by `resolveRunner()` based on `CLAUDE_PROJECT_DIR` env var
 
 ### `task`
 
@@ -337,13 +344,15 @@ Non-responsibilities:
 
 Responsibilities:
 
-- analyze historical Codex sessions
+- analyze historical sessions from Codex or Claude Code
 - extract only durable engineering taste
 - pass distilled items into the memory writing flow
 
 Implementation split:
 
-- Codex-specific adapter code discovers and normalizes candidate session artifacts
+- host-specific adapter code discovers and normalizes candidate session artifacts
+  - Codex: scans `~/.codex/sessions/` for `.json`/`.jsonl` artifacts
+  - Claude Code: scans `~/.claude/projects/<encoded-path>/` for `.jsonl` transcripts
 - a deterministic selector decides which sessions are valid source material
 - `distill-session` remains the single-session worker over normalized `{ session_id, messages }`
 - `skills/memory-distill/` defines the canonical semantic spec for taste extraction, adjudication, governance handoff, and retrieval intent
@@ -377,8 +386,8 @@ One subagent is enough to establish the background memory loop without creating 
 
 The subagent should:
 
-1. run LingXi's deterministic Codex distill runner
-2. let the runner inspect recent historical sessions
+1. run LingXi's deterministic distill runner (`lx-distill-sessions.mjs --host <host>`)
+2. let the runner inspect recent historical sessions from the appropriate host source
 3. let the selector filter for repository relevance and self-distill exclusion
 4. let the single-session worker identify durable engineering taste
 5. report the runner summary without replacing the selector/worker logic
@@ -421,6 +430,20 @@ Automations are the low-intrusion background engine for LingXi memory accumulati
 ### Default Cadence
 
 - every 6 hours
+
+### Scheduling By Host
+
+Codex:
+
+- uses native `rrule`-based app automations
+- scheduling is a first-class product feature
+
+Claude Code:
+
+- uses hook-triggered background distill
+- the unified `lx-memory-hook.mjs` checks the last distill timestamp on each `UserPromptSubmit`
+- if the interval (default 6 hours) has elapsed, spawns `lx-distill-sessions.mjs --host claude` as a detached background process
+- non-blocking: the hook response is not delayed by the distill process
 
 ### Why Background Automation
 

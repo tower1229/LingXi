@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 
 import process from "node:process";
+import { normalizeText } from "./_lingxi-memory.mjs";
 import { selectCodexSessions } from "./_lingxi-codex-session-select.mjs";
+import { selectClaudeSessions } from "./_lingxi-claude-session-select.mjs";
+
+function detectHost() {
+  if (normalizeText(process.env.CLAUDE_PROJECT_DIR)) return "claude";
+  return "codex";
+}
 
 function parseArgs(argv) {
   const args = {
     projectRoot: null,
     sessionsRoot: null,
+    host: null,
     limit: 20,
     sinceHours: 6
   };
@@ -20,6 +28,11 @@ function parseArgs(argv) {
     }
     if (arg === "--sessions-root") {
       args.sessionsRoot = argv[index + 1] || null;
+      index += 1;
+      continue;
+    }
+    if (arg === "--host") {
+      args.host = argv[index + 1] || null;
       index += 1;
       continue;
     }
@@ -39,7 +52,10 @@ function parseArgs(argv) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const result = selectCodexSessions(args.projectRoot, args);
+  const host = args.host || detectHost();
+  const result = host === "claude"
+    ? selectClaudeSessions(args.projectRoot, args)
+    : selectCodexSessions(args.projectRoot, args);
   process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 }
 

@@ -11,7 +11,7 @@ Goal:
 - Do not manually inspect or semantically select session artifacts yourself.
 
 Process:
-1. Run `node scripts/lx-distill-sessions.mjs`.
+1. Run `node scripts/lx-distill-sessions.mjs --host claude`.
 2. Let the runner invoke the deterministic selector and the single-session distill worker.
 3. Report the JSON summary exactly, including failures if any exist.
 
