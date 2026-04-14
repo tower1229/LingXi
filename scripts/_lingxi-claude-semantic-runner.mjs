@@ -74,7 +74,7 @@ export function runClaudeStructuredOutput(projectRoot, prompt, schema, operation
         "-p",
         `Read the prompt from ${promptFile} and respond with ONLY valid JSON matching the requested schema. No markdown fences, no explanation, just the JSON object.`,
         "--output-format", "json",
-        "-C", projectRoot
+        "--bare"
       ],
       {
         cwd: projectRoot,
