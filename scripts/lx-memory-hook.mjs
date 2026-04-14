@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { spawn } from "node:child_process";
@@ -61,6 +62,33 @@ function triggerBackgroundDistill(projectRoot) {
   }
 }
 
+function readCronStatus(projectRoot) {
+  try {
+    const setupDir = path.join(projectRoot, ".lingxi", "setup");
+    if (fs.existsSync(path.join(setupDir, "claude-cron-state.json"))) return "active";
+    if (fs.existsSync(path.join(setupDir, "claude-cron-pending.json"))) return "pending";
+    // Neither file exists: treat as pending for legacy installs
+    return "pending";
+  } catch {
+    return "unknown";
+  }
+}
+
+function buildCronSetupInstruction(projectRoot) {
+  if (readCronStatus(projectRoot) !== "pending") return null;
+  const now = new Date();
+  const next = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+  const cron = `${next.getMinutes()} ${next.getHours()} ${next.getDate()} ${next.getMonth() + 1} *`;
+  return `[LingXi Schedule Setup Needed]
+Please set up the LingXi session distillation schedule now:
+1. Use CronCreate with { recurring: false, durable: true, cron: "${cron}" } and this exact prompt:
+   "LingXi scheduled session distillation: use the Agent tool with subagent_type \\"lingxi-session-distill\\" to process recent Claude Code sessions for this project."
+2. Write the returned job ID to .lingxi/setup/claude-cron-state.json:
+   { "job_id": "<returned-id>", "scheduled_at": "${now.toISOString()}", "interval_hours": 6 }
+3. Delete the file .lingxi/setup/claude-cron-pending.json
+This is a one-time setup. The agent will self-renew the schedule after each run.`;
+}
+
 async function readJsonStdin() {
   const chunks = [];
   for await (const chunk of process.stdin) {
@@ -95,22 +123,32 @@ async function main() {
 
   if (!prompt) return;
 
+  // Check cron schedule status (Claude host only — Codex uses its own automation system)
+  const cronInstruction = isClaudeHost ? buildCronSetupInstruction(hookProjectRoot) : null;
+
   const brief = await buildConversationMemoryBrief(hookProjectRoot, prompt, {
     caller,
     interaction_mode: "conversation"
   });
 
-  // Schedule background distill after memory retrieval (non-blocking)
-  triggerBackgroundDistill(hookProjectRoot);
-
-  if (brief.operation !== "applied_memory" || !normalizeText(brief.active_memory_brief)) {
-    return;
+  // Background distill: Codex host only.
+  // Claude host uses CronCreate-based scheduled tasks instead of hook-triggered spawns.
+  if (!isClaudeHost) {
+    triggerBackgroundDistill(hookProjectRoot);
   }
+
+  const contextParts = [];
+  if (cronInstruction) contextParts.push(cronInstruction);
+  if (brief.operation === "applied_memory" && normalizeText(brief.active_memory_brief)) {
+    contextParts.push(brief.active_memory_brief);
+  }
+
+  if (contextParts.length === 0) return;
 
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: brief.active_memory_brief
+      additionalContext: contextParts.join("\n\n")
     }
   }, null, 2) + "\n");
 }

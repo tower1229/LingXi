@@ -385,6 +385,19 @@ function copyDirRecursive(src, dst) {
   }
 }
 
+function setupClaudeCronPending() {
+  const setupDir = resolveTarget(".lingxi", "setup");
+  const statePath = path.join(setupDir, "claude-cron-state.json");
+  const pendingPath = path.join(setupDir, "claude-cron-pending.json");
+  // Do not overwrite an active schedule or an existing pending signal
+  if (fs.existsSync(statePath) || fs.existsSync(pendingPath)) return;
+  writeManagedArtifact(pendingPath, JSON.stringify({
+    generated_by: "lingxi-setup",
+    interval_hours: 6,
+    created_at: new Date().toISOString()
+  }, null, 2) + "\n");
+}
+
 function setupClaudeAdapter() {
   // .claude/agents/lingxi-session-distill.md
   writeManagedArtifact(
@@ -402,6 +415,9 @@ function setupClaudeAdapter() {
 
   // CLAUDE.md (only when missing)
   const wroteClaudeMd = writeIfMissing(resolveTarget("CLAUDE.md"), defaultClaudeMd());
+
+  // .lingxi/setup/claude-cron-pending.json (signal for CronCreate bootstrap)
+  setupClaudeCronPending();
 
   return { wroteClaudeMd };
 }
