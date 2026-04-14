@@ -3,9 +3,6 @@ import os from "node:os";
 import path from "node:path";
 import { normalizeText } from "./_lingxi-memory.mjs";
 import {
-  SESSION_FILE_EXTENSIONS,
-  extractText,
-  normalizeRole,
   normalizeMessage,
   uniqueMessages,
   findMessages,
