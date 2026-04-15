@@ -39,14 +39,26 @@ function logHookError(projectRoot, operation, error) {
   }
 }
 
+function isDistillLockActive(lockPath) {
+  try {
+    const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
+    if (Date.now() - lock.started_at > 30 * 60 * 1000) return false;
+    try { process.kill(lock.pid, 0); return true; } catch { return false; }
+  } catch {
+    return false;
+  }
+}
+
 function triggerBackgroundDistill(projectRoot) {
   try {
     if (!shouldTriggerBackgroundDistill(projectRoot)) return;
+    const lockPath = path.join(projectRoot, ".lingxi", "state", "distill.lock");
+    if (isDistillLockActive(lockPath)) return;
     const scriptPath = path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
       "lx-distill-sessions.mjs"
     );
-    const child = spawn(process.execPath, [scriptPath, "--host", isClaudeHost ? "claude" : "codex", "--project-root", projectRoot], {
+    const child = spawn(process.execPath, [scriptPath, "--host", isClaudeHost ? "claude" : "codex", "--project-root", projectRoot, "--lock-file", lockPath], {
       cwd: projectRoot,
       stdio: "ignore",
       detached: true
@@ -60,33 +72,6 @@ function triggerBackgroundDistill(projectRoot) {
   } catch {
     // non-critical, fail silently
   }
-}
-
-function readCronStatus(projectRoot) {
-  try {
-    const setupDir = path.join(projectRoot, ".lingxi", "setup");
-    if (fs.existsSync(path.join(setupDir, "claude-cron-state.json"))) return "active";
-    if (fs.existsSync(path.join(setupDir, "claude-cron-pending.json"))) return "pending";
-    // Neither file exists: treat as pending for legacy installs
-    return "pending";
-  } catch {
-    return "unknown";
-  }
-}
-
-function buildCronSetupInstruction(projectRoot) {
-  if (readCronStatus(projectRoot) !== "pending") return null;
-  const now = new Date();
-  const next = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-  const cron = `${next.getMinutes()} ${next.getHours()} ${next.getDate()} ${next.getMonth() + 1} *`;
-  return `[LingXi Schedule Setup Needed]
-Please set up the LingXi session distillation schedule now:
-1. Use CronCreate with { recurring: false, durable: true, cron: "${cron}" } and this exact prompt:
-   "LingXi scheduled session distillation: use the Agent tool with subagent_type \\"lingxi-session-distill\\" to process recent Claude Code sessions for this project."
-2. Write the returned job ID to .lingxi/setup/claude-cron-state.json:
-   { "job_id": "<returned-id>", "scheduled_at": "${now.toISOString()}", "interval_hours": 6 }
-3. Delete the file .lingxi/setup/claude-cron-pending.json
-This is a one-time setup. The agent will self-renew the schedule after each run.`;
 }
 
 async function readJsonStdin() {
@@ -123,22 +108,14 @@ async function main() {
 
   if (!prompt) return;
 
-  // Check cron schedule status (Claude host only — Codex uses its own automation system)
-  const cronInstruction = isClaudeHost ? buildCronSetupInstruction(hookProjectRoot) : null;
-
   const brief = await buildConversationMemoryBrief(hookProjectRoot, prompt, {
     caller,
     interaction_mode: "conversation"
   });
 
-  // Background distill: Codex host only.
-  // Claude host uses CronCreate-based scheduled tasks instead of hook-triggered spawns.
-  if (!isClaudeHost) {
-    triggerBackgroundDistill(hookProjectRoot);
-  }
+  triggerBackgroundDistill(hookProjectRoot);
 
   const contextParts = [];
-  if (cronInstruction) contextParts.push(cronInstruction);
   if (brief.operation === "applied_memory" && normalizeText(brief.active_memory_brief)) {
     contextParts.push(brief.active_memory_brief);
   }

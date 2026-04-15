@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { spawn } from "node:child_process";
@@ -24,7 +25,8 @@ function parseArgs(argv) {
     host: null,
     limit: 20,
     sinceHours: 6,
-    force: false
+    force: false,
+    lockFile: null
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -56,6 +58,10 @@ function parseArgs(argv) {
     }
     if (arg === "--force") {
       args.force = true;
+    }
+    if (arg === "--lock-file") {
+      args.lockFile = argv[index + 1] || null;
+      index += 1;
     }
   }
 
@@ -118,59 +124,70 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const host = args.host || detectHost();
   const projectRoot = resolveProjectRoot(args.projectRoot);
-  const selection = selectSessions(host, projectRoot, args);
-  const workerScriptPath = distillWorkerScriptPath();
-  const results = [];
 
-  for (const session of selection.selected) {
-    const input = {
-      session_id: session.session_id,
-      messages: session.messages
-    };
-    if (args.force) {
-      input.force = true;
-    }
+  if (args.lockFile) {
+    fs.writeFileSync(args.lockFile, JSON.stringify({ pid: process.pid, started_at: Date.now() }));
+  }
 
-    try {
-      const result = await runSingleDistill(workerScriptPath, projectRoot, input);
-      if (result.code !== 0) {
+  try {
+    const selection = selectSessions(host, projectRoot, args);
+    const workerScriptPath = distillWorkerScriptPath();
+    const results = [];
+
+    for (const session of selection.selected) {
+      const input = {
+        session_id: session.session_id,
+        messages: session.messages
+      };
+      if (args.force) {
+        input.force = true;
+      }
+
+      try {
+        const result = await runSingleDistill(workerScriptPath, projectRoot, input);
+        if (result.code !== 0) {
+          results.push({
+            operation: "failed",
+            session_id: session.session_id,
+            source_path: session.source_path,
+            error: (result.stderr || result.stdout || "distill worker failed").trim()
+          });
+          continue;
+        }
+
+        const parsed = JSON.parse(result.stdout);
+        results.push({
+          ...parsed,
+          source_path: session.source_path
+        });
+      } catch (error) {
         results.push({
           operation: "failed",
           session_id: session.session_id,
           source_path: session.source_path,
-          error: (result.stderr || result.stdout || "distill worker failed").trim()
+          error: String(error.message || error)
         });
-        continue;
       }
+    }
 
-      const parsed = JSON.parse(result.stdout);
-      results.push({
-        ...parsed,
-        source_path: session.source_path
-      });
-    } catch (error) {
-      results.push({
-        operation: "failed",
-        session_id: session.session_id,
-        source_path: session.source_path,
-        error: String(error.message || error)
-      });
+    const processedSummary = summarizeProcessed(results);
+    process.stdout.write(JSON.stringify({
+      operation: "distill_scan_completed",
+      host,
+      selected_count: selection.selected.length,
+      processed_count: processedSummary.processed_count,
+      written_count: processedSummary.written_count,
+      merged_count: processedSummary.merged_count,
+      skipped_count: processedSummary.skipped_count,
+      failed_count: processedSummary.failed_count,
+      selection,
+      results
+    }, null, 2) + "\n");
+  } finally {
+    if (args.lockFile) {
+      try { fs.unlinkSync(args.lockFile); } catch {}
     }
   }
-
-  const processedSummary = summarizeProcessed(results);
-  process.stdout.write(JSON.stringify({
-    operation: "distill_scan_completed",
-    host,
-    selected_count: selection.selected.length,
-    processed_count: processedSummary.processed_count,
-    written_count: processedSummary.written_count,
-    merged_count: processedSummary.merged_count,
-    skipped_count: processedSummary.skipped_count,
-    failed_count: processedSummary.failed_count,
-    selection,
-    results
-  }, null, 2) + "\n");
 }
 
 main().catch((error) => {

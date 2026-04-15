@@ -14,15 +14,8 @@ Process:
 1. Run `node scripts/lx-distill-sessions.mjs --host claude`.
 2. Let the runner invoke the deterministic selector and the single-session distill worker.
 3. Report the JSON summary exactly, including failures if any exist.
-4. Schedule the next run (self-renewing CronCreate chain):
-   a. Compute the cron expression for exactly 6 hours from now in local time (format: "M H DoM Mon *", e.g. "25 14 15 4 *").
-   b. Use CronCreate with { recurring: false, durable: true, cron: "<computed>" } and this exact prompt:
-      "LingXi scheduled session distillation: use the Agent tool with subagent_type \"lingxi-session-distill\" to process recent Claude Code sessions for this project."
-   c. Write the returned job ID to .lingxi/setup/claude-cron-state.json:
-      { "job_id": "<returned-id>", "scheduled_at": "<ISO-now>", "interval_hours": 6 }
 
 Guardrails:
 - Do not bypass the runner by manually reading session artifacts.
 - Do not substitute your own session-selection logic for LingXi's deterministic selector.
 - Treat `.claude/agents/` and generated artifacts as Claude Code runtime adapter artifacts, not LingXi memory core.
-- Always complete step 4 after a successful or skipped distillation run to maintain schedule continuity.

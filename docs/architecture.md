@@ -429,21 +429,16 @@ Automations are the low-intrusion background engine for LingXi memory accumulati
 
 ### Default Cadence
 
-- every 6 hours
+- every 6 hours (event-driven, not timer-based)
 
-### Scheduling By Host
+### Scheduling
 
-Codex:
+Both Codex and Claude Code use the same hook-driven mechanism:
 
-- uses native `rrule`-based app automations
-- scheduling is a first-class product feature
-
-Claude Code:
-
-- uses hook-triggered background distill
 - the unified `lx-memory-hook.mjs` checks the last distill timestamp on each `UserPromptSubmit`
-- if the interval (default 6 hours) has elapsed, spawns `lx-distill-sessions.mjs --host claude` as a detached background process
+- if the interval (default 6 hours) has elapsed and no distill process is already running (PID lock), spawns `lx-distill-sessions.mjs` as a detached background process
 - non-blocking: the hook response is not delayed by the distill process
+- inactive projects incur zero overhead since the hook only fires on user interaction
 
 ### Why Background Automation
 

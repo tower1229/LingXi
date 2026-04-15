@@ -25,7 +25,6 @@ describe("install manifest runtime", () => {
     assert.ok(files.has("scripts/_lingxi-codex-sessions.mjs"));
     assert.ok(files.has("scripts/_lingxi-codex-session-select.mjs"));
     assert.ok(files.has("scripts/lx-bootstrap.mjs"));
-    assert.ok(files.has("scripts/lx-create-automation.mjs"));
     assert.ok(files.has("scripts/lx-distill-sessions.mjs"));
     assert.ok(files.has("scripts/lx-memory-hook.mjs"));
     assert.ok(files.has("scripts/lx-select-sessions.mjs"));
@@ -34,7 +33,6 @@ describe("install manifest runtime", () => {
     assert.ok(files.has("scripts/lx-uninstall.mjs"));
     assert.ok(files.has("templates/agents/lingxi-session-distill.toml.tmpl"));
     assert.ok(files.has("templates/agents/lingxi-session-distill.claude.md.tmpl"));
-    assert.ok(files.has("templates/automations/session-distill.toml.tmpl"));
     assert.ok(files.has("scripts/_lingxi-claude-session-select.mjs"));
     assert.ok(files.has("scripts/_lingxi-claude-semantic-runner.mjs"));
     assert.ok(files.has("scripts/_lingxi-session-utils.mjs"));
@@ -64,7 +62,6 @@ describe("install manifest runtime", () => {
     const manifest = loadManifest();
     assert.deepStrictEqual(manifest.packageScripts, {
       "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
-      "lx:create-automation": "node scripts/lx-create-automation.mjs",
       "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
       "lx:setup": "node scripts/lingxi-setup.mjs",
       "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",

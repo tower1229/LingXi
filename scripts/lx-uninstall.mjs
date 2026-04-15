@@ -23,7 +23,6 @@ const KNOWN_MANAGED_MARKERS = [
   "scripts/lx-memory-hook.mjs",
   "scripts/lx-select-sessions.mjs",
   "scripts/lx-distill-sessions.mjs",
-  "scripts/lx-create-automation.mjs",
   "scripts/lx-bootstrap.mjs",
   "scripts/lingxi-memory-index.mjs",
   "scripts/lingxi-setup.mjs",
@@ -39,7 +38,6 @@ const KNOWN_MANAGED_MARKERS = [
   "skills/session-distill/SKILL.md",
   "templates/agents/lingxi-session-distill.toml.tmpl",
   "templates/agents/lingxi-session-distill.claude.md.tmpl",
-  "templates/automations/session-distill.toml.tmpl",
   ".lingxi",
   ".codex/config.toml",
   ".codex/hooks.json",
@@ -50,7 +48,6 @@ const KNOWN_MANAGED_MARKERS = [
   "CLAUDE.md"
 ];
 const DEFAULT_MANAGED_PACKAGE_SCRIPTS = {
-  "lx:create-automation": "node scripts/lx-create-automation.mjs",
   "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
   "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
   "lx:setup": "node scripts/lingxi-setup.mjs",

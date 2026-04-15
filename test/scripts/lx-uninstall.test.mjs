@@ -36,7 +36,6 @@ function setupUninstallFixture(tmpDir) {
   fs.mkdirSync(path.join(tmpDir, "scripts"), { recursive: true });
   fs.writeFileSync(path.join(tmpDir, "scripts", "_lingxi-memory.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-bootstrap.mjs"), "dummy", "utf8");
-  fs.writeFileSync(path.join(tmpDir, "scripts", "lx-create-automation.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lx-memory-hook.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-memory-index.mjs"), "dummy", "utf8");
   fs.writeFileSync(path.join(tmpDir, "scripts", "lingxi-setup.mjs"), "dummy", "utf8");
@@ -59,7 +58,6 @@ function setupUninstallFixture(tmpDir) {
       scripts: {
         test: "node --test",
         "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
-        "lx:create-automation": "node scripts/lx-create-automation.mjs",
         "lx:setup": "node scripts/lingxi-setup.mjs",
         "lx:uninstall": "node scripts/lx-uninstall.mjs"
       }

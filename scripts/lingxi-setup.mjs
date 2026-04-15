@@ -251,7 +251,16 @@ function mergeCodexTomlConfig(existingContent = "") {
   return `${output.join("\n").replace(/\n*$/, "\n")}`;
 }
 
+function cleanupLegacyAutomation() {
+  const automationToml = resolveTarget(".lingxi", "setup", "automation.session-distill.toml");
+  if (fs.existsSync(automationToml)) {
+    fs.unlinkSync(automationToml);
+  }
+}
+
 function setupCodexAdapter() {
+  cleanupLegacyAutomation();
+
   writeManagedArtifact(
     resolveTarget(".codex", "agents", "lingxi-session-distill.toml"),
     renderTemplate("agents/lingxi-session-distill.toml.tmpl")
@@ -264,13 +273,6 @@ function setupCodexAdapter() {
   const codexHooksPath = resolveTarget(".codex", "hooks.json");
   const existingCodexHooks = fs.existsSync(codexHooksPath) ? fs.readFileSync(codexHooksPath, "utf8") : null;
   writeManagedArtifact(codexHooksPath, mergeCodexHooksConfig(existingCodexHooks));
-
-  writeManagedArtifact(
-    resolveTarget(".lingxi", "setup", "automation.session-distill.toml"),
-    renderTemplate("automations/session-distill.toml.tmpl", {
-      "__PROJECT_ROOT__": targetRoot
-    })
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -385,20 +387,17 @@ function copyDirRecursive(src, dst) {
   }
 }
 
-function setupClaudeCronPending() {
-  const setupDir = resolveTarget(".lingxi", "setup");
-  const statePath = path.join(setupDir, "claude-cron-state.json");
-  const pendingPath = path.join(setupDir, "claude-cron-pending.json");
-  // Do not overwrite an active schedule or an existing pending signal
-  if (fs.existsSync(statePath) || fs.existsSync(pendingPath)) return;
-  writeManagedArtifact(pendingPath, JSON.stringify({
-    generated_by: "lingxi-setup",
-    interval_hours: 6,
-    created_at: new Date().toISOString()
-  }, null, 2) + "\n");
+function cleanupLegacyCronPending() {
+  for (const name of ["claude-cron-pending.json", "claude-cron-state.json"]) {
+    const filePath = resolveTarget(".lingxi", "setup", name);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
 }
 
 function setupClaudeAdapter() {
+  cleanupLegacyCronPending();
   // .claude/agents/lingxi-session-distill.md
   writeManagedArtifact(
     resolveTarget(".claude", "agents", "lingxi-session-distill.md"),
@@ -415,9 +414,6 @@ function setupClaudeAdapter() {
 
   // CLAUDE.md (only when missing)
   const wroteClaudeMd = writeIfMissing(resolveTarget("CLAUDE.md"), defaultClaudeMd());
-
-  // .lingxi/setup/claude-cron-pending.json (signal for CronCreate bootstrap)
-  setupClaudeCronPending();
 
   return { wroteClaudeMd };
 }
@@ -462,8 +458,7 @@ function main() {
       ...(codexEnabled ? [
         ".codex/config.toml",
         ".codex/hooks.json",
-        ".codex/agents/lingxi-session-distill.toml",
-        ".lingxi/setup/automation.session-distill.toml"
+        ".codex/agents/lingxi-session-distill.toml"
       ] : []),
       ...(claudeEnabled ? [
         ".claude/settings.json",
@@ -472,9 +467,6 @@ function main() {
       ] : [])
     ],
     ...(codexEnabled ? {
-      default_distill_rrule: "FREQ=HOURLY;INTERVAL=6",
-      automation_registration_required: true,
-      automation_create_command: "node scripts/lx-create-automation.mjs",
       codex_hooks_enabled: true,
       codex_hooks_windows_note: windowsHooksNote
     } : {})

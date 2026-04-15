@@ -72,8 +72,6 @@ node scripts/lx-bootstrap.mjs
 - 生成 `.lingxi/` 公共运行时骨架
 - 生成 `.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/lingxi-session-distill.toml`（Codex adapter）
 - 生成 `.claude/settings.json`、`.claude/agents/lingxi-session-distill.md`、`.claude/skills/`（Claude Code adapter）
-- 生成 `.lingxi/setup/automation.session-distill.toml`
-- 把该自动化配置注册成实际的 Codex 自动化任务
 
 可以通过 `--host` 参数只生成特定 host 的 artifacts：
 
@@ -91,7 +89,6 @@ LingXi 默认把该自动化注册为 `local` 执行环境，而不是 `worktree
 
 ```bash
 node scripts/lingxi-setup.mjs
-node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
 ```
 

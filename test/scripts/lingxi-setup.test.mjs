@@ -66,15 +66,12 @@ describe("lingxi-setup", () => {
     const codexHooks = JSON.parse(fs.readFileSync(path.join(tempDir, ".codex", "hooks.json"), "utf8"));
     const distillAgent = fs.readFileSync(path.join(tempDir, ".codex", "agents", "lingxi-session-distill.toml"), "utf8");
     const state = JSON.parse(fs.readFileSync(path.join(tempDir, ".lingxi", "state", "processed-sessions.json"), "utf8"));
-    const automation = fs.readFileSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml"), "utf8");
     const summary = JSON.parse(result.stdout);
 
     assert.strictEqual(summary.host, "all");
     assert.strictEqual(summary.codex_enabled, true);
     assert.strictEqual(summary.claude_enabled, true);
-    assert.strictEqual(summary.default_distill_rrule, "FREQ=HOURLY;INTERVAL=6");
-    assert.strictEqual(summary.automation_registration_required, true);
-    assert.strictEqual(summary.automation_create_command, "node scripts/lx-create-automation.mjs");
+    assert.strictEqual(summary.default_distill_rrule, undefined);
     assert.strictEqual(summary.codex_hooks_enabled, true);
     assert.match(summary.codex_hooks_windows_note, /does not execute hooks natively on Windows yet/);
     assert.strictEqual(state.state_schema_version, "v2");
@@ -91,11 +88,7 @@ describe("lingxi-setup", () => {
     });
     assert.strictEqual(state.last_run, null);
     assert.deepStrictEqual(state.sessions, {});
-    assert.match(automation, /rrule = "FREQ=HOURLY;INTERVAL=6"/);
-    assert.match(automation, /agent = "\.codex\/agents\/lingxi-session-distill\.toml"/);
-    assert.match(automation, /state_file = "\.lingxi\/state\/processed-sessions\.json"/);
-    assert.match(automation, /journal_file = "\.lingxi\/state\/distill-journal\.jsonl"/);
-    assert.match(automation, /lx-distill-sessions\.mjs/);
+    assert.ok(!fs.existsSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml")));
     assert.match(codexConfig, /\[features\]/);
     assert.match(codexConfig, /^codex_hooks = true$/m);
     assert.ok(Array.isArray(codexHooks.hooks?.UserPromptSubmit));
@@ -204,7 +197,6 @@ describe("lingxi-setup", () => {
     assert.strictEqual(first.code, 0, first.stderr);
 
     const stateFile = path.join(tempDir, ".lingxi", "state", "processed-sessions.json");
-    const automationFile = path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml");
     const journalFile = path.join(tempDir, ".lingxi", "state", "distill-journal.jsonl");
     const codexConfigFile = path.join(tempDir, ".codex", "config.toml");
     const codexHooksFile = path.join(tempDir, ".codex", "hooks.json");
@@ -286,11 +278,6 @@ describe("lingxi-setup", () => {
       "legacy agent prompt\n",
       "utf8"
     );
-    fs.writeFileSync(
-      automationFile,
-      "prompt = \"Analyze recent Codex sessions manually.\"\n",
-      "utf8"
-    );
 
     const second = await runSetup(tempDir);
     assert.strictEqual(second.code, 0, second.stderr);
@@ -299,8 +286,7 @@ describe("lingxi-setup", () => {
       customState
     );
     assert.strictEqual(fs.readFileSync(journalFile, "utf8"), "{\"ts\":\"2026-04-08T00:00:00.000Z\"}\n");
-    assert.match(fs.readFileSync(automationFile, "utf8"), /rrule = "FREQ=HOURLY;INTERVAL=6"/);
-    assert.match(fs.readFileSync(automationFile, "utf8"), /lx-distill-sessions\.mjs/);
+    assert.ok(!fs.existsSync(path.join(tempDir, ".lingxi", "setup", "automation.session-distill.toml")));
     const mergedConfig = fs.readFileSync(codexConfigFile, "utf8");
     const mergedHooks = JSON.parse(fs.readFileSync(codexHooksFile, "utf8"));
     assert.match(mergedConfig, /^model = "gpt-5.4"$/m);

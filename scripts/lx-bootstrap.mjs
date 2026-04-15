@@ -44,17 +44,12 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const setup = runNodeScript("scripts/lingxi-setup.mjs", ["--host", args.host]);
 
-  // Codex automation registration only applies when Codex adapter is enabled
-  const codexEnabled = args.host === "codex" || args.host === "all";
-  const automation = codexEnabled ? runNodeScript("scripts/lx-create-automation.mjs") : null;
-
   process.stdout.write(JSON.stringify({
     operation: "bootstrapped",
     project_root: setup.target_root,
     host: setup.host,
     memory_loop_ready: true,
-    setup,
-    ...(automation ? { automation } : {})
+    setup
   }, null, 2) + "\n");
 }
 

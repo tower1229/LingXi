@@ -46,7 +46,7 @@ describe("lx-bootstrap", () => {
     }
   });
 
-  it("completes runtime setup and automation registration in one step", async () => {
+  it("completes runtime setup in one step", async () => {
     projectDir = createTempDir("lingxi-bootstrap-project-");
     codexHome = createTempDir("lingxi-bootstrap-codex-home-");
 
@@ -58,10 +58,10 @@ describe("lx-bootstrap", () => {
     assert.strictEqual(summary.project_root, projectDir);
     assert.strictEqual(summary.memory_loop_ready, true);
     assert.strictEqual(summary.setup.target_root, projectDir);
-    assert.ok(summary.automation.automation_id.startsWith("lingxi-session-distill-"));
+    assert.strictEqual(summary.automation, undefined);
 
     assert.ok(fs.existsSync(path.join(projectDir, ".lingxi", "memory", "INDEX.md")));
     assert.ok(fs.existsSync(path.join(projectDir, ".codex", "agents", "lingxi-session-distill.toml")));
-    assert.ok(fs.existsSync(summary.automation.automation_path));
+    assert.ok(!fs.existsSync(path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml")));
   });
 });

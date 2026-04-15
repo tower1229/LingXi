@@ -1,9 +1,0 @@
-generated_by = "lingxi-setup"
-name = "LingXi Session Distill"
-prompt = "Run `node scripts/lx-distill-sessions.mjs` for this repository, use its deterministic selector and single-session distill worker, and report the JSON summary without manually choosing sessions yourself."
-status = "ACTIVE"
-rrule = "FREQ=HOURLY;INTERVAL=6"
-agent = ".codex/agents/lingxi-session-distill.toml"
-state_file = ".lingxi/state/processed-sessions.json"
-journal_file = ".lingxi/state/distill-journal.jsonl"
-cwds = ["__PROJECT_ROOT__"]

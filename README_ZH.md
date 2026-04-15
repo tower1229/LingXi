@@ -98,8 +98,6 @@ node scripts/lx-bootstrap.mjs
 - `.codex/config.toml`
 - `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
-- `.lingxi/setup/automation.session-distill.toml`
-- 在 Codex 中注册 session-distill 自动化任务
 
 生成出来的 Codex automation 与 agent 属于 LingXi memory core 之上的 runtime adapter。它们应当启动确定性 distill runner，而不是手工挑选会话。
 
@@ -111,7 +109,6 @@ node scripts/lx-bootstrap.mjs
 
 ```bash
 node scripts/lingxi-setup.mjs
-node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
 ```
 

@@ -7,7 +7,6 @@
   "license": "MIT",
   "scripts": {
     "lx:bootstrap": "node scripts/lx-bootstrap.mjs",
-    "lx:create-automation": "node scripts/lx-create-automation.mjs",
     "lx:distill-sessions": "node scripts/lx-distill-sessions.mjs",
     "lx:setup": "node scripts/lingxi-setup.mjs",
     "lx:setup:claude": "node scripts/lingxi-setup.mjs --host claude",

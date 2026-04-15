@@ -98,8 +98,6 @@ This step:
 - `.codex/config.toml`
 - `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
-- `.lingxi/setup/automation.session-distill.toml`
-- registers the generated session-distill automation in Codex
 
 The generated Codex automation and agent are runtime adapters over LingXi's host-agnostic memory core. They should launch the deterministic distill runner rather than manually picking sessions.
 
@@ -111,7 +109,6 @@ If you need to run the low-level steps separately for debugging or inspection:
 
 ```bash
 node scripts/lingxi-setup.mjs
-node scripts/lx-create-automation.mjs
 node scripts/lx-distill-sessions.mjs
 ```
 

@@ -70,10 +70,6 @@ function runInstaller(projectRoot, extraEnv = {}) {
   });
 }
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 describe("install/bash.sh smoke", () => {
   let projectDir;
   let codexHome;
@@ -119,12 +115,6 @@ describe("install/bash.sh smoke", () => {
       "legacy agent prompt\n",
       "utf8"
     );
-    fs.writeFileSync(
-      path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml"),
-      "prompt = \"Analyze recent Codex sessions manually.\"\n",
-      "utf8"
-    );
-
     const localServer = await createStaticServer(repoRoot);
     server = localServer.server;
 
@@ -141,24 +131,16 @@ describe("install/bash.sh smoke", () => {
 
     const pkg = JSON.parse(fs.readFileSync(path.join(projectDir, "package.json"), "utf8"));
     assert.strictEqual(pkg.scripts["lx:bootstrap"], "node scripts/lx-bootstrap.mjs");
-    assert.strictEqual(pkg.scripts["lx:create-automation"], "node scripts/lx-create-automation.mjs");
     assert.strictEqual(pkg.scripts["lx:distill-sessions"], "node scripts/lx-distill-sessions.mjs");
     assert.strictEqual(pkg.scripts["lx:setup"], "node scripts/lingxi-setup.mjs");
     assert.strictEqual(pkg.scripts["lx:uninstall"], "node scripts/lx-uninstall.mjs");
 
     assert.ok(fs.existsSync(path.join(projectDir, ".lingxi", "memory", "INDEX.md")));
-    assert.ok(fs.existsSync(path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml")));
+    assert.ok(!fs.existsSync(path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml")));
     assert.ok(fs.existsSync(path.join(projectDir, ".codex", "config.toml")));
     assert.ok(fs.existsSync(path.join(projectDir, ".codex", "hooks.json")));
     assert.ok(fs.existsSync(path.join(projectDir, ".codex", "agents", "lingxi-session-distill.toml")));
     assert.ok(fs.existsSync(path.join(projectDir, "AGENTS.md")));
-
-    const generatedAutomation = fs.readFileSync(
-      path.join(projectDir, ".lingxi", "setup", "automation.session-distill.toml"),
-      "utf8"
-    );
-    assert.match(generatedAutomation, /lx-distill-sessions\.mjs/);
-    assert.match(generatedAutomation, /agent = "\.codex\/agents\/lingxi-session-distill\.toml"/);
 
     const generatedAgent = fs.readFileSync(
       path.join(projectDir, ".codex", "agents", "lingxi-session-distill.toml"),
@@ -167,20 +149,6 @@ describe("install/bash.sh smoke", () => {
     assert.match(generatedAgent, /Run `node scripts\/lx-distill-sessions\.mjs`/);
     assert.match(generatedAgent, /Do not bypass the runner by manually reading Codex session artifacts\./);
 
-    const automationRoot = path.join(codexHome, "automations");
-    const automationIds = fs.readdirSync(automationRoot);
-    assert.strictEqual(automationIds.length, 1);
-
-    const automationToml = fs.readFileSync(
-      path.join(automationRoot, automationIds[0], "automation.toml"),
-      "utf8"
-    );
-    assert.match(automationToml, /^name = "LingXi Session Distill"$/m);
-    assert.match(automationToml, /^execution_environment = "local"$/m);
-    assert.match(automationToml, /lx-distill-sessions\.mjs/);
-    assert.match(
-      automationToml,
-      new RegExp(`^cwds = \\["${escapeRegExp(projectDir).replace(/\\/g, "\\\\")}"\\]$`, "m")
-    );
+    assert.ok(!fs.existsSync(path.join(codexHome, "automations")));
   });
 });
