@@ -86,7 +86,7 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 如果你使用的是上面的远程安装脚本，安装过程中已经自动执行了本地 bootstrap，一般不需要再手动跑一遍。
 
-如果你是手动同步文件到项目，或者只想补跑 runtime / automation 注册，则执行：
+如果你是手动同步文件到项目，或者只想补跑 runtime 注册，则执行：
 
 ```bash
 node scripts/lx-bootstrap.mjs
@@ -99,9 +99,7 @@ node scripts/lx-bootstrap.mjs
 - `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 
-生成出来的 Codex automation 与 agent 属于 LingXi memory core 之上的 runtime adapter。它们应当启动确定性 distill runner，而不是手工挑选会话。
-
-如果不注册自动化，LingXi 的后台记忆沉淀循环实际上并没有闭环。
+生成的 agent 产物属于 LingXi memory core 之上的 runtime adapter。会话提炼由 `UserPromptSubmit` hook 在用户活跃时自动触发。
 
 ### 底层命令
 

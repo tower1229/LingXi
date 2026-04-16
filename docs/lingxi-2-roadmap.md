@@ -350,8 +350,6 @@ After setup, a target repository should contain:
   state/
     processed-sessions.json
     distill-journal.jsonl
-  setup/
-    automation.session-distill.toml
 .codex/
   agents/
     lingxi-session-distill.toml
@@ -361,9 +359,9 @@ AGENTS.md
 ### Notes
 
 - `.lingxi/state/processed-sessions.json` tracks what has already been distilled.
-- `.lingxi/setup/automation.session-distill.toml` preserves generated automation config, including the default `FREQ=HOURLY;INTERVAL=6` cadence and linked state/journal files.
-- `node scripts/lx-bootstrap.mjs` is the default bootstrap step that both generates the automation artifact and registers the real Codex automation entry.
+- `node scripts/lx-bootstrap.mjs` is the default bootstrap step that runs setup and generates host adapter artifacts.
 - `.codex/agents/lingxi-session-distill.toml` is the project-local background agent definition.
+- Session distillation is triggered by the `UserPromptSubmit` hook, not by fixed-interval scheduling.
 
 ### Session Distillation State
 

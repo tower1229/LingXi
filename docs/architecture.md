@@ -99,8 +99,6 @@ Expected runtime structure in target repositories:
   state/
     processed-sessions.json
     distill-journal.jsonl
-  setup/
-    automation.session-distill.toml
 .codex/
   config.toml
   hooks.json
@@ -141,11 +139,6 @@ CLAUDE.md
 `state/distill-journal.jsonl`
 
 - stores lightweight operational history for distillation runs
-
-`setup/automation.session-distill.toml`
-
-- stores the generated automation configuration artifact for auditability
-- acts as the source artifact consumed by bootstrap when registering Codex automation
 
 `.codex/config.toml`
 
@@ -807,15 +800,13 @@ When `--host codex` or `--host all` (default):
 5. merge or create `.codex/config.toml`
 6. merge or create `.codex/hooks.json`
 7. generate `.codex/agents/lingxi-session-distill.toml`
-8. generate `.lingxi/setup/automation.session-distill.toml`
-9. register Codex automation through bootstrap
 
 When `--host claude` or `--host all` (default):
 
-10. merge or create `.claude/settings.json`
-11. generate `.claude/agents/lingxi-session-distill.md`
-12. copy skills to `.claude/skills/`
-13. generate `CLAUDE.md` only when missing
+8. merge or create `.claude/settings.json`
+9. generate `.claude/agents/lingxi-session-distill.md`
+10. copy skills to `.claude/skills/`
+11. generate `CLAUDE.md` only when missing
 
 ### Setup Safety Rules
 

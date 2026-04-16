@@ -86,7 +86,7 @@ irm https://raw.githubusercontent.com/tower1229/LingXi/main/install/powershell.p
 
 If you used the remote install script above, local bootstrap already ran during installation, so you usually do not need to run it again.
 
-If you installed the files manually, or want to rerun runtime / automation registration explicitly, run:
+If you installed the files manually, or want to rerun runtime registration explicitly, run:
 
 ```bash
 node scripts/lx-bootstrap.mjs
@@ -99,9 +99,7 @@ This step:
 - `.codex/hooks.json`
 - `.codex/agents/lingxi-session-distill.toml`
 
-The generated Codex automation and agent are runtime adapters over LingXi's host-agnostic memory core. They should launch the deterministic distill runner rather than manually picking sessions.
-
-Without automation registration, the background memory distillation loop is not actually closed.
+The generated agent artifacts are runtime adapters over LingXi's host-agnostic memory core. Session distillation is triggered automatically by the `UserPromptSubmit` hook whenever there is user activity.
 
 ### Low-Level Commands
 

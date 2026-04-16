@@ -40,8 +40,6 @@ Today the repository is explicitly Codex-native in several places:
 
 - product shell uses `.codex-plugin/plugin.json`
 - setup generates `.codex/agents/lingxi-session-distill.toml`
-- setup generates `.lingxi/setup/automation.session-distill.toml`
-- bootstrap registers a Codex automation
 - runtime guidance is emitted as `AGENTS.md`
 
 This is aligned with the current architecture docs, which describe LingXi 2.0 as a Codex-native plugin with runtime roots under `.lingxi/` and `.codex/agents/`.
